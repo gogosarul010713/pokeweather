@@ -1,0 +1,165 @@
+/* ============================================================
+   GOOGLE FONTS
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@400;500;600;700&display=swap');
+
+/* ============================================================
+   RESET
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Exo 2', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   TEMA OSCURO — default
+   ============================================================ */
+:root {
+  /* Fondos */
+  --bg-primary:   #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary:  #1C2333;
+  --bg-overlay:   #252D3D;
+
+  /* Texto */
+  --text-primary:   #E6EDF3;
+  --text-secondary: #7D8590;
+  --text-accent:    #FFD700;
+
+  /* Bordes */
+  --border-subtle:  rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong:  rgba(255, 255, 255, 0.24);
+
+  /* UI semántica */
+  --ui-accent:   #58A6FF;
+  --ui-success:  #3FB950;
+  --ui-warning:  #D29922;
+  --ui-error:    #F85149;
+
+  /* Condiciones climáticas */
+  --condition-sunny:      #FFB347; --condition-sunny-rgb:      255, 179, 71;
+  --condition-partly:     #87CEEB; --condition-partly-rgb:     135, 206, 235;
+  --condition-cloudy:     #9E9E9E; --condition-cloudy-rgb:     158, 158, 158;
+  --condition-fog:        #C8C8C8; --condition-fog-rgb:        200, 200, 200;
+  --condition-rain:       #5B9BD5; --condition-rain-rgb:       91,  155, 213;
+  --condition-snow:       #B0E0E6; --condition-snow-rgb:       176, 224, 230;
+  --condition-windy:      #78C896; --condition-windy-rgb:      120, 200, 150;
+
+  /* Tipos Pokémon */
+  --type-fire:     #FF6B35; --type-fire-rgb:     255, 107, 53;
+  --type-ground:   #C2A062; --type-ground-rgb:   194, 160, 98;
+  --type-normal:   #A8A878; --type-normal-rgb:   168, 168, 120;
+  --type-flying:   #7EC8E3; --type-flying-rgb:   126, 200, 227;
+  --type-ghost:    #705898; --type-ghost-rgb:    112, 88,  152;
+  --type-dark:     #705848; --type-dark-rgb:     112, 88,  72;
+  --type-water:    #6890F0; --type-water-rgb:    104, 144, 240;
+  --type-electric: #F8D030; --type-electric-rgb: 248, 208, 48;
+  --type-ice:      #98D8D8; --type-ice-rgb:      152, 216, 216;
+  --type-steel:    #B8B8D0; --type-steel-rgb:    184, 184, 208;
+  --type-dragon:   #7038F8; --type-dragon-rgb:   112, 56,  248;
+  --type-rock:     #B6A136; --type-rock-rgb:     182, 161, 54;
+  --type-poison:   #A33EA1; --type-poison-rgb:   163, 62,  161;
+  --type-psychic:  #F85888; --type-psychic-rgb:  248, 88,  136;
+  --type-bug:      #A8B820; --type-bug-rgb:      168, 184, 32;
+  --type-grass:    #78C850; --type-grass-rgb:    120, 200, 80;
+  --type-fighting: #C03028; --type-fighting-rgb: 192, 48,  40;
+  --type-fairy:    #EE99AC; --type-fairy-rgb:    238, 153, 172;
+}
+
+/* ============================================================
+   TEMA CLARO — override
+   ============================================================ */
+html.light {
+  /* Fondos */
+  --bg-primary:   #F0F2F5;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary:  #EBEDF0;
+  --bg-overlay:   #F8F9FA;
+
+  /* Texto */
+  --text-primary:   #1A202C;
+  --text-secondary: #6B7280;
+  --text-accent:    #D97706;
+
+  /* Bordes */
+  --border-subtle:  rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong:  rgba(0, 0, 0, 0.20);
+
+  /* UI semántica */
+  --ui-accent:   #1D6FB8;
+  --ui-success:  #15803D;
+  --ui-warning:  #92400E;
+  --ui-error:    #B91C1C;
+
+  /* Condiciones y tipos NO cambian entre temas */
+}
+
+/* ============================================================
+   ANIMACIONES GLOBALES
+   ============================================================ */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 6px  rgba(var(--glow-rgb), 0.3); }
+  50%       { box-shadow: 0 0 14px rgba(var(--glow-rgb), 0.6); }
+}
+
+@keyframes pokeBallSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ============================================================
+   SCROLLBAR GLOBAL
+   ============================================================ */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* ============================================================
+   LEAFLET — overrides base
+   ============================================================ */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: var(--bg-primary);
+}
+
+.leaflet-control-attribution {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 10px;
+  background: rgba(var(--bg-primary), 0.8) !important;
+  color: var(--text-secondary) !important;
+}
