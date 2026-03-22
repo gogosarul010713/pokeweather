@@ -62,6 +62,9 @@ body {
   --condition-snow:       #B0E0E6; --condition-snow-rgb:       176, 224, 230;
   --condition-windy:      #78C896; --condition-windy-rgb:      120, 200, 150;
 
+  /* Tile filter: positron invertido → dark grisáceo CartoDB sin CORS */
+  --tile-filter: invert(0.92) hue-rotate(210deg) brightness(0.85) saturate(0.75);
+
   /* Tipos Pokémon */
   --type-fire:     #FF6B35; --type-fire-rgb:     255, 107, 53;
   --type-ground:   #C2A062; --type-ground-rgb:   194, 160, 98;
@@ -108,6 +111,9 @@ html.light {
   --ui-success:  #15803D;
   --ui-warning:  #92400E;
   --ui-error:    #B91C1C;
+
+  /* Tile filter: voyager en light mode — sin filtro */
+  --tile-filter: none;
 
   /* Condiciones y tipos NO cambian entre temas */
 }

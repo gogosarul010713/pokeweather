@@ -79,14 +79,15 @@ export const isExtremeWeather = (alerts) => {
 ## MAPEO CONDICIÓN → TIPOS POKÉMON POTENCIADOS
 
 ```js
+// Tipos oficiales Pokémon GO (sistema de clima boost v2)
 export const CONDITION_TO_TYPES = {
-  sunny:  ['fire',    'ground'],
-  partly: ['normal',  'flying'],
-  cloudy: ['ghost',   'dark'],
+  sunny:  ['fire',    'ground',   'grass'],
+  partly: ['normal',  'rock'],
+  cloudy: ['fairy',   'fighting', 'poison'],
   fog:    ['ghost',   'dark'],
-  rain:   ['water',   'electric'],
+  rain:   ['water',   'electric', 'bug'],
   snow:   ['ice',     'steel'],
-  windy:  ['flying',  'dragon'],
+  windy:  ['flying',  'dragon',   'psychic'],
 }
 ```
 
@@ -317,6 +318,49 @@ setTimeout(() => refetch(), msUntilNextHour())
 
 ---
 
+---
+
+## BADGE CATEGORIES — Identificación de fortalezas específicas
+
+```js
+// src/data/weatherService.ts
+
+export type BadgeType = 'stops' | 'gyms' | 'community' | 'multi'
+
+// Calcula badges basados en cuartiles (top 25% en cada métrica)
+export const calculateBadges = (cities: City[]) => {
+  const densities = cities.map(c => c.density).sort((a, b) => b - a)
+  const gymsArray = cities.map(c => c.gyms).sort((a, b) => b - a)
+  const q1Density = densities[Math.floor(densities.length * 0.25)]
+  const q1Gyms = gymsArray[Math.floor(gymsArray.length * 0.25)]
+
+  return (city: City): BadgeType[] => {
+    const badges: BadgeType[] = []
+    if (city.density >= q1Density) badges.push('stops')     // 🎯
+    if (city.gyms >= q1Gyms) badges.push('gyms')           // 💪
+    if (city.rating >= 4.0) badges.push('community')       // 👥
+    return badges.length >= 2 ? ['multi'] : badges         // ⭐
+  }
+}
+
+export const BADGE_ICONS: Record<BadgeType, string> = {
+  stops: '🎯', gyms: '💪', community: '👥', multi: '⭐',
+}
+```
+
+**Categorías:**
+- **🎯 Pokestop Hub**: top 25% en densidad (muchas pokeparadas)
+- **💪 Gym Hub**: top 25% en gimnasios (muchas batallas)
+- **👥 Popular**: rating ≥ 4.0 (comunidad activa)
+- **⭐ Multi-Purpose**: 2+ categorías simultáneamente
+
+**Aplicación:**
+- MapPin: badges pequeños (12px) posicionados alrededor
+- CityTooltip: muestra badges como emojis
+- LocationDetail: explica cada badge y por qué lo tiene
+
+---
+
 ## REGLAS DE NEGOCIO — resumen
 
 | Regla | Descripción |
@@ -328,3 +372,4 @@ setTimeout(() => refetch(), msUntilNextHour())
 | locationKey | Permanente en localStorage, no expira |
 | Ciclo de refresh | Próxima HH:00, no cada 60min desde el inicio |
 | Mock mode | Sin `VITE_ACCUWEATHER_KEY` → automático |
+| **Score** | Normalizado 0-100, recalculado al cargar dataset |

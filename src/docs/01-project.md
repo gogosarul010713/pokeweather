@@ -174,14 +174,11 @@ src/
 │
 └── components/
     ├── Header/
-    │   ├── Header.jsx
-    │   ├── Brand.jsx
-    │   ├── FilterBar.jsx
-    │   ├── SearchInput.jsx
-    │   ├── ThemeToggle.jsx
-    │   └── ConditionPanel/
-    │       ├── ConditionPanel.jsx
-    │       └── WeatherConditionCard.jsx
+    │   ├── Header.tsx
+    │   ├── Brand.tsx
+    │   ├── FilterPanel.tsx        ← reemplaza FilterBar + ConditionPanel
+    │   ├── SearchInput.tsx
+    │   └── ThemeToggle.tsx
     ├── Sidebar/
     │   ├── Sidebar.jsx
     │   ├── MenuIcon.jsx
@@ -194,10 +191,10 @@ src/
     │   ├── MapLegend.jsx
     │   └── FlyToCity.jsx
     └── UI/
-        ├── FilterChip.jsx
-        ├── TypeBadge.jsx
-        ├── SyncBadge.jsx
-        └── LoadingScreen.jsx
+        ├── CustomSelect.tsx       ← reemplaza FilterChip (Sprint 3)
+        ├── TypeBadge.tsx
+        ├── SyncBadge.tsx
+        └── LoadingScreen.tsx
 ```
 
 ---

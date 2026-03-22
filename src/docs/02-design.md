@@ -137,8 +137,52 @@ html.light {
 background:     var(--bg-secondary)
 border-bottom:  1px solid var(--border-default)
 padding:        0 16px
-display:        flex; align-items: center; gap: 16px
-zonas:          Brand (min-w 200px) · FilterBar (flex:1) · ConditionPanel + ThemeToggle + SyncBadge
+display:        flex; align-items: center; gap: 12px
+zonas:          Brand · FilterPanel (flex:1) · SyncBadge + ThemeToggle
+```
+
+### CustomSelect (Dropdown reutilizable)
+```
+Trigger button:
+  background: var(--bg-tertiary)
+  border: 1px solid var(--border-default)
+  border-radius: 6px, padding: 8px 12px
+  font: Exo 2 500 13px
+  min-width: 120px, gap: 8px
+  open: border-color var(--ui-accent)
+  hover: background var(--bg-overlay)
+  disabled: opacity 0.5
+
+Chevron ▼: 16px, rota 180deg al abrir (transition 200ms)
+
+Popup:
+  background: var(--bg-secondary)
+  border: 1px solid var(--border-default)
+  border-radius: 6px, box-shadow: 0 4px 12px rgba(0,0,0,0.3)
+  max-height: 280px, overflow-y: auto
+  animación popIn 150ms
+
+Opción:
+  padding: 10px 12px, font: Exo 2 400 13px
+  hover: background var(--bg-tertiary)
+  selected: background rgba(accent-rgb, 0.1), color var(--ui-accent), font-weight 600
+
+Checkbox (multi-select):
+  16×16px, border: 1.5px solid var(--border-default), border-radius 3px
+  selected: background var(--ui-accent), border-color var(--ui-accent), check ✓ blanco
+```
+
+### FilterPanel
+```
+display: flex, gap: 8px, align-items: center, flex: 1, height: 48px
+Contenido (izq → der):
+  CustomSelect "Continente"   (single-select, min-width 120px)
+  CustomSelect "Clima"        (multi-select, min-width 120px)
+  CustomSelect "Tipo Pokémon" (disabled placeholder)
+  CustomSelect "Ordenar por"  (single-select, min-width 120px)
+  Botón "✕ Limpiar"          (solo si conditionFilter.length > 0)
+  Divider 1px × 28px var(--border-default)
+  SearchInput
 ```
 
 ### Brand
@@ -208,18 +252,33 @@ LocationFeed:
 
 ### LocationCard
 ```
-padding: 10px 12px
-border-bottom: 1px solid var(--border-subtle)
-transition: background 0.12s
+Layout: flex-row, padding 10px 12px
+border: 1px solid var(--border-default), border-radius 8px
+position: relative (para ❤️ absoluto top-right)
 
-hover:        background var(--bg-tertiary)
-active dark:  background rgba(88,166,255,0.06) + border-left 2px var(--ui-accent)
-active light: background rgba(29,111,184,0.06) + border-left 2px var(--ui-accent)
+┌─────────────────────────────────────────────────────┐
+│                                                  ❤️  │  ← absolute top:8 right:8, 14px
+│ [☀️]  Shibuya          [🔥][🌿][🌿]                 │
+│ 36px  Japón            21/03 · 08:00 AM              │
+└─────────────────────────────────────────────────────┘
 
-Row 1: {flag} nombre (Exo 2 700 13px) + hora (Exo 2 700 12px, --text-accent)
-Row 2: ClimateBadge + · + coords (Exo 2 400 10px, --text-secondary)
-Row 3: TypeBadge[]
-Row 4: density · stops · gyms · rating (Exo 2 400 11px, --text-secondary)
+.lc-root    → position:relative, flex, align-center, gap:8, padding:10 12
+.lc-weather → 36×36px, object-fit:contain, onError: display:none
+              src: /weather/{condition}.png
+.lc-body    → flex:1, flex-col, gap:3, padding-right:24px
+  .lc-row1  → flex, align-center, gap:6
+    .lc-name     → flex:1, Exo 2 700 14px, ellipsis, title={city.name}
+    .lc-types-row → flex, gap:2, flex-shrink:0
+      img          → /types/ico_{n}_{type}.webp, 22×22px, max 4, onError: display:none
+  .lc-row2  → flex, justify-between
+    .lc-country  → Exo 2 400 12px, --text-secondary
+    .lc-datetime → Exo 2 400 10px, --text-secondary, "DD/MM · HH:MM AM/PM"
+.lc-favorite → position:absolute, top:8, right:8, 14px, rojo si favorito
+
+Fecha: city.timezone (UTC offset hours) → new Date() + offset → DD/MM
+Hora:  city.localTime "HH:MM" (24h) → "HH:MM AM/PM" (12h)
+Tipos: máx 4. Sin label "TIPOS POTENCIADOS". Sin flag emoji. Sin rating.
+Imágenes tipo: /public/types/ico_{n}_{type}.webp (formato webp, fondo transparente)
 ```
 
 ### TypeBadge
@@ -247,33 +306,88 @@ color: var(--condition-{x});
 border: 1px solid rgba(var(--condition-{x}-rgb), 0.3);
 ```
 
-### MapPin (Leaflet DivIcon)
+### LocationDetail (modal)
 ```
-Teardrop SVG 28px, rotate(-45deg)
-fill: var(--condition-{x})
-border: 2px solid rgba(255,255,255,0.35)  ← fijo, no cambia con tema
-shadow: drop-shadow(0 2px 6px rgba(0,0,0,0.4))
-emoji: 11px, rotate(45deg)
+Modal: position fixed bottom, max-height 72vh, slideUp 250ms, max-width 600px
 
-hover:          scale(1.25), z-index elevado
-selected dark:  scale(1.3) + glow rgba(condition-rgb, 0.5)
-selected light: scale(1.3) + shadow más definida, sin glow
+┌──[☀️48px]  Gangnam, Seúl               [❤️][✕]──┐
+│             Corea del Sur · Asia                    │
+│             37.4979, 127.0276  [📋 → ✓]            │
+├────────────────────────────────────────────────────┤
+│  CLIMA                                             │
+│  [☀️32px]  Sunny · 20°C · Sensación 18°C          │
+│                                                    │
+│  TIPOS POTENCIADOS                                 │
+│  [img 36px] [img 36px] [img 36px]                  │
+│                                                    │
+│  HORA LOCAL                                        │
+│  21/03 · 08:00 AM   (Exo 2 600 14px)              │
+│                                                    │
+│  DATOS POKÉMON GO                                  │
+│  ┌────────┬────────┬────────┬────────┐            │
+│  │  118   │  670   │   40   │ ⭐ 5  │            │
+│  │Densidad│ Stops  │  Gyms  │ Rating │            │
+│  └────────┴────────┴────────┴────────┘            │
+│                                                    │
+│  TIPS  /  EVENTO  (si existen)                     │
+└────────────────────────────────────────────────────┘
+
+Header:
+  .ld-weather-icon  → 48px, /weather/{condition}.png
+  .ld-city-name     → Exo 2 700 16px, ellipsis + title
+  .ld-city-sub      → Exo 2 400 12px, muted (país · región)
+  .ld-coords        → Exo 2 600 13px, prominente
+  .ld-copy-icon-btn → clipboard SVG → check SVG al copiar (2s)
+
+Stat chips (grid 4 columnas):
+  .ld-stat-value    → Exo 2 700 15px
+  .ld-stat-label    → Exo 2 400 9px uppercase
+
+Eliminados: Humedad · Viento · Transporte
+Hora local: solo valor directo bajo título (sin label interno)
+Sensación térmica: "Sensación X°C" (no "Siente")
 ```
 
-### CityTooltip
+### MapPin (Leaflet DivIcon + Badges)
 ```
-background: var(--bg-secondary)
-border: 1px solid var(--border-default)
-border-radius: 12px, padding: 14px 16px, min-width: 200px
-shadow dark:  0 8px 32px rgba(0,0,0,0.5)
-shadow light: 0 4px 20px rgba(0,0,0,0.15)
-animación: popIn 150ms ease-out
+Teardrop SVG fijo
+  tamaño: 22×29px (normal), 28×37px (selected)
+  fill: CONDITION_COLORS[condition] (clima)
+  border: 2px solid rgba(255,255,255,0.35)
+  shadow: drop-shadow(0 2px 6px rgba(0,0,0,0.7))
 
-ciudad: Exo 2 800 14px, --text-primary
-hora:   Exo 2 700 15px, --text-accent
-coords: Exo 2 400 11px, --text-secondary
-clima:  emoji + label 11px + imagen 80×80px via WEATHER_IMAGES[condition]
-tipos:  TypeBadge[]
+badges (pequeños, 12px):
+  🎯 Pokestop Hub (top 25% densidad)
+  💪 Gym Hub (top 25% gyms)
+  👥 Popular (rating ≥ 4.0)
+  ⭐ Multi-Purpose (2+ categorías)
+  posicionados: top-left, top-right, bottom-right (máx 3)
+
+estados:
+  selected: +30% size, glow rgba(255,255,255,0.95)
+```
+
+### CityTooltip (Popup Minimalista)
+```
+Popup esencial — todo lo demás va en LocationDetail modal.
+
+layout: inline-flex, flex-col, padding: 8px 10px, min-width: 200px
+
+header (flex-row):
+  icono clima: 32×32px, /weather/{condition}.png
+  body (flex-col): nombre (Exo 2 700 13px), país (10px, secondary)
+  temp: Exo 2 700 16px, color = CONDITION_COLORS[condition]
+
+condición:
+  inline-flex, padding 2px 6px, gap 4px
+  dot (6px circle) + label (10px font)
+
+badges:
+  si existen: mostrar emojis separados por espacio (13px)
+
+acciones (flex-row, gap 6px):
+  btn "📋 Coords": click → copy coords + "✓ Copiado" (2s), stopPropagation()
+  btn "Ver detalle →": click → setSidebarMode('detail'), stopPropagation()
 ```
 
 ### SyncBadge
@@ -282,6 +396,31 @@ height: 28px, pill, Exo 2 600 10px
 loading → --ui-warning, spinner
 error   → --ui-error, ✕, click retry
 ok      → --ui-success, ✓, "hace Xm"
+```
+
+### MapLegend (Colapsable)
+```
+posición: absolute bottom: 28px, right: 12px, z-index: 450
+background: var(--bg-secondary)
+border: 1px solid var(--border-default), border-radius: 8px
+box-shadow: 0 4px 12px rgba(0,0,0,0.4)
+
+header (click collapsa):
+  padding: 8px 10px
+  title: "Leyenda" (Exo 2 700 10px uppercase)
+  chevron: 10px, rota 180deg al abrir (200ms transition)
+
+body (2 secciones):
+  ── Clima ────────────────────
+  7 condiciones (sunny, partly, cloudy, fog, rain, snow, windy)
+    dot color (10px circle) + label (Exo 2 500 12px)
+
+  ── Calidad (Score) ────────────
+  5 rangos (0-20, 21-40, 41-60, 61-80, 81-100)
+    dot gradient color + label (Exo 2 500 12px)
+    nota: "👑 Top 3 · ⭐#4-10 · Tamaño ∝ Calidad"
+
+css: scrollbar thin, padding: 4px 10px por row
 ```
 
 ### LoadingScreen
@@ -324,6 +463,38 @@ transition: background 0.12s ease, border-color 0.15s ease, transform 0.15s ease
   to   { transform: rotate(360deg); }
 }
 ```
+
+---
+
+## TILES — CartoDB + CSS Filter
+
+```css
+/* src/index.css */
+
+:root {
+  /* Dark mode: positron invertido → gris oscuro */
+  --tile-filter: invert(0.92) hue-rotate(210deg) brightness(0.85) saturate(0.75);
+}
+
+html.light {
+  /* Light mode: voyager sin filtro */
+  --tile-filter: none;
+}
+
+/* src/components/Map/MapView.tsx */
+.mv-root .leaflet-tile-container {
+  filter: var(--tile-filter, none);
+}
+```
+
+**Tiles usadas:**
+- Dark: CartoDB `light_all` (positron) + CSS invert → aspecto gris oscuro sin CORS issues
+- Light: CartoDB `rastertiles/voyager` → colorido, clara diferencia tierra/océano
+
+**Por qué:**
+- CartoDB `dark_matter` bloqueado por ORB en Chromium
+- `positron` + CSS invert → solución visual equivalente sin CORS
+- `worldCopyJump: true` en MapContainer → pins persisten al cruzar antimeridiano
 
 ---
 

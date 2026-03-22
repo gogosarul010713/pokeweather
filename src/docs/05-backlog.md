@@ -276,19 +276,26 @@
 
 ## EP-06 · Header
 
-### US-301 · FilterChip
-**SP:** 2 · **Prioridad:** 🔴
+### US-301 · CustomSelect — Dropdown reutilizable
+**SP:** 3 · **Prioridad:** 🔴
+> ⚠️ Reemplaza: US-301 (FilterChip), US-304 (WeatherConditionCard) — 2026-03-20
 
-**Como** usuario,
-**quiero** chips de filtro para filtrar por región,
-**para** ver solo ciudades de una zona geográfica.
+**Como** desarrollador,
+**quiero** un componente dropdown genérico y reutilizable,
+**para** construir todos los filtros del header con una sola pieza base.
 
 **Criterios de aceptación:**
-- [ ] Pill h:28px, Exo 2 500 12px
-- [ ] Props: `label`, `active`, `onClick`
-- [ ] Activo: `border-color --ui-accent`, `background rgba(accent, 0.08)`
-- [ ] Default: `bg-tertiary`, `border-default`
-- [ ] Hover: `border-color --ui-accent`
+- [x] Props: `label`, `value`, `options[]`, `onChange`, `isMulti?`, `selectedItems?`, `disabled?`
+- [x] `SelectOption` soporta campo `icon?: string` — si existe, renderiza `<img>` en opción y en trigger
+- [x] Botón trigger: `bg-tertiary`, borde, chevron ▼ que rota al abrir
+- [ ] Popup: `bg-secondary`, sombra, `border-radius 6px`, `max-height 280px`, scroll
+- [ ] Animación `popIn` 150ms al abrir
+- [ ] Single-select: click opción cierra popup
+- [ ] Multi-select: checkbox por opción, permanece abierto, muestra "N seleccionados"
+- [ ] Click fuera cierra popup (mousedown listener)
+- [ ] Estado `disabled`: opacidad 0.5, cursor not-allowed
+- [ ] Opción activa: `rgba(accent, 0.1)`, color accent, font-weight 600
+- [ ] Archivo: `src/components/UI/CustomSelect.tsx`
 
 ---
 
@@ -309,51 +316,39 @@
 
 ---
 
-### US-303 · FilterBar — región + búsqueda
-**SP:** 3 · **Prioridad:** 🔴
+### US-303 · FilterPanel — Dropdowns jerarquizados
+**SP:** 4 · **Prioridad:** 🔴
+> ⚠️ Reemplaza: US-303 (FilterBar chips), US-305 (ConditionPanel) — 2026-03-20
 
 **Como** usuario,
-**quiero** la barra de filtros completa en el header,
-**para** combinar región y búsqueda de texto.
+**quiero** filtros jerárquicos con dropdowns en el header,
+**para** combinar región, clima, tipo Pokémon y orden de forma escalable.
 
 **Criterios de aceptación:**
-- [ ] FilterBar.jsx flex:1 en centro del header
-- [ ] Chips: Todas · Asia · Europa · América · Oceanía · África
-- [ ] Solo un chip activo (radio behavior)
-- [ ] SearchInput a la derecha
-- [ ] Actualiza store → LocationFeed y pines reactivos
+- [x] `FilterPanel` flex:1 en centro del header, fila horizontal, `height: 48px`
+- [x] **Dropdown 1 — Continente** (single-select): Todas · Asia · Europa · América · Oceanía · África → `setRegionFilter`
+- [ ] **Dropdown 2 — Clima** (multi-select): ☀️ Sunny · ⛅ Partly · ☁️ Cloudy · 🌫️ Fog · 🌧️ Rain · ❄️ Snow · 💨 Windy → `setConditionFilter`
+- [ ] **Dropdown 3 — Tipo Pokémon** (placeholder, disabled): "Todos (próximamente)" — se activará en Sprint 4
+- [ ] **Dropdown 4 — Ordenar por** (single-select): Nombre · Densidad · Rating · Hora Local → `setSortMode`
+- [ ] Botón "✕ Limpiar" visible solo si `conditionFilter.length > 0`
+- [x] **Dropdown 2 — Clima** (multi-select): 7 condiciones con imagen PNG `/weather/{condition}.png` (sin emojis)
+- [x] Divider visual entre dropdowns y SearchInput
+- [x] Reactivo: cambio en cualquier dropdown actualiza LocationFeed y pines
+- [x] Archivo: `src/components/Header/FilterPanel.tsx`
 
 ---
 
-### US-304 · WeatherConditionCard
-**SP:** 3 · **Prioridad:** 🔴
-
-**Como** usuario,
-**quiero** botones para cada condición climática,
-**para** filtrar ciudades por el tipo de clima que me interesa para jugar.
-
-**Criterios de aceptación:**
-- [ ] 7 botones: ☀️ ⛅ ☁️ 🌫️ 🌧️ ❄️ 💨
-- [ ] Multi-select
-- [ ] Seleccionado dark: borde + glow condition
-- [ ] Seleccionado light: borde + bg sutil, sin glow
-- [ ] Tooltip con nombre de condición
-- [ ] Llama `toggleCondition(condition)`
+### US-304 · ~~WeatherConditionCard~~ — DEPRECATED
+**SP:** ~~3~~ · **Prioridad:** ~~🔴~~
+> ❌ Removido 2026-03-20 — funcionalidad integrada en US-303 (FilterPanel, Dropdown Clima)
+> Archivo eliminado: `src/components/Header/ConditionPanel/WeatherConditionCard.tsx`
 
 ---
 
-### US-305 · ConditionPanel
-**SP:** 2 · **Prioridad:** 🔴
-
-**Como** usuario,
-**quiero** el panel de condiciones integrado en el header,
-**para** filtrar por clima sin salir de la barra superior.
-
-**Criterios de aceptación:**
-- [ ] Agrupa los 7 WeatherConditionCard en fila horizontal
-- [ ] Separador visual entre FilterBar y ConditionPanel
-- [ ] Botón "Limpiar" cuando hay condiciones activas
-- [ ] No desborda en pantallas 1280px+
+### US-305 · ~~ConditionPanel~~ — DEPRECATED
+**SP:** ~~2~~ · **Prioridad:** ~~🔴~~
+> ❌ Removido 2026-03-20 — funcionalidad integrada en US-303 (FilterPanel, Dropdown Clima)
+> Archivo eliminado: `src/components/Header/ConditionPanel/ConditionPanel.tsx`
 
 ---
 
@@ -375,87 +370,112 @@
 
 ## EP-07 · Sidebar
 
-### US-401 · TypeBadge
-**SP:** 1 · **Prioridad:** 🔴
+### US-405 · Favorites System
+**SP:** 3 · **Prioridad:** 🔴
+> Implementar primero — base para LocationCard, LocationFeed y MenuStrip
 
 **Como** usuario,
-**quiero** badges con tipos Pokémon potenciados,
-**para** saber qué Pokémon cazar en cada ciudad.
+**quiero** marcar ciudades como favoritas y que se guarden entre sesiones,
+**para** acceder rápidamente a mis lugares favoritos.
 
 **Criterios de aceptación:**
-- [ ] Exo 2 700 9px uppercase, padding 1px 7px, border-radius 8px
-- [ ] Background: `rgba(var(--type-x-rgb), 0.18)`
-- [ ] Color: `var(--type-x)`, Border: `rgba(var(--type-x-rgb), 0.35)`
-- [ ] Light: alpha mayor para contraste
-- [ ] Funciona con los 18 tipos
+- [ ] Store: `favorites: string[]` (array de city IDs)
+- [ ] Actions: `toggleFavorite(cityId)`, `clearFavorites()`
+- [ ] localStorage sync: `pwe-favorites` clave
+- [ ] LocationCard muestra ❤️ rojo si es favorito, outline si no
+- [ ] LocationDetail modal tiene botón ❤️ para toggle
+- [ ] LocationFeed en Modo Favoritos filtra a solo array `favorites`
+- [ ] Archivo: actualiza `src/data/useStore.ts`
 
 ---
 
-### US-402 · ClimateBadge
-**SP:** 1 · **Prioridad:** 🔴
-
-**Como** usuario,
-**quiero** el badge de condición climática en cada card,
-**para** identificar el clima de un vistazo.
-
-**Criterios de aceptación:**
-- [ ] Exo 2 700 10px, padding 1px 8px, border-radius 10px
-- [ ] Background/color/border con `--condition-{x}` y `--condition-{x}-rgb`
-- [ ] Muestra emoji + nombre + imagen (thumbnail) via `WEATHER_IMAGES`
-
----
-
-### US-403 · LocationCard
-**SP:** 5 · **Prioridad:** 🔴
-
-**Como** usuario,
-**quiero** cards con todos los datos de Pokémon GO por ciudad,
-**para** decidir qué ciudad explorar.
-
-**Criterios de aceptación:**
-- [ ] Row 1: flag + nombre (Exo 2 700 13px) + hora (`--text-accent`)
-- [ ] Row 2: ClimateBadge + coords (`--text-secondary`)
-- [ ] Row 3: TypeBadge[]
-- [ ] Row 4: density · stops · gyms · rating
-- [ ] Hover: `bg-tertiary`
-- [ ] Activo dark: `rgba(accent,0.06)` + `border-left 2px`
-- [ ] Activo light: `rgba(accent,0.06)` + `border-left 2px`
-- [ ] Click: `setSelectedCity(city)`
-- [ ] Animación `cardIn` staggered
-
----
-
-### US-404 · LocationFeed
+### US-401 · LocationCard
 **SP:** 3 · **Prioridad:** 🔴
 
 **Como** usuario,
-**quiero** la lista filtrada y ordenada de ciudades,
-**para** navegar con scroll fluido.
+**quiero** cards con los datos de Pokémon GO por ciudad,
+**para** ver clima, tipos y decidir qué ciudad explorar.
 
 **Criterios de aceptación:**
-- [ ] overflow-y auto, scrollbar thin
-- [ ] Muestra `getFilteredCities(cities)`
-- [ ] Contador "N ciudades" en la parte superior
-- [ ] Sort: Nombre · Densidad · Rating · Hora
-- [ ] Actualización reactiva al cambiar filtros
-- [ ] Ciudad activa marcada
-- [ ] Sin resultados: mensaje informativo
+- [x] Layout: `[WeatherIcon 36px] + [body: row1(nombre+tipos) / row2(país+datetime)]`
+- [x] Weather icon: `/weather/{condition}.png` 36×36px, onError: `display:none`
+- [x] Nombre ciudad: Exo 2 700 14px, ellipsis + `title` para tooltip nativo
+- [x] País: Exo 2 400 12px, --text-secondary (row 2 izquierda)
+- [x] Tipos: `/types/ico_{n}_{type}.webp` 22×22px, máx 4, inline en row 1
+- [x] Sin label "TIPOS POTENCIADOS" visible
+- [x] Fecha local via `city.timezone` → `new Date() + offset` → `DD/MM`
+- [x] Hora: `city.localTime` (24h) → `HH:MM AM/PM` (row 2 derecha)
+- [x] ❤️ `position:absolute; top:8px; right:8px` — fuera del flujo
+- [x] Body con `padding-right:24px` para no solapar el ❤️
+- [x] Click card: `setSelectedCity(city)` + `setSidebarMode('detail')`
+- [x] Click ❤️: `toggleFavorite(city.id)` con `stopPropagation`
+- [x] Sin flag emoji · Sin rating · Sin ClimateBadge
+- [x] Archivo: `src/components/Sidebar/LocationCard.tsx`
 
 ---
 
-### US-405 · MenuStrip
-**SP:** 2 · **Prioridad:** 🟢
+### US-402 · LocationFeed
+**SP:** 3 · **Prioridad:** 🔴
 
 **Como** usuario,
-**quiero** íconos de navegación en la franja izquierda,
-**para** cambiar entre vistas.
+**quiero** la lista filtrada de ciudades que puedo navegar,
+**para** encontrar rápidamente dónde quiero ir.
 
 **Criterios de aceptación:**
-- [ ] Franja 44px, `bg-primary`, `border-right border-subtle`
-- [ ] 3 íconos SVG: Lista (activo) · Mapa · Filtros
-- [ ] Activo: `--text-primary`. Inactivo: `--text-secondary`
-- [ ] Hover: `--text-primary`, transición 0.12s
+- [ ] Scroll vertical de LocationCard[] componentes
+- [ ] Conectado a `getFilteredCities()` del store
+- [ ] Si `sidebarMode === 'favorites'`: filtra a solo array `favorites`
+- [ ] Contador "N ciudades" en header
+- [ ] Mensaje "Sin resultados" si array vacío
+- [ ] Actualización reactiva al cambiar filtros/búsqueda del header
+- [ ] Click en card → `setSelectedCity()` → abre LocationDetail
+- [ ] Archivo: actualiza `src/components/Sidebar/Sidebar.tsx`
+
+---
+
+### US-403 · MenuStrip (3 Modos)
+**SP:** 3 · **Prioridad:** 🔴
+
+**Como** usuario,
+**quiero** íconos de navegación que cambien el contenido de la sidebar,
+**para** alternar entre lista, detalle y favoritos.
+
+**Criterios de aceptación:**
+- [ ] 3 botones/iconos: 📋 Lista | 📍 Detalle | ⭐ Favoritos
+- [ ] Store: `sidebarMode: 'list' | 'detail' | 'favorites'` + `setSidebarMode()`
+- [ ] Click ícono → actualiza `sidebarMode`
+- [ ] Activo: color primario. Inactivo: muted
+- [ ] **Modo Lista** (default): LocationFeed filtrada
+- [ ] **Modo Detalle**: LocationDetail modal (activado al seleccionar ciudad)
+- [ ] **Modo Favoritos**: LocationFeed filtra por `favorites` array
 - [ ] Tooltip al hover
+- [ ] Archivo: actualiza `src/components/Sidebar/Sidebar.tsx`
+
+---
+
+### US-404 · LocationDetail Modal
+**SP:** 4 · **Prioridad:** 🔴
+
+**Como** usuario,
+**quiero** un modal con toda la información detallada de una ciudad,
+**para** ver datos completos sin salir de la app.
+
+**Criterios de aceptación:**
+- [x] Modal overlay sobre el mapa, z-index 500, animación slideUp 250ms
+- [x] **Header**: WeatherIcon 48px + columna (nombre, país·región, coords + 📋) + [❤️][✕]
+- [x] Coordenadas `lat.toFixed(4), lon.toFixed(4)` en el header como info principal
+- [x] Botón copiar: ícono clipboard SVG → check SVG al copiar, 2s, estilo accent
+- [x] **Clima**: PNG `/weather/{condition}.png` 32px + label + `temp°C · Sensación X°C`
+- [x] **Tipos potenciados**: imágenes `/types/ico_{n}_{type}.webp` 36px (sin text badges)
+- [x] **Hora local**: `DD/MM · HH:MM AM/PM` calculada con `city.timezone` (sin label redundante)
+- [x] **Datos Pokémon GO**: 4 stat chips en grid (Densidad · Stops · Gyms · Rating)
+- [x] Tips y Evento si existen (Transporte eliminado — irrelevante)
+- [x] Sin Humedad ni Viento (eliminados)
+- [x] Botón ❤️ toggle favorito (rojo si activo)
+- [x] Botón ✕ + click outside + Escape → cierra modal
+- [x] Botón "Ver en lista" → `setSidebarMode('list')`
+- [x] Se abre si `selectedCity !== null` y `sidebarMode === 'detail'`
+- [x] Archivo: `src/components/Sidebar/LocationDetail.tsx`
 
 ---
 
@@ -524,6 +544,35 @@
 - [ ] 7 filas: pin + emoji + nombre de condición
 - [ ] `bg-secondary`, `border-default`, `border-radius 8px`
 - [ ] Colapsable (click en título)
+
+### US-505 · Tiles + Dark Mode + Badge Categories
+**SP:** 8 · **Prioridad:** 🔴
+
+**Criterios de aceptación:**
+- [x] CartoDB positron + CSS invert (dark), voyager (light) — sin CORS issues
+- [x] worldCopyJump activo (pins persisten al cruzar antimeridiano)
+- [x] Pins tamaño fijo (22×29px), color según condición climática
+- [x] Badges pequeños (12px) en pins: 🎯 stops, 💪 gyms, 👥 community, ⭐ multi (2+)
+- [x] Basado en cuartiles: top 25% en cada métrica
+- [x] CityTooltip minimalista (nombre, temp, condición, badges, 2 botones)
+- [x] MapLegend: 7 condiciones + 4 categorías de badges
+
+---
+
+### US-506 · Popup Unificado + "Ver Detalle"
+**SP:** 5 · **Prioridad:** 🔴
+
+**Como** usuario,
+**quiero** un popup general al seleccionar una ciudad (desde lista o pin) con opción de ver más detalles,
+**para** evitar información confusa y tener control sobre cuándo abrir el modal completo.
+
+**Criterios de aceptación:**
+- [x] Click en pin o lista → abre CityTooltip popup (sin LocationDetail modal)
+- [x] CityTooltip incluye: icono clima correcto, coords+copiar, tipos, score, "Ver detalle"
+- [x] "Ver detalle" → abre LocationDetail bottom sheet modal
+- [x] Cerrar popup → clearSelectedCity (permite reabrirlo)
+- [x] Botones inside popup usan stopPropagation (no cierran accidentalmente)
+- [x] FlyToCity: funciona tanto desde list click como desde pin click
 
 ---
 

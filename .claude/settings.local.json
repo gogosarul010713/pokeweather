@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node c:/Workspace/React/pokeweather/fix-sprint3.js)",
+      "Bash(node c:/Workspace/React/pokeweather/fix-sprint3.cjs)"
+    ]
+  }
+}
