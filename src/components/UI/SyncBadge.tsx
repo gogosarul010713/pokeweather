@@ -1,7 +1,33 @@
+import { useEffect, useState } from 'react'
 import { useStore } from '../../data/useStore'
 
 export default function SyncBadge() {
   const status = useStore((s) => s.loadingStatus)
+  const lastUpdated = useStore((s) => s.lastUpdated)
+  const [timeago, setTimeago] = useState<string>('')
+
+  useEffect(() => {
+    if (!lastUpdated) {
+      setTimeago('')
+      return
+    }
+
+    const updateTimeago = () => {
+      const minutes = Math.floor((Date.now() - lastUpdated) / 1000 / 60)
+      if (minutes === 0) {
+        setTimeago('Ahora')
+      } else if (minutes === 1) {
+        setTimeago('Hace 1 min')
+      } else {
+        setTimeago(`Hace ${minutes} min`)
+      }
+    }
+
+    updateTimeago()
+    const interval = setInterval(updateTimeago, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [lastUpdated])
 
   if (status === 'loading') {
     return (
@@ -97,7 +123,7 @@ export default function SyncBadge() {
         }
       `}</style>
       <div className="ui-sync-ok">
-        ✓ Actualizado
+        ✓ {timeago || 'Actualizado'}
       </div>
     </>
   )

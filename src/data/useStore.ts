@@ -67,6 +67,7 @@ interface AppStore {
   favorites: string[]
   badgeFilter: string[]
   showBadgesOnPins: boolean
+  lastUpdated: number | null
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -85,6 +86,7 @@ interface AppStore {
   clearFavorites: () => void
   setBadgeFilter: (badges: string[]) => void
   setShowBadgesOnPins: (show: boolean) => void
+  setLastUpdated: (timestamp: number) => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -121,6 +123,7 @@ export const useStore = create<AppStore>((set, get) => ({
       return true
     }
   })(),
+  lastUpdated: null,
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -177,6 +180,8 @@ export const useStore = create<AppStore>((set, get) => ({
     localStorage.setItem('pwe-showBadgesOnPins', JSON.stringify(show))
     set({ showBadgesOnPins: show })
   },
+
+  setLastUpdated: (timestamp) => set({ lastUpdated: timestamp }),
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {

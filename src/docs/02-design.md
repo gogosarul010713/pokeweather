@@ -356,46 +356,135 @@ Teardrop SVG fijo
   border: 2px solid rgba(255,255,255,0.35)
   shadow: drop-shadow(0 2px 6px rgba(0,0,0,0.7))
 
-badges (pequeños, 12px):
-  🎯 Pokestop Hub (top 25% densidad)
-  💪 Gym Hub (top 25% gyms)
-  👥 Popular (rating ≥ 4.0)
-  ⭐ Multi-Purpose (2+ categorías)
-  posicionados: top-left, top-right, bottom-right (máx 3)
+badges (pequeños, 12px) — renderizado condicional según showBadgesOnPins:
+  🎯 Pokeparadas (top 25% densidad)
+  💪 Gimnasios (top 25% gyms)
+  👥 Comunidad Activa (rating ≥ 4.0)
+  ✨ Mejores Lugares (tiene TODAS 3)
+  posicionados: top-left, top-right, bottom-right (máx 2-3)
+
+badge logic (cuartiles):
+  - Calculado en calculateBadges() de weatherService.ts
+  - Si tiene todas 3 → solo retorna 'best' (exclusivo)
+  - Si tiene 1-2 → retorna array de esas categorías
+  - Lógica OR en filtros: múltiples badges seleccionados simultáneamente
+
+persistencia:
+  - showBadgesOnPins guardado en localStorage: 'pwe-showBadgesOnPins'
 
 estados:
   selected: +30% size, glow rgba(255,255,255,0.95)
 ```
 
-### CityTooltip (Popup Minimalista)
+### CityTooltip (Popup 3 Líneas — Sprint 5)
 ```
-Popup esencial — todo lo demás va en LocationDetail modal.
+Popup minimalista con diseño optimizado — todo lo demás va en LocationDetail modal.
 
-layout: inline-flex, flex-col, padding: 8px 10px, min-width: 200px
+┌─────────────────────────────────────────────────────┐
+│ [☀️] Shibuya, Japón | Sunny                         │  ← Línea 1
+│ Tipos: [🔥 img] [🌿 img] [🌿 img]                    │  ← Línea 2
+│ Coordenadas: 35.6595, 139.7004 [Copiar]             │  ← Línea 3
+│ [────── Ver detalle →]  (full-width)                │  ← Botón
+└─────────────────────────────────────────────────────┘
 
-header (flex-row):
-  icono clima: 32×32px, /weather/{condition}.png
-  body (flex-col): nombre (Exo 2 700 13px), país (10px, secondary)
-  temp: Exo 2 700 16px, color = CONDITION_COLORS[condition]
+LÍNEA 1 (flex-row, gap 8px):
+  icono clima: 24×24px, /weather/{condition}.png
+  body (flex-col):
+    nombre: Exo 2 700 13px (Shibuya, Japón)
+    condición: Exo 2 400 11px, var(--text-secondary) (Sunny)
 
-condición:
-  inline-flex, padding 2px 6px, gap 4px
-  dot (6px circle) + label (10px font)
+LÍNEA 2 (flex-col, gap 4px):
+  label: "Tipos Potenciados:" Exo 2 600 10px
+  imágenes: /types/ico_{n}_{type}.webp, 18×18px (máx 3)
 
-badges:
-  si existen: mostrar emojis separados por espacio (13px)
+LÍNEA 3 (flex-row, gap 4px):
+  label: "Coordenadas:" Exo 2 600 10px
+  coords: Exo 2 700 11px (35.6595, 139.7004)
+  btn copiar: ícono clipboard → checkmark al copiar (2s feedback)
 
-acciones (flex-row, gap 6px):
-  btn "📋 Coords": click → copy coords + "✓ Copiado" (2s), stopPropagation()
-  btn "Ver detalle →": click → setSidebarMode('detail'), stopPropagation()
+BOTÓN "Ver detalle →":
+  full-width, padding 8px, Exo 2 600 12px
+  background: var(--ui-accent), text white
+  border-radius: 6px
+  stopPropagation() en click
+
+COPY FEEDBACK:
+  onclick → navigator.clipboard.writeText(coords)
+  button text: "Copiar" → "✓ Copiado" (2 segundos)
+  transición suave de color
+
+layout general:
+  bg: var(--bg-secondary)
+  border: 1px solid var(--border-default)
+  border-radius: 12px
+  padding: 10px
+  min-width: 240px
+  gap: 8px
 ```
 
-### SyncBadge
+### MapLegend (Pestañas — Sprint 5)
 ```
-height: 28px, pill, Exo 2 600 10px
-loading → --ui-warning, spinner
-error   → --ui-error, ✕, click retry
-ok      → --ui-success, ✓, "hace Xm"
+Leyenda flotante esquina inferior derecha con 2 pestañas.
+
+┌─────────────────────────────────────┐
+│ CLIMA      │ CATEGORÍAS            │  ← Pestañas con underline activo
+├─────────────────────────────────────┤
+│ [🌡️] Sunny        [color dot]       │
+│ [🌤️] Partly       [color dot]       │
+│ [☁️] Cloudy       [color dot]       │
+│ [🌫️] Fog         [color dot]       │
+│ [🌧️] Rain        [color dot]       │
+│ [❄️] Snow        [color dot]       │
+│ [💨] Windy       [color dot]       │
+└─────────────────────────────────────┘
+
+TAB 1 — CLIMA:
+  7 filas, cada una:
+    color dot: 6px circle, var(--condition-x)
+    label: Exo 2 400 12px, nombre condición
+
+TAB 2 — CATEGORÍAS:
+  Toggle switch:
+    label: "Iconos en pines" Exo 2 600 11px
+    switch: 40×24px, border-radius 12px
+    color: var(--ui-accent) when ON, var(--border-default) when OFF
+    thumb: 20×20px, smooth transition 200ms
+    persistencia: localStorage 'pwe-showBadgesOnPins'
+
+  4 Checkboxes (filter):
+    □ 🎯 Pokeparadas
+    □ 💪 Gimnasios
+    □ 👥 Comunidad Activa
+    □ ✨ Mejores Lugares
+
+    cada checkbox:
+      16×16px
+      checked: background var(--ui-accent), border var(--ui-accent), ✓ blanco
+      unchecked: border var(--border-default)
+
+    lógica: OR (múltiples simultáneas)
+    actualizaciones: reactivas a MapView + LocationFeed
+
+ESTILOS GENERALES:
+  floating position: bottom-right, 16px margin
+  background: var(--bg-secondary)
+  border: 1px solid var(--border-default)
+  border-radius: 12px
+  padding: 12px
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3)
+
+  pestañas:
+    height: 36px
+    flex-row, gap: 16px
+    font: Exo 2 600 12px
+    cursor: pointer
+    active: border-bottom 2px var(--ui-accent)
+    transition: border-color 200ms
+
+  contenido:
+    max-height: 320px
+    overflow-y: auto (si necesario)
+    gap: 8px entre items
 ```
 
 ### MapLegend (Colapsable)

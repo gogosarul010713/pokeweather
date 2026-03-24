@@ -300,3 +300,5 @@ VITE_ACCUWEATHER_KEY=   # sin key → usa mockCities automáticamente
 - Ante duda de estilo: leer `02-design.md`.
 - Ante duda de clima: leer `03-weather-logic.md`.
 - Ante duda de API: leer `04-api.md`.
+- Ante duda de badges: leer `07-badges.md`.
+- Ante duda de git/versioning: leer `08-git-workflow.md`.

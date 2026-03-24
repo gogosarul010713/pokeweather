@@ -481,98 +481,106 @@
 
 ## EP-08 · Mapa
 
-### US-501 · MapPin
-**SP:** 5 · **Prioridad:** 🔴
+### US-501 · MapPin ✅
+**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ✅ Completado (2026-03-22)
 
 **Como** usuario,
 **quiero** un pin por ciudad con el color de su clima,
 **para** visualizar el clima global de un vistazo.
 
 **Criterios de aceptación:**
-- [ ] Leaflet DivIcon, teardrop SVG 28px, rotate(-45deg)
-- [ ] Fill: `--condition-{x}` del clima de la ciudad
-- [ ] Border: `2px solid rgba(255,255,255,0.35)` fijo
-- [ ] Emoji 11px, rotate(45deg)
-- [ ] Hover: scale(1.25)
-- [ ] Seleccionado dark: scale(1.3) + glow
-- [ ] Seleccionado light: scale(1.3) + shadow
-- [ ] Click: `setSelectedCity(city)`
-- [ ] Se actualiza cuando cambia la condición
+- [x] Leaflet DivIcon, tamaño fijo (22×29px)
+- [x] Fill: `--condition-{x}` del clima de la ciudad
+- [x] Border: `2px solid rgba(255,255,255,0.35)` fijo
+- [x] Emoji 11px rotado
+- [x] Badges pequeños (12px): 🎯 stops, 💪 gyms, 👥 community, ✨ best
+- [x] Renderizado condicional de badges según `showBadgesOnPins`
+- [x] Click: `setSelectedCity(city)`
+- [x] Se actualiza cuando cambia la condición
+- [x] Persistencia de badges en LocalStorage
 
 ---
 
-### US-502 · CityTooltip
-**SP:** 5 · **Prioridad:** 🔴
+### US-502 · CityTooltip ✅
+**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ✅ Completado (2026-03-22)
 
 **Como** usuario,
 **quiero** un popup detallado al hacer click en un pin,
 **para** ver todos los datos sin salir del mapa.
 
 **Criterios de aceptación:**
-- [ ] Leaflet Popup personalizado, `bg-secondary`, `border-radius 12px`
-- [ ] Nombre, hora local, coords, clima (emoji + label + imagen 80×80px)
-- [ ] tempC, feelsLike, humidity, windKmh, density, stops, gyms, rating
-- [ ] TypeBadge[], animación `popIn` 150ms
-- [ ] Sincronizado con ciudad activa en sidebar
+- [x] Leaflet Popup personalizado, `bg-secondary`, `border-radius 12px`
+- [x] Diseño 3 líneas: [emoji clima] Nombre, País | Condición
+- [x] Línea 2: Tipos potenciados [tipo1 tipo2 tipo3]
+- [x] Línea 3: Coordenadas [Copiar coords button]
+- [x] Botón "Ver detalle →" full-width
+- [x] Copiar coords con feedback visual (✓ 2 segundos)
+- [x] Sincronizado con ciudad activa en sidebar
 
 ---
 
-### US-503 · FlyToCity
-**SP:** 2 · **Prioridad:** 🟡
+### US-503 · FlyToCity ✅
+**SP:** 2 · **Prioridad:** 🟡 · **Estado:** ✅ Completado (2026-03-22)
 
 **Como** usuario,
 **quiero** que el mapa vuele a la ciudad seleccionada en la sidebar,
 **para** verla en contexto geográfico automáticamente.
 
 **Criterios de aceptación:**
-- [ ] Observa `selectedCity` en el store
-- [ ] `mapRef.flyTo([lat, lon], 10, { duration: 1.2 })`
-- [ ] No vuela si ya está centrado ahí
-- [ ] Duración configurable
+- [x] Observa `selectedCity` en el store
+- [x] `mapRef.flyTo([lat, lon], 10, { duration: 1.2 })`
+- [x] No vuela si ya está centrado ahí
+- [x] Duración configurable
 
 ---
 
-### US-504 · MapLegend
-**SP:** 2 · **Prioridad:** 🟢
+### US-504 · MapLegend ✅
+**SP:** 2 · **Prioridad:** 🟢 · **Estado:** ✅ Completado (2026-03-22)
 
 **Como** usuario,
-**quiero** una leyenda que explique los colores de los pines,
-**para** entender qué condición representa cada color.
+**quiero** una leyenda que explique los colores de los pines y categorías,
+**para** entender qué condición/categoría representa cada símbolo.
 
 **Criterios de aceptación:**
-- [ ] Flotante en esquina inferior derecha
-- [ ] 7 filas: pin + emoji + nombre de condición
-- [ ] `bg-secondary`, `border-default`, `border-radius 8px`
-- [ ] Colapsable (click en título)
+- [x] Flotante en esquina inferior derecha
+- [x] 2 pestañas: CLIMA (7 condiciones) | CATEGORÍAS (4 filtros + toggle)
+- [x] Tab CLIMA: pin + emoji + nombre de condición
+- [x] Tab CATEGORÍAS: Toggle "Iconos en pines" + checkboxes para filtrar
+- [x] Filtro OR logic: múltiples badges seleccionados simultáneamente
+- [x] Persistencia en localStorage: `'pwe-showBadgesOnPins'`
+- [x] `bg-secondary`, `border-default`, `border-radius 8px`
 
-### US-505 · Tiles + Dark Mode + Badge Categories
-**SP:** 8 · **Prioridad:** 🔴
+### US-505 · Sistema de Badges con Cuartiles ✅
+**SP:** 8 · **Prioridad:** 🔴 · **Estado:** ✅ Completado (2026-03-22)
 
 **Criterios de aceptación:**
-- [x] CartoDB positron + CSS invert (dark), voyager (light) — sin CORS issues
-- [x] worldCopyJump activo (pins persisten al cruzar antimeridiano)
-- [x] Pins tamaño fijo (22×29px), color según condición climática
-- [x] Badges pequeños (12px) en pins: 🎯 stops, 💪 gyms, 👥 community, ⭐ multi (2+)
-- [x] Basado en cuartiles: top 25% en cada métrica
-- [x] CityTooltip minimalista (nombre, temp, condición, badges, 2 botones)
-- [x] MapLegend: 7 condiciones + 4 categorías de badges
+- [x] 4 categorías de badges calculadas por cuartiles (top 25%)
+- [x] 🎯 Pokeparadas: Top 25% densidad
+- [x] 💪 Gimnasios: Top 25% gyms
+- [x] 👥 Comunidad Activa: Rating ≥ 4.0
+- [x] ✨ Mejores Lugares: Tiene TODAS las 3 (exclusivo)
+- [x] Lógica: Si tiene todas → solo retorna 'best'
+- [x] Implementado en `src/data/weatherService.ts` → `calculateBadges()`
+- [x] Badges renderizados en MapPin según `showBadgesOnPins`
 
 ---
 
-### US-506 · Popup Unificado + "Ver Detalle"
-**SP:** 5 · **Prioridad:** 🔴
+### US-506 · Filtrado por Badges + Auto-scroll ✅
+**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ✅ Completado (2026-03-22)
 
 **Como** usuario,
-**quiero** un popup general al seleccionar una ciudad (desde lista o pin) con opción de ver más detalles,
-**para** evitar información confusa y tener control sobre cuándo abrir el modal completo.
+**quiero** filtrar ciudades por categorías de badges y que se desplace automáticamente a la ciudad seleccionada,
+**para** encontrar rápidamente lugares específicos y una mejor experiencia de navegación.
 
 **Criterios de aceptación:**
-- [x] Click en pin o lista → abre CityTooltip popup (sin LocationDetail modal)
-- [x] CityTooltip incluye: icono clima correcto, coords+copiar, tipos, score, "Ver detalle"
-- [x] "Ver detalle" → abre LocationDetail bottom sheet modal
-- [x] Cerrar popup → clearSelectedCity (permite reabrirlo)
-- [x] Botones inside popup usan stopPropagation (no cierran accidentalmente)
-- [x] FlyToCity: funciona tanto desde list click como desde pin click
+- [x] Filtrado por badges con lógica OR (múltiples selecciones simultáneamente)
+- [x] Filtro aplicado a MapView y LocationFeed
+- [x] Default: todos los badges seleccionados
+- [x] Actualizaciones reactivas al cambiar filtro
+- [x] Auto-scroll en LocationFeed al seleccionar pin
+- [x] Scroll suave con posición center
+- [x] Implementado en `src/components/Sidebar/LocationFeed.tsx`
+- [x] Z-index fixes: Header (100 → 1001), CustomSelect (200 → 1001)
 
 ---
 

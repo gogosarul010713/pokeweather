@@ -110,3 +110,125 @@ export const resolveCondition = (iconId: number, windKmh: number, gustKmh: numbe
 
 export const isExtremeWeather = (alerts: unknown[]): boolean =>
   Array.isArray(alerts) && alerts.length > 0
+
+// ─── AccuWeather API Functions (Sprint 6) ─────────────────────────────────────
+
+import { getCachedLocationKey, setCachedLocationKey } from './cacheService'
+import { getS2Key } from './s2Service'
+import type { City } from './useStore'
+
+interface HourlyForecastData {
+  WeatherIcon: number
+  Temperature: { Value: number }
+  RealFeelTemperature: { Value: number }
+  RelativeHumidity: number
+  Wind: { Speed: { Value: number } }
+  WindGust: { Speed: { Value: number } }
+  HasPrecipitation: boolean
+}
+
+export const getAccuWeatherLocationKey = async (
+  lat: number,
+  lon: number,
+  apiKey: string
+): Promise<string> => {
+  const s2Key = getS2Key(lat, lon)
+
+  // 1. Verificar caché permanente (localStorage)
+  const cached = getCachedLocationKey(s2Key)
+  if (cached) return cached
+
+  // 2. Llamar API
+  const url = `https://dataservice.accuweather.com/locations/v1/cities/geoposition/search` +
+    `?apikey=${apiKey}&q=${lat},${lon}&toplevel=true`
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!response.ok) {
+    throw new Error(`AccuWeather location error: ${response.status}`)
+  }
+
+  const data = await response.json()
+  const locationKey = data.Key
+
+  // 3. Cachear permanentemente
+  setCachedLocationKey(s2Key, locationKey)
+
+  return locationKey
+}
+
+export const getHourlyForecast = async (
+  locationKey: string,
+  apiKey: string
+): Promise<HourlyForecastData> => {
+  const url = `https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}` +
+    `?apikey=${apiKey}&details=true&metric=true`
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!response.ok) {
+    throw new Error(`AccuWeather forecast error: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data[0] // primer slot = hora actual
+}
+
+export const getAlerts = async (
+  locationKey: string,
+  apiKey: string
+): Promise<unknown[]> => {
+  try {
+    const url = `https://dataservice.accuweather.com/alerts/v1/${locationKey}` +
+      `?apikey=${apiKey}&details=true`
+
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+    if (!response.ok) return [] // Si falla, sin alertas
+
+    return await response.json()
+  } catch {
+    return [] // Si falla, sin alertas (no crítico)
+  }
+}
+
+export const fetchCityWeather = async (
+  city: City,
+  apiKey: string
+): Promise<City> => {
+  try {
+    // 1. Obtener location key
+    const locationKey = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
+
+    // 2. Fetch forecast y alerts en paralelo
+    const [forecast, alerts] = await Promise.all([
+      getHourlyForecast(locationKey, apiKey),
+      getAlerts(locationKey, apiKey),
+    ])
+
+    // 3. Calcular condición y tipos
+    const condition = resolveCondition(forecast.WeatherIcon, forecast.Wind.Speed.Value, forecast.WindGust.Speed.Value)
+    const boostedTypes = CONDITION_TO_TYPES[condition]
+    const isExtreme = isExtremeWeather(alerts)
+
+    // 4. Construir objeto City actualizado
+    const weatherData: City = {
+      ...city,
+      condition,
+      boostedTypes,
+      isExtreme,
+      tempC: forecast.Temperature.Value,
+      feelsLike: forecast.RealFeelTemperature.Value,
+      humidity: forecast.RelativeHumidity,
+      windKmh: forecast.Wind.Speed.Value,
+      gustKmh: forecast.WindGust.Speed.Value,
+      weatherIcon: forecast.WeatherIcon,
+      accuLocationKey: locationKey,
+      updatedAt: Date.now(),
+      weatherImage: `/weather/${condition}.png`,
+      // localTime será calculado en useWeather con timezone
+    }
+
+    return weatherData
+  } catch (error) {
+    // Lanzar error para que useWeather lo maneje y muestre estado informativo
+    throw new Error(`Failed to fetch weather for ${city.name}: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}

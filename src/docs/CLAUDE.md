@@ -61,7 +61,8 @@ Lee el archivo correspondiente antes de trabajar en esa área:
 | `docs/04-api.md` | Al tocar fetch de AccuWeather o lógica de caché de API |
 | `docs/05-backlog.md` | Para ver criterios de aceptación de cualquier US |
 | `docs/06-sprints.md` | Para ver el plan de sprints y en qué US estamos |
-| `docs/07-badges.md` | Sistema de categorías y filtros por badges |
+| `docs/07-badges.md` | Sistema de categorías y filtros por badges (Sprint 5) |
+| `docs/08-git-workflow.md` | Flujo Git Flow, ramas, commits, versionado semántico (Sprint 5) |
 
 ---
 
@@ -90,16 +91,19 @@ VITE_ACCUWEATHER_KEY=   # sin key → mock mode automático
 
 ## SPRINT ACTUAL
 
-**Sprint:** 5 — Mapa Completo + Visual Scoring
+**Sprint:** 5 — Badges, Filtros, Auto-scroll, Z-index Fix ✅ **COMPLETADO (2026-03-22)**
 **Completado:**
-- US-501 (MapPin con score visual)
-- US-502 (CityTooltip mejorada)
-- US-503 (FlyToCity)
-- US-504 (MapLegend mejorada)
-- US-505 (Tiles + Dark Mode + Visual Score)
-- US-506 (Popup Unificado + "Ver Detalle")
+- ✅ Sistema de Badges (4 categorías: Pokeparadas, Gimnasios, Comunidad Activa, Mejores Lugares)
+- ✅ MapLegend con pestañas (CLIMA | CATEGORÍAS)
+- ✅ Toggle mostrar/ocultar badges en pines con persistencia localStorage
+- ✅ Filtrado por categorías con lógica OR
+- ✅ Auto-scroll en LocationFeed al seleccionar pin
+- ✅ CityTooltip rediseñado (3 líneas)
+- ✅ Z-index fixes (Header: 100 → 1001, CustomSelect: 200 → 1001)
+- ✅ Documentación: 07-badges.md, 08-git-workflow.md
+- ✅ Git Flow implementado: rama develop, sprint-5, feature branches
 
-**Siguiente:** Sprint 6 — AccuWeather Real API
+**Próximo:** Sprint 6 — AccuWeather Real API (21 SP)
 
 ## ARCHIVOS EXISTENTES / MODIFICADOS
 - `src/index.css` ✅ completo (+ --tile-filter)
