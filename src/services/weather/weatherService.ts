@@ -2,6 +2,7 @@
 // Mapeos AccuWeather weatherIcon → condiciones base → tipos Pokémon GO
 // Sprint 2-6: Evolución desde mock data → API real AccuWeather
 // Sprint 7: Mejorar precision (target 95%+ vs PGO oficial)
+// Sprint 7 - US-605: Caché geoespacial optimizado (por locationKey)
 
 import type { WeatherCondition } from '../../config/weatherImages'
 
@@ -115,6 +116,7 @@ export const isExtremeWeather = (alerts: unknown[]): boolean =>
 // ─── AccuWeather API Functions (Sprint 6) ─────────────────────────────────────
 
 import { getCachedLocationKey, setCachedLocationKey } from '../cache/cacheService'
+import type { WeatherData } from '../cache/cacheService'
 import { getS2Key } from '../geo/s2Service'
 import type { City } from '../../store/useStore'
 
@@ -192,16 +194,20 @@ export const getAlerts = async (
 
 export const fetchCityWeather = async (
   city: City,
-  apiKey: string
+  apiKey: string,
+  enableAlerts: boolean = false
 ): Promise<City> => {
   try {
     // 1. Obtener location key
     const locationKey = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
 
-    // 2. Fetch forecast y alerts en paralelo
+    // 2. Fetch forecast + alerts (opcional, si plan lo soporta)
+    const forecastPromise = getHourlyForecast(locationKey, apiKey)
+    const alertsPromise = enableAlerts ? getAlerts(locationKey, apiKey) : Promise.resolve([])
+
     const [forecast, alerts] = await Promise.all([
-      getHourlyForecast(locationKey, apiKey),
-      getAlerts(locationKey, apiKey),
+      forecastPromise,
+      alertsPromise,
     ])
 
     // 3. Calcular condición y tipos
@@ -231,5 +237,46 @@ export const fetchCityWeather = async (
   } catch (error) {
     // Lanzar error para que useWeather lo maneje y muestre estado informativo
     throw new Error(`Failed to fetch weather for ${city.name}: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
+/**
+ * Enriquece un City con datos de WeatherData (del caché geoespacial).
+ *
+ * US-605: Separa responsabilidades:
+ * - WeatherData: Datos climáticos por locationKey (compartidos entre ciudades)
+ * - City: Identidad única + datos climáticos
+ *
+ * @param city Ciudad base (sin datos climáticos)
+ * @param weatherData Datos climáticos del caché (o null si no disponibles)
+ * @returns City enriquecida con datos climáticos
+ */
+export function enrichCityWithWeatherData(
+  city: City,
+  weatherData: WeatherData | null
+): City {
+  if (!weatherData) {
+    // Fallback: valores por defecto si caché está vacío
+    return {
+      ...city,
+      condition: 'cloudy',
+      boostedTypes: [],
+      isExtreme: false,
+      tempC: 0,
+      feelsLike: 0,
+      humidity: 0,
+      windKmh: 0,
+      gustKmh: 0,
+      weatherIcon: 0,
+      weatherImage: '/weather/cloudy.png',
+      updatedAt: Date.now(),
+      timezone: 0,
+    }
+  }
+
+  // Enriquecer: city-specific fields + weather data
+  return {
+    ...city,
+    ...weatherData,
   }
 }

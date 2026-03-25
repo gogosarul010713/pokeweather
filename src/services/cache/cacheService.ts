@@ -1,32 +1,60 @@
 // Caché de datos climáticos en IndexedDB y locationKeys en localStorage.
 // TTL dinámico: expira a HH:00:00 de la próxima hora (Lazy Load strategy).
 // LocationKeys son permanentes.
+//
+// SPRINT 7 — US-605: Caché geoespacial optimizado
+// La clave primaria del caché es locationKey (no city.id).
+// Múltiples ciudades en la misma celda S2 nivel 10 comparten locationKey
+// → Reutilizan la misma entrada de caché (eficiencia -33% API calls)
 
 import { get, set, del, clear } from 'idb-keyval'
 import { msUntilNextHour } from '../../utils/timeUtils'
+import type { WeatherCondition } from '../../config/weatherImages'
 
 const KEY_PREFIX_WEATHER = 'pwe-weather-'
 const KEY_PREFIX_LOC     = 'pwe-loc-'
 
+// Datos que se almacenan en caché (sin city-specific fields)
+export interface WeatherData {
+  condition: WeatherCondition
+  boostedTypes: string[]
+  isExtreme: boolean
+  tempC: number
+  feelsLike: number
+  humidity: number
+  windKmh: number
+  gustKmh: number
+  weatherIcon: number
+  timezone: number
+  updatedAt: number
+  weatherImage: string
+  // ⚠️ NO incluir: id, name, lat, lon (específicos de cada ciudad)
+}
+
 interface WeatherCacheEntry {
-  data: unknown
+  data: WeatherData
   savedAt: number
   expiresAt: number  // Timestamp absoluto cuando expira (HH:00:00 próxima hora)
 }
 
 // ─── Datos climáticos — IndexedDB ─────────────────────────────────────────────
-// IMPORTANTE: La clave del caché es city.id (no s2Key).
-// Dos ciudades cercanas pueden compartir s2Key (mismo nivel S2) pero deben
-// tener cachés separados para evitar sobrescribir datos entre ellas.
+// CLAVE PRIMARIA: locationKey (AccuWeather)
+// Beneficio: Dos ciudades con mismo locationKey = comparten caché
+// Ejemplo: Shibuya + Harajuku (misma S2 cell nivel 10) → 1 entrada en IndexedDB
 
-export const getCachedWeather = async (cityId: string): Promise<unknown | null> => {
+/**
+ * Obtiene datos climáticos en caché por locationKey de AccuWeather.
+ * @param locationKey ID de ubicación AccuWeather (ej: "348205" para Tokio)
+ * @returns Datos climáticos o null si no está caché o está expirado
+ */
+export const getCachedWeather = async (locationKey: string): Promise<WeatherData | null> => {
   try {
-    const entry = await get<WeatherCacheEntry>(`${KEY_PREFIX_WEATHER}${cityId}`)
+    const entry = await get<WeatherCacheEntry>(`${KEY_PREFIX_WEATHER}${locationKey}`)
     if (!entry) return null
 
     // Verifica expiración absoluta: si now >= expiresAt, está expirado
     if (Date.now() >= entry.expiresAt) {
-      await del(`${KEY_PREFIX_WEATHER}${cityId}`)
+      await del(`${KEY_PREFIX_WEATHER}${locationKey}`)
       return null
     }
 
@@ -36,14 +64,20 @@ export const getCachedWeather = async (cityId: string): Promise<unknown | null> 
   }
 }
 
-export const setCachedWeather = async (cityId: string, data: unknown): Promise<void> => {
+/**
+ * Almacena datos climáticos en caché por locationKey.
+ * TTL: dinámico hasta la próxima HH:00:00 (compatibilitad con Pokémon GO)
+ * @param locationKey ID de ubicación AccuWeather
+ * @param data Datos climáticos a almacenar
+ */
+export const setCachedWeather = async (locationKey: string, data: WeatherData): Promise<void> => {
   try {
     const now = Date.now()
     // TTL dinámico: expira a la próxima HH:00:00
     const ttl = msUntilNextHour()
     const expiresAt = now + ttl
 
-    await set(`${KEY_PREFIX_WEATHER}${cityId}`, { data, savedAt: now, expiresAt })
+    await set(`${KEY_PREFIX_WEATHER}${locationKey}`, { data, savedAt: now, expiresAt })
   } catch { /* silencioso */ }
 }
 

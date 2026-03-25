@@ -1,9 +1,10 @@
 // batchWeatherService.ts
 // Sprint 6: Procesa múltiples ciudades en batches paralelos.
 // Reduce consumo de API mediante parallelización + rate limiting.
+// Sprint 7 - US-605: Caché geoespacial optimizado (por locationKey)
 
 import type { City } from '../../store/useStore'
-import { fetchCityWeather } from './weatherService'
+import { fetchCityWeather, enrichCityWithWeatherData, getAccuWeatherLocationKey } from './weatherService'
 import { getCachedWeather, setCachedWeather } from '../cache/cacheService'
 
 export interface BatchConfig {
@@ -13,6 +14,7 @@ export interface BatchConfig {
   retryOnError: boolean  // Reintentar en fallo (default: true)
   maxRetries: number     // # máx reintentos (default: 2)
   ignoreCache?: boolean  // Ignorar caché y fetchar siempre API (default: false) — para auto-refresh
+  enableAlerts?: boolean // Incluir endpoint /alerts/v1/ (default: false — Core Weather Starter no soporta)
 }
 
 export interface BatchMetrics {
@@ -70,31 +72,43 @@ export async function loadCitiesInBatch(
     // Procesar batch en paralelo
     const batchPromises = batch.map(async (city) => {
       try {
-        // 1. Intentar obtener del caché (por city.id, NO por s2Key)
-        // PERO: si ignoreCache=true, saltamos caché (para auto-refresh a HH:00)
+        // 1. Obtener locationKey (siempre caché en localStorage — rápido)
+        const locationKey = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
+
+        // 2. Intentar obtener del caché por locationKey (US-605: Caché geoespacial)
+        // Si ignoreCache=true, saltamos caché (para auto-refresh a HH:00)
         const cached = finalConfig.ignoreCache
           ? null
-          : await getCachedWeather(city.id)
+          : await getCachedWeather(locationKey)
 
         if (cached) {
           cachedHits++
-          // Preservar id/name/lat/lon del city original — nunca del caché
+          // Enriquecer: city-specific fields + weather data
+          const enrichedCity = enrichCityWithWeatherData(
+            { ...city, accuLocationKey: locationKey },
+            cached
+          )
           return {
             success: true as const,
-            data: { ...(cached as Partial<City>), id: city.id, name: city.name, lat: city.lat, lon: city.lon, s2Key: city.s2Key } as City,
+            data: enrichedCity,
           }
         }
 
-        // 2. Si no está en caché, fetchar de API
+        // 3. Si no está en caché, fetchar de API
         const weatherData = await fetchCityWeatherWithRetry(
           city,
           apiKey,
-          finalConfig.maxRetries
+          finalConfig.maxRetries,
+          finalConfig.enableAlerts ?? false
         )
 
-        // 3. Cachear resultado (por city.id para evitar colisiones entre ciudades con mismo s2Key)
-        await setCachedWeather(city.id, weatherData)
-        totalCalls += 3  // 3 endpoints: location + forecast + alerts
+        // 4. Cachear resultado por locationKey (NO por city.id)
+        // Beneficio US-605: Dos ciudades con mismo locationKey reutilizan caché
+        const { accuLocationKey, ...cacheableData } = weatherData
+        await setCachedWeather(accuLocationKey, cacheableData)
+
+        // Contar endpoints: location + forecast + (alerts si está habilitado)
+        totalCalls += finalConfig.enableAlerts ? 3 : 2
 
         return { success: true as const, data: weatherData }
       } catch (error) {
@@ -147,15 +161,16 @@ async function fetchCityWeatherWithRetry(
   city: City,
   apiKey: string,
   maxRetries: number,
+  enableAlerts: boolean = false,
   attempt: number = 0
 ): Promise<City> {
   try {
-    return await fetchCityWeather(city, apiKey)
+    return await fetchCityWeather(city, apiKey, enableAlerts)
   } catch (error) {
     if (attempt < maxRetries) {
       // Esperar un poco antes de reintentar (backoff exponencial)
       await sleep(Math.pow(2, attempt) * 100)
-      return fetchCityWeatherWithRetry(city, apiKey, maxRetries, attempt + 1)
+      return fetchCityWeatherWithRetry(city, apiKey, maxRetries, enableAlerts, attempt + 1)
     }
     throw error
   }
