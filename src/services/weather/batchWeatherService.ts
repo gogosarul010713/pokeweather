@@ -12,6 +12,7 @@ export interface BatchConfig {
   cacheTTL: number       // TTL en ms (default: 60 min)
   retryOnError: boolean  // Reintentar en fallo (default: true)
   maxRetries: number     // # máx reintentos (default: 2)
+  ignoreCache?: boolean  // Ignorar caché y fetchar siempre API (default: false) — para auto-refresh
 }
 
 export interface BatchMetrics {
@@ -70,7 +71,11 @@ export async function loadCitiesInBatch(
     const batchPromises = batch.map(async (city) => {
       try {
         // 1. Intentar obtener del caché (por city.id, NO por s2Key)
-        const cached = await getCachedWeather(city.id)
+        // PERO: si ignoreCache=true, saltamos caché (para auto-refresh a HH:00)
+        const cached = finalConfig.ignoreCache
+          ? null
+          : await getCachedWeather(city.id)
+
         if (cached) {
           cachedHits++
           // Preservar id/name/lat/lon del city original — nunca del caché
