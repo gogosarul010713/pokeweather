@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar/Sidebar'
 import MapView from './components/Map/MapView'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
+import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
 import type { City } from './store/useStore'
 
@@ -12,7 +13,7 @@ export default function App() {
   const [cities, setCities] = useState<City[]>([])
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
-  const { run } = useWeather()
+  const { run, toastMessage } = useWeather()
 
   // useCallback para garantizar que onReady sea la misma referencia
   const handleCitiesLoaded = useCallback((loaded: City[]) => {
@@ -75,6 +76,11 @@ export default function App() {
         {/* LOCATION DETAIL MODAL */}
         {sidebarMode === 'detail' && selectedCity && (
           <LocationDetail city={selectedCity} />
+        )}
+
+        {/* TOAST NOTIFICATIONS — Auto-refresh */}
+        {toastMessage && (
+          <Toast message={toastMessage} type="info" duration={3000} />
         )}
       </div>
     </>
