@@ -1,15 +1,17 @@
 // Caché de datos climáticos en IndexedDB y locationKeys en localStorage.
-// TTL 60 min para datos de clima. LocationKeys son permanentes.
+// TTL dinámico: expira a HH:00:00 de la próxima hora (Lazy Load strategy).
+// LocationKeys son permanentes.
 
 import { get, set, del, clear } from 'idb-keyval'
+import { msUntilNextHour } from '../../utils/timeUtils'
 
-const WEATHER_TTL_MS     = 60 * 60 * 1000   // 60 minutos
 const KEY_PREFIX_WEATHER = 'pwe-weather-'
 const KEY_PREFIX_LOC     = 'pwe-loc-'
 
 interface WeatherCacheEntry {
   data: unknown
   savedAt: number
+  expiresAt: number  // Timestamp absoluto cuando expira (HH:00:00 próxima hora)
 }
 
 // ─── Datos climáticos — IndexedDB ─────────────────────────────────────────────
@@ -21,10 +23,13 @@ export const getCachedWeather = async (cityId: string): Promise<unknown | null> 
   try {
     const entry = await get<WeatherCacheEntry>(`${KEY_PREFIX_WEATHER}${cityId}`)
     if (!entry) return null
-    if (Date.now() - entry.savedAt > WEATHER_TTL_MS) {
+
+    // Verifica expiración absoluta: si now >= expiresAt, está expirado
+    if (Date.now() >= entry.expiresAt) {
       await del(`${KEY_PREFIX_WEATHER}${cityId}`)
       return null
     }
+
     return entry.data
   } catch {
     return null   // IndexedDB no disponible — falla silenciosamente
@@ -33,7 +38,12 @@ export const getCachedWeather = async (cityId: string): Promise<unknown | null> 
 
 export const setCachedWeather = async (cityId: string, data: unknown): Promise<void> => {
   try {
-    await set(`${KEY_PREFIX_WEATHER}${cityId}`, { data, savedAt: Date.now() })
+    const now = Date.now()
+    // TTL dinámico: expira a la próxima HH:00:00
+    const ttl = msUntilNextHour()
+    const expiresAt = now + ttl
+
+    await set(`${KEY_PREFIX_WEATHER}${cityId}`, { data, savedAt: now, expiresAt })
   } catch { /* silencioso */ }
 }
 
