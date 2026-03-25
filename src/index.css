@@ -169,3 +169,18 @@ html.light {
   background: rgba(var(--bg-primary), 0.8) !important;
   color: var(--text-secondary) !important;
 }
+
+/* ============================================================
+   TRANSICIONES — Auto-refresh lazy load
+   ============================================================ */
+
+/* Fade in/out para actualización suave de datos */
+@keyframes fadeInOut {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.fade-refresh {
+  animation: fadeInOut 200ms ease-in-out;
+}
