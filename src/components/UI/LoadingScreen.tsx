@@ -2,7 +2,7 @@
 // Fade-out 0.4s al pasar a 'ready'.
 
 import { useEffect, useState } from 'react'
-import { useStore } from '../../data/useStore'
+import { useStore } from '../../store/useStore'
 
 export default function LoadingScreen() {
   const loadingStatus   = useStore((s) => s.loadingStatus)

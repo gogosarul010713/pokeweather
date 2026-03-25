@@ -2,9 +2,9 @@
 // Sprint 6: Procesa múltiples ciudades en batches paralelos.
 // Reduce consumo de API mediante parallelización + rate limiting.
 
-import type { City } from './useStore'
+import type { City } from '../../store/useStore'
 import { fetchCityWeather } from './weatherService'
-import { getCachedWeather, setCachedWeather } from './cacheService'
+import { getCachedWeather, setCachedWeather } from '../cache/cacheService'
 
 export interface BatchConfig {
   parallelLimit: number  // Ciudades simultáneas (default: 5)
@@ -69,13 +69,14 @@ export async function loadCitiesInBatch(
     // Procesar batch en paralelo
     const batchPromises = batch.map(async (city) => {
       try {
-        // 1. Intentar obtener del caché
-        const cached = await getCachedWeather(city.s2Key)
+        // 1. Intentar obtener del caché (por city.id, NO por s2Key)
+        const cached = await getCachedWeather(city.id)
         if (cached) {
           cachedHits++
+          // Preservar id/name/lat/lon del city original — nunca del caché
           return {
             success: true as const,
-            data: { ...city, ...(cached as Partial<City>) } as City,
+            data: { ...(cached as Partial<City>), id: city.id, name: city.name, lat: city.lat, lon: city.lon, s2Key: city.s2Key } as City,
           }
         }
 
@@ -86,8 +87,8 @@ export async function loadCitiesInBatch(
           finalConfig.maxRetries
         )
 
-        // 3. Cachear resultado
-        await setCachedWeather(city.s2Key, weatherData)
+        // 3. Cachear resultado (por city.id para evitar colisiones entre ciudades con mismo s2Key)
+        await setCachedWeather(city.id, weatherData)
         totalCalls += 3  // 3 endpoints: location + forecast + alerts
 
         return { success: true as const, data: weatherData }

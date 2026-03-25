@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
-import { useStore } from '../../data/useStore'
+import { useStore } from '../../store/useStore'
 
 const FLY_ZOOM     = 10
 const FLY_DURATION = 1.5   // segundos

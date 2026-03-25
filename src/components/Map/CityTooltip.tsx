@@ -5,9 +5,9 @@
 // [Ver detalle →]
 
 import { useState } from 'react'
-import { useStore } from '../../data/useStore'
-import type { City } from '../../data/useStore'
-import { CONDITION_LABEL } from '../../data/weatherService'
+import { useStore } from '../../store/useStore'
+import type { City } from '../../store/useStore'
+import { CONDITION_LABEL } from '../../services/weather/weatherService'
 
 interface CityTooltipProps {
   city: City

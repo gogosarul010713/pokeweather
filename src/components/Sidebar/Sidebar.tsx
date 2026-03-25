@@ -1,4 +1,4 @@
-import { useStore, type City } from '../../data/useStore'
+import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
 
 interface SidebarProps {

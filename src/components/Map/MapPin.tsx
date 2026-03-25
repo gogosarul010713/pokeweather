@@ -4,9 +4,9 @@
 import { useMemo } from 'react'
 import { Marker } from 'react-leaflet'
 import L from 'leaflet'
-import { useStore } from '../../data/useStore'
-import { CONDITION_COLORS, BADGE_ICONS, type BadgeType } from '../../data/weatherService'
-import type { City } from '../../data/useStore'
+import { useStore } from '../../store/useStore'
+import { CONDITION_COLORS, BADGE_ICONS, type BadgeType } from '../../services/weather/weatherService'
+import type { City } from '../../store/useStore'
 
 interface MapPinProps {
   city: City

@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { useStore } from './data/useStore'
+import { useEffect, useState, useCallback } from 'react'
+import { useStore } from './store/useStore'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import MapView from './components/Map/MapView'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
-import { useWeather } from './data/useWeather'
-import type { City } from './data/useStore'
+import { useWeather } from './hooks/useWeather'
+import type { City } from './store/useStore'
 
 export default function App() {
   const [cities, setCities] = useState<City[]>([])
@@ -14,9 +14,16 @@ export default function App() {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const { run } = useWeather()
 
+  // useCallback para garantizar que onReady sea la misma referencia
+  const handleCitiesLoaded = useCallback((loaded: City[]) => {
+    setCities(loaded)
+  }, [])
+
+  // Ejecutar una sola vez al montar el componente
   useEffect(() => {
-    run((loaded) => setCities(loaded))
-  }, [run])
+    run(handleCitiesLoaded)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <>

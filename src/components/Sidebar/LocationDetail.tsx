@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useStore, type City } from '../../data/useStore'
+import { useStore, type City } from '../../store/useStore'
 
 const TYPE_ICON: Record<string, string> = {
   normal:   '/types/ico_0_normal.webp',

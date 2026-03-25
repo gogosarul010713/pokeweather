@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { useStore } from '../../data/useStore'
+import { useStore } from '../../store/useStore'
 
 const DEBOUNCE_MS = 200
 

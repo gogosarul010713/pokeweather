@@ -7,8 +7,8 @@
  *   testBatchAccuracy().then(console.log)
  */
 
-import type { City } from './useStore'
-import { loadCitiesInBatch, calculateAccuracy } from './batchWeatherService'
+import type { City } from '../store/useStore'
+import { loadCitiesInBatch, calculateAccuracy } from '../services/weather/batchWeatherService'
 
 /**
  * 5 ciudades random para test

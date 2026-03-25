@@ -1,8 +1,9 @@
 // weatherService.ts
-// Sprint 2: solo mapeos de condición → tipos (necesario para mockCities).
-// Sprint 5 (US-207): se agregan todas las funciones de fetch AccuWeather.
+// Mapeos AccuWeather weatherIcon → condiciones base → tipos Pokémon GO
+// Sprint 2-6: Evolución desde mock data → API real AccuWeather
+// Sprint 7: Mejorar precision (target 95%+ vs PGO oficial)
 
-import type { WeatherCondition } from '../config/weatherImages'
+import type { WeatherCondition } from '../../config/weatherImages'
 
 // ─── Mapeo AccuWeather WeatherIcon → condición base ───────────────────────────
 
@@ -113,9 +114,9 @@ export const isExtremeWeather = (alerts: unknown[]): boolean =>
 
 // ─── AccuWeather API Functions (Sprint 6) ─────────────────────────────────────
 
-import { getCachedLocationKey, setCachedLocationKey } from './cacheService'
-import { getS2Key } from './s2Service'
-import type { City } from './useStore'
+import { getCachedLocationKey, setCachedLocationKey } from '../cache/cacheService'
+import { getS2Key } from '../geo/s2Service'
+import type { City } from '../../store/useStore'
 
 interface HourlyForecastData {
   WeatherIcon: number

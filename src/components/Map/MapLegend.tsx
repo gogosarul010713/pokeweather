@@ -3,10 +3,10 @@
 // Tab 2: Filtros de categorías + Toggle de badges en pines
 
 import { useState } from 'react'
-import { useStore } from '../../data/useStore'
-import { CONDITION_COLORS, CONDITION_LABEL, BADGE_ICONS } from '../../data/weatherService'
+import { useStore } from '../../store/useStore'
+import { CONDITION_COLORS, CONDITION_LABEL, BADGE_ICONS } from '../../services/weather/weatherService'
 import type { WeatherCondition } from '../../config/weatherImages'
-import type { BadgeType } from '../../data/weatherService'
+import type { BadgeType } from '../../services/weather/weatherService'
 
 const CONDITIONS: WeatherCondition[] = [
   'sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy',

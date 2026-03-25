@@ -1,4 +1,4 @@
-import { useStore } from '../../data/useStore'
+import { useStore } from '../../store/useStore'
 import CustomSelect from '../UI/CustomSelect'
 import type { SelectOption } from '../UI/CustomSelect'
 import SearchInput from './SearchInput'

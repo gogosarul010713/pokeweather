@@ -1,4 +1,4 @@
-import { useStore, type City } from '../../data/useStore'
+import { useStore, type City } from '../../store/useStore'
 
 interface LocationCardProps {
   city: City

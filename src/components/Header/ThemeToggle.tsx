@@ -1,4 +1,4 @@
-import { useStore } from '../../data/useStore'
+import { useStore } from '../../store/useStore'
 
 export default function ThemeToggle() {
   const theme = useStore((s) => s.theme)

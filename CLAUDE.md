@@ -78,34 +78,47 @@ Lee el archivo correspondiente antes de trabajar en esa área:
 8. **`region` en minúsculas** — `'asia'`, `'europa'`, `'america'`, `'oceania'`, `'africa'`
 9. **Un `<style>` por componente** — con prefijo de clase obligatorio
 10. **WINDY** — reemplaza sunny/partly/cloudy pero NUNCA rain/snow/fog
+11. **NO crear archivos `.md`** — nunca crear archivos Markdown (documentación, READMEs, notas, etc.) a menos que el usuario lo solicite explícitamente en ese mensaje
 
 ---
 
 ## VARIABLES DE ENTORNO
 
 ```
-VITE_ACCUWEATHER_KEY=   # sin key → mock mode automático
+VITE_ACCUWEATHER_KEY=   # ⚠️ REQUERIDA (sin key → error de inicialización)
 ```
+
+**Obtener API Key**: https://www.accuweather.com/en/free-weather-api (Tier: Core Weather Starter, 15,000 calls/mes)
 
 ---
 
 ## SPRINT ACTUAL
 
-**Sprint:** 5 — Badges, Filtros, Auto-scroll, Z-index Fix ✅ **COMPLETADO (2026-03-22)**
+**Sprint:** 6 — AccuWeather Real API + Batch Processing ✅ **COMPLETADO (2026-03-24)**
 **Completado:**
-- ✅ Sistema de Badges (4 categorías: Pokeparadas, Gimnasios, Comunidad Activa, Mejores Lugares)
-- ✅ MapLegend con pestañas (CLIMA | CATEGORÍAS)
-- ✅ Toggle mostrar/ocultar badges en pines con persistencia localStorage
-- ✅ Filtrado por categorías con lógica OR
-- ✅ Auto-scroll en LocationFeed al seleccionar pin
-- ✅ CityTooltip rediseñado (3 líneas)
-- ✅ Z-index fixes (Header: 100 → 1001, CustomSelect: 200 → 1001)
-- ✅ Documentación: 07-badges.md, 08-git-workflow.md
-- ✅ Git Flow implementado: rama develop, sprint-5, feature branches
+- ✅ Eliminado modo mock completamente (solo API real)
+- ✅ S2_LEVEL corregido: 13 → 10 (Pokémon GO spec)
+- ✅ S2 Keys calculados en mockCities.ts
+- ✅ Batch processing implementado (5 paralelo, 200ms delay)
+- ✅ 3-layer caching: LocationKeys (localStorage) + Weather (IndexedDB, TTL 60min)
+- ✅ Debug tools: debugCaching.ts (8 funciones, console access via pweCache)
+- ✅ Documentación: 10-api.md, 11-caching-strategy.md, 12-fix-s2key.md, 13-debugging-cache.md, 14-setup-accuweather.md
+- ✅ Build exitoso (npm run build ✓)
+- ⏳ **PENDIENTE**: Usuario configura `.env.local` y verifica 94 ciudades cargadas
 
-**Próximo:** Sprint 6 — AccuWeather Real API (21 SP)
+**Bugs Conocidos:**
+- ⚠️ **MapView.tsx:156** — Keys duplicadas en Leaflet: "Encountered two children with the same key, `osaka-dotonbori`"
+  - Causa: Múltiples ciudades pueden renderizarse con key duplicada
+  - Impacto: Warning en console (no afecta funcionalidad)
+  - Fix: Cambiar key de MapPin a usar id único garantizado
+
+**Próximo:** Sprint 7 — Lazy Load (reduce consumo API 50%, cumple presupuesto 15k/mes)
+
+---
 
 ## ARCHIVOS EXISTENTES / MODIFICADOS
+
+**Sprint 5:**
 - `src/index.css` ✅ completo (+ --tile-filter)
 - `src/App.tsx` ✅ completo
 - `src/main.tsx` ✅ completo
@@ -115,6 +128,25 @@ VITE_ACCUWEATHER_KEY=   # sin key → mock mode automático
 - `src/components/Map/CityTooltip.tsx` ✅ (score + ver detalle)
 - `src/components/Map/MapLegend.tsx` ✅ (score legend)
 - `src/components/Sidebar/LocationCard.tsx` ✅ (refactor popup)
+
+**Sprint 6:**
+- `src/data/useStore.ts` ✅ (+ lastUpdated tracking)
+- `src/data/useWeather.ts` ✅ **REWRITTEN** (mock eliminado, solo API real)
+- `src/data/s2Service.ts` ✅ (S2_LEVEL: 13 → 10)
+- `src/data/mockCities.ts` ✅ (s2Key: '' → getS2Key(lat, lng))
+- `src/data/batchWeatherService.ts` ✅ (ya existía, usado en Sprint 6)
+- `src/data/debugCaching.ts` ✅ **NUEVO** (260 líneas, 8 funciones)
+- `src/main.tsx` ✅ (+ auto-import debugCaching en DEV)
+- `.env.local.example` ✅ **NUEVO**
+- `src/docs/10-api.md` ✅ **NUEVO**
+- `src/docs/11-caching-strategy.md` ✅ **NUEVO**
+- `src/docs/12-fix-s2key.md` ✅ **NUEVO**
+- `src/docs/13-debugging-cache.md` ✅ **NUEVO**
+- `src/docs/14-setup-accuweather.md` ✅ **NUEVO** (CRÍTICO para usuario)
+- `src/docs/HALLAZGOS-CLIMA.md` ✅ **NUEVO**
+- `src/data/ANALYSIS-DEEP-DEBUG.md` ✅ **NUEVO**
+
+---
 
 ## DECISIONES TOMADAS
 
@@ -140,10 +172,8 @@ VITE_ACCUWEATHER_KEY=   # sin key → mock mode automático
 
 ### Otros
 - TypeScript (.tsx) — no .jsx
-- <style> por componente
+- `<style>` por componente
 - overflow: hidden en html/body/#root (fix Leaflet)
 - --glow-rgb como variable local
-```
 
 ---
-> Actualiza este bloque al avanzar de sprint.

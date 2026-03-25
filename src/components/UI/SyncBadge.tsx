@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useStore } from '../../data/useStore'
+import { useStore } from '../../store/useStore'
 
 export default function SyncBadge() {
   const status = useStore((s) => s.loadingStatus)

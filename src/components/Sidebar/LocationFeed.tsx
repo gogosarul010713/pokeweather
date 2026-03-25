@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef } from 'react'
-import { useStore, type City } from '../../data/useStore'
-import { calculateBadges } from '../../data/weatherService'
+import { useStore, type City } from '../../store/useStore'
+import { calculateBadges } from '../../services/weather/weatherService'
 import LocationCard from './LocationCard'
 
 interface LocationFeedProps {
