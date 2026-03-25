@@ -2,21 +2,15 @@
 // Hook principal de carga de datos climáticos desde AccuWeather API.
 // ⚠️ REQUIERE VITE_ACCUWEATHER_KEY configurada en .env.local
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { loadCitiesInBatch } from '../services/weather/batchWeatherService'
 import { getS2Key } from '../services/geo/s2Service'
 import { shouldRefreshCities, setLastUpdateHour, getCachedWeather } from '../services/cache/cacheService'
+import { msUntilNextHour } from '../utils/timeUtils'
 import type { City } from '../store/useStore'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const msUntilNextHour = (): number => {
-  const now = new Date()
-  const next = new Date(now)
-  next.setHours(next.getHours() + 1, 0, 0, 0)
-  return next.getTime() - now.getTime()
-}
 
 const calculateLocalTime = (timezone: number): string => {
   const now = new Date()
@@ -109,15 +103,19 @@ export function useWeather() {
   const setLoadingProgress = useStore((s) => s.setLoadingProgress)
   const setLastUpdated = useStore((s) => s.setLastUpdated)
   const refreshRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onReadyRef = useRef<(cities: City[]) => void>(() => {})
 
-  const loadCities = useCallback(async (): Promise<City[]> => {
+  // Toast state para notificaciones durante auto-refresh
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  const loadCities = useCallback(async (forceRefresh: boolean = false): Promise<City[]> => {
     // Cargar ciudades del JSON (siempre)
     const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
     const cities = transformCitiesToCityFormat(rawCities)
     const total = cities.length
 
     // Verificar si debe refrescar (estrategia Lazy Load Horario)
-    const needsRefresh = shouldRefreshCities()
+    const needsRefresh = forceRefresh || shouldRefreshCities()
 
     if (!needsRefresh) {
       console.log(`⏭️  Hora no cambió. Cargando desde caché IndexedDB...`)
@@ -144,20 +142,23 @@ export function useWeather() {
 
     // ─ Refrescar desde API ─
     const apiKey = getApiKey() // ⚠️ Throws si no está configurada
-    console.log(`🌍 Loading ${total} cities from AccuWeather API...`)
+    const isAutoRefresh = forceRefresh && !shouldRefreshCities()
+    console.log(`🌍 Loading ${total} cities from AccuWeather API${isAutoRefresh ? ' (auto-refresh)' : ''}...`)
     setLoadingStatus('loading')
 
     try {
       // Cargar clima en batch desde AccuWeather
+      // Para auto-refresh (HH:00), ignorar caché para obtener datos frescos
       const batchResult = await loadCitiesInBatch(cities, apiKey, {
         parallelLimit: 5,
         delayMs: 200,
+        ignoreCache: forceRefresh,  // ← Nuevo: fuerza fetch si es auto-refresh
       })
 
-      // Log de métricas
+      // Log de métricas — Lazy Load Horario
       console.log(
-        `✅ Batch load: ${batchResult.successful.length}/${total} ciudades, ` +
-        `${batchResult.metrics.cachedHits} cache hits, ` +
+        `🔄 Auto-refresh HH:00 — ${batchResult.metrics.cachedHits} cache hits, ` +
+        `${batchResult.successful.length}/${total} ciudades actualizadas, ` +
         `${batchResult.metrics.totalCalls} API calls, ` +
         `${batchResult.metrics.executionMs}ms`
       )
@@ -197,8 +198,73 @@ export function useWeather() {
     }
   }, [setLoadingStatus, setLoadingProgress])
 
+  // Visibility API: pausa refresh si app en background
+  const handleVisibilityChange = useCallback(() => {
+    if (document.hidden) {
+      // App en background: pausar auto-refresh
+      if (refreshRef.current) {
+        clearTimeout(refreshRef.current)
+        refreshRef.current = null
+        console.log('⏸️ Auto-refresh pausado (app en background)')
+      }
+    } else {
+      // App visible nuevamente
+      console.log('▶️ App visible — verificando si necesita refresh automático')
+      // Si ya pasó la HH:00 mientras estaba oculta → refrescar ahora
+      if (shouldRefreshCities()) {
+        console.log('⚡ Detectada actualización pendiente, refrescando ahora...')
+        // La siguiente carga verificará shouldRefreshCities() = true
+      }
+    }
+  }, [])
+
+  const scheduleNextRefresh = useCallback(() => {
+    // Limpiar timer anterior si existe
+    if (refreshRef.current) {
+      clearTimeout(refreshRef.current)
+      refreshRef.current = null
+    }
+
+    // No programar si app está oculta
+    if (document.hidden) {
+      console.log('⏸️ No se programa refresh (app oculta)')
+      return
+    }
+
+    const msUntilNext = msUntilNextHour()
+    console.log(`⏰ Próximo auto-refresh en ${Math.round(msUntilNext / 1000)}s (${new Date(Date.now() + msUntilNext).toLocaleTimeString()})`)
+
+    refreshRef.current = setTimeout(async () => {
+      console.log('🔄 Trigger auto-refresh HH:00')
+      setToastMessage('Actualizando clima...')
+
+      try {
+        // forceRefresh=true → ignora shouldRefreshCities, usa ignoreCache en batch
+        const refreshed = await loadCities(true)
+        setLoadingStatus('ready')
+        setLastUpdated(Date.now())
+        onReadyRef.current(refreshed)
+
+        // Toast desaparece automáticamente en 3s
+        setTimeout(() => setToastMessage(null), 3000)
+
+        // Programar siguiente refresh
+        scheduleNextRefresh()
+      } catch (error) {
+        console.error('❌ Auto-refresh error:', error)
+        setToastMessage('Error actualizando clima')
+        setLoadingStatus('error')
+        // Reintentar en 1 minuto
+        refreshRef.current = setTimeout(() => scheduleNextRefresh(), 60 * 1000)
+      }
+    }, msUntilNext)
+  }, [loadCities, setLoadingStatus, setLastUpdated, setToastMessage])
+
   const run = useCallback(
     async (onReady: (cities: City[]) => void) => {
+      // Guardar onReady en ref para poder usarla en auto-refresh
+      onReadyRef.current = onReady
+
       try {
         const cities = await loadCities()
 
@@ -219,27 +285,23 @@ export function useWeather() {
         setLastUpdated(Date.now())
         onReady(cities)
 
-        // Refresh automático en la próxima HH:00
-        if (refreshRef.current) clearTimeout(refreshRef.current)
-        refreshRef.current = setTimeout(async () => {
-          const refreshed = await loadCities()
-          setLoadingStatus('ready')
-          setLastUpdated(Date.now())
-          onReady(refreshed)
-        }, msUntilNextHour())
+        // Programar auto-refresh + Visibility listener
+        scheduleNextRefresh()
+        document.addEventListener('visibilitychange', handleVisibilityChange)
       } catch {
         setLoadingStatus('error')
       }
     },
-    [loadCities, setLoadingStatus, setLastUpdated],
+    [loadCities, setLoadingStatus, setLastUpdated, scheduleNextRefresh, handleVisibilityChange],
   )
 
-  // Limpia el timer al desmontar
+  // Limpia timers y listeners al desmontar
   useEffect(() => {
     return () => {
       if (refreshRef.current) clearTimeout(refreshRef.current)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [])
+  }, [handleVisibilityChange])
 
-  return { run }
+  return { run, toastMessage, setToastMessage }
 }
