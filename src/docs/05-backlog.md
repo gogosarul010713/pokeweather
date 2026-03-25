@@ -650,6 +650,77 @@
 
 ---
 
+### US-604 · Lazy Load Horario — Refresh automático HH:00
+**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ⏳ En progreso · **Sprint:** 6 (actual)
+
+**Como** usuario,
+**quiero** que el clima se actualice automáticamente cada hora (a HH:00 exacto),
+**para** tener datos frescos sin gastar batería ni consumir API innecesariamente.
+
+**Criterios de aceptación:**
+
+#### 1. Timer Automático
+- [ ] `useWeather.ts`: calcula ms hasta próxima HH:00 (helper `msUntilNextHour`)
+- [ ] Al iniciar hook, `setTimeout` dispara refresh en HH:00
+- [ ] Timer se reseta después cada actualización
+- [ ] Listener de Visibility API (pausa si tab oculta)
+
+#### 2. Comportamiento Lazy Load
+- [ ] NO actualizar si app está en background
+- [ ] Si usuario cierra app a 3:50 pm y abre a 4:30 pm → detecta HH:00 y refrescar
+- [ ] Si usuario permanece en app, refresh transparente a HH:00
+
+#### 3. UX & Transición
+- [ ] Toast/Banner en header: "Actualizando clima..." + spinner (500ms-5s)
+- [ ] Fade-out/in de datos (200ms) al reemplazar clima
+- [ ] SyncBadge muestra "Sincronizando..." durante refresh
+- [ ] Si modal LocationDetail abierto → cerrar + mostrar Toast + reabrir LocationFeed
+
+#### 4. Caché Dinámico — TTL hasta HH:00
+- [ ] `cacheService.ts`: Agregar helper `msUntilNextHour()`
+- [ ] `setCachedWeather()`: TTL dinámico = `now + msUntilNextHour()`
+- [ ] `getCachedWeather()`: Verifica expiración absoluta (`_expiresAt` < now)
+- [ ] Cache expira automáticamente a HH:00 exacto
+- [ ] Si user entra después de HH:00, detecta caché expirado → fetcha nuevos datos
+
+#### 5. Auto-refresh a HH:00
+- [ ] Auto-refresh **ignora cache** — siempre fetcha de API
+- [ ] Batch processing: máx 5 ciudades paralelo (reutilizar `batchWeatherService`)
+- [ ] Rate limit: 200ms delay entre batches
+- [ ] Guarda con TTL dinámico (hasta próxima HH:00)
+
+#### 6. Logging & Debugging
+- [ ] Console: `🔄 Auto-refresh HH:00 — X ciudades actualizadas, Y cache hits`
+- [ ] Timestamp: `setLastUpdateHour()` al terminar
+- [ ] Métrica: `metrics.executionMs` en console
+- [ ] Accesible desde DevTools: `pweCache.lastRefreshTime`
+
+### Estimado API Consumption
+- Promedio: ~600-1,200 calls/mes (< presupuesto 15k)
+- Pico: 282 calls por refresh horario (100% cache miss)
+
+### Detalles Técnicos
+
+**Archivos a modificar:**
+- `src/services/cache/cacheService.ts` — TTL dinámico + helper msUntilNextHour
+- `src/hooks/useWeather.ts` — Timer + Visibility API listener
+- `src/components/UI/Toast.tsx` (crear si no existe) — Notificación durante refresh
+- `src/index.css` — Transición fade (si no existe)
+- `src/services/weather/batchWeatherService.ts` — Agregar opción `ignoreCache`
+
+**No modificar:**
+- Resto de servicios
+
+**Definición de "Listo"**
+- ✅ 94 ciudades refrescan cada hora si app está abierta
+- ✅ Zero API calls si app cerrada
+- ✅ Cache expira automáticamente a HH:00
+- ✅ Consumo <15k calls/mes validado
+- ✅ Toast visible, fade suave
+- ✅ Sin console errors
+
+---
+
 ## EP-10 · Responsive
 
 ### US-701 · Layout tablet (768–1024px)

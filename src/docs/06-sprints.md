@@ -270,34 +270,46 @@ src/components/Sidebar/LocationCard.tsx
 
 ---
 
-## SPRINT 6 — AccuWeather Real + Calidad
+## SPRINT 6 — AccuWeather Real + Lazy Load Horario
 
-**Objetivo:** Integrar la API real de AccuWeather, con manejo de caché optimizado, refresh automático en la hora exacta, y flag de clima extremo con indicadores visuales.
+**Objetivo:** Integrar la API real de AccuWeather con caché dinámico inteligente y refresh automático sin desperdicio de API. Implementar lazy load horario que actualiza a HH:00 exacto solo si hay usuarios activos.
 
 **Definition of Done:**
-- Con `VITE_ACCUWEATHER_KEY` configurada: los datos son reales de AccuWeather
-- Caché de locationKey en localStorage (no se repite la llamada de geoposición)
-- Datos climáticos en IndexedDB con TTL 60 min
-- SyncBadge muestra minutos desde última actualización
-- Ciudades con clima extremo tienen indicador visual
+- ✅ Con `VITE_ACCUWEATHER_KEY` configurada: datos reales de AccuWeather
+- ✅ Caché de locationKey en localStorage (permanente)
+- ✅ SyncBadge muestra minutos desde última actualización
+- ✅ Ciudades con clima extremo tienen indicador visual (🌫️ badge)
+- 🔄 **Nuevo:** TTL dinámico — cache expira a HH:00 exacto (no 60 min fijos)
+- 🔄 **Nuevo:** Auto-refresh a HH:00 sin consumir API si app cerrada
+- 🔄 **Nuevo:** Toast + fade transition durante refresh automático
+- 🔄 **Nuevo:** Consumo <15k calls/mes validado
 
 ### US incluidas
 
-| US | Nombre | SP |
-|----|--------|----|
-| US-601 | Integración AccuWeather completa | 8 |
-| US-602 | Refresh automático horario | 3 |
-| US-603 | isExtreme flag y alertas | 3 |
-| **Total** | | **14 SP** |
+| US | Nombre | SP | Estado |
+|----|--------|----|--------|
+| US-601 | Integración AccuWeather completa | 8 | ✅ Completado |
+| US-602 | Refresh automático horario (v1) | 3 | ✅ Completado |
+| US-603 | isExtreme flag y alertas | 3 | ✅ Completado |
+| **US-604** | **Lazy Load Horario + TTL dinámico** | **5** | **🔄 En progreso** |
+| **Total** | | **19 SP** | |
 
 ### Archivos modificados en Sprint 6
 
 ```
-src/data/weatherService.js   (agregar fetch functions)
-src/data/useWeather.js       (branch real vs mock + refresh)
-src/components/Sidebar/LocationCard.jsx    (isExtreme indicator)
-src/components/Map/MapPin.jsx              (glowPulse si isExtreme)
-src/components/Map/CityTooltip.jsx         (mensaje clima extremo)
+✅ src/data/weatherService.ts   (fetch functions)
+✅ src/hooks/useWeather.ts       (real vs mock + básico refresh)
+
+🔄 src/services/cache/cacheService.ts    (↦ TTL dinámico + msUntilNextHour helper)
+🔄 src/hooks/useWeather.ts               (↦ Timer + Visibility API listener + auto-refresh)
+🔄 src/services/weather/batchWeatherService.ts  (↦ ignoreCache option)
+
+✅ src/components/Sidebar/LocationCard.tsx    (isExtreme indicator)
+✅ src/components/Map/MapPin.tsx              (glowPulse si isExtreme)
+✅ src/components/Map/CityTooltip.tsx         (mensaje clima extremo)
+
+🔄 src/components/UI/Toast.tsx           (← crear para notificaciones)
+🔄 src/index.css                         (← fade transition)
 ```
 
 ---
@@ -364,5 +376,5 @@ Sprint 6 (API real) ────────────────────
 | Sprint 3 | ✅ Completado (refactorizado + polish 2026-03-21) |
 | Sprint 4 | ✅ Completado (2026-03-21) |
 | Sprint 5 | ✅ Completado (2026-03-22) — Badges, filtros, auto-scroll, z-index fix |
-| Sprint 6 | ⏳ Pendiente |
+| **Sprint 6** | **🔄 En progreso (2026-03-25)** — US-601/602/603 ✅, US-604 🔄 Lazy Load Horario |
 | Sprint 7 | ⏳ Pendiente |
