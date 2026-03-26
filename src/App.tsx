@@ -60,7 +60,7 @@ export default function App() {
         <LoadingScreen />
 
         {/* ── HEADER ── */}
-        <Header />
+        <Header cities={cities} />
 
         {/* ── BODY ── */}
         <div className="app-body">

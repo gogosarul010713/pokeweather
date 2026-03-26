@@ -1,9 +1,19 @@
+import { useState } from 'react'
 import Brand from './Brand'
 import ThemeToggle from './ThemeToggle'
 import SyncBadge from '../UI/SyncBadge'
 import FilterPanel from './FilterPanel'
+import TestingButton from './TestingButton'
+import TestingTools from '../TestingTools/TestingTools'
+import type { City } from '../../store/useStore'
 
-export default function Header() {
+interface HeaderProps {
+  cities?: City[]
+}
+
+export default function Header({ cities = [] }: HeaderProps) {
+  const [isTestingOpen, setIsTestingOpen] = useState(false)
+
   return (
     <>
       <style>{`
@@ -38,12 +48,16 @@ export default function Header() {
         {/* Centro — filtros + búsqueda */}
         <FilterPanel />
 
-        {/* Derecha — sync + tema */}
+        {/* Derecha — testing + sync + tema */}
         <div className="hd-right">
+          <TestingButton onClick={() => setIsTestingOpen(true)} />
           <SyncBadge />
           <ThemeToggle />
         </div>
       </header>
+
+      {/* Testing Tools Drawer */}
+      <TestingTools cities={cities} isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
     </>
   )
 }

@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
     "idb-keyval": "^6.2.2",
     "leaflet": "^1.9.4",
     "react": "^19.2.4",
