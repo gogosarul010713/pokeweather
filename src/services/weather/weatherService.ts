@@ -7,13 +7,15 @@
 import type { WeatherCondition } from '../../config/weatherImages'
 
 // ─── Mapeo AccuWeather WeatherIcon → condición base ───────────────────────────
+// Referencia: Bulbapedia, GamePress, pgo-weatherbot, Pokémon GO Hub
+// Niantic usa los icon IDs de AccuWeather como tabla de lookup (1:1 con estados de PGO)
 
 export const ACCUWEATHER_TO_CONDITION: Record<string, number[]> = {
   sunny:  [1, 2, 3, 4, 30, 33, 34],
   partly: [5, 6, 35, 36],
-  cloudy: [7, 8, 38],
-  fog:    [11, 37],
-  rain:   [12, 13, 14, 15, 16, 17, 18, 40, 41, 42],
+  cloudy: [7, 8, 11, 37, 38],  // ✅ Incluye 11, 37 (niebla ligera = nublado)
+  fog:    [],                   // ✅ Vacío (FOG se detecta por visibilidad < 1km)
+  rain:   [12, 13, 14, 15, 16, 17, 40, 41, 42],  // ✅ Sin 18 (lluvia fuerte parcial)
   snow:   [19, 20, 21, 22, 23, 24, 25, 26, 29, 43, 44],
 }
 
@@ -103,10 +105,25 @@ export const getBaseCondition = (iconId: number): WeatherCondition => {
   return 'cloudy'
 }
 
-export const resolveCondition = (iconId: number, windKmh: number, gustKmh: number): WeatherCondition => {
+export const resolveCondition = (
+  iconId: number,
+  windKmh: number,
+  gustKmh: number,
+  visibilityKm?: number
+): WeatherCondition => {
   const base = getBaseCondition(iconId)
+
+  // Niebla DENSA (visibility < 1km) reemplaza base state
+  // GamePress: "FOG es una condición rara, solo cuando visibilidad está muy baja"
+  if (visibilityKm !== undefined && visibilityKm < 1) {
+    return 'fog'
+  }
+
+  // WINDY reemplaza sunny/partly/cloudy si viento es suficiente
+  // pgo-weatherbot: windKmh >= 24.1 OR gustKmh >= 35.4
   const isWindy = windKmh >= WINDY_WIND_KMH || gustKmh >= WINDY_GUST_KMH
   if (isWindy && ['sunny', 'partly', 'cloudy'].includes(base)) return 'windy'
+
   return base
 }
 
@@ -128,6 +145,7 @@ interface HourlyForecastData {
   Wind: { Speed: { Value: number } }
   WindGust: { Speed: { Value: number } }
   HasPrecipitation: boolean
+  Visibility?: { Value: number }  // ← Para detectar FOG (km)
 }
 
 export const getAccuWeatherLocationKey = async (
@@ -211,7 +229,12 @@ export const fetchCityWeather = async (
     ])
 
     // 3. Calcular condición y tipos
-    const condition = resolveCondition(forecast.WeatherIcon, forecast.Wind.Speed.Value, forecast.WindGust.Speed.Value)
+    const condition = resolveCondition(
+      forecast.WeatherIcon,
+      forecast.Wind.Speed.Value,
+      forecast.WindGust.Speed.Value,
+      forecast.Visibility?.Value  // ← Visibilidad en km para FOG
+    )
     const boostedTypes = CONDITION_TO_TYPES[condition]
     const isExtreme = isExtremeWeather(alerts)
 
@@ -226,6 +249,7 @@ export const fetchCityWeather = async (
       humidity: forecast.RelativeHumidity,
       windKmh: forecast.Wind.Speed.Value,
       gustKmh: forecast.WindGust.Speed.Value,
+      visibilityKm: forecast.Visibility?.Value ?? 10,  // ← Default 10km si no viene
       weatherIcon: forecast.WeatherIcon,
       accuLocationKey: locationKey,
       updatedAt: Date.now(),
@@ -267,6 +291,7 @@ export function enrichCityWithWeatherData(
       humidity: 0,
       windKmh: 0,
       gustKmh: 0,
+      visibilityKm: 10,
       weatherIcon: 0,
       weatherImage: '/weather/cloudy.png',
       updatedAt: Date.now(),

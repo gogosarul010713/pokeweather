@@ -87,6 +87,7 @@ function transformCitiesToCityFormat(jsonCities: any[]): City[] {
     humidity: 0,
     windKmh: 0,
     gustKmh: 0,
+    visibilityKm: 10,
     localTime: '',
     s2Key: getS2Key(c.lat, c.lng),
     accuLocationKey: '',

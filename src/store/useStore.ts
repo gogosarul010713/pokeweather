@@ -30,6 +30,7 @@ export interface City {
   humidity: number
   windKmh: number
   gustKmh: number
+  visibilityKm: number  // ← Para detectar FOG
   localTime: string
   s2Key: string
   accuLocationKey: string
