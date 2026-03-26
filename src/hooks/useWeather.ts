@@ -25,8 +25,9 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
   const result: City[] = []
 
   for (const city of cities) {
-    // Buscar caché por city.id (no por s2Key — ciudades cercanas pueden compartir s2Key)
-    const cached = await getCachedWeather(city.id)
+    // ✅ FIX #2: Buscar caché por locationKey (sincronizado con batchWeatherService)
+    // Nota: US-605 guarda datos por locationKey, no por city.id
+    const cached = await getCachedWeather(city.s2Key)  // Usar s2Key como proxy de locationKey
     if (cached) {
       // Preservar id/name/lat/lon del city original — nunca del caché
       const merged = {
@@ -104,6 +105,7 @@ export function useWeather() {
   const setLastUpdated = useStore((s) => s.setLastUpdated)
   const refreshRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onReadyRef = useRef<(cities: City[]) => void>(() => {})
+  const loadingCitiesRef = useRef<boolean>(false)  // ✅ FIX #1: Evitar doble ejecución en React Strict Mode
 
   // Toast state para notificaciones durante auto-refresh
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -262,21 +264,32 @@ export function useWeather() {
 
   const run = useCallback(
     async (onReady: (cities: City[]) => void) => {
+      // ✅ FIX #1: Protección contra React Strict Mode double-call
+      if (loadingCitiesRef.current) {
+        console.log('⏭️ loadCities ya en progreso, ignorando llamada duplicada (Strict Mode)')
+        return
+      }
+      loadingCitiesRef.current = true
+
       // Guardar onReady en ref para poder usarla en auto-refresh
       onReadyRef.current = onReady
 
       try {
-        const cities = await loadCities()
+        let cities = await loadCities()
 
-        // DEBUG: Verificar duplicados
+        // ✅ FIX #3: Deduplicación defensiva
         const ids = cities.map(c => c.id)
         const uniqueIds = new Set(ids)
         if (ids.length !== uniqueIds.size) {
-          console.error('❌ DUPLICATES DETECTED:', {
-            total: ids.length,
-            unique: uniqueIds.size,
-            array: cities.map(c => `${c.name}(${c.id})`)
+          console.warn('⚠️ Duplicados detectados, deduplicando...')
+          // Mantener primer elemento de cada id único
+          const seen = new Set<string>()
+          cities = cities.filter(city => {
+            if (seen.has(city.id)) return false
+            seen.add(city.id)
+            return true
           })
+          console.log(`✅ Deduplicadas: ${ids.length} → ${cities.length}`)
         } else {
           console.log('✅ Array limpio:', ids.length, 'ciudades únicas')
         }
@@ -290,6 +303,8 @@ export function useWeather() {
         document.addEventListener('visibilitychange', handleVisibilityChange)
       } catch {
         setLoadingStatus('error')
+      } finally {
+        loadingCitiesRef.current = false  // Permitir siguiente carga
       }
     },
     [loadCities, setLoadingStatus, setLastUpdated, scheduleNextRefresh, handleVisibilityChange],
