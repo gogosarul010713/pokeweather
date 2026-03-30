@@ -30,4 +30,6 @@ dist-ssr
 
 # Vercel — contiene projectId y orgId (no subir)
 .vercel
-.vercel
+
+# Archivos de ejemplo con valores reales — nunca subir
+.env.example
