@@ -187,6 +187,12 @@ import type { WeatherData } from '../cache/cacheService'
 import { getS2Key } from '../geo/s2Service'
 import type { City } from '../../store/useStore'
 
+// En dev: llamada directa (localhost no tiene CORS)
+// En prod: proxy via Vercel (evita CORS desde dominio de producción)
+const ACCUWEATHER_BASE = import.meta.env.DEV
+  ? 'https://dataservice.accuweather.com'
+  : '/api/accuweather'
+
 interface HourlyForecastData {
   WeatherIcon: number
   Temperature: { Value: number }
@@ -210,7 +216,7 @@ export const getAccuWeatherLocationKey = async (
   if (cached) return cached
 
   // 2. Llamar API
-  const url = `https://dataservice.accuweather.com/locations/v1/cities/geoposition/search` +
+  const url = `${ACCUWEATHER_BASE}/locations/v1/cities/geoposition/search` +
     `?apikey=${apiKey}&q=${lat},${lon}&toplevel=true`
 
   const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
@@ -231,7 +237,7 @@ export const getHourlyForecast = async (
   locationKey: string,
   apiKey: string
 ): Promise<HourlyForecastData> => {
-  const url = `https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}` +
+  const url = `${ACCUWEATHER_BASE}/forecasts/v1/hourly/12hour/${locationKey}` +
     `?apikey=${apiKey}&details=true&metric=true`
 
   const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
@@ -248,7 +254,7 @@ export const getAlerts = async (
   apiKey: string
 ): Promise<unknown[]> => {
   try {
-    const url = `https://dataservice.accuweather.com/alerts/v1/${locationKey}` +
+    const url = `${ACCUWEATHER_BASE}/alerts/v1/${locationKey}` +
       `?apikey=${apiKey}&details=true`
 
     const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
