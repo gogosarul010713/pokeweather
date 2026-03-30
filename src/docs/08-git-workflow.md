@@ -401,15 +401,20 @@ git checkout -b sprint-5 <commit-hash>
 
 ## CHECKLIST: Terminar Sprint Correctamente
 
-- [ ] Todas las US mergeadas a sprint-5
+- [ ] Todas las US mergeadas a sprint-N
 - [ ] `npm run build` sin errores
+- [ ] `npm run lint` sin errores
+- [ ] `npm run test -- --run` pasa localmente
 - [ ] Probar funcionalidades principales en navegador
-- [ ] Mergear sprint-5 a develop
-- [ ] Mergear develop a main
-- [ ] Crear tag `v2.x.0` con descripción
+- [ ] Mergear sprint-N a develop
+- [ ] Mergear develop a main → **CI/CD se activa automáticamente**
+- [ ] Crear tag `v2.x.0` con descripción (ver VERSIONADO SEMÁNTICO)
 - [ ] Push tag a remoto
-- [ ] Verificar en GitHub que release existe
-- [ ] Eliminar rama sprint-5 (opcional)
+- [ ] Verificar en GitHub que CI verde ✅
+- [ ] Verificar en Vercel que deploy production OK ✅
+- [ ] Eliminar rama sprint-N (opcional, después de probar en main)
+
+> CI/CD workflow: ver `docs/09-cicd.md` para configuración inicial y detalle de pipelines.
 
 ---
 
