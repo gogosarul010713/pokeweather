@@ -63,6 +63,8 @@ Lee el archivo correspondiente antes de trabajar en esa área:
 | `docs/06-sprints.md` | Para ver el plan de sprints y en qué US estamos |
 | `docs/07-badges.md` | Sistema de categorías y filtros por badges (Sprint 5) |
 | `docs/08-git-workflow.md` | Flujo Git Flow, ramas, commits, versionado semántico (Sprint 5) |
+| `docs/20-weather-classification-algorithm.md` | Algoritmo completo de clasificación clima AccuWeather → Pokémon GO (tablas, umbrales, dedup) |
+| `docs/21-refactor-weather-algorithm.md` | Plan de refactorización del algoritmo de clima (8 pasos, status tracking) |
 
 ---
 

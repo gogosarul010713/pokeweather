@@ -1,49 +1,87 @@
 [
-  {"name":"Shibuya / Harajuku","country":"Japón","flag":"🇯🇵","region":"asia","lat":35.670065,"lng":139.694966,"density":142,"stops":890,"gyms":54,"rating":5,"tags":["evento","turistico","raid"],"tips":"La zona más densa de Tokio. Parque Yoyogi tiene cientos de stops en 500m de radio.","best":"Parque Yoyogi, Cruce Shibuya, Harajuku","evento":"Safari Zone frecuente, Community Days masivos","transporte":"Metro Yamanote Line"},
-  {"name":"Shinjuku","country":"Japón","flag":"🇯🇵","region":"asia","lat":35.685176,"lng":139.710052,"density":138,"stops":820,"gyms":49,"rating":5,"tags":["evento","turistico","raid","nidos"],"tips":"Shinjuku Gyoen y los alrededores de la estación son excepcionales para raids.","best":"Shinjuku Gyoen, Kabukicho, Est. Shinjuku","evento":"Eventos Niantic frecuentes","transporte":"Estación Shinjuku central"},
-
-  {"name":"Gangnam, Seúl","country":"Corea del Sur","flag":"🇰🇷","region":"asia","lat":37.511835,"lng":127.059787,"density":118,"stops":670,"gyms":40,"rating":5,"tags":["evento","raid","turistico"],"tips":"Gangnam e Itaewon: altísima densidad. Comunidad coreana muy organizada.","best":"COEX Mall, Itaewon, Hongdae","evento":"Safari Zone Seúl 2023","transporte":"Metro Línea 2 verde"},
-  {"name":"Hongdae, Seúl","country":"Corea del Sur","flag":"🇰🇷","region":"asia","lat":37.556197,"lng":126.925034,"density":112,"stops":640,"gyms":38,"rating":5,"tags":["evento","nidos","raid"],"tips":"Zona universitaria con alta densidad y comunidad joven muy activa.","best":"Hongdae, World Cup Park, Sinchon","evento":"Community Days masivos","transporte":"Metro Línea 2/6"},
-
-  {"name":"Marina Bay","country":"Singapur","flag":"🇸🇬","region":"asia","lat":1.283757,"lng":103.859107,"density":134,"stops":760,"gyms":46,"rating":5,"tags":["turistico","raid","evento"],"tips":"Marina Bay Sands y Gardens by the Bay son puntos calientes mundiales.","best":"Marina Bay Sands, Gardens by the Bay, Merlion","evento":"Safari Zone Singapur 2019","transporte":"MRT Downtown/Circle Line"},
-  {"name":"Chinatown, Singapur","country":"Singapur","flag":"🇸🇬","region":"asia","lat":1.281516,"lng":103.844240,"density":126,"stops":710,"gyms":43,"rating":5,"tags":["turistico","raid"],"tips":"Cada templo y monumento histórico es un PokéStop. Densidad comparable a Tokio.","best":"Buddha Tooth Temple, Maxwell Food Centre","evento":"Raids coordinados frecuentes","transporte":"MRT NE Line Chinatown"},
-
-  {"name":"Daan, Taipei","country":"Taiwán","flag":"🇹🇼","region":"asia","lat":25.029659,"lng":121.536287,"density":124,"stops":690,"gyms":41,"rating":5,"tags":["evento","nidos","raid"],"tips":"Daan Forest Park y el Memorial de Chiang Kai-shek son de primer nivel mundial.","best":"Daan Forest Park, Ximending, Zhongzheng","evento":"Safari Zone Taipei 2023","transporte":"MRT Red/Green Line"},
-  {"name":"Ximending, Taipei","country":"Taiwán","flag":"🇹🇼","region":"asia","lat":25.044666,"lng":121.506310,"density":118,"stops":660,"gyms":40,"rating":5,"tags":["turistico","evento","raid"],"tips":"Zona de ocio más densa de Taipei, equivalente a Shibuya.","best":"Ximending, Longshan Temple, Bopiliao","evento":"Comunidad muy activa","transporte":"MRT Ximen Station"},
-
-  {"name":"Central, HK","country":"Hong Kong","flag":"🇭🇰","region":"asia","lat":22.282357,"lng":114.188697,"density":128,"stops":710,"gyms":42,"rating":5,"tags":["turistico","raid"],"tips":"Victoria Park y el paseo del puerto tienen stops cada 20 metros.","best":"Victoria Park, IFC, PMQ","evento":"Community Days activos","transporte":"MTR Island Line"},
-  {"name":"Mong Kok, HK","country":"Hong Kong","flag":"🇭🇰","region":"asia","lat":22.317609,"lng":114.170928,"density":120,"stops":670,"gyms":40,"rating":5,"tags":["turistico","raid","nidos"],"tips":"Una de las zonas más densas de HK. Mercados y templos llenos de stops.","best":"Ladies Market, Goldfish Market, Temple Street","evento":"Raids nocturnos frecuentes","transporte":"MTR Tsuen Wan Line"},
-
-  {"name":"Trocadéro / Centro, París","country":"Francia","flag":"🇫🇷","region":"europa","lat":48.862798,"lng":2.287604,"density":119,"stops":950,"gyms":58,"rating":5,"tags":["turistico","evento","raid"],"tips":"Tullerías, Campos Elíseos y Trocadéro. Stops en cada escultura y monumento.","best":"Tuileries, Champs-Élysées, Île de la Cité","evento":"Safari Zone París 2022 (Disneyland)","transporte":"RER A, Métro Ligne 1"},
-  {"name":"Le Marais, París","country":"Francia","flag":"🇫🇷","region":"europa","lat":48.855611,"lng":2.365527,"density":112,"stops":880,"gyms":53,"rating":5,"tags":["turistico","raid"],"tips":"El barrio judío y galerías de arte. Cada galería es un stop.","best":"Place des Vosges, Centre Pompidou, Bastille","evento":"Comunidad muy activa","transporte":"Métro Ligne 1/7/8"},
-
-  {"name":"Barri Gòtic, Barcelona","country":"España","flag":"🇪🇸","region":"europa","lat":41.381925,"lng":2.177305,"density":115,"stops":680,"gyms":40,"rating":5,"tags":["turistico","evento","raid"],"tips":"Barrio Gótico y Paseo de Gracia: stops en cada edificio modernista.","best":"Barri Gòtic, Passeig de Gràcia, Parc Güell","evento":"Safari Zone Barcelona 2019","transporte":"Metro L3/L4"},
-  {"name":"El Retiro, Madrid","country":"España","flag":"🇪🇸","region":"europa","lat":40.415258,"lng":-3.683466,"density":108,"stops":620,"gyms":37,"rating":4,"tags":["turistico","evento","raid"],"tips":"El parque del Retiro y el Paseo del Arte concentran densidad altísima.","best":"Parque del Retiro, Prado, Gran Vía","evento":"Community Days masivos en el Retiro","transporte":"Metro L2/L9 Retiro"},
-
-  {"name":"Hyde Park, Londres","country":"Reino Unido","flag":"🇬🇧","region":"europa","lat":51.507364,"lng":-0.164114,"density":112,"stops":920,"gyms":56,"rating":5,"tags":["turistico","evento","raid"],"tips":"Hyde Park, Regent's Park y South Bank. Cada museo tiene docenas de stops.","best":"Hyde Park, Trafalgar Square, South Bank","evento":"Community Days masivos en Hyde Park","transporte":"Underground Central/Jubilee Line"},
-  {"name":"Shoreditch, Londres","country":"Reino Unido","flag":"🇬🇧","region":"europa","lat":51.525752,"lng":-0.071998,"density":104,"stops":850,"gyms":51,"rating":4,"tags":["raid","nidos"],"tips":"East London con arte callejero. Cada mural es un stop potencial.","best":"Shoreditch, Brick Lane, Victoria Park","evento":"Comunidad activa de East London","transporte":"Overground/Elizabeth Line"},
-
-  {"name":"Mitte, Berlín","country":"Alemania","flag":"🇩🇪","region":"europa","lat":52.514534,"lng":13.350102,"density":96,"stops":590,"gyms":35,"rating":4,"tags":["turistico","raid"],"tips":"Tiergarten y la isla de los museos son zonas de alta densidad.","best":"Tiergarten, Museumsinsel, Unter den Linden","evento":"Safari Zone Dortmund cercano","transporte":"U-Bahn/S-Bahn Friedrichstr"},
-  {"name":"Múnich Centro","country":"Alemania","flag":"🇩🇪","region":"europa","lat":48.164232,"lng":11.605552,"density":94,"stops":540,"gyms":32,"rating":4,"tags":["turistico","raid","evento"],"tips":"Englischer Garten (más grande que Central Park) con densidad excepcional.","best":"Englischer Garten, Marienplatz, Olympiapark","evento":"GO Fest área Múnich, Community Days activos","transporte":"U-Bahn/S-Bahn Marienplatz"},
-
-  {"name":"Central Park, NYC","country":"EE.UU.","flag":"🇺🇸","region":"america","lat":40.782555,"lng":-73.965583,"density":106,"stops":1200,"gyms":72,"rating":5,"tags":["evento","raid","nidos","turistico"],"tips":"Central Park es el mejor lugar del mundo para eventos outdoor.","best":"Central Park, Times Square, The High Line","evento":"GO Fest NYC, múltiples Community Days","transporte":"Subway todas las líneas"},
-  {"name":"Chicago Grant Park","country":"EE.UU.","flag":"🇺🇸","region":"america","lat":41.873932,"lng":-87.619881,"density":102,"stops":580,"gyms":35,"rating":4,"tags":["evento","raid"],"tips":"Grant Park fue sede del primer GO Fest. Buena densidad en la orilla del lago Míchigan.","best":"Grant Park, Millennium Park, Navy Pier","evento":"GO Fest original 2017 y varios más","transporte":"CTA Red/Blue Line"},
-
-  {"name":"Ibirapuera, São Paulo","country":"Brasil","flag":"🇧🇷","region":"america","lat":-23.585960,"lng":-46.658435,"density":98,"stops":720,"gyms":43,"rating":4,"tags":["raid","nidos","evento"],"tips":"Parque Ibirapuera y Av. Paulista: juego intensivo con gran comunidad.","best":"Av. Paulista, Ibirapuera, Vila Madalena","evento":"Comunidad muy activa, eventos locales","transporte":"Metrô Linha 2 Verde"},
-  {"name":"Copacabana, Río","country":"Brasil","flag":"🇧🇷","region":"america","lat":-22.973873,"lng":-43.185310,"density":94,"stops":680,"gyms":41,"rating":4,"tags":["turistico","raid","nidos"],"tips":"Copacabana e Ipanema: densidad excepcional en el borde costero.","best":"Copacabana, Ipanema, Parque Lage","evento":"Eventos durante Carnaval y festivos","transporte":"Metrô Linha 1, buses"},
-
-  {"name":"Chapultepec, CDMX","country":"México","flag":"🇲🇽","region":"america","lat":19.419482,"lng":-99.189456,"density":88,"stops":810,"gyms":48,"rating":4,"tags":["evento","raid","nidos","turistico"],"tips":"El Bosque de Chapultepec es el Central Park de México.","best":"Chapultepec, Coyoacán, Zócalo, Roma/Condesa","evento":"Eventos masivos frecuentes","transporte":"Metro Línea 1/2, Metrobús"},
-  {"name":"Coyoacán, CDMX","country":"México","flag":"🇲🇽","region":"america","lat":19.349268,"lng":-99.163685,"density":84,"stops":470,"gyms":28,"rating":4,"tags":["turistico","nidos","raid"],"tips":"El jardín central y sus museos son un imán para nidos raros.","best":"Jardín Centenario, Museo Frida Kahlo, Viveros","evento":"Comunidad muy activa","transporte":"Metro Coyoacán L3"},
-
-  {"name":"Palermo, Buenos Aires","country":"Argentina","flag":"🇦🇷","region":"america","lat":-34.570880,"lng":-58.417103,"density":86,"stops":560,"gyms":33,"rating":4,"tags":["raid","nidos","evento"],"tips":"Bosques de Palermo = Central Park porteño. Puerto Madero y Recoleta también excelentes.","best":"Bosques de Palermo, Recoleta, Puerto Madero","evento":"Comunidad activa, raids coordinados","transporte":"Subte Línea D, colectivos"},
-  {"name":"San Telmo, Buenos Aires","country":"Argentina","flag":"🇦🇷","region":"america","lat":-34.620491,"lng":-58.371748,"density":80,"stops":450,"gyms":27,"rating":3,"tags":["turistico","raid"],"tips":"Barrio histórico con stops en plazas y murales del sur porteño.","best":"Plaza Dorrego, Caminito, Boca","evento":"Grupos de WhatsApp muy organizados","transporte":"Subte Línea C, colectivos"},
-
-  {"name":"Sydney CBD","country":"Australia","flag":"🇦🇺","region":"oceania","lat":-33.871520,"lng":151.211624,"density":108,"stops":640,"gyms":38,"rating":4,"tags":["turistico","raid","nidos"],"tips":"Sydney Harbour y Hyde Park son excelentes. Bondi Beach tiene densidad costera alta.","best":"Sydney Harbour, Hyde Park, Darling Harbour","evento":"Safari Zone Sydney 2019","transporte":"Train/Ferry desde Central"},
-  {"name":"Melbourne CBD","country":"Australia","flag":"🇦🇺","region":"oceania","lat":-37.812721,"lng":144.980068,"density":90,"stops":540,"gyms":32,"rating":4,"tags":["raid","nidos","evento"],"tips":"Fitzroy Gardens y el CBD Grid tienen densidad similar a ciudades europeas.","best":"Fitzroy Gardens, CBD, Southbank","evento":"Comunidad activa, eventos periódicos","transporte":"Tram City Circle (gratis)"},
-
-  {"name":"Auckland CBD","country":"Nueva Zelanda","flag":"🇳🇿","region":"oceania","lat":-36.842996,"lng":174.761586,"density":82,"stops":460,"gyms":27,"rating":3,"tags":["turistico","raid","nidos"],"tips":"El waterfront y las reservas volcánicas tienen buena densidad.","best":"Viaduct Harbour, Domain, Ponsonby","evento":"Comunidad NZ activa","transporte":"AT Metro/ferry"},
-  {"name":"Wellington","country":"Nueva Zelanda","flag":"🇳🇿","region":"oceania","lat":-41.290456,"lng":174.782089,"density":76,"stops":420,"gyms":25,"rating":3,"tags":["turistico","raid"],"tips":"Ciudad compacta: waterfront y Botanic Garden son puntos calientes.","best":"Te Papa Museum, Botanic Garden, Cuba Street","evento":"Comunidad Wellington activa","transporte":"Metlink bus"},
-
-  {"name":"Ciudad del Cabo","country":"Sudáfrica","flag":"🇿🇦","region":"africa","lat":-33.911798,"lng":18.422698,"density":72,"stops":400,"gyms":24,"rating":3,"tags":["turistico","nidos","raid"],"tips":"V&A Waterfront y Company's Garden tienen stops en cada escultura y museo.","best":"V&A Waterfront, Company's Garden, De Waal Park","evento":"Comunidad activa sudafricana","transporte":"MyCiTi bus, taxis"},
-  {"name":"Johannesburgo","country":"Sudáfrica","flag":"🇿🇦","region":"africa","lat":-26.108847,"lng":28.052720,"density":66,"stops":370,"gyms":22,"rating":3,"tags":["raid","nidos"],"tips":"Sandton y Rosebank tienen la mayor densidad. Zona norte más segura.","best":"Sandton City, Rosebank, Zoo Lake","evento":"Comunidad JHB activa","transporte":"Gautrain/Uber"}
+  {
+    "name": "Pier 39, San Francisco",
+    "country": "EE.UU.",
+    "flag": "🇺🇸",
+    "region": "america",
+    "lat": 37.808600,
+    "lng": -122.409800,
+    "density": 98,
+    "stops": 720,
+    "gyms": 38,
+    "rating": 5,
+    "tags": ["turistico", "raid", "nidos"],
+    "tips": "Pier 39 es uno de los puntos con mayor densidad de PokéStops del mundo. Alta tasa de spawns acuáticos y shinies.",
+    "best": "Pier 39, Fisherman's Wharf, Embarcadero",
+    "evento": "Community Days activos, spawns costeros frecuentes",
+    "transporte": "BART Embarcadero + F-Market streetcar"
+  },
+  {
+    "name": "Times Square / Midtown, NYC",
+    "country": "EE.UU.",
+    "flag": "🇺🇸",
+    "region": "america",
+    "lat": 40.755200,
+    "lng": -73.983000,
+    "density": 104,
+    "stops": 980,
+    "gyms": 58,
+    "rating": 5,
+    "tags": ["turistico", "raid", "evento", "nidos"],
+    "tips": "Midtown Manhattan: densidad extrema. Bryant Park y Times Square son puntos calientes con lures permanentes.",
+    "best": "Times Square, Bryant Park, Grand Central, High Line",
+    "evento": "GO Fest NYC, Community Days masivos",
+    "transporte": "Subway N/Q/R/W/1/2/3/7 Times Square"
+  },
+  {
+    "name": "Zaragoza Centro",
+    "country": "España",
+    "flag": "🇪🇸",
+    "region": "europa",
+    "lat": 41.661012,
+    "lng": -0.893407,
+    "density": 110,
+    "stops": 640,
+    "gyms": 38,
+    "rating": 5,
+    "tags": ["evento", "raid", "turistico"],
+    "tips": "Una de las ciudades europeas más densas por kilómetro cuadrado. El Casco Histórico y la Basílica del Pilar concentran cientos de stops en radio mínimo.",
+    "best": "Basílica del Pilar, Casco Histórico, Parque Grande",
+    "evento": "Safari Zone Zaragoza 2018, referente mundial de spoofing",
+    "transporte": "Tranvía línea 1, bus urbano"
+  },
+  {
+    "name": "Auckland Waterfront",
+    "country": "Nueva Zelanda",
+    "flag": "🇳🇿",
+    "region": "oceania",
+    "lat": -36.852095,
+    "lng": 174.763180,
+    "density": 84,
+    "stops": 480,
+    "gyms": 29,
+    "rating": 4,
+    "tags": ["turistico", "raid", "nidos"],
+    "tips": "Viaduct Harbour y el waterfront de Auckland tienen buena densidad costera. Útil para adelantar eventos por timezone UTC+13.",
+    "best": "Viaduct Harbour, Queens Wharf, Domain Park",
+    "evento": "Primera ciudad en activar eventos globales por timezone",
+    "transporte": "AT Metro, ferry desde Downtown"
+  },
+  {
+    "name": "Itaewon / Jung-gu, Seúl",
+    "country": "Corea del Sur",
+    "flag": "🇰🇷",
+    "region": "asia",
+    "lat": 37.567308,
+    "lng": 126.977133,
+    "density": 114,
+    "stops": 650,
+    "gyms": 39,
+    "rating": 5,
+    "tags": ["evento", "raid", "turistico"],
+    "tips": "Zona central de Seúl. Itaewon y Namsan son puntos calientes con comunidad internacional muy activa.",
+    "best": "Namsan Park, Itaewon, Gyeongbokgung Palace",
+    "evento": "Safari Zone Seúl 2023, raids coordinados frecuentes",
+    "transporte": "Metro Línea 6 Itaewon / Línea 4 Myeongdong"
+  }
 ]

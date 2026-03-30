@@ -204,8 +204,9 @@ function translateCondition(condition: string): string {
  * Muestra la lógica exacta usada para determinar el clima
  */
 function generateCalculationText(city: City): string {
-  const WINDY_WIND_KMH = 24.1
-  const WINDY_GUST_KMH = 35.4
+  // Umbrales de viento para override a Windy (Doc 20)
+  const WINDY_WIND_KMH = 29    // km/h - viento sostenido
+  const WINDY_GUST_KMH = 31    // km/h - ráfagas
 
   const lines: string[] = []
   lines.push(`IconID: ${city.weatherIcon}`)
@@ -226,7 +227,7 @@ function generateCalculationText(city: City): string {
     city.windKmh >= WINDY_WIND_KMH || city.gustKmh >= WINDY_GUST_KMH
   if (isWindy && ['Soleado', 'Parcial', 'Nublado'].includes(baseCondition)) {
     lines.push(`Wind: ${city.windKmh.toFixed(1)}km/h, Gust: ${city.gustKmh.toFixed(1)}km/h`)
-    lines.push(`→ ${city.windKmh.toFixed(1)} >= 24.1 OR ${city.gustKmh.toFixed(1)} >= 35.4 = WINDY`)
+    lines.push(`→ ${city.windKmh.toFixed(1)} >= ${WINDY_WIND_KMH} OR ${city.gustKmh.toFixed(1)} >= ${WINDY_GUST_KMH} = WINDY`)
     lines.push(`Resultado: VENTOSO`)
     return lines.join('\n')
   }

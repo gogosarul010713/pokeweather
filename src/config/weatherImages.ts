@@ -4,13 +4,13 @@
 
 export type WeatherCondition = 'sunny' | 'partly' | 'cloudy' | 'fog' | 'rain' | 'snow' | 'windy'
 
-// Placeholders: .svg — reemplazar por .png cuando estén los assets finales
+// Rutas de imágenes de clima (PNG)
 export const WEATHER_IMAGES: Record<WeatherCondition, string> = {
-  sunny:  '/weather/sunny.svg',
-  partly: '/weather/partly.svg',
-  cloudy: '/weather/cloudy.svg',
-  fog:    '/weather/fog.svg',
-  rain:   '/weather/rain.svg',
-  snow:   '/weather/snow.svg',
-  windy:  '/weather/windy.svg',
+  sunny:  '/weather/sunny.png',
+  partly: '/weather/partly.png',
+  cloudy: '/weather/cloudy.png',
+  fog:    '/weather/fog.png',
+  rain:   '/weather/rain.png',
+  snow:   '/weather/snow.png',
+  windy:  '/weather/windy.png',
 }
