@@ -205,6 +205,9 @@ export function useWeather() {
     }
   }, [setLoadingStatus, setLoadingProgress])
 
+  // Ref para quebrar la circular dependency entre doRefresh y scheduleNextRefresh
+  const scheduleNextRefreshRef = useRef<() => void>(() => {})
+
   // ✅ FIX: Helper para ejecutar refresh y reprogramar siguiente
   const doRefresh = useCallback(async () => {
     setToastMessage('Actualizando clima...')
@@ -214,14 +217,42 @@ export function useWeather() {
       setLastUpdated(Date.now())
       onReadyRef.current(refreshed)
       setTimeout(() => setToastMessage(null), 3000)
-      scheduleNextRefresh()
+      scheduleNextRefreshRef.current()
     } catch (error) {
       console.error('❌ Auto-refresh error:', error)
       setToastMessage('Error actualizando clima')
       setLoadingStatus('error')
-      refreshRef.current = setTimeout(() => scheduleNextRefresh(), 60 * 1000)
+      refreshRef.current = setTimeout(() => scheduleNextRefreshRef.current(), 60 * 1000)
     }
   }, [loadCities, setLoadingStatus, setLastUpdated, setToastMessage])
+
+  // Reprogramar siguiente refresh a HH:00
+  const scheduleNextRefresh = useCallback(() => {
+    // Limpiar timer anterior si existe
+    if (refreshRef.current) {
+      clearTimeout(refreshRef.current)
+      refreshRef.current = null
+    }
+
+    // No programar si app está oculta
+    if (document.hidden) {
+      console.log('⏸️ No se programa refresh (app oculta)')
+      return
+    }
+
+    const msUntilNext = msUntilNextHour()
+    console.log(`⏰ Próximo auto-refresh en ${Math.round(msUntilNext / 1000)}s (${new Date(Date.now() + msUntilNext).toLocaleTimeString()})`)
+
+    refreshRef.current = setTimeout(() => {
+      console.log('🔄 Trigger auto-refresh HH:00')
+      doRefresh()
+    }, msUntilNext)
+  }, [doRefresh])
+
+  // Actualizar ref después de que scheduleNextRefresh esté definida
+  useEffect(() => {
+    scheduleNextRefreshRef.current = scheduleNextRefresh
+  }, [scheduleNextRefresh])
 
   // Visibility API: pausa/reschedule refresh según visibilidad
   const handleVisibilityChange = useCallback(() => {
@@ -245,28 +276,6 @@ export function useWeather() {
       }
     }
   }, [doRefresh, scheduleNextRefresh])
-
-  const scheduleNextRefresh = useCallback(() => {
-    // Limpiar timer anterior si existe
-    if (refreshRef.current) {
-      clearTimeout(refreshRef.current)
-      refreshRef.current = null
-    }
-
-    // No programar si app está oculta
-    if (document.hidden) {
-      console.log('⏸️ No se programa refresh (app oculta)')
-      return
-    }
-
-    const msUntilNext = msUntilNextHour()
-    console.log(`⏰ Próximo auto-refresh en ${Math.round(msUntilNext / 1000)}s (${new Date(Date.now() + msUntilNext).toLocaleTimeString()})`)
-
-    refreshRef.current = setTimeout(() => {
-      console.log('🔄 Trigger auto-refresh HH:00')
-      doRefresh()
-    }, msUntilNext)
-  }, [doRefresh])
 
   const run = useCallback(
     async (onReady: (cities: City[]) => void) => {
