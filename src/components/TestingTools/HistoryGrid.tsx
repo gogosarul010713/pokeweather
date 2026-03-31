@@ -81,14 +81,19 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
   }
 
   const handleVerificar = (entry: HistoryEntry) => {
+    console.log('🔍 handleVerificar clicked:', entry.ciudad.name, entry.fecha)
+    console.log('📦 Entry data:', entry)
     setSelectedEntry(entry)
+    console.log('✅ setSelectedEntry executed')
   }
 
   const handlePopoverClose = () => {
+    console.log('❌ handlePopoverClose: clearing selectedEntry')
     setSelectedEntry(null)
   }
 
   const handlePopoverUpdated = async () => {
+    console.log('🔄 handlePopoverUpdated: reloading snapshots')
     await loadSnapshots()
     setSelectedEntry(null)
   }
@@ -387,7 +392,16 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
                       <td className="hg-table-td hg-fecha">{entry.fecha}</td>
                       <td className="hg-table-td hg-ciudad">{entry.ciudad.name}</td>
                       <td className="hg-table-td" style={{ textAlign: 'center', width: '100px' }}>
-                        <button className="hg-verificar-btn" onClick={() => handleVerificar(entry)}>
+                        <button
+                          className="hg-verificar-btn"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            console.log('🔘 Button clicked for:', entry.ciudad.name, entry.fecha)
+                            handleVerificar(entry)
+                          }}
+                          type="button"
+                        >
                           Verificar
                         </button>
                       </td>
@@ -404,13 +418,16 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
       </div>
 
       {/* Popover Modal */}
-      {selectedEntry && (
-        <SnapshotPopover
-          entry={selectedEntry}
-          onClose={handlePopoverClose}
-          onUpdated={handlePopoverUpdated}
-        />
-      )}
+      {selectedEntry ? (
+        <>
+          {console.log('🎯 Rendering SnapshotPopover for:', selectedEntry.ciudad.name)}
+          <SnapshotPopover
+            entry={selectedEntry}
+            onClose={handlePopoverClose}
+            onUpdated={handlePopoverUpdated}
+          />
+        </>
+      ) : null}
     </>
   )
 }
