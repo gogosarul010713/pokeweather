@@ -27,3 +27,9 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Vercel — contiene projectId y orgId (no subir)
+.vercel
+
+# Archivos de ejemplo con valores reales — nunca subir
+.env.example

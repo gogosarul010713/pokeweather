@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node c:/Workspace/React/pokeweather/fix-sprint3.js)",
+      "Bash(node c:/Workspace/React/pokeweather/fix-sprint3.cjs)",
+      "Bash(timeout 60 node /c/Workspace/React/pokeweather/debug-detailed.mjs)",
+      "Bash(timeout 60 node /c/Workspace/React/pokeweather/debug-conditions.mjs)",
+      "Read(//tmp/**)",
+      "Bash(timeout 60 node /c/Workspace/React/pokeweather/inject-debug.mjs)",
+      "Bash(ls -la /c/Workspace/React/pokeweather/.env*)",
+      "Bash(timeout 60 node /c/Workspace/React/pokeweather/final-verification.mjs)",
+      "Bash(pkill -f \"npm run dev\")",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(grep -r \"mock\\\\|Mock\\\\|MOCK\" src --include=*.md --include=*.txt)"
+    ],
+    "additionalDirectories": [
+      "C:\\Workspace\\React\\pokeweather"
+    ]
+  }
+}

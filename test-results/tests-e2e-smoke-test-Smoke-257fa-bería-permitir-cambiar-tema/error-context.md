@@ -1,0 +1,946 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e6]
+      - generic [ref=e12]:
+        - generic [ref=e13]: PokéWeather
+        - generic [ref=e14]: Map Tracker
+    - generic [ref=e15]:
+      - button "Todas ▼" [ref=e17] [cursor=pointer]:
+        - generic [ref=e19]: Todas
+        - generic [ref=e20]: ▼
+      - button "Clima ▼" [ref=e22] [cursor=pointer]:
+        - generic [ref=e24]: Clima
+        - generic [ref=e25]: ▼
+      - button "Tipo Pokémon ▼" [disabled] [ref=e27]:
+        - generic [ref=e29]: Tipo Pokémon
+        - generic [ref=e30]: ▼
+      - button "Densidad ▼" [ref=e32] [cursor=pointer]:
+        - generic [ref=e34]: Densidad
+        - generic [ref=e35]: ▼
+      - generic [ref=e38]:
+        - img
+        - textbox "Buscar ciudad" [ref=e39]:
+          - /placeholder: Buscar ciudad...
+    - generic [ref=e40]:
+      - generic [ref=e41]: ✓ Actualizado
+      - button "Cambiar a tema claro" [ref=e42] [cursor=pointer]: ☀️
+  - generic [ref=e43]:
+    - complementary [ref=e44]:
+      - generic [ref=e45]:
+        - button "📋" [ref=e46] [cursor=pointer]
+        - button "📍" [ref=e47] [cursor=pointer]
+        - button "⭐" [ref=e48] [cursor=pointer]
+      - generic [ref=e50]:
+        - generic [ref=e51]: 📋 Ciudades • 52
+        - generic [ref=e52]:
+          - generic [ref=e54] [cursor=pointer]:
+            - img "sunny" [ref=e55]
+            - generic [ref=e56]:
+              - generic [ref=e57]:
+                - generic "Shibuya / Harajuku" [ref=e58]
+                - generic [ref=e59]:
+                  - img "fire" [ref=e60]
+                  - img "ground" [ref=e61]
+                  - img "grass" [ref=e62]
+                - button "🤍" [ref=e63]
+              - generic [ref=e64]:
+                - generic [ref=e65]: Japón
+                - generic [ref=e66]: 23/03 · 04:54 PM
+          - generic [ref=e68] [cursor=pointer]:
+            - img "partly" [ref=e69]
+            - generic [ref=e70]:
+              - generic [ref=e71]:
+                - generic "Shinjuku" [ref=e72]
+                - generic [ref=e73]:
+                  - img "normal" [ref=e74]
+                  - img "rock" [ref=e75]
+                - button "🤍" [ref=e76]
+              - generic [ref=e77]:
+                - generic [ref=e78]: Japón
+                - generic [ref=e79]: 23/03 · 04:54 PM
+          - generic [ref=e81] [cursor=pointer]:
+            - img "cloudy" [ref=e82]
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - generic "Osaka Dotonbori" [ref=e85]
+                - generic [ref=e86]:
+                  - img "fairy" [ref=e87]
+                  - img "fighting" [ref=e88]
+                  - img "poison" [ref=e89]
+                - button "🤍" [ref=e90]
+              - generic [ref=e91]:
+                - generic [ref=e92]: Japón
+                - generic [ref=e93]: 23/03 · 04:54 PM
+          - generic [ref=e95] [cursor=pointer]:
+            - img "fog" [ref=e96]
+            - generic [ref=e97]:
+              - generic [ref=e98]:
+                - generic "Kyoto Gion" [ref=e99]
+                - generic [ref=e100]:
+                  - img "ghost" [ref=e101]
+                  - img "dark" [ref=e102]
+                - button "🤍" [ref=e103]
+              - generic [ref=e104]:
+                - generic [ref=e105]: Japón
+                - generic [ref=e106]: 23/03 · 04:54 PM
+          - generic [ref=e108] [cursor=pointer]:
+            - img "rain" [ref=e109]
+            - generic [ref=e110]:
+              - generic [ref=e111]:
+                - generic "Yokohama Minato Mirai" [ref=e112]
+                - generic [ref=e113]:
+                  - img "water" [ref=e114]
+                  - img "electric" [ref=e115]
+                  - img "bug" [ref=e116]
+                - button "🤍" [ref=e117]
+              - generic [ref=e118]:
+                - generic [ref=e119]: Japón
+                - generic [ref=e120]: 23/03 · 04:54 PM
+          - generic [ref=e122] [cursor=pointer]:
+            - img "snow" [ref=e123]
+            - generic [ref=e124]:
+              - generic [ref=e125]:
+                - generic "Nagoya" [ref=e126]
+                - generic [ref=e127]:
+                  - img "ice" [ref=e128]
+                  - img "steel" [ref=e129]
+                - button "🤍" [ref=e130]
+              - generic [ref=e131]:
+                - generic [ref=e132]: Japón
+                - generic [ref=e133]: 23/03 · 04:54 PM
+          - generic [ref=e135] [cursor=pointer]:
+            - img "windy" [ref=e136]
+            - generic [ref=e137]:
+              - generic [ref=e138]:
+                - generic "Sapporo" [ref=e139]
+                - generic [ref=e140]:
+                  - img "flying" [ref=e141]
+                  - img "dragon" [ref=e142]
+                  - img "psychic" [ref=e143]
+                - button "🤍" [ref=e144]
+              - generic [ref=e145]:
+                - generic [ref=e146]: Japón
+                - generic [ref=e147]: 23/03 · 04:54 PM
+          - generic [ref=e149] [cursor=pointer]:
+            - img "sunny" [ref=e150]
+            - generic [ref=e151]:
+              - generic [ref=e152]:
+                - generic "Gangnam, Seúl" [ref=e153]
+                - generic [ref=e154]:
+                  - img "fire" [ref=e155]
+                  - img "ground" [ref=e156]
+                  - img "grass" [ref=e157]
+                - button "🤍" [ref=e158]
+              - generic [ref=e159]:
+                - generic [ref=e160]: Corea del Sur
+                - generic [ref=e161]: 23/03 · 04:54 PM
+          - generic [ref=e163] [cursor=pointer]:
+            - img "partly" [ref=e164]
+            - generic [ref=e165]:
+              - generic [ref=e166]:
+                - generic "Hongdae, Seúl" [ref=e167]
+                - generic [ref=e168]:
+                  - img "normal" [ref=e169]
+                  - img "rock" [ref=e170]
+                - button "🤍" [ref=e171]
+              - generic [ref=e172]:
+                - generic [ref=e173]: Corea del Sur
+                - generic [ref=e174]: 23/03 · 04:54 PM
+          - generic [ref=e176] [cursor=pointer]:
+            - img "cloudy" [ref=e177]
+            - generic [ref=e178]:
+              - generic [ref=e179]:
+                - generic "Busan Haeundae" [ref=e180]
+                - generic [ref=e181]:
+                  - img "fairy" [ref=e182]
+                  - img "fighting" [ref=e183]
+                  - img "poison" [ref=e184]
+                - button "🤍" [ref=e185]
+              - generic [ref=e186]:
+                - generic [ref=e187]: Corea del Sur
+                - generic [ref=e188]: 23/03 · 04:54 PM
+          - generic [ref=e190] [cursor=pointer]:
+            - img "fog" [ref=e191]
+            - generic [ref=e192]:
+              - generic [ref=e193]:
+                - generic "Incheon" [ref=e194]
+                - generic [ref=e195]:
+                  - img "ghost" [ref=e196]
+                  - img "dark" [ref=e197]
+                - button "🤍" [ref=e198]
+              - generic [ref=e199]:
+                - generic [ref=e200]: Corea del Sur
+                - generic [ref=e201]: 23/03 · 04:54 PM
+          - generic [ref=e203] [cursor=pointer]:
+            - img "windy" [ref=e204]
+            - generic [ref=e205]:
+              - generic [ref=e206]:
+                - generic "Marina Bay" [ref=e207]
+                - generic [ref=e208]:
+                  - img "flying" [ref=e209]
+                  - img "dragon" [ref=e210]
+                  - img "psychic" [ref=e211]
+                - button "🤍" [ref=e212]
+              - generic [ref=e213]:
+                - generic [ref=e214]: Singapur
+                - generic [ref=e215]: 23/03 · 04:54 PM
+          - generic [ref=e217] [cursor=pointer]:
+            - img "sunny" [ref=e218]
+            - generic [ref=e219]:
+              - generic [ref=e220]:
+                - generic "Chinatown, Singapur" [ref=e221]
+                - generic [ref=e222]:
+                  - img "fire" [ref=e223]
+                  - img "ground" [ref=e224]
+                  - img "grass" [ref=e225]
+                - button "🤍" [ref=e226]
+              - generic [ref=e227]:
+                - generic [ref=e228]: Singapur
+                - generic [ref=e229]: 23/03 · 04:54 PM
+          - generic [ref=e231] [cursor=pointer]:
+            - img "partly" [ref=e232]
+            - generic [ref=e233]:
+              - generic [ref=e234]:
+                - generic "Orchard Road" [ref=e235]
+                - generic [ref=e236]:
+                  - img "normal" [ref=e237]
+                  - img "rock" [ref=e238]
+                - button "🤍" [ref=e239]
+              - generic [ref=e240]:
+                - generic [ref=e241]: Singapur
+                - generic [ref=e242]: 23/03 · 04:54 PM
+          - generic [ref=e244] [cursor=pointer]:
+            - img "cloudy" [ref=e245]
+            - generic [ref=e246]:
+              - generic [ref=e247]:
+                - generic "Little India, Singapur" [ref=e248]
+                - generic [ref=e249]:
+                  - img "fairy" [ref=e250]
+                  - img "fighting" [ref=e251]
+                  - img "poison" [ref=e252]
+                - button "🤍" [ref=e253]
+              - generic [ref=e254]:
+                - generic [ref=e255]: Singapur
+                - generic [ref=e256]: 23/03 · 04:54 PM
+          - generic [ref=e258] [cursor=pointer]:
+            - img "fog" [ref=e259]
+            - generic [ref=e260]:
+              - generic [ref=e261]:
+                - generic "Sentosa Island" [ref=e262]
+                - generic [ref=e263]:
+                  - img "ghost" [ref=e264]
+                  - img "dark" [ref=e265]
+                - button "🤍" [ref=e266]
+              - generic [ref=e267]:
+                - generic [ref=e268]: Singapur
+                - generic [ref=e269]: 23/03 · 04:54 PM
+          - generic [ref=e271] [cursor=pointer]:
+            - img "rain" [ref=e272]
+            - generic [ref=e273]:
+              - generic [ref=e274]:
+                - generic "Daan, Taipei" [ref=e275]
+                - generic [ref=e276]:
+                  - img "water" [ref=e277]
+                  - img "electric" [ref=e278]
+                  - img "bug" [ref=e279]
+                - button "🤍" [ref=e280]
+              - generic [ref=e281]:
+                - generic [ref=e282]: Taiwán
+                - generic [ref=e283]: 23/03 · 04:54 PM
+          - generic [ref=e285] [cursor=pointer]:
+            - img "snow" [ref=e286]
+            - generic [ref=e287]:
+              - generic [ref=e288]:
+                - generic "Ximending, Taipei" [ref=e289]
+                - generic [ref=e290]:
+                  - img "ice" [ref=e291]
+                  - img "steel" [ref=e292]
+                - button "🤍" [ref=e293]
+              - generic [ref=e294]:
+                - generic [ref=e295]: Taiwán
+                - generic [ref=e296]: 23/03 · 04:54 PM
+          - generic [ref=e298] [cursor=pointer]:
+            - img "windy" [ref=e299]
+            - generic [ref=e300]:
+              - generic [ref=e301]:
+                - generic "Kaohsiung" [ref=e302]
+                - generic [ref=e303]:
+                  - img "flying" [ref=e304]
+                  - img "dragon" [ref=e305]
+                  - img "psychic" [ref=e306]
+                - button "🤍" [ref=e307]
+              - generic [ref=e308]:
+                - generic [ref=e309]: Taiwán
+                - generic [ref=e310]: 23/03 · 04:54 PM
+          - generic [ref=e312] [cursor=pointer]:
+            - img "sunny" [ref=e313]
+            - generic [ref=e314]:
+              - generic [ref=e315]:
+                - generic "Tainan" [ref=e316]
+                - generic [ref=e317]:
+                  - img "fire" [ref=e318]
+                  - img "ground" [ref=e319]
+                  - img "grass" [ref=e320]
+                - button "🤍" [ref=e321]
+              - generic [ref=e322]:
+                - generic [ref=e323]: Taiwán
+                - generic [ref=e324]: 23/03 · 04:54 PM
+          - generic [ref=e326] [cursor=pointer]:
+            - img "partly" [ref=e327]
+            - generic [ref=e328]:
+              - generic [ref=e329]:
+                - generic "Taichung" [ref=e330]
+                - generic [ref=e331]:
+                  - img "normal" [ref=e332]
+                  - img "rock" [ref=e333]
+                - button "🤍" [ref=e334]
+              - generic [ref=e335]:
+                - generic [ref=e336]: Taiwán
+                - generic [ref=e337]: 23/03 · 04:54 PM
+          - generic [ref=e339] [cursor=pointer]:
+            - img "cloudy" [ref=e340]
+            - generic [ref=e341]:
+              - generic [ref=e342]:
+                - generic "Central, HK" [ref=e343]
+                - generic [ref=e344]:
+                  - img "fairy" [ref=e345]
+                  - img "fighting" [ref=e346]
+                  - img "poison" [ref=e347]
+                - button "🤍" [ref=e348]
+              - generic [ref=e349]:
+                - generic [ref=e350]: Hong Kong
+                - generic [ref=e351]: 23/03 · 04:54 PM
+          - generic [ref=e353] [cursor=pointer]:
+            - img "fog" [ref=e354]
+            - generic [ref=e355]:
+              - generic [ref=e356]:
+                - generic "Mong Kok, HK" [ref=e357]
+                - generic [ref=e358]:
+                  - img "ghost" [ref=e359]
+                  - img "dark" [ref=e360]
+                - button "🤍" [ref=e361]
+              - generic [ref=e362]:
+                - generic [ref=e363]: Hong Kong
+                - generic [ref=e364]: 23/03 · 04:54 PM
+          - generic [ref=e366] [cursor=pointer]:
+            - img "rain" [ref=e367]
+            - generic [ref=e368]:
+              - generic [ref=e369]:
+                - generic "Tsim Sha Tsui" [ref=e370]
+                - generic [ref=e371]:
+                  - img "water" [ref=e372]
+                  - img "electric" [ref=e373]
+                  - img "bug" [ref=e374]
+                - button "🤍" [ref=e375]
+              - generic [ref=e376]:
+                - generic [ref=e377]: Hong Kong
+                - generic [ref=e378]: 23/03 · 04:54 PM
+          - generic [ref=e380] [cursor=pointer]:
+            - img "snow" [ref=e381]
+            - generic [ref=e382]:
+              - generic [ref=e383]:
+                - generic "Wan Chai, HK" [ref=e384]
+                - generic [ref=e385]:
+                  - img "ice" [ref=e386]
+                  - img "steel" [ref=e387]
+                - button "🤍" [ref=e388]
+              - generic [ref=e389]:
+                - generic [ref=e390]: Hong Kong
+                - generic [ref=e391]: 23/03 · 04:54 PM
+          - generic [ref=e393] [cursor=pointer]:
+            - img "sunny" [ref=e394]
+            - generic [ref=e395]:
+              - generic [ref=e396]:
+                - generic "Trocadéro / Centro, París" [ref=e397]
+                - generic [ref=e398]:
+                  - img "fire" [ref=e399]
+                  - img "ground" [ref=e400]
+                  - img "grass" [ref=e401]
+                - button "🤍" [ref=e402]
+              - generic [ref=e403]:
+                - generic [ref=e404]: Francia
+                - generic [ref=e405]: 23/03 · 04:54 PM
+          - generic [ref=e407] [cursor=pointer]:
+            - img "partly" [ref=e408]
+            - generic [ref=e409]:
+              - generic [ref=e410]:
+                - generic "Le Marais, París" [ref=e411]
+                - generic [ref=e412]:
+                  - img "normal" [ref=e413]
+                  - img "rock" [ref=e414]
+                - button "🤍" [ref=e415]
+              - generic [ref=e416]:
+                - generic [ref=e417]: Francia
+                - generic [ref=e418]: 23/03 · 04:54 PM
+          - generic [ref=e420] [cursor=pointer]:
+            - img "cloudy" [ref=e421]
+            - generic [ref=e422]:
+              - generic [ref=e423]:
+                - generic "Lyon" [ref=e424]
+                - generic [ref=e425]:
+                  - img "fairy" [ref=e426]
+                  - img "fighting" [ref=e427]
+                  - img "poison" [ref=e428]
+                - button "🤍" [ref=e429]
+              - generic [ref=e430]:
+                - generic [ref=e431]: Francia
+                - generic [ref=e432]: 23/03 · 04:54 PM
+          - generic [ref=e434] [cursor=pointer]:
+            - img "sunny" [ref=e435]
+            - generic [ref=e436]:
+              - generic [ref=e437]:
+                - generic "Barri Gòtic, Barcelona" [ref=e438]
+                - generic [ref=e439]:
+                  - img "fire" [ref=e440]
+                  - img "ground" [ref=e441]
+                  - img "grass" [ref=e442]
+                - button "🤍" [ref=e443]
+              - generic [ref=e444]:
+                - generic [ref=e445]: España
+                - generic [ref=e446]: 23/03 · 04:54 PM
+          - generic [ref=e448] [cursor=pointer]:
+            - img "partly" [ref=e449]
+            - generic [ref=e450]:
+              - generic [ref=e451]:
+                - generic "El Retiro, Madrid" [ref=e452]
+                - generic [ref=e453]:
+                  - img "normal" [ref=e454]
+                  - img "rock" [ref=e455]
+                - button "🤍" [ref=e456]
+              - generic [ref=e457]:
+                - generic [ref=e458]: España
+                - generic [ref=e459]: 23/03 · 04:54 PM
+          - generic [ref=e461] [cursor=pointer]:
+            - img "cloudy" [ref=e462]
+            - generic [ref=e463]:
+              - generic [ref=e464]:
+                - generic "Sevilla" [ref=e465]
+                - generic [ref=e466]:
+                  - img "fairy" [ref=e467]
+                  - img "fighting" [ref=e468]
+                  - img "poison" [ref=e469]
+                - button "🤍" [ref=e470]
+              - generic [ref=e471]:
+                - generic [ref=e472]: España
+                - generic [ref=e473]: 23/03 · 04:54 PM
+          - generic [ref=e475] [cursor=pointer]:
+            - img "fog" [ref=e476]
+            - generic [ref=e477]:
+              - generic [ref=e478]:
+                - generic "Valencia" [ref=e479]
+                - generic [ref=e480]:
+                  - img "ghost" [ref=e481]
+                  - img "dark" [ref=e482]
+                - button "🤍" [ref=e483]
+              - generic [ref=e484]:
+                - generic [ref=e485]: España
+                - generic [ref=e486]: 23/03 · 04:54 PM
+          - generic [ref=e488] [cursor=pointer]:
+            - img "windy" [ref=e489]
+            - generic [ref=e490]:
+              - generic [ref=e491]:
+                - generic "Hyde Park, Londres" [ref=e492]
+                - generic [ref=e493]:
+                  - img "flying" [ref=e494]
+                  - img "dragon" [ref=e495]
+                  - img "psychic" [ref=e496]
+                - button "🤍" [ref=e497]
+              - generic [ref=e498]:
+                - generic [ref=e499]: Reino Unido
+                - generic [ref=e500]: 23/03 · 04:54 PM
+          - generic [ref=e502] [cursor=pointer]:
+            - img "sunny" [ref=e503]
+            - generic [ref=e504]:
+              - generic [ref=e505]:
+                - generic "Shoreditch, Londres" [ref=e506]
+                - generic [ref=e507]:
+                  - img "fire" [ref=e508]
+                  - img "ground" [ref=e509]
+                  - img "grass" [ref=e510]
+                - button "🤍" [ref=e511]
+              - generic [ref=e512]:
+                - generic [ref=e513]: Reino Unido
+                - generic [ref=e514]: 23/03 · 04:54 PM
+          - generic [ref=e516] [cursor=pointer]:
+            - img "partly" [ref=e517]
+            - generic [ref=e518]:
+              - generic [ref=e519]:
+                - generic "Mánchester" [ref=e520]
+                - generic [ref=e521]:
+                  - img "normal" [ref=e522]
+                  - img "rock" [ref=e523]
+                - button "🤍" [ref=e524]
+              - generic [ref=e525]:
+                - generic [ref=e526]: Reino Unido
+                - generic [ref=e527]: 23/03 · 04:54 PM
+          - generic [ref=e529] [cursor=pointer]:
+            - img "cloudy" [ref=e530]
+            - generic [ref=e531]:
+              - generic [ref=e532]:
+                - generic "Edimburgo" [ref=e533]
+                - generic [ref=e534]:
+                  - img "fairy" [ref=e535]
+                  - img "fighting" [ref=e536]
+                  - img "poison" [ref=e537]
+                - button "🤍" [ref=e538]
+              - generic [ref=e539]:
+                - generic [ref=e540]: Reino Unido
+                - generic [ref=e541]: 23/03 · 04:54 PM
+          - generic [ref=e543] [cursor=pointer]:
+            - img "snow" [ref=e544]
+            - generic [ref=e545]:
+              - generic [ref=e546]:
+                - generic "Mitte, Berlín" [ref=e547]
+                - generic [ref=e548]:
+                  - img "ice" [ref=e549]
+                  - img "steel" [ref=e550]
+                - button "🤍" [ref=e551]
+              - generic [ref=e552]:
+                - generic [ref=e553]: Alemania
+                - generic [ref=e554]: 23/03 · 04:54 PM
+          - generic [ref=e556] [cursor=pointer]:
+            - img "windy" [ref=e557]
+            - generic [ref=e558]:
+              - generic [ref=e559]:
+                - generic "Múnich Centro" [ref=e560]
+                - generic [ref=e561]:
+                  - img "flying" [ref=e562]
+                  - img "dragon" [ref=e563]
+                  - img "psychic" [ref=e564]
+                - button "🤍" [ref=e565]
+              - generic [ref=e566]:
+                - generic [ref=e567]: Alemania
+                - generic [ref=e568]: 23/03 · 04:54 PM
+          - generic [ref=e570] [cursor=pointer]:
+            - img "sunny" [ref=e571]
+            - generic [ref=e572]:
+              - generic [ref=e573]:
+                - generic "Hamburgo" [ref=e574]
+                - generic [ref=e575]:
+                  - img "fire" [ref=e576]
+                  - img "ground" [ref=e577]
+                  - img "grass" [ref=e578]
+                - button "🤍" [ref=e579]
+              - generic [ref=e580]:
+                - generic [ref=e581]: Alemania
+                - generic [ref=e582]: 23/03 · 04:54 PM
+          - generic [ref=e584] [cursor=pointer]:
+            - img "partly" [ref=e585]
+            - generic [ref=e586]:
+              - generic [ref=e587]:
+                - generic "Dortmund" [ref=e588]
+                - generic [ref=e589]:
+                  - img "normal" [ref=e590]
+                  - img "rock" [ref=e591]
+                - button "🤍" [ref=e592]
+              - generic [ref=e593]:
+                - generic [ref=e594]: Alemania
+                - generic [ref=e595]: 23/03 · 04:54 PM
+          - generic [ref=e597] [cursor=pointer]:
+            - img "rain" [ref=e598]
+            - generic [ref=e599]:
+              - generic [ref=e600]:
+                - generic "Central Park, NYC" [ref=e601]
+                - generic [ref=e602]:
+                  - img "water" [ref=e603]
+                  - img "electric" [ref=e604]
+                  - img "bug" [ref=e605]
+                - button "🤍" [ref=e606]
+              - generic [ref=e607]:
+                - generic [ref=e608]: EE.UU.
+                - generic [ref=e609]: 23/03 · 04:54 PM
+          - generic [ref=e611] [cursor=pointer]:
+            - img "snow" [ref=e612]
+            - generic [ref=e613]:
+              - generic [ref=e614]:
+                - generic "Chicago Grant Park" [ref=e615]
+                - generic [ref=e616]:
+                  - img "ice" [ref=e617]
+                  - img "steel" [ref=e618]
+                - button "🤍" [ref=e619]
+              - generic [ref=e620]:
+                - generic [ref=e621]: EE.UU.
+                - generic [ref=e622]: 23/03 · 04:54 PM
+          - generic [ref=e624] [cursor=pointer]:
+            - img "windy" [ref=e625]
+            - generic [ref=e626]:
+              - generic [ref=e627]:
+                - generic "San Francisco" [ref=e628]
+                - generic [ref=e629]:
+                  - img "flying" [ref=e630]
+                  - img "dragon" [ref=e631]
+                  - img "psychic" [ref=e632]
+                - button "🤍" [ref=e633]
+              - generic [ref=e634]:
+                - generic [ref=e635]: EE.UU.
+                - generic [ref=e636]: 23/03 · 04:54 PM
+          - generic [ref=e638] [cursor=pointer]:
+            - img "sunny" [ref=e639]
+            - generic [ref=e640]:
+              - generic [ref=e641]:
+                - generic "Washington D.C." [ref=e642]
+                - generic [ref=e643]:
+                  - img "fire" [ref=e644]
+                  - img "ground" [ref=e645]
+                  - img "grass" [ref=e646]
+                - button "🤍" [ref=e647]
+              - generic [ref=e648]:
+                - generic [ref=e649]: EE.UU.
+                - generic [ref=e650]: 23/03 · 04:54 PM
+          - generic [ref=e652] [cursor=pointer]:
+            - img "partly" [ref=e653]
+            - generic [ref=e654]:
+              - generic [ref=e655]:
+                - generic "Los Ángeles" [ref=e656]
+                - generic [ref=e657]:
+                  - img "normal" [ref=e658]
+                  - img "rock" [ref=e659]
+                - button "🤍" [ref=e660]
+              - generic [ref=e661]:
+                - generic [ref=e662]: EE.UU.
+                - generic [ref=e663]: 23/03 · 04:54 PM
+          - generic [ref=e665] [cursor=pointer]:
+            - img "rain" [ref=e666]
+            - generic [ref=e667]:
+              - generic [ref=e668]:
+                - generic "Ibirapuera, São Paulo" [ref=e669]
+                - generic [ref=e670]:
+                  - img "water" [ref=e671]
+                  - img "electric" [ref=e672]
+                  - img "bug" [ref=e673]
+                - button "🤍" [ref=e674]
+              - generic [ref=e675]:
+                - generic [ref=e676]: Brasil
+                - generic [ref=e677]: 23/03 · 04:54 PM
+          - generic [ref=e679] [cursor=pointer]:
+            - img "snow" [ref=e680]
+            - generic [ref=e681]:
+              - generic [ref=e682]:
+                - generic "Copacabana, Río" [ref=e683]
+                - generic [ref=e684]:
+                  - img "ice" [ref=e685]
+                  - img "steel" [ref=e686]
+                - button "🤍" [ref=e687]
+              - generic [ref=e688]:
+                - generic [ref=e689]: Brasil
+                - generic [ref=e690]: 23/03 · 04:54 PM
+          - generic [ref=e692] [cursor=pointer]:
+            - img "fog" [ref=e693]
+            - generic [ref=e694]:
+              - generic [ref=e695]:
+                - generic "Chapultepec, CDMX" [ref=e696]
+                - generic [ref=e697]:
+                  - img "ghost" [ref=e698]
+                  - img "dark" [ref=e699]
+                - button "🤍" [ref=e700]
+              - generic [ref=e701]:
+                - generic [ref=e702]: México
+                - generic [ref=e703]: 23/03 · 04:54 PM
+          - generic [ref=e705] [cursor=pointer]:
+            - img "rain" [ref=e706]
+            - generic [ref=e707]:
+              - generic [ref=e708]:
+                - generic "Coyoacán, CDMX" [ref=e709]
+                - generic [ref=e710]:
+                  - img "water" [ref=e711]
+                  - img "electric" [ref=e712]
+                  - img "bug" [ref=e713]
+                - button "🤍" [ref=e714]
+              - generic [ref=e715]:
+                - generic [ref=e716]: México
+                - generic [ref=e717]: 23/03 · 04:54 PM
+          - generic [ref=e719] [cursor=pointer]:
+            - img "cloudy" [ref=e720]
+            - generic [ref=e721]:
+              - generic [ref=e722]:
+                - generic "Palermo, Buenos Aires" [ref=e723]
+                - generic [ref=e724]:
+                  - img "fairy" [ref=e725]
+                  - img "fighting" [ref=e726]
+                  - img "poison" [ref=e727]
+                - button "🤍" [ref=e728]
+              - generic [ref=e729]:
+                - generic [ref=e730]: Argentina
+                - generic [ref=e731]: 23/03 · 04:54 PM
+          - generic [ref=e733] [cursor=pointer]:
+            - img "sunny" [ref=e734]
+            - generic [ref=e735]:
+              - generic [ref=e736]:
+                - generic "Sydney CBD" [ref=e737]
+                - generic [ref=e738]:
+                  - img "fire" [ref=e739]
+                  - img "ground" [ref=e740]
+                  - img "grass" [ref=e741]
+                - button "🤍" [ref=e742]
+              - generic [ref=e743]:
+                - generic [ref=e744]: Australia
+                - generic [ref=e745]: 23/03 · 04:54 PM
+          - generic [ref=e747] [cursor=pointer]:
+            - img "partly" [ref=e748]
+            - generic [ref=e749]:
+              - generic [ref=e750]:
+                - generic "Melbourne CBD" [ref=e751]
+                - generic [ref=e752]:
+                  - img "normal" [ref=e753]
+                  - img "rock" [ref=e754]
+                - button "🤍" [ref=e755]
+              - generic [ref=e756]:
+                - generic [ref=e757]: Australia
+                - generic [ref=e758]: 23/03 · 04:54 PM
+    - main [ref=e759]:
+      - generic [ref=e760]:
+        - generic [ref=e761]:
+          - generic:
+            - generic:
+              - button "✨" [ref=e762] [cursor=pointer]:
+                - generic [ref=e763]:
+                  - img [ref=e764]
+                  - generic [ref=e767]: ✨
+              - button "✨" [ref=e768] [cursor=pointer]:
+                - generic [ref=e769]:
+                  - img [ref=e770]
+                  - generic [ref=e773]: ✨
+              - button "✨" [ref=e774] [cursor=pointer]:
+                - generic [ref=e775]:
+                  - img [ref=e776]
+                  - generic [ref=e779]: ✨
+              - button "✨" [ref=e780] [cursor=pointer]:
+                - generic [ref=e781]:
+                  - img [ref=e782]
+                  - generic [ref=e785]: ✨
+              - button "🎯 👥" [ref=e786] [cursor=pointer]:
+                - generic [ref=e787]:
+                  - img [ref=e788]
+                  - generic [ref=e791]: 🎯
+                  - generic [ref=e792]: 👥
+              - button "👥" [ref=e793] [cursor=pointer]:
+                - generic [ref=e794]:
+                  - img [ref=e795]
+                  - generic [ref=e798]: 👥
+              - button "👥" [ref=e799] [cursor=pointer]:
+                - generic [ref=e800]:
+                  - img [ref=e801]
+                  - generic [ref=e804]: 👥
+              - button "✨" [ref=e805] [cursor=pointer]:
+                - generic [ref=e806]:
+                  - img [ref=e807]
+                  - generic [ref=e810]: ✨
+              - button "✨" [ref=e811] [cursor=pointer]:
+                - generic [ref=e812]:
+                  - img [ref=e813]
+                  - generic [ref=e816]: ✨
+              - button "👥" [ref=e817] [cursor=pointer]:
+                - generic [ref=e818]:
+                  - img [ref=e819]
+                  - generic [ref=e822]: 👥
+              - button "👥" [ref=e823] [cursor=pointer]:
+                - generic [ref=e824]:
+                  - img [ref=e825]
+                  - generic [ref=e828]: 👥
+              - button "✨" [ref=e829] [cursor=pointer]:
+                - generic [ref=e830]:
+                  - img [ref=e831]
+                  - generic [ref=e834]: ✨
+              - button "✨" [ref=e835] [cursor=pointer]:
+                - generic [ref=e836]:
+                  - img [ref=e837]
+                  - generic [ref=e840]: ✨
+              - button "✨" [ref=e841] [cursor=pointer]:
+                - generic [ref=e842]:
+                  - img [ref=e843]
+                  - generic [ref=e846]: ✨
+              - button "🎯 👥" [ref=e847] [cursor=pointer]:
+                - generic [ref=e848]:
+                  - img [ref=e849]
+                  - generic [ref=e852]: 🎯
+                  - generic [ref=e853]: 👥
+              - button "👥" [ref=e854] [cursor=pointer]:
+                - generic [ref=e855]:
+                  - img [ref=e856]
+                  - generic [ref=e859]: 👥
+              - button "✨" [ref=e860] [cursor=pointer]:
+                - generic [ref=e861]:
+                  - img [ref=e862]
+                  - generic [ref=e865]: ✨
+              - button "✨" [ref=e866] [cursor=pointer]:
+                - generic [ref=e867]:
+                  - img [ref=e868]
+                  - generic [ref=e871]: ✨
+              - button "🎯 👥" [ref=e872] [cursor=pointer]:
+                - generic [ref=e873]:
+                  - img [ref=e874]
+                  - generic [ref=e877]: 🎯
+                  - generic [ref=e878]: 👥
+              - button "👥" [ref=e879] [cursor=pointer]:
+                - generic [ref=e880]:
+                  - img [ref=e881]
+                  - generic [ref=e884]: 👥
+              - button "👥" [ref=e885] [cursor=pointer]:
+                - generic [ref=e886]:
+                  - img [ref=e887]
+                  - generic [ref=e890]: 👥
+              - button "✨" [ref=e891] [cursor=pointer]:
+                - generic [ref=e892]:
+                  - img [ref=e893]
+                  - generic [ref=e896]: ✨
+              - button "✨" [ref=e897] [cursor=pointer]:
+                - generic [ref=e898]:
+                  - img [ref=e899]
+                  - generic [ref=e902]: ✨
+              - button "✨" [ref=e903] [cursor=pointer]:
+                - generic [ref=e904]:
+                  - img [ref=e905]
+                  - generic [ref=e908]: ✨
+              - button "🎯 👥" [ref=e909] [cursor=pointer]:
+                - generic [ref=e910]:
+                  - img [ref=e911]
+                  - generic [ref=e914]: 🎯
+                  - generic [ref=e915]: 👥
+              - button "✨" [ref=e916] [cursor=pointer]:
+                - generic [ref=e917]:
+                  - img [ref=e918]
+                  - generic [ref=e921]: ✨
+              - button "✨" [ref=e922] [cursor=pointer]:
+                - generic [ref=e923]:
+                  - img [ref=e924]
+                  - generic [ref=e927]: ✨
+              - button "👥" [ref=e928] [cursor=pointer]:
+                - generic [ref=e929]:
+                  - img [ref=e930]
+                  - generic [ref=e933]: 👥
+              - button "✨" [ref=e934] [cursor=pointer]:
+                - generic [ref=e935]:
+                  - img [ref=e936]
+                  - generic [ref=e939]: ✨
+              - button "🎯 👥" [ref=e940] [cursor=pointer]:
+                - generic [ref=e941]:
+                  - img [ref=e942]
+                  - generic [ref=e945]: 🎯
+                  - generic [ref=e946]: 👥
+              - button "👥" [ref=e947] [cursor=pointer]:
+                - generic [ref=e948]:
+                  - img [ref=e949]
+                  - generic [ref=e952]: 👥
+              - button "👥" [ref=e953] [cursor=pointer]:
+                - generic [ref=e954]:
+                  - img [ref=e955]
+                  - generic [ref=e958]: 👥
+              - button "✨" [ref=e959] [cursor=pointer]:
+                - generic [ref=e960]:
+                  - img [ref=e961]
+                  - generic [ref=e964]: ✨
+              - button "✨" [ref=e965] [cursor=pointer]:
+                - generic [ref=e966]:
+                  - img [ref=e967]
+                  - generic [ref=e970]: ✨
+              - button "👥" [ref=e971] [cursor=pointer]:
+                - generic [ref=e972]:
+                  - img [ref=e973]
+                  - generic [ref=e976]: 👥
+              - button "👥" [ref=e977] [cursor=pointer]:
+                - generic [ref=e978]:
+                  - img [ref=e979]
+                  - generic [ref=e982]: 👥
+              - button "👥" [ref=e983] [cursor=pointer]:
+                - generic [ref=e984]:
+                  - img [ref=e985]
+                  - generic [ref=e988]: 👥
+              - button "👥" [ref=e989] [cursor=pointer]:
+                - generic [ref=e990]:
+                  - img [ref=e991]
+                  - generic [ref=e994]: 👥
+              - button "👥" [ref=e995] [cursor=pointer]:
+                - generic [ref=e996]:
+                  - img [ref=e997]
+                  - generic [ref=e1000]: 👥
+              - button "👥" [ref=e1001] [cursor=pointer]:
+                - generic [ref=e1002]:
+                  - img [ref=e1003]
+                  - generic [ref=e1006]: 👥
+              - button "✨" [ref=e1007] [cursor=pointer]:
+                - generic [ref=e1008]:
+                  - img [ref=e1009]
+                  - generic [ref=e1012]: ✨
+              - button "👥" [ref=e1013] [cursor=pointer]:
+                - generic [ref=e1014]:
+                  - img [ref=e1015]
+                  - generic [ref=e1018]: 👥
+              - button "👥" [ref=e1019] [cursor=pointer]:
+                - generic [ref=e1020]:
+                  - img [ref=e1021]
+                  - generic [ref=e1024]: 👥
+              - button "👥" [ref=e1025] [cursor=pointer]:
+                - generic [ref=e1026]:
+                  - img [ref=e1027]
+                  - generic [ref=e1030]: 👥
+              - button "💪 👥" [ref=e1031] [cursor=pointer]:
+                - generic [ref=e1032]:
+                  - img [ref=e1033]
+                  - generic [ref=e1036]: 💪
+                  - generic [ref=e1037]: 👥
+              - button "💪 👥" [ref=e1038] [cursor=pointer]:
+                - generic [ref=e1039]:
+                  - img [ref=e1040]
+                  - generic [ref=e1043]: 💪
+                  - generic [ref=e1044]: 👥
+              - button "💪 👥" [ref=e1045] [cursor=pointer]:
+                - generic [ref=e1046]:
+                  - img [ref=e1047]
+                  - generic [ref=e1050]: 💪
+                  - generic [ref=e1051]: 👥
+              - button "💪 👥" [ref=e1052] [cursor=pointer]:
+                - generic [ref=e1053]:
+                  - img [ref=e1054]
+                  - generic [ref=e1057]: 💪
+                  - generic [ref=e1058]: 👥
+              - button "👥" [ref=e1059] [cursor=pointer]:
+                - generic [ref=e1060]:
+                  - img [ref=e1061]
+                  - generic [ref=e1064]: 👥
+              - button "👥" [ref=e1065] [cursor=pointer]:
+                - generic [ref=e1066]:
+                  - img [ref=e1067]
+                  - generic [ref=e1070]: 👥
+              - button "✨" [ref=e1071] [cursor=pointer]:
+                - generic [ref=e1072]:
+                  - img [ref=e1073]
+                  - generic [ref=e1076]: ✨
+              - button "👥" [ref=e1077] [cursor=pointer]:
+                - generic [ref=e1078]:
+                  - img [ref=e1079]
+                  - generic [ref=e1082]: 👥
+          - generic:
+            - generic [ref=e1083]:
+              - button "Zoom in" [ref=e1084] [cursor=pointer]: +
+              - button "Zoom out" [disabled] [ref=e1085]: −
+            - generic [ref=e1086]:
+              - link "Leaflet" [ref=e1087] [cursor=pointer]:
+                - /url: https://leafletjs.com
+                - img [ref=e1088]
+                - text: Leaflet
+              - text: "| ©"
+              - link "OSM" [ref=e1092] [cursor=pointer]:
+                - /url: https://www.openstreetmap.org/copyright
+              - text: ©
+              - link "CARTO" [ref=e1093] [cursor=pointer]:
+                - /url: https://carto.com/
+        - generic [ref=e1094]:
+          - generic [ref=e1095] [cursor=pointer]:
+            - generic [ref=e1096]: Leyenda
+            - generic [ref=e1097]: ▼
+          - generic [ref=e1098]:
+            - button "Clima" [ref=e1099] [cursor=pointer]
+            - button "Categorías" [ref=e1100] [cursor=pointer]
+          - generic [ref=e1101]:
+            - generic [ref=e1104]: Soleado
+            - generic [ref=e1107]: Parcial
+            - generic [ref=e1110]: Nublado
+            - generic [ref=e1113]: Niebla
+            - generic [ref=e1116]: Lluvia
+            - generic [ref=e1119]: Nieve
+            - generic [ref=e1122]: Ventoso
+```

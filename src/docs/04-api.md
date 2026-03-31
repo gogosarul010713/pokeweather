@@ -19,8 +19,6 @@
 VITE_ACCUWEATHER_KEY=tu_api_key_aqui
 ```
 
-- Si no está definida → app usa `mockCities.js` automáticamente.
-- La key nunca se expone en el bundle (solo `import.meta.env.VITE_*` en Vite es seguro).
 
 ---
 

@@ -1,0 +1,362 @@
+// weatherService.ts
+// Mapeos AccuWeather weatherIcon → condiciones base → tipos Pokémon GO
+// Sprint 2-6: Evolución desde mock data → API real AccuWeather
+// Sprint 7: Mejorar precision (target 95%+ vs PGO oficial)
+// Sprint 7 - US-605: Caché geoespacial optimizado (por locationKey)
+
+import type { WeatherCondition } from '../../config/weatherImages'
+
+// ─── Traducción AccuWeather WeatherIcon → Clima Pokémon GO ──────────────────
+// Referencia: Doc 20 (20-weather-classification-algorithm.md)
+// Cada icono AccuWeather (1-44) tiene un clima PGO asignado + flag canWindy.
+// canWindy=true: climas "secos" que pueden convertirse en Windy por viento fuerte.
+// canWindy=false: precipitación activa (lluvia, nieve, tormentas, niebla).
+
+export interface WeatherTranslation {
+  id: number
+  iconText: string
+  canWindy: boolean
+  pgoCondition: WeatherCondition
+}
+
+export const WEATHER_TRANSLATIONS: Record<number, WeatherTranslation> = {
+  // ── Día (1-32) ──
+  1:  { id: 1,  iconText: 'Sunny',                     canWindy: true,  pgoCondition: 'sunny' },
+  2:  { id: 2,  iconText: 'Mostly Sunny',              canWindy: true,  pgoCondition: 'sunny' },
+  3:  { id: 3,  iconText: 'Partly Sunny',              canWindy: true,  pgoCondition: 'partly' },
+  4:  { id: 4,  iconText: 'Intermittent Clouds',       canWindy: true,  pgoCondition: 'partly' },
+  5:  { id: 5,  iconText: 'Hazy Sunshine',             canWindy: true,  pgoCondition: 'cloudy' },
+  6:  { id: 6,  iconText: 'Mostly Cloudy',             canWindy: true,  pgoCondition: 'cloudy' },
+  7:  { id: 7,  iconText: 'Cloudy',                    canWindy: true,  pgoCondition: 'cloudy' },
+  8:  { id: 8,  iconText: 'Dreary (Overcast)',         canWindy: true,  pgoCondition: 'cloudy' },
+  // 9, 10: No existen en AccuWeather
+  11: { id: 11, iconText: 'Fog',                       canWindy: false, pgoCondition: 'fog' },
+  12: { id: 12, iconText: 'Showers',                   canWindy: false, pgoCondition: 'rain' },
+  13: { id: 13, iconText: 'Mostly Cloudy w/ Showers',  canWindy: false, pgoCondition: 'cloudy' },
+  14: { id: 14, iconText: 'Partly Sunny w/ Showers',   canWindy: false, pgoCondition: 'partly' },
+  15: { id: 15, iconText: 'T-Storms',                  canWindy: false, pgoCondition: 'rain' },
+  16: { id: 16, iconText: 'Mostly Cloudy w/ T-Storms', canWindy: false, pgoCondition: 'cloudy' },
+  17: { id: 17, iconText: 'Partly Sunny w/ T-Storms',  canWindy: false, pgoCondition: 'partly' },
+  18: { id: 18, iconText: 'Rain',                      canWindy: false, pgoCondition: 'rain' },
+  19: { id: 19, iconText: 'Flurries',                  canWindy: false, pgoCondition: 'snow' },
+  20: { id: 20, iconText: 'Mostly Cloudy w/ Flurries', canWindy: false, pgoCondition: 'cloudy' },
+  21: { id: 21, iconText: 'Partly Sunny w/ Flurries',  canWindy: false, pgoCondition: 'partly' },
+  22: { id: 22, iconText: 'Snow',                      canWindy: false, pgoCondition: 'snow' },
+  23: { id: 23, iconText: 'Mostly Cloudy w/ Snow',     canWindy: false, pgoCondition: 'cloudy' },
+  24: { id: 24, iconText: 'Ice',                       canWindy: false, pgoCondition: 'snow' },
+  25: { id: 25, iconText: 'Sleet',                     canWindy: false, pgoCondition: 'snow' },
+  26: { id: 26, iconText: 'Freezing Rain',             canWindy: false, pgoCondition: 'rain' },
+  // 27, 28: No existen en AccuWeather
+  29: { id: 29, iconText: 'Rain and Snow',             canWindy: false, pgoCondition: 'rain' },
+  30: { id: 30, iconText: 'Hot',                       canWindy: true,  pgoCondition: 'sunny' },
+  31: { id: 31, iconText: 'Cold',                      canWindy: true,  pgoCondition: 'snow' },
+  32: { id: 32, iconText: 'Windy',                     canWindy: true,  pgoCondition: 'windy' },
+  // ── Noche (33-44) ──
+  33: { id: 33, iconText: 'Clear',                     canWindy: true,  pgoCondition: 'sunny' },
+  34: { id: 34, iconText: 'Mostly Clear',              canWindy: true,  pgoCondition: 'sunny' },
+  35: { id: 35, iconText: 'Partly Cloudy',             canWindy: true,  pgoCondition: 'partly' },
+  36: { id: 36, iconText: 'Intermittent Clouds',       canWindy: true,  pgoCondition: 'partly' },
+  37: { id: 37, iconText: 'Hazy Moonlight',            canWindy: true,  pgoCondition: 'cloudy' },
+  38: { id: 38, iconText: 'Mostly Cloudy',             canWindy: true,  pgoCondition: 'cloudy' },
+  39: { id: 39, iconText: 'Partly Cloudy w/ Showers',  canWindy: false, pgoCondition: 'partly' },
+  40: { id: 40, iconText: 'Mostly Cloudy w/ Showers',  canWindy: false, pgoCondition: 'cloudy' },
+  41: { id: 41, iconText: 'Partly Cloudy w/ T-Storms', canWindy: false, pgoCondition: 'partly' },
+  42: { id: 42, iconText: 'Mostly Cloudy w/ T-Storms', canWindy: false, pgoCondition: 'cloudy' },
+  43: { id: 43, iconText: 'Mostly Cloudy w/ Flurries', canWindy: false, pgoCondition: 'snow' },
+  44: { id: 44, iconText: 'Mostly Cloudy w/ Snow',     canWindy: false, pgoCondition: 'snow' },
+}
+
+// ─── Mapeo condición → tipos Pokémon potenciados ──────────────────────────────
+
+export const CONDITION_TO_TYPES: Record<WeatherCondition, string[]> = {
+  sunny:  ['fire',     'ground',   'grass'],
+  partly: ['normal',   'rock'],
+  cloudy: ['fairy',    'fighting', 'poison'],
+  fog:    ['ghost',    'dark'],
+  rain:   ['water',    'electric', 'bug'],
+  snow:   ['ice',      'steel'],
+  windy:  ['flying',   'dragon',   'psychic'],
+}
+
+// ─── Colores por condición (hex del design system — ver index.css) ────────────
+// Usados en MapPin (DivIcon HTML no hereda CSS vars) y MapLegend.
+
+export const CONDITION_COLORS: Record<WeatherCondition, string> = {
+  sunny:  '#FFB347',
+  partly: '#87CEEB',
+  cloudy: '#9E9E9E',
+  fog:    '#C8C8C8',
+  rain:   '#5B9BD5',
+  snow:   '#B0E0E6',
+  windy:  '#78C896',
+}
+
+export const CONDITION_LABEL: Record<WeatherCondition, string> = {
+  sunny:  'Soleado',
+  partly: 'Parcial',
+  cloudy: 'Nublado',
+  fog:    'Niebla',
+  rain:   'Lluvia',
+  snow:   'Nieve',
+  windy:  'Ventoso',
+}
+
+// ─── Score de calidad: identifica los mejores puntos ─────────────────────────
+// Score = (densidad/max) × 0.60 + (gyms/max) × 0.25 + (rating/5) × 0.15
+// Retorna: 0-100 (normalizado)
+// Usado por MapPin (tamaño+color), CityTooltip (breakdown), MapLegend (leyenda)
+
+export type BadgeType = 'stops' | 'gyms' | 'community' | 'best'
+
+export const calculateBadges = (cities: Array<{ density: number; gyms: number; rating: number }>) => {
+  const densities = cities.map(c => c.density).sort((a, b) => b - a)
+  const gymsArray = cities.map(c => c.gyms).sort((a, b) => b - a)
+  const q1Density = densities[Math.floor(densities.length * 0.25)]
+  const q1Gyms = gymsArray[Math.floor(gymsArray.length * 0.25)]
+
+  return (city: { density: number; gyms: number; rating: number }): BadgeType[] => {
+    const hasStops = city.density >= q1Density
+    const hasGyms = city.gyms >= q1Gyms
+    const hasCommunity = city.rating >= 4.0
+
+    // Si tiene TODOS, retorna 'best' (Mejores lugares)
+    if (hasStops && hasGyms && hasCommunity) {
+      return ['best']
+    }
+
+    // Si no tiene todos, retorna los badges individuales
+    const badges: BadgeType[] = []
+    if (hasStops) badges.push('stops')
+    if (hasGyms) badges.push('gyms')
+    if (hasCommunity) badges.push('community')
+    return badges
+  }
+}
+
+export const BADGE_ICONS: Record<BadgeType, string> = {
+  stops: '🎯',
+  gyms: '💪',
+  community: '👥',
+  best: '✨',
+}
+
+// ─── Funciones de cálculo ─────────────────────────────────────────────────────
+
+// Umbrales de viento para override a Windy (Doc 20)
+const WINDY_WIND_KMH = 29    // km/h - viento sostenido
+const WINDY_GUST_KMH = 31    // km/h - ráfagas
+
+export const getBaseCondition = (iconId: number): WeatherCondition => {
+  const translation = WEATHER_TRANSLATIONS[iconId]
+  if (!translation) {
+    console.warn(`⚠️ WeatherIcon ${iconId} no reconocido, fallback a cloudy`)
+    return 'cloudy'
+  }
+  return translation.pgoCondition
+}
+
+export const resolveCondition = (
+  iconId: number,
+  windKmh: number,
+  gustKmh: number
+): WeatherCondition => {
+  const base = getBaseCondition(iconId)
+  const translation = WEATHER_TRANSLATIONS[iconId]
+
+  // WINDY reemplaza cualquier clima si:
+  // 1. El icono AccuWeather permite override por viento (translation.canWindy = true)
+  // 2. El viento supera los umbrales (Doc 20: > 29 km/h o > 31 km/h ráfagas)
+  //
+  // Iconos con canWindy=false (precipitación activa, FOG): nunca se convierten en WINDY
+  // Iconos con canWindy=true (climas secos): pueden convertirse en WINDY si hay viento fuerte
+  if (translation && translation.canWindy) {
+    const isWindy = windKmh > WINDY_WIND_KMH || gustKmh > WINDY_GUST_KMH
+    if (isWindy) return 'windy'
+  }
+
+  return base
+}
+
+export const isExtremeWeather = (alerts: unknown[]): boolean =>
+  Array.isArray(alerts) && alerts.length > 0
+
+// ─── AccuWeather API Functions (Sprint 6) ─────────────────────────────────────
+
+import { getCachedLocationKey, setCachedLocationKey } from '../cache/cacheService'
+import type { WeatherData } from '../cache/cacheService'
+import { getS2Key } from '../geo/s2Service'
+import type { City } from '../../store/useStore'
+
+// En dev: llamada directa (localhost no tiene CORS)
+// En prod: proxy via Vercel (evita CORS desde dominio de producción)
+const ACCUWEATHER_BASE = import.meta.env.DEV
+  ? 'https://dataservice.accuweather.com'
+  : '/api/accuweather'
+
+interface HourlyForecastData {
+  WeatherIcon: number
+  Temperature: { Value: number }
+  RealFeelTemperature: { Value: number }
+  RelativeHumidity: number
+  Wind: { Speed: { Value: number } }
+  WindGust: { Speed: { Value: number } }
+  HasPrecipitation: boolean
+  Visibility?: { Value: number }  // ← Para detectar FOG (km)
+}
+
+export const getAccuWeatherLocationKey = async (
+  lat: number,
+  lon: number,
+  apiKey: string
+): Promise<string> => {
+  const s2Key = getS2Key(lat, lon)
+
+  // 1. Verificar caché permanente (localStorage)
+  const cached = getCachedLocationKey(s2Key)
+  if (cached) return cached
+
+  // 2. Llamar API
+  const url = `${ACCUWEATHER_BASE}/locations/v1/cities/geoposition/search` +
+    `?apikey=${apiKey}&q=${lat},${lon}&toplevel=true`
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!response.ok) {
+    throw new Error(`AccuWeather location error: ${response.status}`)
+  }
+
+  const data = await response.json()
+  const locationKey = data.Key
+
+  // 3. Cachear permanentemente
+  setCachedLocationKey(s2Key, locationKey)
+
+  return locationKey
+}
+
+export const getHourlyForecast = async (
+  locationKey: string,
+  apiKey: string
+): Promise<HourlyForecastData> => {
+  const url = `${ACCUWEATHER_BASE}/forecasts/v1/hourly/12hour/${locationKey}` +
+    `?apikey=${apiKey}&details=true&metric=true`
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!response.ok) {
+    throw new Error(`AccuWeather forecast error: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data[0] // primer slot = hora actual
+}
+
+export const getAlerts = async (
+  locationKey: string,
+  apiKey: string
+): Promise<unknown[]> => {
+  try {
+    const url = `${ACCUWEATHER_BASE}/alerts/v1/${locationKey}` +
+      `?apikey=${apiKey}&details=true`
+
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+    if (!response.ok) return [] // Si falla, sin alertas
+
+    return await response.json()
+  } catch {
+    return [] // Si falla, sin alertas (no crítico)
+  }
+}
+
+export const fetchCityWeather = async (
+  city: City,
+  apiKey: string,
+  enableAlerts: boolean = false
+): Promise<City> => {
+  try {
+    // 1. Obtener location key
+    const locationKey = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
+
+    // 2. Fetch forecast + alerts (opcional, si plan lo soporta)
+    const forecastPromise = getHourlyForecast(locationKey, apiKey)
+    const alertsPromise = enableAlerts ? getAlerts(locationKey, apiKey) : Promise.resolve([])
+
+    const [forecast, alerts] = await Promise.all([
+      forecastPromise,
+      alertsPromise,
+    ])
+
+    // 3. Calcular condición y tipos
+    const condition = resolveCondition(
+      forecast.WeatherIcon,
+      forecast.Wind.Speed.Value,
+      forecast.WindGust.Speed.Value
+    )
+    const boostedTypes = CONDITION_TO_TYPES[condition]
+    const isExtreme = isExtremeWeather(alerts)
+
+    // 4. Construir objeto City actualizado
+    const weatherData: City = {
+      ...city,
+      condition,
+      boostedTypes,
+      isExtreme,
+      tempC: forecast.Temperature.Value,
+      feelsLike: forecast.RealFeelTemperature.Value,
+      humidity: forecast.RelativeHumidity,
+      windKmh: forecast.Wind.Speed.Value,
+      gustKmh: forecast.WindGust.Speed.Value,
+      visibilityKm: forecast.Visibility?.Value ?? 10,  // ← Default 10km si no viene
+      weatherIcon: forecast.WeatherIcon,
+      accuLocationKey: locationKey,
+      updatedAt: Date.now(),
+      weatherImage: `/weather/${condition}.png`,
+      // localTime será calculado en useWeather con timezone
+    }
+
+    return weatherData
+  } catch (error) {
+    // Lanzar error para que useWeather lo maneje y muestre estado informativo
+    throw new Error(`Failed to fetch weather for ${city.name}: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
+/**
+ * Enriquece un City con datos de WeatherData (del caché geoespacial).
+ *
+ * US-605: Separa responsabilidades:
+ * - WeatherData: Datos climáticos por locationKey (compartidos entre ciudades)
+ * - City: Identidad única + datos climáticos
+ *
+ * @param city Ciudad base (sin datos climáticos)
+ * @param weatherData Datos climáticos del caché (o null si no disponibles)
+ * @returns City enriquecida con datos climáticos
+ */
+export function enrichCityWithWeatherData(
+  city: City,
+  weatherData: WeatherData | null
+): City {
+  if (!weatherData) {
+    // Fallback: valores por defecto si caché está vacío
+    return {
+      ...city,
+      condition: 'cloudy',
+      boostedTypes: [],
+      isExtreme: false,
+      tempC: 0,
+      feelsLike: 0,
+      humidity: 0,
+      windKmh: 0,
+      gustKmh: 0,
+      visibilityKm: 10,
+      weatherIcon: 0,
+      weatherImage: '/weather/cloudy.png',
+      updatedAt: Date.now(),
+      timezone: 0,
+    }
+  }
+
+  // Enriquecer: city-specific fields + weather data
+  return {
+    ...city,
+    ...weatherData,
+  }
+}

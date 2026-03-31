@@ -1,0 +1,80 @@
+name: Deploy — Staging (develop)
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true   # si hay 2 pushes rápidos, cancela el anterior
+
+jobs:
+  deploy-staging:
+    name: Deploy Staging
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.alias.outputs.url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VITE_ACCUWEATHER_KEY: ${{ secrets.VITE_ACCUWEATHER_KEY }}
+
+      - name: Deploy to Vercel (Preview)
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deploy_url=$URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # Asigna una URL fija a este deploy (staging.xxx.vercel.app)
+      # → misma URL siempre, sin importar cuántos deploys hay
+      - name: Assign staging alias
+        id: alias
+        run: |
+          ALIAS="${{ secrets.VERCEL_STAGING_ALIAS }}"
+          vercel alias set ${{ steps.deploy.outputs.deploy_url }} $ALIAS --token=${{ secrets.VERCEL_TOKEN }}
+          echo "url=https://$ALIAS" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Comment staging URL in commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.alias.outputs.url }}'
+            const sha = context.sha.substring(0, 7)
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `🧪 **Staging deployed** — [${sha}](${url})\n\n🔗 ${url}`
+            })

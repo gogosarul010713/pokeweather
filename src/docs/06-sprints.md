@@ -102,84 +102,114 @@ public/weather/windy.png
 
 ---
 
-## SPRINT 3 — Header Completo
+## SPRINT 3 — Header Completo (Refactorizado 2026-03-20)
 
-**Objetivo:** Header 100% funcional con búsqueda de texto, filtros de región, panel de 7 condiciones climáticas con multi-select, y badge de sincronización real conectado al estado de carga.
+> ⚠️ **Cambio de diseño:** Chips horizontales + botones individuales reemplazados por dropdowns jerarquizados (`CustomSelect` + `FilterPanel`) por escalabilidad y mejor UX.
+
+**Objetivo:** Header 100% funcional con búsqueda de texto y filtros jerarquizados via dropdowns (Continente · Clima · Tipo Pokémon · Ordenar por), y badge de sincronización real.
 
 **Definition of Done:**
 - Escribir en SearchInput filtra la lista y los pines reactivamente
-- Seleccionar chip de región filtra correctamente
-- Seleccionar condiciones filtra y muestra glow/bg según tema
+- Dropdown Continente filtra por región (single-select)
+- Dropdown Clima filtra por condición (multi-select con checkboxes)
+- Dropdown Ordenar por cambia el sort del LocationFeed
 - SyncBadge muestra estado real del hook useWeather
 
 ### US incluidas
 
-| US | Nombre | SP |
-|----|--------|----|
-| US-301 | FilterChip | 2 |
-| US-302 | SearchInput | 2 |
-| US-303 | FilterBar (región + búsqueda) | 3 |
-| US-304 | WeatherConditionCard | 3 |
-| US-305 | ConditionPanel | 2 |
-| US-306 | SyncBadge funcional | 2 |
-| **Total** | | **14 SP** |
+| US | Nombre | SP | Estado |
+|----|--------|----|--------|
+| US-301 | CustomSelect (dropdown reutilizable) | 3 | ✅ |
+| US-302 | SearchInput | 2 | ✅ |
+| US-303 | FilterPanel (4 dropdowns jerarquizados) | 4 | ✅ |
+| ~~US-304~~ | ~~WeatherConditionCard~~ (integrado en US-303) | ~~3~~ | ❌ Deprecated |
+| ~~US-305~~ | ~~ConditionPanel~~ (integrado en US-303) | ~~2~~ | ❌ Deprecated |
+| US-306 | SyncBadge funcional | 2 | ✅ |
+| **Total** | | **11 SP efectivos** | |
 
 ### Archivos generados en Sprint 3
 
 ```
-src/components/Header/FilterBar.jsx
-src/components/Header/SearchInput.jsx
-src/components/Header/ConditionPanel/ConditionPanel.jsx
-src/components/Header/ConditionPanel/WeatherConditionCard.jsx
-src/components/UI/FilterChip.jsx
-src/components/UI/SyncBadge.jsx   (reemplaza placeholder)
+src/components/UI/CustomSelect.tsx         (nuevo)
+src/components/UI/SyncBadge.tsx            (reemplaza placeholder)
+src/components/Header/SearchInput.tsx
+src/components/Header/FilterPanel.tsx      (nuevo - reemplaza FilterBar + ConditionPanel)
+src/components/Header/Header.tsx           (actualizado)
+src/data/useStore.ts                       (+ setConditionFilter action)
+
+Eliminados:
+src/components/Header/FilterBar.tsx
+src/components/Header/ConditionPanel/ConditionPanel.tsx
+src/components/Header/ConditionPanel/WeatherConditionCard.tsx
 ```
 
 ---
 
-## SPRINT 4 — Sidebar Completa
+## SPRINT 4 — Sidebar Completa (Refactorizado 2026-03-20)
 
-**Objetivo:** Sidebar con lista completa de ciudades filtrada y ordenada. Cada card muestra todos los datos de Pokémon GO (density, stops, gyms, rating, tipos potenciados, clima). La selección de ciudad sincroniza sidebar y mapa.
+**Objetivo:** Sidebar con 3 modos navegables (📋 Lista · 📍 Detalle · ⭐ Favoritos), LocationCards filtradas reactivamente, LocationDetail modal sobre mapa, y sistema de favoritos persistido en localStorage.
+
+**Arquitectura:**
+- Sidebar tiene estado `sidebarMode: 'list' | 'detail' | 'favorites'` en store
+- **Modo Lista**: LocationFeed muestra ciudades filtradas por dropdowns del header
+- **Modo Detalle**: Click en LocationCard abre LocationDetail modal (overlay sobre mapa)
+- **Modo Favoritos**: LocationFeed filtra a ciudades marcadas como favoritas
+- Favoritos persisten en localStorage (`pwe-favorites`)
 
 **Definition of Done:**
-- LocationFeed muestra todas las ciudades del mock
-- Filtros del Sprint 3 actualizan la lista reactivamente
-- Click en ciudad: se marca activa en la lista, mapa vuela a esa ciudad (placeholder OK)
-- TypeBadge y ClimateBadge renderizando correctamente
+- LocationFeed renderiza LocationCards filtradas (dropdowns + búsqueda del header)
+- Click en LocationCard selecciona ciudad + abre modal → cambia a Modo Detalle
+- LocationDetail modal: nombre, país, región, clima, tipos, density, stops, gyms, rating, tips
+- Botón ❤️ toggle favorito (rojo si es favorito)
+- MenuStrip con 3 iconos funcionales cambian `sidebarMode`
+- Modo Favoritos filtra por array `favorites` del store
+- localStorage mantiene favoritos entre sesiones
 
 ### US incluidas
 
-| US | Nombre | SP |
-|----|--------|----|
-| US-401 | TypeBadge | 1 |
-| US-402 | ClimateBadge | 1 |
-| US-403 | LocationCard | 5 |
-| US-404 | LocationFeed | 3 |
-| US-405 | MenuStrip | 2 |
-| **Total** | | **12 SP** |
+| US | Nombre | SP | Estado |
+|----|--------|----|--------|
+| US-401 | LocationCard.tsx | 3 | ✅ |
+| US-402 | LocationFeed (refactor) | 3 | ✅ |
+| US-403 | MenuStrip (3 modos) | 3 | ✅ |
+| US-404 | LocationDetail modal | 4 | ✅ |
+| US-405 | Favorites system | 3 | ✅ |
+| **Total** | | **16 SP** | |
 
-### Archivos generados en Sprint 4
+### Archivos a generar/actualizar en Sprint 4
 
 ```
-src/components/Sidebar/Sidebar.jsx        (reemplaza placeholder)
-src/components/Sidebar/MenuIcon.jsx
-src/components/Sidebar/LocationFeed.jsx
-src/components/Sidebar/LocationCard.jsx
-src/components/UI/TypeBadge.jsx
-src/components/UI/ClimateBadge.jsx
+src/components/Sidebar/LocationCard.tsx   (nuevo)
+src/components/Sidebar/LocationDetail.tsx (nuevo)
+src/components/Sidebar/Sidebar.tsx        (refactor: MenuStrip + LocationFeed)
+src/data/useStore.ts                      (+ favorites array + actions)
+
+Cambios en store:
+  + sidebarMode: 'list' | 'detail' | 'favorites'
+  + setSidebarMode(mode)
+  + favorites: string[]
+  + toggleFavorite(cityId)
+  + clearFavorites()
+  + localStorage sync para favorites
 ```
 
 ---
 
-## SPRINT 5 — Mapa Completo
+## SPRINT 5 — Mapa Completo + Visual Scoring
 
-**Objetivo:** Mapa con un pin por ciudad (color según condición climática), tooltip detallado al hacer click, navegación automática al seleccionar ciudad en sidebar, y leyenda de condiciones colapsable.
+**Objetivo:** Mapa fully funcional con pins inteligentes escalados por calidad, popup unificado con opción de detalle, navegación automática, y leyenda completa.
 
 **Definition of Done:**
-- Todos los pines renderizan en el mapa con el color correcto
-- Click en pin selecciona ciudad y sincroniza con sidebar
-- CityTooltip muestra todos los datos incluyendo imagen de clima
-- FlyToCity vuela al seleccionar desde la sidebar
+- ✅ Tiles: CartoDB positron+CSS filter (dark), voyager (light) — sin CORS
+- ✅ worldCopyJump: true (pins persisten cruzando antimeridiano)
+- ✅ Pins: tamaño fijo (22×29px), color = CONDITION_COLORS
+- ✅ Badges: 🎯 stops, 💪 gyms, 👥 community (rating≥4), ⭐ multi (2+)
+- ✅ Badges basados en cuartiles (top 25%)
+- ✅ CityTooltip: minimalista (3 líneas) + 2 botones (copiar coords, ver detalle)
+- ✅ Click pin/lista → popup (sin LocationDetail modal)
+- ✅ "Ver detalle" → abre LocationDetail con breakdown de badges
+- ✅ Cerrar popup → clear selection (reabreible)
+- ✅ MapLegend: condiciones + badges explicados
 
 ### US incluidas
 
@@ -187,57 +217,106 @@ src/components/UI/ClimateBadge.jsx
 |----|--------|----|
 | US-206 | s2Service.js | 2 |
 | US-207 | weatherService.js (mapeos + funciones) | 5 |
-| US-501 | MapPin | 5 |
-| US-502 | CityTooltip | 5 |
+| US-501 | MapPin (tamaño dinámico + score visual) | 8 |
+| US-502 | CityTooltip (mejorada con score + "Ver detalle") | 5 |
 | US-503 | FlyToCity | 2 |
-| US-504 | MapLegend | 2 |
-| **Total** | | **21 SP** |
+| US-504 | MapLegend (+ score legend) | 3 |
+| US-505 | Tiles + Dark Mode + Score Visual | 8 |
+| US-506 | Popup Unificado + "Ver Detalle" | 5 |
+| **Total** | | **38 SP** |
 
 > Nota: US-206 y US-207 se mueven aquí porque su implementación completa
 > depende del mapa. En Sprint 2 solo se usa el mapeo de condiciones para mock.
 
-### Archivos generados en Sprint 5
+### Archivos generados/actualizados en Sprint 5
 
 ```
-src/data/s2Service.js
-src/data/weatherService.js
-src/components/Map/MapView.jsx      (reemplaza placeholder con pines)
-src/components/Map/MapPin.jsx
-src/components/Map/CityTooltip.jsx
-src/components/Map/MapLegend.jsx
-src/components/Map/FlyToCity.jsx
+src/index.css
+  └─ --tile-filter: CSS vars para inversión de tiles
+
+src/data/s2Service.ts
+
+src/data/weatherService.ts
+  ├─ CONDITION_COLORS, CONDITION_LABEL
+  ├─ calculateScore(cities) → scoring function
+  └─ getScoreColor(score) → color gradient (0-100)
+
+src/components/Map/MapView.tsx
+  ├─ CartoDB positron + CSS filter (dark), voyager (light)
+  ├─ worldCopyJump={true}
+  ├─ Score calculation + ranking (top 10)
+  └─ SelectedPopup con removeEvent → setSelectedCity(null)
+
+src/components/Map/MapPin.tsx
+  ├─ Tamaño dinámico (1.5x - 3.5x) según score
+  ├─ Color gradient (azul → rojo) via getScoreColor()
+  └─ Badges: 👑 top 3, #4-10 números
+
+src/components/Map/CityTooltip.tsx
+  ├─ Icono correcto (/weather/{condition}.png)
+  ├─ Coords + copiar button (stopPropagation)
+  ├─ Score box + breakdown (stops, gyms, rating, densidad)
+  └─ "Ver detalle" button (stopPropagation)
+
+src/components/Map/MapLegend.tsx
+  ├─ Leyenda de 7 condiciones climáticas
+  └─ Score ranges + color scale
+
+src/components/Map/FlyToCity.tsx
+
+src/components/Sidebar/LocationCard.tsx
+  └─ Solo setSelectedCity (sin setSidebarMode)
 ```
 
 ---
 
-## SPRINT 6 — AccuWeather Real + Calidad
+## SPRINT 6 — AccuWeather Real + Lazy Load Horario + Testing & Validación
 
-**Objetivo:** Integrar la API real de AccuWeather, con manejo de caché optimizado, refresh automático en la hora exacta, y flag de clima extremo con indicadores visuales.
+### Fase 1 (Completada)
+**Objetivo:** Integrar la API real de AccuWeather con caché dinámico inteligente y refresh automático sin desperdicio de API.
+
+### Fase 2 (En progreso — 2026-03-30)
+**Objetivo:** Finalizar US-602/604 con fixes + agregar toolkit de testing/validación para medir precisión del algoritmo.
 
 **Definition of Done:**
-- Con `VITE_ACCUWEATHER_KEY` configurada: los datos son reales de AccuWeather
-- Caché de locationKey en localStorage (no se repite la llamada de geoposición)
-- Datos climáticos en IndexedDB con TTL 60 min
-- SyncBadge muestra minutos desde última actualización
-- Ciudades con clima extremo tienen indicador visual
+- ✅ US-601/602/603 Completadas
+- 🔄 US-604 + Fixes F1/F2 (Lazy Load + fade-refresh + Visibility API rescheduling)
+- 🔄 US-606/607/608/609/610 (Inspector caché, historial, dashboard, métricas, export)
+- ✅ Consumo <15k calls/mes validado
+- ✅ Historial de precisión guardado (7 días configurable)
+- ✅ Dashboard operativo para análisis manual
 
 ### US incluidas
 
-| US | Nombre | SP |
-|----|--------|----|
-| US-601 | Integración AccuWeather completa | 8 |
-| US-602 | Refresh automático horario | 3 |
-| US-603 | isExtreme flag y alertas | 3 |
-| **Total** | | **14 SP** |
+| US | Nombre | SP | Estado |
+|----|--------|----|--------|
+| US-601 | Integración AccuWeather | 8 | ✅ |
+| US-602 | Refresh automático horario | 3 | ⚠️ Fixes F1+F2 |
+| US-603 | isExtreme flag y alertas | 3 | ✅ |
+| US-604 | Lazy Load + TTL dinámico | 5 | ⚠️ Fixes F1+F2 |
+| **US-606** | **Inspector Visual Caché** | **3** | **🆕** |
+| **US-607** | **Servicio Historial** | **5** | **🆕** |
+| **US-608** | **Dashboard Grilla** | **8** | **🆕** |
+| **US-609** | **Métricas Precisión** | **3** | **🆕** |
+| **US-610** | **Export Excel Historial** | **2** | **🆕** |
+| **Total** | | **40 SP** | |
 
 ### Archivos modificados en Sprint 6
 
 ```
-src/data/weatherService.js   (agregar fetch functions)
-src/data/useWeather.js       (branch real vs mock + refresh)
-src/components/Sidebar/LocationCard.jsx    (isExtreme indicator)
-src/components/Map/MapPin.jsx              (glowPulse si isExtreme)
-src/components/Map/CityTooltip.jsx         (mensaje clima extremo)
+✅ src/data/weatherService.ts   (fetch functions)
+✅ src/hooks/useWeather.ts       (real vs mock + básico refresh)
+
+🔄 src/services/cache/cacheService.ts    (↦ TTL dinámico + msUntilNextHour helper)
+🔄 src/hooks/useWeather.ts               (↦ Timer + Visibility API listener + auto-refresh)
+🔄 src/services/weather/batchWeatherService.ts  (↦ ignoreCache option)
+
+✅ src/components/Sidebar/LocationCard.tsx    (isExtreme indicator)
+✅ src/components/Map/MapPin.tsx              (glowPulse si isExtreme)
+✅ src/components/Map/CityTooltip.tsx         (mensaje clima extremo)
+
+🔄 src/components/UI/Toast.tsx           (← crear para notificaciones)
+🔄 src/index.css                         (← fade transition)
 ```
 
 ---
@@ -299,10 +378,10 @@ Sprint 6 (API real) ────────────────────
 
 | Sprint | Estado |
 |--------|--------|
-| Sprint 1 | ⏳ Pendiente |
-| Sprint 2 | ⏳ Pendiente |
-| Sprint 3 | ⏳ Pendiente |
-| Sprint 4 | ⏳ Pendiente |
-| Sprint 5 | ⏳ Pendiente |
-| Sprint 6 | ⏳ Pendiente |
-| Sprint 7 | ⏳ Pendiente |
+| Sprint 1 | ✅ Completado |
+| Sprint 2 | ✅ Completado |
+| Sprint 3 | ✅ Completado (refactorizado + polish 2026-03-21) |
+| Sprint 4 | ✅ Completado (2026-03-21) |
+| Sprint 5 | ✅ Completado (2026-03-22) — Badges, filtros, auto-scroll, z-index fix |
+| **Sprint 6** | **✅ Completado (2026-03-30)** — Fase 1 ✅ (API real, batch, caching), Fase 2 ✅ (Lazy Load, Auto-refresh, Testing) |
+| Sprint 7 | ⏳ Pendiente (Responsive: tablet + mobile) |
