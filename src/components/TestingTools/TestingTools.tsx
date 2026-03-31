@@ -18,10 +18,15 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
   const [retentionDays, setRetentionDaysLocal] = useState<7 | 14 | 30>(
     (getRetentionDays() as 7 | 14 | 30) || 7
   )
+  const [isMaximized, setIsMaximized] = useState(false)
 
   const handleRetentionChange = (days: 7 | 14 | 30) => {
     setRetentionDaysLocal(days)
     setRetentionDays(days)
+  }
+
+  const handleToggleMaximize = () => {
+    setIsMaximized(!isMaximized)
   }
 
   return (
@@ -61,6 +66,15 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
           flex-direction: column;
           animation: slideIn 0.3s ease-out;
           box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease-out;
+        }
+
+        .tt-drawer.maximized {
+          right: 0;
+          left: 0;
+          width: 100%;
+          border-left: none;
+          border-radius: 0;
         }
 
         @keyframes slideIn {
@@ -84,6 +98,33 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
         .tt-title {
           font-size: 16px;
           font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .tt-header-actions {
+          display: flex;
+          gap: 4px;
+          align-items: center;
+        }
+
+        .tt-button-icon {
+          background: none;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          color: var(--text-secondary);
+          padding: 6px 8px;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          transition: all 0.2s;
+        }
+
+        .tt-button-icon:hover {
+          background-color: var(--bg-tertiary);
           color: var(--text-primary);
         }
 
@@ -234,13 +275,23 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
 
       {/* Drawer */}
       {isOpen && (
-        <div className="tt-drawer">
+        <div className={`tt-drawer ${isMaximized ? 'maximized' : ''}`}>
           {/* Header */}
           <div className="tt-header">
             <h2 className="tt-title">🧪 Testing Tools</h2>
-            <button className="tt-close" onClick={onClose}>
-              ✕
-            </button>
+            <div className="tt-header-actions">
+              <button
+                className="tt-button-icon"
+                onClick={handleToggleMaximize}
+                title={isMaximized ? 'Minimizar' : 'Maximizar'}
+                aria-label={isMaximized ? 'Minimizar' : 'Maximizar'}
+              >
+                {isMaximized ? '⛶' : '⛶'}
+              </button>
+              <button className="tt-close" onClick={onClose} title="Cerrar" aria-label="Cerrar">
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Tab Navigation */}
