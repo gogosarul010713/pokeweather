@@ -954,6 +954,75 @@ Tab: "Métricas"
 
 ---
 
+## EP-11 · Cache Management
+
+### US-711 · Administrador de Caché
+**SP:** 5 · **Prioridad:** 🟡 · **Estado:** ⏳ Pendiente · **Sprint:** 7 Fase 2
+
+**Como** administrador,
+**quiero** ver, editar y eliminar datos cacheados por ciudad,
+**para** manejar manualmente el caché si necesito resetear o depurar información.
+
+**Layout:**
+```
+Tab: "💾 Caché"
+┌──────────────────────────────────────────────┐
+│ Filtro: [Buscar ciudad ▾]   [🗑️ Reset Todo]  │
+├──────────────────────────────────────────────┤
+│ Pier 39, San Francisco        📍 Ubicación   │
+│ └─ LocationKey: ACU12345      ✓ Caché:10m    │
+│    ├─ [Editar] [❌ Eliminar]                 │
+│    └─ Snapshots: 24 (últimas 24h)            │
+│       └─ 31/03 10:00 Lluvia     ❌ Eliminar   │
+│       └─ 31/03 21:00 Nublado    ❌ Eliminar   │
+│                                              │
+│ Auckland Waterfront           📍 Ubicación   │
+│ └─ LocationKey: ACU67890      ✓ Caché:65m    │
+│    └─ [Editar] [❌ Eliminar]                 │
+└──────────────────────────────────────────────┘
+```
+
+**Criterios de aceptación:**
+
+- [ ] Listar todas las ciudades cacheadas (con LocationKeys + Weather snapshots)
+- [ ] Mostrar tamaño del caché por ciudad (KB) y antigüedad (min/h/d)
+- [ ] Buscar ciudad por nombre (autocomplete)
+- [ ] **Editar LocationKey:** modal con la clave para copiar/actualizar
+- [ ] **Eliminar por ciudad:** borra LocationKey + todos los snapshots
+- [ ] **Eliminar snapshot individual:** seleccionar snapshot y eliminar
+- [ ] **Reset Total:** botón 🗑️ para limpiar TODO el caché con confirmación
+- [ ] Confirmación antes de eliminar ("¿Seguro? Se perderá caché de X ciudades")
+- [ ] Estado visual: ✓ (válido), ⚠️ (próximo a expirar), ❌ (expirado)
+- [ ] Persistencia: cambios se guardan inmediatamente en IndexedDB
+
+**Comportamiento:**
+
+1. **Ver caché:** Expande ciudad → muestra:
+   - LocationKey (copiable)
+   - Fecha de última actualización
+   - Snapshots con timestamp
+   - TTL restante
+
+2. **Editar LocationKey:** Modal popup con:
+   - Campo editable
+   - Botón copiar al clipboard
+   - Guardar cambios
+
+3. **Eliminar snapshot:** Click ❌ en snapshot específico
+   - Confirmación rápida: "¿Eliminar snapshot de las 10:00?"
+   - Se elimina de IndexedDB inmediatamente
+
+4. **Reset Todo:** Botón 🗑️ rojo
+   - Confirmación: "Esto borrará TODO el caché. ¿Continuar?"
+   - Limpia LocationKeys + Weather snapshots + History snapshots
+   - No afecta ciudades en el mapa (re-fetchea en próximo refresh)
+
+**Archivos:**
+- `src/components/TestingTools/CacheManager.tsx` ← nuevo
+- `src/services/cache/cacheManagementService.ts` ← nuevo (lectura/escritura directa IndexedDB)
+
+---
+
 ## BACKLOG ADICIONAL (sin sprint asignado)
 
 | ID | Historia | SP | Épica |

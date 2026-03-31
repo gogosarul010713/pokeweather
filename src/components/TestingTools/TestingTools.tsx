@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { exportCitiesToExcel } from '../../utils/exportToExcel'
 import { getRetentionDays, setRetentionDays } from '../../services/history/weatherHistoryService'
 import HistoryGrid from './HistoryGrid'
 import type { City } from '../../store/useStore'
@@ -10,33 +9,17 @@ interface TestingToolsProps {
   onClose: () => void
 }
 
-type TabType = 'historial' | 'pruebas' | 'metricas'
+type TabType = 'historial' | 'cache' | 'metricas'
 
 export default function TestingTools({ cities, isOpen, onClose }: TestingToolsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('historial')
   const [retentionDays, setRetentionDaysLocal] = useState<7 | 14 | 30>(
     (getRetentionDays() as 7 | 14 | 30) || 7
   )
-  const [isExporting, setIsExporting] = useState(false)
 
   const handleRetentionChange = (days: 7 | 14 | 30) => {
     setRetentionDaysLocal(days)
     setRetentionDays(days)
-  }
-
-  const handleExport = async (testNumber: 1 | 2 | 3) => {
-    setIsExporting(true)
-    try {
-      await exportCitiesToExcel(cities, {
-        testNumber,
-        timestamp: new Date(),
-      })
-    } catch (error) {
-      console.error('Error exporting to Excel:', error)
-      alert('Error al exportar. Ver consola.')
-    } finally {
-      setIsExporting(false)
-    }
   }
 
   return (
@@ -267,10 +250,10 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
               📊 Historial
             </button>
             <button
-              className={`tt-tab ${activeTab === 'pruebas' ? 'active' : ''}`}
-              onClick={() => setActiveTab('pruebas')}
+              className={`tt-tab ${activeTab === 'cache' ? 'active' : ''}`}
+              onClick={() => setActiveTab('cache')}
             >
-              📥 Pruebas
+              💾 Caché
             </button>
             <button
               className={`tt-tab ${activeTab === 'metricas' ? 'active' : ''}`}
@@ -291,70 +274,23 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
               />
             )}
 
-            {/* Tab: Pruebas */}
-            {activeTab === 'pruebas' && (
-              <>
-                {/* Exportar a Excel */}
-                <div className="tt-section">
-                  <h3 className="tt-section-title">Exportar Pruebas de Clima</h3>
-                  <p className="tt-section-desc">
-                    Descarga los datos climáticos actuales de las <span className="tt-city-count">{cities.length}</span> ciudades.
-                    Tendrás una hora para verificar cada uno en Pokémon GO.
-                  </p>
-
-                  <div className="tt-button-group">
-                    <button
-                      className="tt-button tt-button-primary"
-                      onClick={() => handleExport(1)}
-                      disabled={isExporting || cities.length === 0}
-                      title="Exporta los datos de hoy (Prueba 1)"
-                    >
-                      {isExporting ? '⏳' : '📥'} Prueba 1
-                    </button>
-                    <button
-                      className="tt-button tt-button-primary"
-                      onClick={() => handleExport(2)}
-                      disabled={isExporting || cities.length === 0}
-                      title="Exporta los datos para mañana (Prueba 2)"
-                    >
-                      {isExporting ? '⏳' : '📥'} Prueba 2
-                    </button>
-                    <button
-                      className="tt-button tt-button-primary"
-                      onClick={() => handleExport(3)}
-                      disabled={isExporting || cities.length === 0}
-                      title="Exporta los datos para el tercer día (Prueba 3)"
-                    >
-                      {isExporting ? '⏳' : '📥'} Prueba 3
-                    </button>
-                  </div>
-
-                  <div className="tt-info">
-                    <strong>📋 Formato:</strong> Cada archivo contiene las {cities.length} ciudades con columnas: Ciudad,
-                    Clima, Coordenadas, y Real (que tú llenarás después de verificar en Pokémon GO).
-                  </div>
-
-                  <div className="tt-info">
-                    <strong>📅 Workflow:</strong>
-                    <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
-                      <li>Haz clic en "Prueba 1" → descarga el archivo</li>
-                      <li>Abre Pokémon GO y verifica los {cities.length} climas (tienes 1 hora)</li>
-                      <li>Completa la columna "Real" en Excel con lo que viste</li>
-                      <li>Repite 2 veces más (Prueba 2 y 3) en días diferentes</li>
-                      <li>Compara resultados para detectar inconsistencias</li>
-                    </ol>
-                  </div>
+            {/* Tab: Caché */}
+            {activeTab === 'cache' && (
+              <div className="tt-section">
+                <h3 className="tt-section-title">Administrador de Caché</h3>
+                <div className="tt-info">
+                  ⏳ Próximamente: Ver, editar y eliminar datos en caché (LocationKeys, Weather snapshots)
                 </div>
-
-                {/* Info adicional */}
-                <div className="tt-section">
-                  <h3 className="tt-section-title">Notas</h3>
-                  <div className="tt-info">
-                    El clima que ves aquí proviene de <strong>AccuWeather API</strong>. Pokémon GO usa su propio servicio
-                    meteorológico, así que puede haber diferencias ocasionales.
-                  </div>
+                <div className="tt-info">
+                  <strong>Características:</strong>
+                  <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                    <li>Ver caché guardada por ciudad</li>
+                    <li>Editar datos de LocationKey</li>
+                    <li>Eliminar snapshots específicos</li>
+                    <li>Reset manual de caché global</li>
+                  </ul>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Tab: Métricas (placeholder para US-609) */}

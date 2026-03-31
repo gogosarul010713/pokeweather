@@ -321,32 +321,48 @@ src/components/Sidebar/LocationCard.tsx
 
 ---
 
-## SPRINT 7 — Responsive
+## SPRINT 7 — Historial + Testing Tools + Responsive
 
-**Objetivo:** Adaptar el layout completo a tablet y mobile según el diseño del design system. El contenido y la funcionalidad son idénticos — solo cambia el layout.
+**Objetivo:**
+- Fase 1 ✅ (2026-03-31): Dashboard de Historial interactivo (US-608)
+- Fase 2: Cache Management + Métricas (US-711, US-609)
+- Fase 3: Responsive design (tablet + mobile)
 
-**Definition of Done:**
-- En tablet: sidebar es drawer, mapa ocupa todo el ancho
-- En mobile: mapa fullscreen, navegación por bottom sheet
-- Sin overflow horizontal en ningún breakpoint
-- Funcionalidad 100% accesible en mobile (filtros, búsqueda, city selection)
+**Definition of Done (Fase 1):**
+- ✅ Tabla de resumen: Fecha | Ciudad | Verificar | % Precisión
+- ✅ Modal detalle: todas las horas del día con dropdowns
+- ✅ Botón Maximizar/Minimizar tabla
+- ✅ Export historial a Excel
+- ✅ Estado visual: ✓/✗/?/—
 
-### US incluidas
+### US incluidas (Sprint 7)
 
-| US | Nombre | SP |
-|----|--------|----|
-| US-701 | Layout tablet (768–1024px) | 5 |
-| US-702 | Layout mobile (< 768px) | 8 |
-| **Total** | | **13 SP** |
+| Fase | US | Nombre | SP | Estado |
+|------|----|----|----|----|
+| Fase 1 | US-608 | Dashboard de Historial | 8 | ✅ Completada |
+| Fase 2 | US-711 | Administrador de Caché | 5 | ⏳ Pendiente |
+| Fase 2 | US-609 | Métricas de Precisión | 3 | ⏳ Pendiente |
+| Fase 3 | US-701 | Layout tablet (768–1024px) | 5 | ⏳ Pendiente |
+| Fase 3 | US-702 | Layout mobile (< 768px) | 8 | ⏳ Pendiente |
+| **Total** | | | **29 SP** | |
 
-### Archivos modificados en Sprint 7
+### Archivos modificados en Sprint 7 Fase 1
 
 ```
-src/index.css                           (media queries)
-src/App.jsx                             (lógica responsive)
-src/components/Header/Header.jsx        (compacto en mobile)
-src/components/Sidebar/Sidebar.jsx      (drawer en tablet, bottom sheet en mobile)
-src/components/Map/CityTooltip.jsx      (panel bottom en mobile)
+✅ src/components/TestingTools/TestingTools.tsx       (refactor: tabs)
+✅ src/components/TestingTools/HistoryGrid.tsx        (nueva tabla resumen)
+✅ src/components/TestingTools/SnapshotPopover.tsx    (nuevo modal detalle)
+✅ src/config/conditionEmojis.ts                      (nueva config)
+✅ src/utils/exportHistory.ts                         (nuevo export)
+✅ src/docs/24-us608-history-dashboard.md             (documentación)
+```
+
+### Archivos a crear en Sprint 7 Fase 2
+
+```
+src/components/TestingTools/CacheManager.tsx          (gestor caché UI)
+src/services/cache/cacheManagementService.ts          (API lectura/escritura IndexedDB)
+src/docs/26-us711-cache-management.md                 (documentación)
 ```
 
 ---
@@ -384,4 +400,4 @@ Sprint 6 (API real) ────────────────────
 | Sprint 4 | ✅ Completado (2026-03-21) |
 | Sprint 5 | ✅ Completado (2026-03-22) — Badges, filtros, auto-scroll, z-index fix |
 | **Sprint 6** | **✅ Completado (2026-03-30)** — Fase 1 ✅ (API real, batch, caching), Fase 2 ✅ (Lazy Load, Auto-refresh, Testing) |
-| Sprint 7 | ⏳ Pendiente (Responsive: tablet + mobile) |
+| **Sprint 7** | **🔄 En progreso (2026-03-31)** — Fase 1 ✅ (Historial + Dashboard), Fase 2 ⏳ (Cache + Métricas), Fase 3 ⏳ (Responsive) |
