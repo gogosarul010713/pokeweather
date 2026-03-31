@@ -14,9 +14,10 @@ interface SnapshotPopoverProps {
   entry: HistoryEntry
   onClose: () => void
   onUpdated?: () => void
+  isMaximized?: boolean
 }
 
-export default function SnapshotPopover({ entry, onClose, onUpdated }: SnapshotPopoverProps) {
+export default function SnapshotPopover({ entry, onClose, onUpdated, isMaximized = false }: SnapshotPopoverProps) {
   const [updating, setUpdating] = useState<string | null>(null)
 
   const sortedSnapshots = [...entry.snapshots].sort((a, b) => a.capturedAt - b.capturedAt)
@@ -69,7 +70,7 @@ export default function SnapshotPopover({ entry, onClose, onUpdated }: SnapshotP
           right: 0;
           bottom: 0;
           background: rgba(0, 0, 0, 0.6);
-          z-index: 2500;
+          z-index: ${isMaximized ? 3500 : 2500};
           display: flex;
           align-items: center;
           justify-content: center;

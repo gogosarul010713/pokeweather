@@ -422,6 +422,7 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
           entry={popoverData.entry}
           onClose={handleClosePopover}
           onUpdated={handlePopoverUpdated}
+          isMaximized={isMaximized}
         />
       )}
     </>
