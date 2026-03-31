@@ -1,6 +1,6 @@
 /**
  * src/components/TestingTools/PrecisionMetrics.tsx
- * Panel de métricas de precisión climática
+ * Panel de métricas de precisión climática — Optimizado para mostrar tabla de condiciones
  * US-609: Métricas de Precisión
  */
 
@@ -24,7 +24,6 @@ export default function PrecisionMetrics({ retentionDays = 7 }: PrecisionMetrics
   const [report, setReport] = useState<PrecisionReport | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'conditions' | 'regions'>('conditions')
 
   useEffect(() => {
     loadMetrics()
@@ -74,198 +73,121 @@ export default function PrecisionMetrics({ retentionDays = 7 }: PrecisionMetrics
 
   return (
     <div className="pm-container">
-      {/* Header */}
-      <div className="pm-header">
-        <div className="pm-header-info">
+      {/* Header — Una sola línea */}
+      <div className="pm-header-compact">
+        <div className="pm-header-main">
           <h3 className="pm-title">📊 Métricas de Precisión</h3>
-          <p className="pm-subtitle">
+          <span className="pm-subtitle">
             Basado en: {totalVerified} verificaciones (de {report.totalSnapshots} snapshots)
-          </p>
+          </span>
         </div>
 
         {!isReliable && (
-          <div className="pm-warning">
-            ⚠️ Datos insuficientes para estadísticas confiables (&lt;10 verificaciones)
+          <div className="pm-warning-inline">
+            ⚠️ Datos insuficientes
           </div>
         )}
       </div>
 
-      {/* Overall Stats */}
-      <div className="pm-overall">
-        <div className="pm-stat">
-          <span className="pm-stat-label">Precisión General</span>
-          <span className="pm-stat-value" style={{ color: getPrecisionColor(report.overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger') }}>
-            {overallPrecision}% {getStatusEmoji(report.overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger')}
+      {/* Overall Stats — Lineal */}
+      <div className="pm-overall-linear">
+        <div className="pm-stat-inline">
+          <span className="pm-stat-label">Precisión General:</span>
+          <span
+            className="pm-stat-value-large"
+            style={{ color: getPrecisionColor(overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger') }}
+          >
+            {overallPrecision}% {getStatusEmoji(overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger')}
           </span>
         </div>
 
-        <div className="pm-stat">
-          <span className="pm-stat-label">Correctos</span>
-          <span className="pm-stat-value">
+        <div className="pm-stat-inline">
+          <span className="pm-stat-label">Correctos:</span>
+          <span className="pm-stat-value-inline">
             {totalCorrect} / {totalVerified}
           </span>
         </div>
 
-        <div className="pm-stat">
-          <span className="pm-stat-label">Target</span>
-          <span className="pm-stat-value">{target}%</span>
+        <div className="pm-stat-inline">
+          <span className="pm-stat-label">Target:</span>
+          <span className="pm-stat-value-inline">{target}%</span>
         </div>
 
-        <div className="pm-stat">
-          <span className="pm-stat-label">Gap</span>
-          <span className="pm-stat-value" style={{ color: gap >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+        <div className="pm-stat-inline">
+          <span className="pm-stat-label">Gap:</span>
+          <span
+            className="pm-stat-value-inline"
+            style={{ color: gap >= 0 ? 'var(--success)' : 'var(--danger)' }}
+          >
             {gap >= 0 ? '+' : ''}{gap}%
           </span>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="pm-tabs">
-        <button
-          className={`pm-tab ${activeTab === 'conditions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('conditions')}
-        >
-          🌡️ Por Condición ({report.byCondition.length})
-        </button>
-        <button
-          className={`pm-tab ${activeTab === 'regions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('regions')}
-        >
-          🌍 Por Región ({report.byRegion.length})
-        </button>
+      {/* Tabla de Condiciones — Grande */}
+      <div className="pm-table-wrapper">
+        <div className="pm-table-title">🌡️ Precisión por Condición</div>
+        <table className="pm-table">
+          <thead>
+            <tr>
+              <th className="th-condition">Condición</th>
+              <th className="th-verified">Verificados</th>
+              <th className="th-correct">Correctos</th>
+              <th className="th-precision">Precisión</th>
+            </tr>
+          </thead>
+          <tbody>
+            {report.byCondition.map(metric => (
+              <tr key={metric.condition} className={`pm-row-${metric.status}`}>
+                <td className="pm-condition-cell">{metric.condition}</td>
+                <td className="pm-verified-cell">{metric.verified}</td>
+                <td className="pm-correct-cell">{metric.correct}</td>
+                <td className="pm-precision-cell">
+                  <span
+                    className="pm-precision-value"
+                    style={{ color: getPrecisionColor(metric.status) }}
+                  >
+                    {metric.precision}% {getStatusEmoji(metric.status)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+
+            {/* Total Row */}
+            <tr className="pm-total-row">
+              <td className="pm-condition-cell">
+                <strong>TOTAL</strong>
+              </td>
+              <td className="pm-verified-cell">
+                <strong>{totalVerified}</strong>
+              </td>
+              <td className="pm-correct-cell">
+                <strong>{totalCorrect}</strong>
+              </td>
+              <td className="pm-precision-cell">
+                <strong>
+                  <span
+                    className="pm-precision-value"
+                    style={{ color: getPrecisionColor(overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger') }}
+                  >
+                    {overallPrecision}% {getStatusEmoji(overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger')}
+                  </span>
+                </strong>
+              </td>
+            </tr>
+
+            {/* Gap Row */}
+            <tr className="pm-target-row">
+              <td className="pm-condition-cell">Target: {target}%</td>
+              <td colSpan={3} className="pm-gap-cell">
+                <span style={{ color: gap >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  {gap >= 0 ? '✅' : '❌'} Gap: {gap >= 0 ? '+' : ''}{gap}%
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-
-      {/* Conditions Table */}
-      {activeTab === 'conditions' && (
-        <div className="pm-table-wrapper">
-          <table className="pm-table">
-            <thead>
-              <tr>
-                <th>Condición</th>
-                <th>Verificados</th>
-                <th>Correctos</th>
-                <th>Precisión</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.byCondition.map(metric => (
-                <tr key={metric.condition} className={`pm-row-${metric.status}`}>
-                  <td className="pm-condition-cell">{metric.condition}</td>
-                  <td className="pm-number-cell">{metric.verified}</td>
-                  <td className="pm-number-cell">{metric.correct}</td>
-                  <td className="pm-precision-cell">
-                    <span
-                      className="pm-precision-value"
-                      style={{ color: getPrecisionColor(metric.status) }}
-                    >
-                      {metric.precision}% {getStatusEmoji(metric.status)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-
-              {/* Total Row */}
-              <tr className="pm-total-row">
-                <td className="pm-condition-cell">
-                  <strong>TOTAL</strong>
-                </td>
-                <td className="pm-number-cell">
-                  <strong>{totalVerified}</strong>
-                </td>
-                <td className="pm-number-cell">
-                  <strong>{totalCorrect}</strong>
-                </td>
-                <td className="pm-precision-cell">
-                  <strong>
-                    <span
-                      className="pm-precision-value"
-                      style={{ color: getPrecisionColor(overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger') }}
-                    >
-                      {overallPrecision}% {getStatusEmoji(overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger')}
-                    </span>
-                  </strong>
-                </td>
-              </tr>
-
-              {/* Gap Row */}
-              <tr className="pm-target-row">
-                <td className="pm-condition-cell">Target: {target}%</td>
-                <td colSpan={3} className="pm-gap-cell">
-                  <span style={{ color: gap >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                    {gap >= 0 ? '✅' : '❌'} Gap: {gap >= 0 ? '+' : ''}{gap}%
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Regions Table */}
-      {activeTab === 'regions' && (
-        <div className="pm-table-wrapper">
-          <table className="pm-table">
-            <thead>
-              <tr>
-                <th>Región</th>
-                <th>Verificados</th>
-                <th>Correctos</th>
-                <th>Precisión</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.byRegion.map(metric => (
-                <tr key={metric.region} className={`pm-row-${metric.status}`}>
-                  <td className="pm-condition-cell">{metric.region}</td>
-                  <td className="pm-number-cell">{metric.verified}</td>
-                  <td className="pm-number-cell">{metric.correct}</td>
-                  <td className="pm-precision-cell">
-                    <span
-                      className="pm-precision-value"
-                      style={{ color: getPrecisionColor(metric.status) }}
-                    >
-                      {metric.precision}% {getStatusEmoji(metric.status)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-
-              {/* Total Row */}
-              <tr className="pm-total-row">
-                <td className="pm-condition-cell">
-                  <strong>TOTAL</strong>
-                </td>
-                <td className="pm-number-cell">
-                  <strong>{totalVerified}</strong>
-                </td>
-                <td className="pm-number-cell">
-                  <strong>{totalCorrect}</strong>
-                </td>
-                <td className="pm-precision-cell">
-                  <strong>
-                    <span
-                      className="pm-precision-value"
-                      style={{ color: getPrecisionColor(overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger') }}
-                    >
-                      {overallPrecision}% {getStatusEmoji(overallPrecision >= 98 ? 'good' : overallPrecision >= 80 ? 'warning' : 'danger')}
-                    </span>
-                  </strong>
-                </td>
-              </tr>
-
-              {/* Gap Row */}
-              <tr className="pm-target-row">
-                <td className="pm-condition-cell">Target: {target}%</td>
-                <td colSpan={3} className="pm-gap-cell">
-                  <span style={{ color: gap >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                    {gap >= 0 ? '✅' : '❌'} Gap: {gap >= 0 ? '+' : ''}{gap}%
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
 
       {/* Legend */}
       <div className="pm-legend">
@@ -287,8 +209,8 @@ export default function PrecisionMetrics({ retentionDays = 7 }: PrecisionMetrics
         .pm-container {
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          padding: 16px;
+          gap: 12px;
+          padding: 12px;
           max-height: 600px;
           overflow-y: auto;
         }
@@ -306,156 +228,179 @@ export default function PrecisionMetrics({ retentionDays = 7 }: PrecisionMetrics
           font-weight: 500;
         }
 
-        .pm-header {
+        /* Header Compacto — Una línea */
+        .pm-header-compact {
           display: flex;
-          flex-direction: column;
-          gap: 12px;
+          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
         }
 
-        .pm-header-info {
-          margin: 0;
+        .pm-header-main {
+          display: flex;
+          align-items: baseline;
+          gap: 6px;
+          min-width: 0;
         }
 
         .pm-title {
-          margin: 0 0 4px 0;
-          font-size: 15px;
+          margin: 0;
+          font-size: 13px;
           font-weight: 600;
           color: var(--text-primary);
+          white-space: nowrap;
         }
 
         .pm-subtitle {
           margin: 0;
-          font-size: 12px;
+          font-size: 11px;
           color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        .pm-warning {
-          padding: 8px 12px;
+        .pm-warning-inline {
+          padding: 4px 8px;
           background: rgba(255, 152, 0, 0.1);
-          border-left: 3px solid var(--warning);
-          border-radius: 3px;
-          font-size: 11px;
+          border-left: 2px solid var(--warning);
+          border-radius: 2px;
+          font-size: 10px;
           color: var(--warning);
           font-weight: 500;
+          white-space: nowrap;
         }
 
-        .pm-overall {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
+        /* Overall Stats — Lineal */
+        .pm-overall-linear {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
           padding: 12px;
           background: var(--bg-primary);
           border-radius: 4px;
           border: 1px solid var(--border-primary);
         }
 
-        .pm-stat {
+        .pm-stat-inline {
           display: flex;
-          flex-direction: column;
-          gap: 4px;
+          align-items: center;
+          gap: 6px;
+          white-space: nowrap;
         }
 
         .pm-stat-label {
           font-size: 10px;
           color: var(--text-secondary);
+          font-weight: 600;
           text-transform: uppercase;
-          font-weight: 500;
           letter-spacing: 0.5px;
         }
 
-        .pm-stat-value {
-          font-size: 14px;
+        .pm-stat-value-large {
+          font-size: 15px;
+          font-weight: 700;
+          font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .pm-stat-value-inline {
+          font-size: 12px;
           font-weight: 600;
           color: var(--text-primary);
           font-family: 'Monaco', 'Courier New', monospace;
         }
 
-        .pm-tabs {
-          display: flex;
-          gap: 0;
-          border-bottom: 1px solid var(--border-primary);
-          background: var(--bg-primary);
-          border-radius: 4px 4px 0 0;
-        }
-
-        .pm-tab {
-          flex: 1;
-          padding: 10px;
-          border: none;
-          background: none;
-          color: var(--text-secondary);
-          font-size: 11px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 150ms ease;
-          border-bottom: 2px solid transparent;
-          text-align: center;
-        }
-
-        .pm-tab:hover {
-          color: var(--text-primary);
-        }
-
-        .pm-tab.active {
-          color: var(--text-primary);
-          border-bottom-color: #1F77E3;
-        }
-
+        /* Tabla — Grande y Prominente */
         .pm-table-wrapper {
-          overflow-x: auto;
-          border: 1px solid var(--border-primary);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          overflow: hidden;
           border-radius: 4px;
+          border: 1px solid var(--border-primary);
+        }
+
+        .pm-table-title {
+          padding: 10px 12px;
+          background: var(--bg-tertiary);
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text-primary);
         }
 
         .pm-table {
           border-collapse: collapse;
-          font-size: 11px;
+          font-size: 12px;
           width: 100%;
           background: var(--bg-secondary);
         }
 
         .pm-table th {
-          background: var(--bg-tertiary);
-          padding: 10px 8px;
+          background: var(--bg-primary);
+          padding: 12px 8px;
           text-align: left;
           font-weight: 600;
           color: var(--text-primary);
-          border-bottom: 1px solid var(--border-primary);
-          white-space: nowrap;
+          border-bottom: 2px solid var(--border-primary);
+          font-size: 11px;
+        }
+
+        .th-condition {
+          min-width: 100px;
+        }
+
+        .th-verified {
+          text-align: center;
+          min-width: 85px;
+          font-weight: 700;
+        }
+
+        .th-correct {
+          text-align: center;
+          min-width: 70px;
+        }
+
+        .th-precision {
+          text-align: right;
+          min-width: 90px;
         }
 
         .pm-table td {
-          padding: 10px 8px;
+          padding: 12px 8px;
           border-bottom: 1px solid var(--border-primary);
           color: var(--text-primary);
         }
 
         .pm-condition-cell {
           font-weight: 500;
-          max-width: 120px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          text-transform: capitalize;
         }
 
-        .pm-number-cell {
+        .pm-verified-cell {
+          text-align: center;
+          font-weight: 700;
+          font-family: 'Monaco', 'Courier New', monospace;
+          font-size: 14px;
+        }
+
+        .pm-correct-cell {
           text-align: center;
           font-family: 'Monaco', 'Courier New', monospace;
-          width: 80px;
         }
 
         .pm-precision-cell {
           text-align: right;
           font-weight: 600;
-          width: 100px;
         }
 
         .pm-precision-value {
           display: inline-block;
-          padding: 3px 8px;
+          padding: 4px 8px;
           border-radius: 3px;
           background: rgba(0, 0, 0, 0.1);
-          font-size: 10px;
+          font-size: 11px;
+          font-weight: 600;
         }
 
         .pm-row-good {
@@ -492,29 +437,30 @@ export default function PrecisionMetrics({ retentionDays = 7 }: PrecisionMetrics
         .pm-target-row {
           background: var(--bg-primary);
           border-top: 1px dashed var(--border-primary);
+          font-size: 11px;
         }
 
         .pm-gap-cell {
           text-align: right;
-          padding: 10px 8px;
+          padding: 12px 8px;
           font-weight: 600;
         }
 
         .pm-legend {
           display: flex;
-          gap: 16px;
-          padding: 12px;
+          gap: 12px;
+          padding: 10px 12px;
           background: var(--bg-primary);
           border-radius: 4px;
           border: 1px solid var(--border-primary);
           flex-wrap: wrap;
-          font-size: 11px;
+          font-size: 10px;
         }
 
         .pm-legend-item {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
           color: var(--text-secondary);
         }
 
