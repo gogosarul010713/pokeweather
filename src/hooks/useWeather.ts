@@ -8,6 +8,7 @@ import { loadCitiesInBatch } from '../services/weather/batchWeatherService'
 import { getS2Key } from '../services/geo/s2Service'
 import { shouldRefreshCities, setLastUpdateHour, getCachedWeather } from '../services/cache/cacheService'
 import { msUntilNextHour } from '../utils/timeUtils'
+import { saveSnapshots, clearOldSnapshots } from '../services/history/weatherHistoryService'
 import type { City } from '../store/useStore'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -194,6 +195,9 @@ export function useWeather() {
       // Guardar timestamp de actualización (Lazy Load)
       setLastUpdateHour()
 
+      // US-607: Guardar snapshots históricos para análisis de precisión
+      await saveSnapshots(resultWithTime)
+
       return resultWithTime
     } catch (error) {
       console.error('❌ Error loading cities:', error)
@@ -277,6 +281,9 @@ export function useWeather() {
       onReadyRef.current = onReady
 
       try {
+        // US-607: Limpiar snapshots antiguos (> N días)
+        await clearOldSnapshots()
+
         let cities = await loadCities()
 
         // ✅ FIX #3: Deduplicación defensiva
