@@ -889,7 +889,7 @@ Tab: "Historial"
 ---
 
 ### US-609 · Métricas de Precisión
-**SP:** 3 · **Prioridad:** 🟡 · **Estado:** ⏳ Pendiente · **Sprint:** 6 Fase 2
+**SP:** 3 · **Prioridad:** 🟡 · **Estado:** ✅ Completada (2026-03-31) · **Sprint:** 7 Fase 2
 
 **Como** analista,
 **quiero** ver el % de precisión por condición climática vs el target de 98%,

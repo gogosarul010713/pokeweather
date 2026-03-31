@@ -325,24 +325,21 @@ src/components/Sidebar/LocationCard.tsx
 
 **Objetivo:**
 - Fase 1 ✅ (2026-03-31): Dashboard de Historial interactivo (US-608)
-- Fase 2 (PRIMERA PRIORIDAD): Inspector Visual de Caché (US-606) → Métricas (US-609)
+- Fase 2 ✅ (2026-03-31): Debug Tools (US-606 + US-609)
 - Fase 3: Responsive design (tablet + mobile)
 
-**Definition of Done (Fase 2 — US-606):**
-- ✅ Tab "🔧 Caché" en TestingTools
-- ✅ Tabla: LocationKeys + Weather data con estado visual (✅/⏰/❌)
-- ✅ Acciones: Ver (popup JSON) | Copiar clave | Eliminar (con confirmación)
-- ✅ Filtros: Tipo | Estado | Búsqueda por ciudad
-- ✅ Métricas resumen: Total | Almacenamiento | % usado
-- ✅ Dev-only (oculto en producción)
+**Definition of Done (Fase 2):**
+- ✅ US-606: Tab "🔧 Caché" con visualización, filtros, eliminación
+- ✅ US-609: Tab "📈 Métricas" con precisión por condición/región
+- ✅ Ambas dev-only (oculto en producción)
 
 ### US incluidas (Sprint 7)
 
 | Fase | US | Nombre | SP | Estado |
 |------|----|----|----|----|
 | Fase 1 | US-608 | Dashboard de Historial | 8 | ✅ Completada |
-| Fase 2 | **US-606** | **Inspector Visual de Caché** | **5** | **⏳ En progreso** |
-| Fase 2 | US-609 | Métricas de Precisión | 3 | ⏳ Pendiente |
+| Fase 2 | **US-606** | **Inspector Visual de Caché** | **5** | **✅ Completada** |
+| Fase 2 | **US-609** | **Métricas de Precisión** | **3** | **✅ Completada** |
 | Fase 3 | US-701 | Layout tablet (768–1024px) | 5 | ⏳ Pendiente |
 | Fase 3 | US-702 | Layout mobile (< 768px) | 8 | ⏳ Pendiente |
 | **Total** | | | **29 SP** | |
