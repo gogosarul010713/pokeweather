@@ -6,7 +6,6 @@ import MapView from './components/Map/MapView'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
 import { Toast } from './components/UI/Toast'
-import RefreshProgressBar from './components/UI/RefreshProgressBar'
 import { useWeather } from './hooks/useWeather'
 import type { City } from './store/useStore'
 
@@ -14,7 +13,6 @@ export default function App() {
   const [cities, setCities] = useState<City[]>([])
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
-  const loadingStatus = useStore((s) => s.loadingStatus)
   const { run, toastMessage } = useWeather()
 
   // useCallback para garantizar que onReady sea la misma referencia
@@ -57,12 +55,9 @@ export default function App() {
 
       `}</style>
 
-      <div className={`app-root ${loadingStatus === 'loading' ? 'is-refreshing' : ''}`}>
+      <div className="app-root">
         {/* LoadingScreen cubre todo hasta que useWeather termina */}
         <LoadingScreen />
-
-        {/* Progress bar durante auto-refresh */}
-        <RefreshProgressBar />
 
         {/* ── HEADER ── */}
         <Header cities={cities} />
