@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { getSnapshots } from '../../services/history/weatherHistoryService'
-import { CONDITION_EMOJIS } from '../../config/conditionEmojis'
 import SnapshotPopover from './SnapshotPopover'
 import { exportHistoryToExcel } from '../../utils/exportHistory'
 import type { City } from '../../store/useStore'
@@ -12,17 +11,18 @@ interface HistoryGridProps {
   onRetentionChange: (days: 7 | 14 | 30) => void
 }
 
-interface SnapshotsByDateByCity {
-  [cityId: string]: {
-    [dateStr: string]: WeatherSnapshot[]
-  }
+interface HistoryEntry {
+  fecha: string
+  ciudad: City
+  snapshots: WeatherSnapshot[]
+  precisionPercentage: number
 }
 
 export default function HistoryGrid({ cities, retentionDays, onRetentionChange }: HistoryGridProps) {
   const [snapshots, setSnapshots] = useState<WeatherSnapshot[]>([])
   const [loading, setLoading] = useState(false)
-  const [selectedPopover, setSelectedPopover] = useState<{ snapshotId: string; snapshot: WeatherSnapshot } | null>(null)
-  const [dataStructure, setDataStructure] = useState<SnapshotsByDateByCity>({})
+  const [selectedEntry, setSelectedEntry] = useState<HistoryEntry | null>(null)
+  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([])
 
   // Cargar snapshots al montar o cambiar retentionDays
   useEffect(() => {
@@ -35,27 +35,43 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
       const data = await getSnapshots({ retentionDays })
       setSnapshots(data)
 
-      // Agrupar por ciudad → fecha
-      const grouped: SnapshotsByDateByCity = {}
+      // Crear entradas: [fecha + ciudad] = snapshots para ese día
+      const entriesMap = new Map<string, HistoryEntry>()
+
       for (const snapshot of data) {
-        if (!grouped[snapshot.cityId]) {
-          grouped[snapshot.cityId] = {}
-        }
         const dateStr = new Date(snapshot.capturedAt).toLocaleDateString('es-ES')
-        if (!grouped[snapshot.cityId][dateStr]) {
-          grouped[snapshot.cityId][dateStr] = []
+        const key = `${dateStr}-${snapshot.cityId}`
+
+        if (!entriesMap.has(key)) {
+          const city = cities.find((c) => c.id === snapshot.cityId)
+          if (city) {
+            entriesMap.set(key, {
+              fecha: dateStr,
+              ciudad: city,
+              snapshots: [],
+              precisionPercentage: 0,
+            })
+          }
         }
-        grouped[snapshot.cityId][dateStr].push(snapshot)
+
+        const entry = entriesMap.get(key)
+        if (entry) {
+          entry.snapshots.push(snapshot)
+        }
       }
 
-      // Ordenar snapshots por hora dentro de cada fecha
-      Object.keys(grouped).forEach((cityId) => {
-        Object.keys(grouped[cityId]).forEach((dateStr) => {
-          grouped[cityId][dateStr].sort((a, b) => a.capturedAt - b.capturedAt)
-        })
+      // Calcular precisión para cada entrada
+      const entries = Array.from(entriesMap.values())
+      entries.forEach((entry) => {
+        const verified = entry.snapshots.filter((s) => s.actualCondition !== undefined && s.actualCondition !== null)
+        const correct = verified.filter((s) => s.isCorrect === true)
+        entry.precisionPercentage = verified.length > 0 ? Math.round((correct.length / verified.length) * 100) : 0
       })
 
-      setDataStructure(grouped)
+      // Ordenar: más recientes primero
+      entries.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+
+      setHistoryEntries(entries)
     } catch (error) {
       console.error('Error loading snapshots:', error)
     } finally {
@@ -63,13 +79,17 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
     }
   }
 
+  const handleVerificar = (entry: HistoryEntry) => {
+    setSelectedEntry(entry)
+  }
+
   const handlePopoverClose = () => {
-    setSelectedPopover(null)
+    setSelectedEntry(null)
   }
 
   const handlePopoverUpdated = async () => {
     await loadSnapshots()
-    setSelectedPopover(null)
+    setSelectedEntry(null)
   }
 
   const handleExportClick = async () => {
@@ -83,27 +103,6 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
       console.error('Error exporting to Excel:', error)
       alert('Error al exportar. Ver consola.')
     }
-  }
-
-  // Obtener todas las fechas únicas (ordenadas, más recientes primero)
-  const allDates = Array.from(
-    new Set(
-      Object.values(dataStructure).flatMap((cityData) => Object.keys(cityData))
-    )
-  ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-
-  const getStatusIcon = (snapshot: WeatherSnapshot): string => {
-    if (snapshot.actualCondition === undefined || snapshot.actualCondition === null) return '?'
-    if (snapshot.isCorrect) return '✓'
-    if (snapshot.isCorrect === false) return '✗'
-    return '—'
-  }
-
-  const getStatusColor = (snapshot: WeatherSnapshot): string => {
-    if (snapshot.actualCondition === undefined || snapshot.actualCondition === null) return 'unverified'
-    if (snapshot.isCorrect) return 'correct'
-    if (snapshot.isCorrect === false) return 'incorrect'
-    return 'empty'
   }
 
   return (
@@ -160,124 +159,115 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
           box-shadow: 0 4px 12px rgba(31, 119, 227, 0.3);
         }
 
-        .hg-wrapper {
+        .hg-table {
           flex: 1;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
+          overflow: auto;
           border: 1px solid var(--border-default);
           border-radius: 4px;
           background: var(--bg-primary);
         }
 
-        .hg-scroll-container {
-          flex: 1;
-          overflow: auto;
-          display: grid;
-          grid-template-columns: 140px 1fr;
-          grid-auto-rows: 40px;
+        .hg-table-inner {
+          width: 100%;
+          border-collapse: collapse;
         }
 
-        .hg-header-city {
+        .hg-table-header {
+          background: var(--bg-secondary);
           position: sticky;
-          left: 0;
           top: 0;
-          background: var(--bg-secondary);
-          border-right: 2px solid var(--border-default);
-          border-bottom: 1px solid var(--border-default);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          font-size: 12px;
-          color: var(--text-secondary);
-          z-index: 20;
-          padding: 0 8px;
-          text-align: center;
-        }
-
-        .hg-header-date {
-          background: var(--bg-secondary);
-          border-bottom: 1px solid var(--border-default);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          font-size: 11px;
-          color: var(--text-primary);
-          border-right: 1px solid var(--border-default);
-          padding: 0 4px;
-        }
-
-        .hg-cell-city {
-          position: sticky;
-          left: 0;
-          background: var(--bg-tertiary);
-          border-right: 2px solid var(--border-default);
-          border-bottom: 1px solid var(--border-default);
-          display: flex;
-          align-items: center;
-          padding: 0 8px;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--text-primary);
           z-index: 10;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
         }
 
-        .hg-cell {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          border-right: 1px solid var(--border-default);
+        .hg-table-th {
+          padding: 12px 16px;
+          text-align: left;
+          font-weight: 600;
+          font-size: 13px;
+          color: var(--text-secondary);
           border-bottom: 1px solid var(--border-default);
-          cursor: pointer;
-          gap: 2px;
+          border-right: 1px solid var(--border-default);
+        }
+
+        .hg-table-th:last-child {
+          border-right: none;
+        }
+
+        .hg-table-row {
+          border-bottom: 1px solid var(--border-default);
           transition: background-color 0.15s;
         }
 
-        .hg-cell:hover {
-          background-color: var(--bg-quaternary);
-        }
-
-        .hg-cell-empty {
-          color: var(--text-tertiary);
-          background: var(--bg-tertiary);
-          cursor: default;
-        }
-
-        .hg-cell-empty:hover {
+        .hg-table-row:hover {
           background-color: var(--bg-tertiary);
         }
 
-        .hg-cell-unverified {
-          background: rgba(255, 193, 7, 0.1);
+        .hg-table-td {
+          padding: 12px 16px;
+          font-size: 13px;
           color: var(--text-primary);
+          border-right: 1px solid var(--border-default);
         }
 
-        .hg-cell-correct {
-          background: rgba(76, 175, 80, 0.15);
-          color: var(--text-primary);
+        .hg-table-td:last-child {
+          border-right: none;
         }
 
-        .hg-cell-incorrect {
-          background: rgba(244, 67, 54, 0.15);
-          color: var(--text-primary);
+        .hg-fecha {
+          font-weight: 500;
+          width: 100px;
         }
 
-        .hg-status-icon {
+        .hg-ciudad {
+          flex: 1;
+          min-width: 200px;
+        }
+
+        .hg-precision {
+          width: 100px;
+          text-align: center;
+          font-weight: 600;
+        }
+
+        .hg-precision-low {
+          color: #f44336;
+        }
+
+        .hg-precision-medium {
+          color: #ff9800;
+        }
+
+        .hg-precision-high {
+          color: #4caf50;
+        }
+
+        .hg-precision-none {
+          color: var(--text-tertiary);
+        }
+
+        .hg-verificar-btn {
+          padding: 6px 12px;
+          background: #1F77E3;
+          border: none;
+          border-radius: 4px;
+          color: white;
           font-size: 12px;
           font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          width: 100%;
+        }
+
+        .hg-verificar-btn:hover {
+          background: #1856B4;
+          transform: translateY(-1px);
         }
 
         .hg-empty-state {
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 100%;
+          height: 200px;
           color: var(--text-tertiary);
           font-size: 14px;
         }
@@ -315,62 +305,60 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
           </button>
         </div>
 
-        {/* Grid */}
+        {/* Table */}
         {loading ? (
           <div className="hg-loading">Cargando snapshots...</div>
-        ) : snapshots.length === 0 ? (
+        ) : historyEntries.length === 0 ? (
           <div className="hg-empty-state">No hay datos históricos para este período</div>
         ) : (
-          <div className="hg-wrapper">
-            <div className="hg-scroll-container" style={{ gridTemplateColumns: `140px repeat(${allDates.length}, 80px)` }}>
-              {/* Header: Fechas */}
-              <div className="hg-header-city">Ciudad</div>
-              {allDates.map((dateStr) => (
-                <div key={`header-${dateStr}`} className="hg-header-date">
-                  {dateStr.split('/').slice(0, 2).join('/')}
-                </div>
-              ))}
+          <div className="hg-table">
+            <table className="hg-table-inner">
+              <thead className="hg-table-header">
+                <tr>
+                  <th className="hg-table-th hg-fecha">Fecha</th>
+                  <th className="hg-table-th hg-ciudad">Ciudad</th>
+                  <th className="hg-table-th" style={{ width: '100px', textAlign: 'center' }}>
+                    Verificar
+                  </th>
+                  <th className="hg-table-th hg-precision">% Precisión</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historyEntries.map((entry) => {
+                  const precisionColor =
+                    entry.precisionPercentage === 0
+                      ? 'hg-precision-none'
+                      : entry.precisionPercentage >= 90
+                        ? 'hg-precision-high'
+                        : entry.precisionPercentage >= 70
+                          ? 'hg-precision-medium'
+                          : 'hg-precision-low'
 
-              {/* Rows: Ciudades */}
-              {cities.map((city) => (
-                <div key={`city-${city.id}`}>
-                  <div className="hg-cell-city" title={city.name}>
-                    {city.name}
-                  </div>
-
-                  {allDates.map((dateStr) => {
-                    const snapshotForDate = dataStructure[city.id]?.[dateStr]?.[0]
-                    if (!snapshotForDate) {
-                      return <div key={`cell-${city.id}-${dateStr}`} className="hg-cell hg-cell-empty">—</div>
-                    }
-
-                    const statusClass = getStatusColor(snapshotForDate)
-                    const statusIcon = getStatusIcon(snapshotForDate)
-                    const conditionEmoji = CONDITION_EMOJIS[snapshotForDate.condition as keyof typeof CONDITION_EMOJIS] || '❓'
-
-                    return (
-                      <div
-                        key={`cell-${city.id}-${dateStr}`}
-                        className={`hg-cell hg-cell-${statusClass}`}
-                        onClick={() => setSelectedPopover({ snapshotId: snapshotForDate.snapshotId, snapshot: snapshotForDate })}
-                      >
-                        <span>{conditionEmoji}</span>
-                        <span className="hg-status-icon">{statusIcon}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
+                  return (
+                    <tr key={`${entry.fecha}-${entry.ciudad.id}`} className="hg-table-row">
+                      <td className="hg-table-td hg-fecha">{entry.fecha}</td>
+                      <td className="hg-table-td hg-ciudad">{entry.ciudad.name}</td>
+                      <td className="hg-table-td" style={{ textAlign: 'center', width: '100px' }}>
+                        <button className="hg-verificar-btn" onClick={() => handleVerificar(entry)}>
+                          Verificar
+                        </button>
+                      </td>
+                      <td className={`hg-table-td hg-precision ${precisionColor}`}>
+                        {entry.precisionPercentage > 0 ? `${entry.precisionPercentage}%` : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
       {/* Popover Modal */}
-      {selectedPopover && (
+      {selectedEntry && (
         <SnapshotPopover
-          snapshot={selectedPopover.snapshot}
-          allSnapshots={dataStructure[selectedPopover.snapshot.cityId]?.[new Date(selectedPopover.snapshot.capturedAt).toLocaleDateString('es-ES')] || []}
+          entry={selectedEntry}
           onClose={handlePopoverClose}
           onUpdated={handlePopoverUpdated}
         />
