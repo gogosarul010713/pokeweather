@@ -383,5 +383,5 @@ Sprint 6 (API real) ────────────────────
 | Sprint 3 | ✅ Completado (refactorizado + polish 2026-03-21) |
 | Sprint 4 | ✅ Completado (2026-03-21) |
 | Sprint 5 | ✅ Completado (2026-03-22) — Badges, filtros, auto-scroll, z-index fix |
-| **Sprint 6** | **🔄 En progreso (2026-03-30)** — Fase 1 ✅, Fase 2 🔄 (Fixes + Testing Toolkit) |
+| **Sprint 6** | **✅ Completado (2026-03-30)** — Fase 1 ✅ (API real, batch, caching), Fase 2 ✅ (Lazy Load, Auto-refresh, Testing) |
 | Sprint 7 | ⏳ Pendiente (Responsive: tablet + mobile) |

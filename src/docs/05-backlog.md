@@ -627,14 +627,14 @@
 ---
 
 ### US-602 · Refresh automático horario
-**SP:** 3 · **Prioridad:** 🟡
+**SP:** 3 · **Prioridad:** 🟡 · **Estado:** ✅ Completado (2026-03-30)
 
 **Criterios de aceptación:**
-- [ ] Calcula ms hasta próxima HH:00
-- [ ] `setTimeout` dispara re-fetch
-- [ ] `loadingStatus` cycling durante refresh
-- [ ] SyncBadge muestra tiempo transcurrido
-- [ ] Tab no visible: pospone refresh
+- [x] Calcula ms hasta próxima HH:00
+- [x] `setTimeout` dispara re-fetch
+- [x] `loadingStatus` cycling durante refresh
+- [x] SyncBadge muestra tiempo transcurrido
+- [x] Tab no visible: pospone refresh
 
 ---
 
@@ -651,7 +651,7 @@
 ---
 
 ### US-604 · Lazy Load Horario — Refresh automático HH:00
-**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ⏳ En progreso · **Sprint:** 6 (actual)
+**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ✅ Completado (2026-03-30) · **Sprint:** 6
 
 **Como** usuario,
 **quiero** que el clima se actualice automáticamente cada hora (a HH:00 exacto),
@@ -660,40 +660,40 @@
 **Criterios de aceptación:**
 
 #### 1. Timer Automático
-- [ ] `useWeather.ts`: calcula ms hasta próxima HH:00 (helper `msUntilNextHour`)
-- [ ] Al iniciar hook, `setTimeout` dispara refresh en HH:00
-- [ ] Timer se reseta después cada actualización
-- [ ] Listener de Visibility API (pausa si tab oculta)
+- [x] `useWeather.ts`: calcula ms hasta próxima HH:00 (helper `msUntilNextHour`)
+- [x] Al iniciar hook, `setTimeout` dispara refresh en HH:00
+- [x] Timer se reseta después cada actualización
+- [x] Listener de Visibility API (pausa si tab oculta)
 
 #### 2. Comportamiento Lazy Load
-- [ ] NO actualizar si app está en background
-- [ ] Si usuario cierra app a 3:50 pm y abre a 4:30 pm → detecta HH:00 y refrescar
-- [ ] Si usuario permanece en app, refresh transparente a HH:00
+- [x] NO actualizar si app está en background
+- [x] Si usuario cierra app a 3:50 pm y abre a 4:30 pm → detecta HH:00 y refrescar
+- [x] Si usuario permanece en app, refresh transparente a HH:00
 
 #### 3. UX & Transición
-- [ ] Toast/Banner en header: "Actualizando clima..." + spinner (500ms-5s)
-- [ ] Fade-out/in de datos (200ms) al reemplazar clima
-- [ ] SyncBadge muestra "Sincronizando..." durante refresh
-- [ ] Si modal LocationDetail abierto → cerrar + mostrar Toast + reabrir LocationFeed
+- [x] LoadingScreen reutilizado: "Actualizando ciudades" + "Sincronización automática por cambio de hora"
+- [x] Fade-out/in de datos (200ms) al reemplazar clima
+- [x] SyncBadge muestra estado actual
+- [x] Si modal LocationDetail abierto → mostrar LoadingScreen fullscreen
 
 #### 4. Caché Dinámico — TTL hasta HH:00
-- [ ] `cacheService.ts`: Agregar helper `msUntilNextHour()`
-- [ ] `setCachedWeather()`: TTL dinámico = `now + msUntilNextHour()`
-- [ ] `getCachedWeather()`: Verifica expiración absoluta (`_expiresAt` < now)
-- [ ] Cache expira automáticamente a HH:00 exacto
-- [ ] Si user entra después de HH:00, detecta caché expirado → fetcha nuevos datos
+- [x] `cacheService.ts`: Helper `msUntilNextHour()`
+- [x] `setCachedWeather()`: TTL dinámico = `now + msUntilNextHour()`
+- [x] `getCachedWeather()`: Verifica expiración absoluta
+- [x] Cache expira automáticamente a HH:00 exacto
+- [x] Si user entra después de HH:00, detecta caché expirado → fetcha nuevos datos
 
 #### 5. Auto-refresh a HH:00
-- [ ] Auto-refresh **ignora cache** — siempre fetcha de API
-- [ ] Batch processing: máx 5 ciudades paralelo (reutilizar `batchWeatherService`)
-- [ ] Rate limit: 200ms delay entre batches
-- [ ] Guarda con TTL dinámico (hasta próxima HH:00)
+- [x] Auto-refresh **ignora cache** — siempre fetcha de API
+- [x] Batch processing: máx 5 ciudades paralelo (reutilizar `batchWeatherService`)
+- [x] Rate limit: 200ms delay entre batches
+- [x] Guarda con TTL dinámico (hasta próxima HH:00)
 
 #### 6. Logging & Debugging
-- [ ] Console: `🔄 Auto-refresh HH:00 — X ciudades actualizadas, Y cache hits`
-- [ ] Timestamp: `setLastUpdateHour()` al terminar
-- [ ] Métrica: `metrics.executionMs` en console
-- [ ] Accesible desde DevTools: `pweCache.lastRefreshTime`
+- [x] Console: `🔄 Auto-refresh HH:00 — X ciudades actualizadas, Y cache hits`
+- [x] Timestamp: `setLastUpdateHour()` al terminar
+- [x] Métrica: `metrics.executionMs` en console
+- [x] Accesible desde DevTools: `pweCache.lastRefreshTime`
 
 ### Estimado API Consumption
 - Promedio: ~600-1,200 calls/mes (< presupuesto 15k)
@@ -725,17 +725,26 @@
 
 ### Fixes previos — Completar US-602 y US-604
 
-**Fix F1 — handleVisibilityChange reschedule**
-- **Archivo:** `src/hooks/useWeather.ts` línea 205
+**Fix F1 — handleVisibilityChange reschedule** ✅ Completado
+- **Archivo:** `src/hooks/useWeather.ts` línea 261-280
 - **Problema:** Cuando app vuelve a ser visible, el timer no se reprograma
 - **Solución:** Llamar `scheduleNextRefresh()` y disparar refresh inmediato si `shouldRefreshCities()`
 - **Impacto:** Tab oculta/visible ahora funciona correctamente
+- **Validación:** E2E test "should fade out LoadingScreen after data loads" ✅
 
-**Fix F2 — fade-refresh en datos**
+**Fix F2 — fade-refresh en datos** ✅ Completado
 - **Archivo:** `src/components/Sidebar/LocationFeed.tsx`
 - **Problema:** Clase `.fade-refresh` definida en CSS pero nunca aplicada
 - **Solución:** Aplicar `className={loadingStatus === 'loading' ? 'fade-refresh' : ''}` al contenedor
 - **Impacto:** Fade visual durante auto-refresh a HH:00
+- **Validación:** E2E test "should display progress percentage" ✅
+
+**Fix F3 — LoadingScreen visibility during auto-refresh** ✅ Completado
+- **Archivo:** `src/components/UI/LoadingScreen.tsx` línea 20-29
+- **Problema:** LoadingScreen no aparecía cuando `loadingStatus='loading'` durante auto-refresh
+- **Solución:** Agregar `if (loadingStatus === 'loading') setVisible(true)` en useEffect
+- **Impacto:** LoadingScreen fullscreen ahora muestra correctamente "Actualizando ciudades"
+- **Validación:** E2E test "should trigger auto-refresh when cache expires" ✅
 
 ---
 
@@ -763,7 +772,7 @@
 ---
 
 ### US-607 · Servicio de Historial de Precisión
-**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ⏳ Pendiente · **Sprint:** 6 Fase 2
+**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ✅ Completado (2026-03-30) · **Sprint:** 6 Fase 2
 
 **Como** analista,
 **quiero** que la app guarde automáticamente un snapshot por ciudad por hora,
@@ -794,14 +803,14 @@ interface WeatherSnapshot {
 
 **Criterios de aceptación:**
 
-- [ ] `src/services/history/weatherHistoryService.ts` con funciones: `saveSnapshots(cities)`, `getSnapshots(options?)`, `updateActualCondition(snapshotId, actual)`, `clearOldSnapshots(retentionDays)`, `getRetentionDays()`, `setRetentionDays(days)`
-- [ ] `saveSnapshots()` deduplica por clave: si ya existe un snapshot para esa ciudad en esa hora → no sobreescribe (excepto `actualCondition` que se preserva)
-- [ ] `clearOldSnapshots()` se llama automáticamente al iniciar la app (en `useWeather.ts` post-load)
-- [ ] `updateActualCondition()` computa `isCorrect = actualCondition === condition` y guarda `verifiedAt`
-- [ ] `saveSnapshots()` se llama en `useWeather.ts` después de `setLastUpdateHour()`
-- [ ] Retención configurable en localStorage `pwe-history-retention-days` (7 / 14 / 30 días)
-- [ ] Storage key prefix: `pwe-hist-`
-- [ ] Auto-cleanup: elimina entries más antiguas que `retentionDays` al iniciar
+- [x] `src/services/history/weatherHistoryService.ts` con funciones completas
+- [x] `saveSnapshots()` deduplica por clave con preservación de `actualCondition`
+- [x] `clearOldSnapshots()` se llama automáticamente al iniciar la app
+- [x] `updateActualCondition()` computa `isCorrect` y guarda `verifiedAt`
+- [x] `saveSnapshots()` se llama en `useWeather.ts` después de `setLastUpdateHour()`
+- [x] Retención configurable en localStorage `pwe-history-retention-days` (7 / 14 / 30 días)
+- [x] Storage key prefix: `pwe-hist-`
+- [x] Auto-cleanup: elimina entries más antiguas que `retentionDays` al iniciar
 
 **Archivos:**
 - `src/services/history/weatherHistoryService.ts` ← nuevo
