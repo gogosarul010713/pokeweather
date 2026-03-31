@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getSnapshots } from '../../services/history/weatherHistoryService'
 import SnapshotPopover from './SnapshotPopover'
 import { exportHistoryToExcel } from '../../utils/exportHistory'
@@ -21,9 +21,9 @@ interface HistoryEntry {
 export default function HistoryGrid({ cities, retentionDays, onRetentionChange }: HistoryGridProps) {
   const [snapshots, setSnapshots] = useState<WeatherSnapshot[]>([])
   const [loading, setLoading] = useState(false)
-  const [selectedEntry, setSelectedEntry] = useState<HistoryEntry | null>(null)
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([])
   const [isMaximized, setIsMaximized] = useState(false)
+  const [popoverData, setPopoverData] = useState<{ entry: HistoryEntry; key: string } | null>(null)
 
   // Cargar snapshots al montar o cambiar retentionDays
   useEffect(() => {
@@ -80,23 +80,20 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
     }
   }
 
-  const handleVerificar = (entry: HistoryEntry) => {
-    console.log('🔍 handleVerificar clicked:', entry.ciudad.name, entry.fecha)
-    console.log('📦 Entry data:', entry)
-    setSelectedEntry(entry)
-    console.log('✅ setSelectedEntry executed')
-  }
+  // Usar useCallback para garantizar que la función persista
+  const handleOpenPopover = useCallback((entry: HistoryEntry) => {
+    const key = `${entry.fecha}-${entry.ciudad.id}`
+    setPopoverData({ entry, key })
+  }, [])
 
-  const handlePopoverClose = () => {
-    console.log('❌ handlePopoverClose: clearing selectedEntry')
-    setSelectedEntry(null)
-  }
+  const handleClosePopover = useCallback(() => {
+    setPopoverData(null)
+  }, [])
 
-  const handlePopoverUpdated = async () => {
-    console.log('🔄 handlePopoverUpdated: reloading snapshots')
+  const handlePopoverUpdated = useCallback(async () => {
     await loadSnapshots()
-    setSelectedEntry(null)
-  }
+    setPopoverData(null)
+  }, [])
 
   const handleExportClick = async () => {
     if (snapshots.length === 0) {
@@ -294,21 +291,26 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
         }
 
         .hg-verificar-btn {
-          padding: 6px 12px;
+          padding: 8px 16px;
           background: #1F77E3;
           border: none;
           border-radius: 4px;
           color: white;
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
           width: 100%;
+          min-height: 36px;
         }
 
         .hg-verificar-btn:hover {
           background: #1856B4;
           transform: translateY(-1px);
+        }
+
+        .hg-verificar-btn:active {
+          transform: translateY(0);
         }
 
         .hg-empty-state {
@@ -370,7 +372,7 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
                 <tr>
                   <th className="hg-table-th hg-fecha">Fecha</th>
                   <th className="hg-table-th hg-ciudad">Ciudad</th>
-                  <th className="hg-table-th" style={{ width: '100px', textAlign: 'center' }}>
+                  <th className="hg-table-th" style={{ width: '120px', textAlign: 'center' }}>
                     Verificar
                   </th>
                   <th className="hg-table-th hg-precision">% Precisión</th>
@@ -391,14 +393,11 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
                     <tr key={`${entry.fecha}-${entry.ciudad.id}`} className="hg-table-row">
                       <td className="hg-table-td hg-fecha">{entry.fecha}</td>
                       <td className="hg-table-td hg-ciudad">{entry.ciudad.name}</td>
-                      <td className="hg-table-td" style={{ textAlign: 'center', width: '100px' }}>
+                      <td className="hg-table-td" style={{ textAlign: 'center', width: '120px' }}>
                         <button
                           className="hg-verificar-btn"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            console.log('🔘 Button clicked for:', entry.ciudad.name, entry.fecha)
-                            handleVerificar(entry)
+                          onClick={() => {
+                            handleOpenPopover(entry)
                           }}
                           type="button"
                         >
@@ -417,17 +416,14 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
         )}
       </div>
 
-      {/* Popover Modal */}
-      {selectedEntry ? (
-        <>
-          {console.log('🎯 Rendering SnapshotPopover for:', selectedEntry.ciudad.name)}
-          <SnapshotPopover
-            entry={selectedEntry}
-            onClose={handlePopoverClose}
-            onUpdated={handlePopoverUpdated}
-          />
-        </>
-      ) : null}
+      {/* Popover Modal - Renderizado FUERA de HistoryGrid container */}
+      {popoverData && (
+        <SnapshotPopover
+          entry={popoverData.entry}
+          onClose={handleClosePopover}
+          onUpdated={handlePopoverUpdated}
+        />
+      )}
     </>
   )
 }
