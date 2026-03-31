@@ -210,21 +210,24 @@ export function useWeather() {
 
   // ✅ FIX: Helper para ejecutar refresh y reprogramar siguiente
   const doRefresh = useCallback(async () => {
-    setToastMessage('Actualizando clima...')
+    // Mostrar LoadingScreen durante auto-refresh (en lugar de Toast sutil)
+    setLoadingStatus('loading')
+
     try {
       const refreshed = await loadCities(true)
       setLoadingStatus('ready')
       setLastUpdated(Date.now())
       onReadyRef.current(refreshed)
-      setTimeout(() => setToastMessage(null), 3000)
-      scheduleNextRefreshRef.current()
+
+      // Después del fade-out del LoadingScreen (400ms), programar siguiente
+      setTimeout(() => scheduleNextRefreshRef.current(), 400)
     } catch (error) {
       console.error('❌ Auto-refresh error:', error)
-      setToastMessage('Error actualizando clima')
       setLoadingStatus('error')
+      // Reintentar en 1 minuto
       refreshRef.current = setTimeout(() => scheduleNextRefreshRef.current(), 60 * 1000)
     }
-  }, [loadCities, setLoadingStatus, setLastUpdated, setToastMessage])
+  }, [loadCities, setLoadingStatus, setLastUpdated])
 
   // Reprogramar siguiente refresh a HH:00
   const scheduleNextRefresh = useCallback(() => {
