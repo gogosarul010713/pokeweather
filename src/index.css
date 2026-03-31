@@ -184,3 +184,24 @@ html.light {
 .fade-refresh {
   animation: fadeInOut 200ms ease-in-out;
 }
+
+/* ============================================================
+   HEADER TINT — Durante auto-refresh
+   ============================================================ */
+
+/* App-root con clase is-refreshing durante auto-refresh */
+.app-root.is-refreshing {
+  --header-refresh-tint: rgba(var(--ui-warning-rgb), 0.08);
+}
+
+/* Header hint visual: tint amarillo cuando hay refresh */
+.app-root.is-refreshing .app-header {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary),
+    var(--header-refresh-tint, transparent)
+  );
+  transition: background 250ms ease-out;
+  border-bottom-color: rgba(var(--ui-warning-rgb), 0.2);
+  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.1);
+}

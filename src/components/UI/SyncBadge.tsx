@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore'
 export default function SyncBadge() {
   const status = useStore((s) => s.loadingStatus)
   const lastUpdated = useStore((s) => s.lastUpdated)
+  const loadingProgress = useStore((s) => s.loadingProgress)
   const [timeago, setTimeago] = useState<string>('')
 
   useEffect(() => {
@@ -30,6 +31,9 @@ export default function SyncBadge() {
   }, [lastUpdated])
 
   if (status === 'loading') {
+    const { current, total } = loadingProgress
+    const hasProgress = current > 0 && total > 0
+
     return (
       <>
         <style>{`
@@ -62,7 +66,9 @@ export default function SyncBadge() {
         `}</style>
         <div className="ui-sync">
           <span className="ui-sync-spinner" />
-          <span>Sincronizando...</span>
+          <span>
+            {hasProgress ? `Sincronizando... ${current}/${total}` : 'Sincronizando...'}
+          </span>
         </div>
       </>
     )
