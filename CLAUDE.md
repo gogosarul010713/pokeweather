@@ -97,25 +97,32 @@ VITE_ACCUWEATHER_KEY=   # ⚠️ REQUERIDA (sin key → error de inicialización
 
 ## SPRINT ACTUAL
 
-**Sprint:** 6 — AccuWeather Real API + Batch Processing ✅ **COMPLETADO (2026-03-24)**
-**Completado:**
+**Sprint:** 6 — AccuWeather Real API + Auto-refresh ✅ **COMPLETADO (2026-03-30)**
+
+**Fase 1 (2026-03-24):** ✅
 - ✅ Eliminado modo mock completamente (solo API real)
 - ✅ S2_LEVEL corregido: 13 → 10 (Pokémon GO spec)
-- ✅ S2 Keys calculados en mockCities.ts
 - ✅ Batch processing implementado (5 paralelo, 200ms delay)
 - ✅ 3-layer caching: LocationKeys (localStorage) + Weather (IndexedDB, TTL 60min)
 - ✅ Debug tools: debugCaching.ts (8 funciones, console access via pweCache)
-- ✅ Documentación: 10-api.md, 11-caching-strategy.md, 12-fix-s2key.md, 13-debugging-cache.md, 14-setup-accuweather.md
-- ✅ Build exitoso (npm run build ✓)
-- ⏳ **PENDIENTE**: Usuario configura `.env.local` y verifica 94 ciudades cargadas
 
-**Bugs Conocidos:**
-- ⚠️ **MapView.tsx:156** — Keys duplicadas en Leaflet: "Encountered two children with the same key, `osaka-dotonbori`"
-  - Causa: Múltiples ciudades pueden renderizarse con key duplicada
-  - Impacto: Warning en console (no afecta funcionalidad)
-  - Fix: Cambiar key de MapPin a usar id único garantizado
+**Fase 2 (2026-03-30):** ✅ **COMPLETADO**
+- ✅ **US-602** Refresh automático horario (timer HH:00, Visibility API)
+- ✅ **US-604** Lazy Load Horario (auto-refresh con LoadingScreen contextual)
+- ✅ **US-607** Servicio de Historial de Precisión (WeatherHistoryService, snapshots)
+- ✅ **Fix F1** handleVisibilityChange reschedule (app vuelve visible → refresh inmediato)
+- ✅ **Fix F2** fade-refresh animation (200ms fadeInOut en LocationFeed)
+- ✅ **Fix F3** LoadingScreen visibility (visible=true cuando loadingStatus='loading')
+- ✅ E2E Tests validados: 6/6 PASSED (Playwright)
+- ✅ Build exitoso (npm run build ✓, 1.32s)
+- ✅ Documentación: 23-sprint-6-completion.md con todas las validaciones
 
-**Próximo:** Sprint 7 — Lazy Load (reduce consumo API 50%, cumple presupuesto 15k/mes)
+**Métricas:**
+- API Consumption: ~600-1200 calls/mes (< 15k presupuesto)
+- Test Coverage: 6/6 E2E tests passed
+- Performance: Fade 400ms, progreso <100ms
+
+**Próximo:** Sprint 7 — Responsive (Tablet + Mobile layout)
 
 ---
 
@@ -132,7 +139,7 @@ VITE_ACCUWEATHER_KEY=   # ⚠️ REQUERIDA (sin key → error de inicialización
 - `src/components/Map/MapLegend.tsx` ✅ (score legend)
 - `src/components/Sidebar/LocationCard.tsx` ✅ (refactor popup)
 
-**Sprint 6:**
+**Sprint 6 — Fase 1:**
 - `src/data/useStore.ts` ✅ (+ lastUpdated tracking)
 - `src/data/useWeather.ts` ✅ **REWRITTEN** (mock eliminado, solo API real)
 - `src/data/s2Service.ts` ✅ (S2_LEVEL: 13 → 10)
@@ -148,6 +155,18 @@ VITE_ACCUWEATHER_KEY=   # ⚠️ REQUERIDA (sin key → error de inicialización
 - `src/docs/14-setup-accuweather.md` ✅ **NUEVO** (CRÍTICO para usuario)
 - `src/docs/HALLAZGOS-CLIMA.md` ✅ **NUEVO**
 - `src/data/ANALYSIS-DEEP-DEBUG.md` ✅ **NUEVO**
+
+**Sprint 6 — Fase 2:**
+- `src/hooks/useWeather.ts` ✅ **UPDATED** (doRefresh, Visibility API, scheduleNextRefresh, saveSnapshots)
+- `src/components/UI/LoadingScreen.tsx` ✅ **UPDATED** (mode prop, visible state fix)
+- `src/components/Sidebar/LocationFeed.tsx` ✅ **UPDATED** (fade-refresh class)
+- `src/services/history/weatherHistoryService.ts` ✅ **NUEVO** (snapshots + history)
+- `src/utils/timeUtils.ts` ✅ **UPDATED** (msUntilNextHour helper)
+- `src/index.css` ✅ **UPDATED** (@keyframes fadeInOut)
+- `src/docs/22-sprint-6-testing-fixes.md` ✅ **NUEVO** (testing guide)
+- `src/docs/23-sprint-6-completion.md` ✅ **NUEVO** (comprehensive summary)
+- `src/docs/05-backlog.md` ✅ **UPDATED** (US-602/604/607 marked complete)
+- `src/docs/06-sprints.md` ✅ **UPDATED** (Sprint 6 marked complete)
 
 ---
 
