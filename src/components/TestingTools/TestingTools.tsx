@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getRetentionDays, setRetentionDays } from '../../services/history/weatherHistoryService'
 import HistoryGrid from './HistoryGrid'
 import CachePanel from './CachePanel'
+import PrecisionMetrics from './PrecisionMetrics'
 import type { City } from '../../store/useStore'
 
 interface TestingToolsProps {
@@ -278,15 +279,8 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
             {/* Tab: Caché */}
             {activeTab === 'cache' && <CachePanel />}
 
-            {/* Tab: Métricas (placeholder para US-609) */}
-            {activeTab === 'metricas' && (
-              <div className="tt-section">
-                <h3 className="tt-section-title">Métricas de Precisión</h3>
-                <div className="tt-info">
-                  Próximamente: Precisión por condición climática vs. target 98% 📈
-                </div>
-              </div>
-            )}
+            {/* Tab: Métricas */}
+            {activeTab === 'metricas' && <PrecisionMetrics retentionDays={retentionDays} />}
           </div>
         </div>
       )}
