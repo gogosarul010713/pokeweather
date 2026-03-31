@@ -749,25 +749,47 @@
 ---
 
 ### US-606 · Inspector Visual de Caché
-**SP:** 3 · **Prioridad:** 🟡 · **Estado:** ⏳ Pendiente · **Sprint:** 6 Fase 2
+**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ⏳ En progreso · **Sprint:** 7 Fase 2
 
 **Como** desarrollador,
-**quiero** ver el estado del caché de manera visual dentro de la app,
-**para** diagnosticar problemas sin abrir la consola del browser.
+**quiero** ver y gestionar el caché de manera visual dentro de la app,
+**para** diagnosticar problemas y limpiar datos sin abrir consola ni DevTools.
+
+**Tipo:** Debug Tool (Dev-only, visible solo en modo desarrollo)
 
 **Criterios de aceptación:**
 
-- [ ] Nueva tab "Caché" en el drawer `TestingTools`
-- [ ] Lista de entries de IndexedDB: locationKey, condición, `expiresAt` (formato HH:mm), edad en minutos
-- [ ] Lista de LocationKeys en localStorage: s2Key → accuLocationKey
-- [ ] Indicador: cuántas entradas expiradas vs vigentes
-- [ ] Botón "Limpiar caché" → limpia IndexedDB + confirma con toast
-- [ ] Botón "Forzar refresh ahora" → llama `shouldRefreshCities()` forzado + toast
-- [ ] Si IndexedDB vacío: mensaje "Caché vacío — los datos se cargarán desde API"
+**Visualización:**
+- [ ] Nueva tab "🔧 Caché" en `TestingTools` (4ª pestaña)
+- [ ] Tabla con 2 secciones:
+  - **LocationKeys** (localStorage): Clave | S2 Value | Guardado | Acciones
+  - **Weather Data** (IndexedDB): Clave | Condición | Expiración | Edad | Estado
+- [ ] Estado visual: ✅ Válido | ⏰ Expirando (<5 min) | ❌ Expirado
+- [ ] Métricas resumen: Total entradas | Almacenamiento usado | % vs límite
 
-**Archivos:**
-- `src/components/TestingTools/TestingTools.tsx` — agregar tab "Caché"
-- `src/services/cache/cacheService.ts` — exportar función `getAllCacheEntries()`
+**Interacción:**
+- [ ] Click "👁️ Ver" → popup JSON completo + timestamp exact
+- [ ] Click "📋 Copiar" → copia clave al clipboard + toast "Copiado"
+- [ ] Checkbox seleccionar entradas → habilita botón "🗑️ Eliminar selección"
+- [ ] "🗑️ Limpiar TODO" → modal confirmación → elimina todo caché
+- [ ] Modal confirmación: "¿Eliminar N entradas? Se perderán datos en caché"
+- [ ] Después de eliminar: tabla se recarga automáticamente
+
+**Funcionalidad avanzada:**
+- [ ] Filtro: [Todos | LocationKeys | Weather | Válidos | Expirados]
+- [ ] Búsqueda por nombre de ciudad
+- [ ] Botón "🔄 Actualizar lista" (recarga tabla desde storage)
+
+**Dev-Only:**
+- [ ] Visible SOLO si `import.meta.env.DEV === true`
+- [ ] NO aparece en producción
+- [ ] Acceso: Header → TestingTools → Tab "Caché"
+
+**Archivos a crear/modificar:**
+- `src/components/TestingTools/CachePanel.tsx` (NUEVA) — 400+ líneas
+- `src/components/TestingTools/CacheDetailPopup.tsx` (NUEVA) — popup con JSON
+- `src/components/TestingTools/TestingTools.tsx` — agregar tab 4
+- `src/utils/cacheDebugHelper.ts` (NUEVA) — funciones auxiliares
 
 ---
 

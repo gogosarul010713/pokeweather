@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { getRetentionDays, setRetentionDays } from '../../services/history/weatherHistoryService'
 import HistoryGrid from './HistoryGrid'
+import CachePanel from './CachePanel'
 import type { City } from '../../store/useStore'
 
 interface TestingToolsProps {
@@ -253,7 +254,7 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
               className={`tt-tab ${activeTab === 'cache' ? 'active' : ''}`}
               onClick={() => setActiveTab('cache')}
             >
-              💾 Caché
+              🔧 Caché
             </button>
             <button
               className={`tt-tab ${activeTab === 'metricas' ? 'active' : ''}`}
@@ -275,23 +276,7 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
             )}
 
             {/* Tab: Caché */}
-            {activeTab === 'cache' && (
-              <div className="tt-section">
-                <h3 className="tt-section-title">Administrador de Caché</h3>
-                <div className="tt-info">
-                  ⏳ Próximamente: Ver, editar y eliminar datos en caché (LocationKeys, Weather snapshots)
-                </div>
-                <div className="tt-info">
-                  <strong>Características:</strong>
-                  <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
-                    <li>Ver caché guardada por ciudad</li>
-                    <li>Editar datos de LocationKey</li>
-                    <li>Eliminar snapshots específicos</li>
-                    <li>Reset manual de caché global</li>
-                  </ul>
-                </div>
-              </div>
-            )}
+            {activeTab === 'cache' && <CachePanel />}
 
             {/* Tab: Métricas (placeholder para US-609) */}
             {activeTab === 'metricas' && (

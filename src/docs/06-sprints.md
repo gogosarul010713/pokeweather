@@ -325,22 +325,23 @@ src/components/Sidebar/LocationCard.tsx
 
 **Objetivo:**
 - Fase 1 ✅ (2026-03-31): Dashboard de Historial interactivo (US-608)
-- Fase 2: Cache Management + Métricas (US-711, US-609)
+- Fase 2 (PRIMERA PRIORIDAD): Inspector Visual de Caché (US-606) → Métricas (US-609)
 - Fase 3: Responsive design (tablet + mobile)
 
-**Definition of Done (Fase 1):**
-- ✅ Tabla de resumen: Fecha | Ciudad | Verificar | % Precisión
-- ✅ Modal detalle: todas las horas del día con dropdowns
-- ✅ Botón Maximizar/Minimizar tabla
-- ✅ Export historial a Excel
-- ✅ Estado visual: ✓/✗/?/—
+**Definition of Done (Fase 2 — US-606):**
+- ✅ Tab "🔧 Caché" en TestingTools
+- ✅ Tabla: LocationKeys + Weather data con estado visual (✅/⏰/❌)
+- ✅ Acciones: Ver (popup JSON) | Copiar clave | Eliminar (con confirmación)
+- ✅ Filtros: Tipo | Estado | Búsqueda por ciudad
+- ✅ Métricas resumen: Total | Almacenamiento | % usado
+- ✅ Dev-only (oculto en producción)
 
 ### US incluidas (Sprint 7)
 
 | Fase | US | Nombre | SP | Estado |
 |------|----|----|----|----|
 | Fase 1 | US-608 | Dashboard de Historial | 8 | ✅ Completada |
-| Fase 2 | US-711 | Administrador de Caché | 5 | ⏳ Pendiente |
+| Fase 2 | **US-606** | **Inspector Visual de Caché** | **5** | **⏳ En progreso** |
 | Fase 2 | US-609 | Métricas de Precisión | 3 | ⏳ Pendiente |
 | Fase 3 | US-701 | Layout tablet (768–1024px) | 5 | ⏳ Pendiente |
 | Fase 3 | US-702 | Layout mobile (< 768px) | 8 | ⏳ Pendiente |
@@ -359,10 +360,18 @@ src/components/Sidebar/LocationCard.tsx
 
 ### Archivos a crear en Sprint 7 Fase 2
 
+**US-606:**
 ```
-src/components/TestingTools/CacheManager.tsx          (gestor caché UI)
-src/services/cache/cacheManagementService.ts          (API lectura/escritura IndexedDB)
-src/docs/26-us711-cache-management.md                 (documentación)
+src/components/TestingTools/CachePanel.tsx            (tabla + acciones caché)
+src/components/TestingTools/CacheDetailPopup.tsx      (popup JSON + metadata)
+src/utils/cacheDebugHelper.ts                         (funciones auxiliares)
+src/docs/25-us606-cache-inspector.md                  (documentación)
+```
+
+**US-609 (siguiente):**
+```
+src/components/TestingTools/MetricsPanel.tsx          (tab Métricas)
+src/docs/26-us609-precision-metrics.md                (documentación)
 ```
 
 ---
