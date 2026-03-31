@@ -201,7 +201,25 @@ export function useWeather() {
     }
   }, [setLoadingStatus, setLoadingProgress])
 
-  // Visibility API: pausa refresh si app en background
+  // ✅ FIX: Helper para ejecutar refresh y reprogramar siguiente
+  const doRefresh = useCallback(async () => {
+    setToastMessage('Actualizando clima...')
+    try {
+      const refreshed = await loadCities(true)
+      setLoadingStatus('ready')
+      setLastUpdated(Date.now())
+      onReadyRef.current(refreshed)
+      setTimeout(() => setToastMessage(null), 3000)
+      scheduleNextRefresh()
+    } catch (error) {
+      console.error('❌ Auto-refresh error:', error)
+      setToastMessage('Error actualizando clima')
+      setLoadingStatus('error')
+      refreshRef.current = setTimeout(() => scheduleNextRefresh(), 60 * 1000)
+    }
+  }, [loadCities, setLoadingStatus, setLastUpdated, setToastMessage])
+
+  // Visibility API: pausa/reschedule refresh según visibilidad
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
       // App en background: pausar auto-refresh
@@ -211,15 +229,18 @@ export function useWeather() {
         console.log('⏸️ Auto-refresh pausado (app en background)')
       }
     } else {
-      // App visible nuevamente
-      console.log('▶️ App visible — verificando si necesita refresh automático')
-      // Si ya pasó la HH:00 mientras estaba oculta → refrescar ahora
+      // App visible nuevamente: reschedule y ejecutar si está expirada
+      console.log('▶️ App visible — rescheduleando timer...')
       if (shouldRefreshCities()) {
-        console.log('⚡ Detectada actualización pendiente, refrescando ahora...')
-        // La siguiente carga verificará shouldRefreshCities() = true
+        console.log('⚡ Caché expirado, refrescando inmediatamente...')
+        doRefresh()
+      } else {
+        // Timer no expiró: simplemente reprogramar
+        console.log('✓ Caché vigente, reprogramando timer')
+        scheduleNextRefresh()
       }
     }
-  }, [])
+  }, [doRefresh, scheduleNextRefresh])
 
   const scheduleNextRefresh = useCallback(() => {
     // Limpiar timer anterior si existe
@@ -237,31 +258,11 @@ export function useWeather() {
     const msUntilNext = msUntilNextHour()
     console.log(`⏰ Próximo auto-refresh en ${Math.round(msUntilNext / 1000)}s (${new Date(Date.now() + msUntilNext).toLocaleTimeString()})`)
 
-    refreshRef.current = setTimeout(async () => {
+    refreshRef.current = setTimeout(() => {
       console.log('🔄 Trigger auto-refresh HH:00')
-      setToastMessage('Actualizando clima...')
-
-      try {
-        // forceRefresh=true → ignora shouldRefreshCities, usa ignoreCache en batch
-        const refreshed = await loadCities(true)
-        setLoadingStatus('ready')
-        setLastUpdated(Date.now())
-        onReadyRef.current(refreshed)
-
-        // Toast desaparece automáticamente en 3s
-        setTimeout(() => setToastMessage(null), 3000)
-
-        // Programar siguiente refresh
-        scheduleNextRefresh()
-      } catch (error) {
-        console.error('❌ Auto-refresh error:', error)
-        setToastMessage('Error actualizando clima')
-        setLoadingStatus('error')
-        // Reintentar en 1 minuto
-        refreshRef.current = setTimeout(() => scheduleNextRefresh(), 60 * 1000)
-      }
+      doRefresh()
     }, msUntilNext)
-  }, [loadCities, setLoadingStatus, setLastUpdated, setToastMessage])
+  }, [doRefresh])
 
   const run = useCallback(
     async (onReady: (cities: City[]) => void) => {

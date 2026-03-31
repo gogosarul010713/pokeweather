@@ -270,29 +270,36 @@ src/components/Sidebar/LocationCard.tsx
 
 ---
 
-## SPRINT 6 — AccuWeather Real + Lazy Load Horario
+## SPRINT 6 — AccuWeather Real + Lazy Load Horario + Testing & Validación
 
-**Objetivo:** Integrar la API real de AccuWeather con caché dinámico inteligente y refresh automático sin desperdicio de API. Implementar lazy load horario que actualiza a HH:00 exacto solo si hay usuarios activos.
+### Fase 1 (Completada)
+**Objetivo:** Integrar la API real de AccuWeather con caché dinámico inteligente y refresh automático sin desperdicio de API.
+
+### Fase 2 (En progreso — 2026-03-30)
+**Objetivo:** Finalizar US-602/604 con fixes + agregar toolkit de testing/validación para medir precisión del algoritmo.
 
 **Definition of Done:**
-- ✅ Con `VITE_ACCUWEATHER_KEY` configurada: datos reales de AccuWeather
-- ✅ Caché de locationKey en localStorage (permanente)
-- ✅ SyncBadge muestra minutos desde última actualización
-- ✅ Ciudades con clima extremo tienen indicador visual (🌫️ badge)
-- 🔄 **Nuevo:** TTL dinámico — cache expira a HH:00 exacto (no 60 min fijos)
-- 🔄 **Nuevo:** Auto-refresh a HH:00 sin consumir API si app cerrada
-- 🔄 **Nuevo:** Toast + fade transition durante refresh automático
-- 🔄 **Nuevo:** Consumo <15k calls/mes validado
+- ✅ US-601/602/603 Completadas
+- 🔄 US-604 + Fixes F1/F2 (Lazy Load + fade-refresh + Visibility API rescheduling)
+- 🔄 US-606/607/608/609/610 (Inspector caché, historial, dashboard, métricas, export)
+- ✅ Consumo <15k calls/mes validado
+- ✅ Historial de precisión guardado (7 días configurable)
+- ✅ Dashboard operativo para análisis manual
 
 ### US incluidas
 
 | US | Nombre | SP | Estado |
 |----|--------|----|--------|
-| US-601 | Integración AccuWeather completa | 8 | ✅ Completado |
-| US-602 | Refresh automático horario (v1) | 3 | ✅ Completado |
-| US-603 | isExtreme flag y alertas | 3 | ✅ Completado |
-| **US-604** | **Lazy Load Horario + TTL dinámico** | **5** | **🔄 En progreso** |
-| **Total** | | **19 SP** | |
+| US-601 | Integración AccuWeather | 8 | ✅ |
+| US-602 | Refresh automático horario | 3 | ⚠️ Fixes F1+F2 |
+| US-603 | isExtreme flag y alertas | 3 | ✅ |
+| US-604 | Lazy Load + TTL dinámico | 5 | ⚠️ Fixes F1+F2 |
+| **US-606** | **Inspector Visual Caché** | **3** | **🆕** |
+| **US-607** | **Servicio Historial** | **5** | **🆕** |
+| **US-608** | **Dashboard Grilla** | **8** | **🆕** |
+| **US-609** | **Métricas Precisión** | **3** | **🆕** |
+| **US-610** | **Export Excel Historial** | **2** | **🆕** |
+| **Total** | | **40 SP** | |
 
 ### Archivos modificados en Sprint 6
 
@@ -376,5 +383,5 @@ Sprint 6 (API real) ────────────────────
 | Sprint 3 | ✅ Completado (refactorizado + polish 2026-03-21) |
 | Sprint 4 | ✅ Completado (2026-03-21) |
 | Sprint 5 | ✅ Completado (2026-03-22) — Badges, filtros, auto-scroll, z-index fix |
-| **Sprint 6** | **🔄 En progreso (2026-03-25)** — US-601/602/603 ✅, US-604 🔄 Lazy Load Horario |
-| Sprint 7 | ⏳ Pendiente |
+| **Sprint 6** | **🔄 En progreso (2026-03-30)** — Fase 1 ✅, Fase 2 🔄 (Fixes + Testing Toolkit) |
+| Sprint 7 | ⏳ Pendiente (Responsive: tablet + mobile) |

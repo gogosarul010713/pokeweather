@@ -12,6 +12,7 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const favorites = useStore((s) => s.favorites)
   const badgeFilter = useStore((s) => s.badgeFilter)
+  const loadingStatus = useStore((s) => s.loadingStatus)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Calcular badges por ciudad
@@ -136,7 +137,7 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
 
         {/* Lista o mensaje vacío */}
         {cityCount > 0 ? (
-          <div className="lf-scroll" ref={scrollContainerRef}>
+          <div className={`lf-scroll ${loadingStatus === 'loading' ? 'fade-refresh' : ''}`} ref={scrollContainerRef}>
             {displayedCities.map((city) => (
               <div key={city.id} data-city-id={city.id}>
                 <LocationCard

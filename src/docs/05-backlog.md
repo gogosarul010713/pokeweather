@@ -721,6 +721,203 @@
 
 ---
 
+## EP-09 · Testing & Validación (Sprint 6 Fase 2)
+
+### Fixes previos — Completar US-602 y US-604
+
+**Fix F1 — handleVisibilityChange reschedule**
+- **Archivo:** `src/hooks/useWeather.ts` línea 205
+- **Problema:** Cuando app vuelve a ser visible, el timer no se reprograma
+- **Solución:** Llamar `scheduleNextRefresh()` y disparar refresh inmediato si `shouldRefreshCities()`
+- **Impacto:** Tab oculta/visible ahora funciona correctamente
+
+**Fix F2 — fade-refresh en datos**
+- **Archivo:** `src/components/Sidebar/LocationFeed.tsx`
+- **Problema:** Clase `.fade-refresh` definida en CSS pero nunca aplicada
+- **Solución:** Aplicar `className={loadingStatus === 'loading' ? 'fade-refresh' : ''}` al contenedor
+- **Impacto:** Fade visual durante auto-refresh a HH:00
+
+---
+
+### US-606 · Inspector Visual de Caché
+**SP:** 3 · **Prioridad:** 🟡 · **Estado:** ⏳ Pendiente · **Sprint:** 6 Fase 2
+
+**Como** desarrollador,
+**quiero** ver el estado del caché de manera visual dentro de la app,
+**para** diagnosticar problemas sin abrir la consola del browser.
+
+**Criterios de aceptación:**
+
+- [ ] Nueva tab "Caché" en el drawer `TestingTools`
+- [ ] Lista de entries de IndexedDB: locationKey, condición, `expiresAt` (formato HH:mm), edad en minutos
+- [ ] Lista de LocationKeys en localStorage: s2Key → accuLocationKey
+- [ ] Indicador: cuántas entradas expiradas vs vigentes
+- [ ] Botón "Limpiar caché" → limpia IndexedDB + confirma con toast
+- [ ] Botón "Forzar refresh ahora" → llama `shouldRefreshCities()` forzado + toast
+- [ ] Si IndexedDB vacío: mensaje "Caché vacío — los datos se cargarán desde API"
+
+**Archivos:**
+- `src/components/TestingTools/TestingTools.tsx` — agregar tab "Caché"
+- `src/services/cache/cacheService.ts` — exportar función `getAllCacheEntries()`
+
+---
+
+### US-607 · Servicio de Historial de Precisión
+**SP:** 5 · **Prioridad:** 🔴 · **Estado:** ⏳ Pendiente · **Sprint:** 6 Fase 2
+
+**Como** analista,
+**quiero** que la app guarde automáticamente un snapshot por ciudad por hora,
+**para** tener evidencia histórica de qué clasificó el algoritmo en cada momento.
+
+**Schema del snapshot:**
+```typescript
+interface WeatherSnapshot {
+  snapshotId: string       // `${cityId}-${YYYYMMDDH}`
+  cityId: string
+  cityName: string
+  cityCountry: string
+  cityRegion: string
+  capturedAt: number       // timestamp exacto
+  condition: string        // lo que clasificó el algoritmo
+  weatherIcon: number
+  tempC: number
+  windKmh: number
+  gustKmh: number
+  visibilityKm: number
+  boostedTypes: string[]
+  isExtreme: boolean
+  actualCondition?: string // el usuario llena esto — nunca se pisa
+  verifiedAt?: number
+  isCorrect?: boolean      // auto-computed: condition === actualCondition
+}
+```
+
+**Criterios de aceptación:**
+
+- [ ] `src/services/history/weatherHistoryService.ts` con funciones: `saveSnapshots(cities)`, `getSnapshots(options?)`, `updateActualCondition(snapshotId, actual)`, `clearOldSnapshots(retentionDays)`, `getRetentionDays()`, `setRetentionDays(days)`
+- [ ] `saveSnapshots()` deduplica por clave: si ya existe un snapshot para esa ciudad en esa hora → no sobreescribe (excepto `actualCondition` que se preserva)
+- [ ] `clearOldSnapshots()` se llama automáticamente al iniciar la app (en `useWeather.ts` post-load)
+- [ ] `updateActualCondition()` computa `isCorrect = actualCondition === condition` y guarda `verifiedAt`
+- [ ] `saveSnapshots()` se llama en `useWeather.ts` después de `setLastUpdateHour()`
+- [ ] Retención configurable en localStorage `pwe-history-retention-days` (7 / 14 / 30 días)
+- [ ] Storage key prefix: `pwe-hist-`
+- [ ] Auto-cleanup: elimina entries más antiguas que `retentionDays` al iniciar
+
+**Archivos:**
+- `src/services/history/weatherHistoryService.ts` ← nuevo
+- `src/hooks/useWeather.ts` — llamar `saveSnapshots()` + `clearOldSnapshots()`
+
+---
+
+### US-608 · Dashboard de Historial — Vista Grilla
+**SP:** 8 · **Prioridad:** 🔴 · **Estado:** ⏳ Pendiente · **Sprint:** 6 Fase 2
+
+**Como** analista,
+**quiero** ver una grilla ciudad × día con el historial de condiciones y poder llenar el "Real" inline,
+**para** centralizar mis observaciones manuales de Pokémon GO.
+
+**Layout:**
+```
+Tab: "Historial"
+┌─────────────────────────────────────────────────────────────┐
+│ Retención: [7 días ▾]   Filtrar: [Todas las regiones ▾]    │
+│ ──────────────────────────────────────────────────────────  │
+│ Ciudad        │ 28/03 │ 29/03 │ 30/03 │ 31/03 │ ...       │
+│ San Francisco │ ☀️ ✓  │ 🌧️ ?  │ 💨 ✓  │ ☀️ -  │ ...       │
+│ NYC           │ 🌤️ ✗  │ ☀️ ✓  │ 🌧️ ?  │  -    │ ...       │
+│ ──────────────────────────────────────────────────────────  │
+│ Click en celda → popover: ver snapshots horarios del día    │
+│ + dropdown para llenar "Real" por hora                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Leyenda de iconos de estado:**
+- ✓ verde = verificado correcto
+- ✗ rojo = verificado incorrecto
+- ? amarillo = snapshot existe, sin verificar
+- — gris = sin datos ese día
+
+**Criterios de aceptación:**
+
+- [ ] Nueva tab "Historial" en `TestingTools`
+- [ ] Grilla: ciudades en filas (todas del JSON), días en columnas (últimos N según retención)
+- [ ] Celda muestra: emoji de condición + ícono de estado (✓/✗/?/—)
+- [ ] Celda sin datos: "—" con fondo neutro
+- [ ] Click en celda → popover con lista de snapshots horarios de ese día para esa ciudad
+- [ ] En popover: cada fila tiene dropdown "Real" (7 condiciones + "No verificado")
+- [ ] Al seleccionar Real → llama `updateActualCondition()` → icono celda se actualiza sin reload
+- [ ] Filtro por región (América / Europa / Asia / Oceanía / África / Todas)
+- [ ] Selector de retención (7 / 14 / 30 días) — persiste en localStorage
+- [ ] Scroll vertical si hay más de 15 ciudades visibles
+
+**Archivos:**
+- `src/components/TestingTools/TestingTools.tsx` — tab Historial
+- `src/components/TestingTools/HistoryGrid.tsx` ← nuevo
+- `src/components/TestingTools/SnapshotPopover.tsx` ← nuevo
+
+---
+
+### US-609 · Métricas de Precisión
+**SP:** 3 · **Prioridad:** 🟡 · **Estado:** ⏳ Pendiente · **Sprint:** 6 Fase 2
+
+**Como** analista,
+**quiero** ver el % de precisión por condición climática vs el target de 98%,
+**para** identificar qué condiciones debo ajustar en el algoritmo.
+
+**Layout:**
+```
+Tab: "Métricas"
+┌──────────────────────────────────────────────────────┐
+│ Basado en: 103 verificaciones (de 1,240 snapshots)  │
+│                                                      │
+│ Condición   │ Verificados │ Correctos │ Precisión    │
+│ Soleado     │     45      │    41     │ 91.1% 🟡     │
+│ Lluvia      │     23      │    22     │ 95.7% 🟢     │
+│ Ventoso     │     12      │     7     │ 58.3% 🔴     │
+│ ...         │             │           │              │
+│ ─────────────────────────────────────────────────── │
+│ TOTAL       │    103      │    89     │ 86.4% 🟡     │
+│ Target: 98% │             │           │ gap: -11.6%  │
+└──────────────────────────────────────────────────────┘
+```
+
+**Criterios de aceptación:**
+
+- [ ] Nueva tab "Métricas" en `TestingTools`
+- [ ] Solo cuenta filas donde `actualCondition` está definido
+- [ ] Tabla por condición: total verificados, correctos, % precisión
+- [ ] Indicador de color: ≥98% = verde, 80–97% = amarillo, <80% = rojo
+- [ ] Fila total con gap vs target 98%
+- [ ] Si hay < 10 verificaciones: warning "Datos insuficientes para estadísticas confiables"
+- [ ] Sección secundaria: precisión por región (misma lógica)
+
+**Archivos:**
+- `src/components/TestingTools/TestingTools.tsx` — tab Métricas
+- `src/components/TestingTools/PrecisionMetrics.tsx` ← nuevo
+
+---
+
+### US-610 · Export Excel del Historial
+**SP:** 2 · **Prioridad:** 🟢 · **Estado:** ⏳ Pendiente · **Sprint:** 6 Fase 2
+
+**Como** analista,
+**quiero** exportar el historial completo a Excel,
+**para** tener un backup offline y hacer análisis adicionales.
+
+**Criterios de aceptación:**
+
+- [ ] Botón "Exportar historial" en tab Historial (US-608)
+- [ ] Un Excel con una pestaña por día (hasta N días según retención)
+- [ ] Columnas: Ciudad, País, Región, Hora, Condición App, Real, Correcto (Sí/No/-)
+- [ ] Celdas "Correcto" con color: verde/rojo/gris según valor
+- [ ] Nombre archivo: `pokeweather-history-YYYY-MM-DD.xlsx`
+- [ ] Función separada de `exportCitiesToExcel()` — no modifica el export actual
+
+**Archivos:**
+- `src/utils/exportHistory.ts` ← nuevo
+
+---
+
 ## EP-10 · Responsive
 
 ### US-701 · Layout tablet (768–1024px)
