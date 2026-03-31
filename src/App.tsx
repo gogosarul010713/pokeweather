@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useStore } from './store/useStore'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
@@ -15,9 +15,16 @@ export default function App() {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const { run, toastMessage } = useWeather()
 
+  // Ref para saber si es el primer load (initial) o auto-refresh posterior
+  const isInitialLoadRef = useRef(true)
+
   // useCallback para garantizar que onReady sea la misma referencia
   const handleCitiesLoaded = useCallback((loaded: City[]) => {
     setCities(loaded)
+    // Después del primer load, marcar que ya no es inicial
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false
+    }
   }, [])
 
   // Ejecutar una sola vez al montar el componente
@@ -56,8 +63,8 @@ export default function App() {
       `}</style>
 
       <div className="app-root">
-        {/* LoadingScreen cubre todo hasta que useWeather termina */}
-        <LoadingScreen />
+        {/* LoadingScreen: 'initial' al arrancar, 'refresh' durante auto-refresh */}
+        <LoadingScreen mode={isInitialLoadRef.current ? 'initial' : 'refresh'} />
 
         {/* ── HEADER ── */}
         <Header cities={cities} />

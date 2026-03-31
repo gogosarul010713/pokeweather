@@ -1,10 +1,17 @@
 // Pantalla de carga fullscreen mientras loadingStatus === 'loading'.
 // Fade-out 0.4s al pasar a 'ready'.
+// Reutilizable para: initial load (primer arranque) y refresh (auto-refresh cada hora)
 
 import { useEffect, useState } from 'react'
 import { useStore } from '../../store/useStore'
 
-export default function LoadingScreen() {
+type LoadingMode = 'initial' | 'refresh'
+
+interface LoadingScreenProps {
+  mode?: LoadingMode  // 'initial' (default) o 'refresh' (auto-refresh)
+}
+
+export default function LoadingScreen({ mode = 'initial' }: LoadingScreenProps) {
   const loadingStatus   = useStore((s) => s.loadingStatus)
   const loadingProgress = useStore((s) => s.loadingProgress)
   const [visible, setVisible] = useState(true)
@@ -107,15 +114,28 @@ export default function LoadingScreen() {
           <circle cx="36" cy="36" r="5" fill="var(--text-muted)" />
         </svg>
 
-        {/* Nombre de la ciudad */}
+        {/* Nombre de la ciudad o mensaje contextual */}
         <div className="ls-city">
-          {cityName ? `Cargando ${cityName}...` : 'Iniciando...'}
+          {mode === 'refresh' ? (
+            <>Actualizando ciudades</>
+          ) : cityName ? (
+            `Cargando ${cityName}...`
+          ) : (
+            'Iniciando...'
+          )}
         </div>
+
+        {/* Subtítulo contextual */}
+        {mode === 'refresh' && (
+          <div className="ls-counter" style={{ marginTop: '-8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+            Sincronización automática por cambio de hora
+          </div>
+        )}
 
         {/* Contador */}
         {total > 0 && (
           <div className="ls-counter">
-            ciudad {current} de {total}
+            {mode === 'refresh' ? `Actualizando ${current}/${total}` : `ciudad ${current} de ${total}`}
           </div>
         )}
 
