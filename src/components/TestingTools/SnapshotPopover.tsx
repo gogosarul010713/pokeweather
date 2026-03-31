@@ -13,12 +13,11 @@ interface HistoryEntry {
 interface SnapshotPopoverProps {
   entry: HistoryEntry
   onClose: () => void
-  onUpdated: () => void
+  onUpdated?: () => void
 }
 
-export default function SnapshotPopover({ entry, onClose }: SnapshotPopoverProps) {
+export default function SnapshotPopover({ entry, onClose, onUpdated }: SnapshotPopoverProps) {
   const [updating, setUpdating] = useState<string | null>(null)
-  const [unsavedChanges, setUnsavedChanges] = useState<Record<string, string | null>>({})
 
   const sortedSnapshots = [...entry.snapshots].sort((a, b) => a.capturedAt - b.capturedAt)
   const mainCondition = entry.snapshots[0]?.condition || 'unknown'
@@ -28,11 +27,16 @@ export default function SnapshotPopover({ entry, onClose }: SnapshotPopoverProps
   const handleUpdateActualCondition = async (snapshotId: string, condition: string | null) => {
     setUpdating(snapshotId)
     try {
-      await updateActualCondition(snapshotId, condition)
-      // Limpiar cambio pendiente
-      const newUnsaved = { ...unsavedChanges }
-      delete newUnsaved[snapshotId]
-      setUnsavedChanges(newUnsaved)
+      const result = await updateActualCondition(snapshotId, condition || null)
+      if (result) {
+        // Actualización exitosa - recarga el popover si callback existe
+        if (onUpdated) {
+          onUpdated()
+        }
+      } else {
+        console.error('Failed to update actual condition')
+        alert('Error al actualizar el clima real.')
+      }
     } catch (error) {
       console.error('Error updating actual condition:', error)
       alert('Error al actualizar. Ver consola.')
@@ -359,7 +363,7 @@ export default function SnapshotPopover({ entry, onClose }: SnapshotPopoverProps
           {/* Footer */}
           <div className="sp-footer">
             <button className="sp-button sp-button-close" onClick={onClose}>
-              Cerrar
+              ✓ Guardar y Cerrar
             </button>
           </div>
         </div>

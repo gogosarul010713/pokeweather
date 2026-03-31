@@ -23,6 +23,7 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
   const [loading, setLoading] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<HistoryEntry | null>(null)
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([])
+  const [isMaximized, setIsMaximized] = useState(false)
 
   // Cargar snapshots al montar o cambiar retentionDays
   useEffect(() => {
@@ -115,6 +116,19 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
           height: 100%;
         }
 
+        .hg-container.maximized {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 3000;
+          background: var(--bg-secondary);
+          border-radius: 0;
+          gap: 0;
+          padding: 0;
+        }
+
         .hg-controls {
           display: flex;
           align-items: center;
@@ -122,6 +136,10 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
           flex-shrink: 0;
           padding-bottom: 8px;
           border-bottom: 1px solid var(--border-default);
+        }
+
+        .hg-container.maximized .hg-controls {
+          padding: 16px;
         }
 
         .hg-retention-select {
@@ -157,6 +175,31 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
         .hg-export-btn:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(31, 119, 227, 0.3);
+        }
+
+        .hg-maximize-btn {
+          padding: 6px 12px;
+          background: var(--bg-tertiary);
+          border: none;
+          border-radius: 4px;
+          color: var(--text-primary);
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .hg-maximize-btn:hover {
+          background: var(--bg-quaternary);
+        }
+
+        .hg-controls-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .hg-table {
@@ -282,7 +325,7 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
         }
       `}</style>
 
-      <div className="hg-container">
+      <div className={`hg-container ${isMaximized ? 'maximized' : ''}`}>
         {/* Controls */}
         <div className="hg-controls">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -300,9 +343,14 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
               <option value="30">30 días</option>
             </select>
           </div>
-          <button className="hg-export-btn" onClick={handleExportClick} disabled={snapshots.length === 0}>
-            📥 Exportar
-          </button>
+          <div className="hg-controls-right">
+            <button className="hg-maximize-btn" onClick={() => setIsMaximized(!isMaximized)}>
+              {isMaximized ? '⛶ Minimizar' : '⛶ Maximizar'}
+            </button>
+            <button className="hg-export-btn" onClick={handleExportClick} disabled={snapshots.length === 0}>
+              📥 Exportar
+            </button>
+          </div>
         </div>
 
         {/* Table */}
