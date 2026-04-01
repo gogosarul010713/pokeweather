@@ -88,7 +88,7 @@ export default function App() {
            RESPONSIVE LAYOUTS
            ────────────────────────────────────────────── */
 
-        /* MOBILE (<768px): Stack vertical — Map 60vh + List 40vh */
+        /* MOBILE (<768px): Stack vertical — Map 55vh + List 45vh */
         @media (max-width: 767px) {
           .app-body {
             flex-direction: column;
@@ -97,18 +97,18 @@ export default function App() {
           }
 
           .app-map-area {
-            height: 60vh;
+            height: 55vh;
             flex: none;
             overflow-y: auto;
           }
 
           /* List area will be positioned below map */
+          /* LocationFeed.lf-root already has border-top, so no need to repeat */
           .app-list-area {
-            height: 40vh;
+            height: 45vh;
             flex: none;
-            overflow-y: auto;
+            overflow: hidden;
             background: var(--bg-primary);
-            border-top: 1px solid var(--border-subtle);
           }
         }
 
