@@ -23,7 +23,6 @@ function getLocalDate(timezone: number): string {
 
 export default function LocationCard({ city, isActive }: LocationCardProps) {
   const setSelectedCity = useStore((s) => s.setSelectedCity)
-  const setSidebarOpen = useStore((s) => s.setSidebarOpen)
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const favorites = useStore((s) => s.favorites)
 
@@ -31,10 +30,6 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
 
   const handleCardClick = () => {
     setSelectedCity(city)
-    // Cerrar drawer en tablet al seleccionar ciudad
-    if (window.innerWidth < 1024) {
-      setSidebarOpen(false)
-    }
   }
 
   const handleFavoriteClick = (e: React.MouseEvent) => {

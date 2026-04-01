@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useStore } from '../../store/useStore'
 import Brand from './Brand'
 import ThemeToggle from './ThemeToggle'
 import SyncBadge from '../UI/SyncBadge'
@@ -14,7 +13,6 @@ interface HeaderProps {
 
 export default function Header({ cities = [] }: HeaderProps) {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
-  const toggleSidebar = useStore((s) => s.toggleSidebar)
 
   return (
     <>
@@ -41,29 +39,6 @@ export default function Header({ cities = [] }: HeaderProps) {
           gap: 8px;
           flex-shrink: 0;
         }
-
-        .hd-menu-toggle {
-          display: none;
-          width: 32px;
-          height: 32px;
-          background: var(--bg-primary);
-          border: 1px solid var(--border-default);
-          border-radius: 6px;
-          cursor: pointer;
-          color: var(--text-primary);
-          font-size: 18px;
-          align-items: center;
-          justify-content: center;
-          transition: background 200ms ease;
-        }
-
-        .hd-menu-toggle:hover {
-          background: var(--bg-tertiary);
-        }
-
-        .hd-menu-toggle:active {
-          background: var(--bg-overlay);
-        }
       `}</style>
 
       <header className="hd-root">
@@ -72,16 +47,6 @@ export default function Header({ cities = [] }: HeaderProps) {
 
         {/* Centro — filtros + búsqueda */}
         <FilterPanel />
-
-        {/* Menu toggle (visible en tablet) */}
-        <button
-          className="hd-menu-toggle"
-          onClick={toggleSidebar}
-          aria-label="Toggle sidebar menu"
-          title="Toggle menu"
-        >
-          ≡
-        </button>
 
         {/* Derecha — testing + sync + tema */}
         <div className="hd-right">

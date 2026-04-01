@@ -13,8 +13,6 @@ export default function App() {
   const [cities, setCities] = useState<City[]>([])
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
-  const sidebarOpen = useStore((s) => s.sidebarOpen)
-  const setSidebarOpen = useStore((s) => s.setSidebarOpen)
   const { run, toastMessage } = useWeather()
 
   // Ref para saber si es el primer load (initial) o auto-refresh posterior
@@ -72,16 +70,7 @@ export default function App() {
         <Header cities={cities} />
 
         {/* ── BODY ── */}
-        <div className="app-body" data-sidebar-open={sidebarOpen}>
-          {/* Backdrop para cerrar drawer en tablet */}
-          {sidebarOpen && (
-            <div
-              className="sb-backdrop"
-              onClick={() => setSidebarOpen(false)}
-              style={{ display: 'none' }} // CSS media query lo muestra en tablet
-            />
-          )}
-
+        <div className="app-body">
           {/* SIDEBAR */}
           <Sidebar cities={cities} />
 
