@@ -18,6 +18,9 @@ export default function App() {
   // Ref para saber si es el primer load (initial) o auto-refresh posterior
   const isInitialLoadRef = useRef(true)
 
+  // Ref para .app-map-area (para scroll automático en mobile)
+  const mapAreaRef = useRef<HTMLDivElement>(null)
+
   // useCallback para garantizar que onReady sea la misma referencia
   const handleCitiesLoaded = useCallback((loaded: City[]) => {
     setCities(loaded)
@@ -32,6 +35,26 @@ export default function App() {
     run(handleCitiesLoaded)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // En mobile: Visual feedback en mapa al seleccionar ciudad (sin scroll disruptivo)
+  // El highlight visual ocurre en MapPin.tsx, aquí solo aseguramos que el mapa reciba focus
+  useEffect(() => {
+    if (!selectedCity || !mapAreaRef.current) return
+
+    // Solo en mobile: agregar efecto visual temporal
+    const isMobile = window.innerWidth < 768
+    if (!isMobile) return
+
+    // Pulse visual suave (sin scroll) — el highlight principal está en MapPin
+    mapAreaRef.current.style.boxShadow = 'inset 0 0 12px rgba(88, 166, 255, 0.1)'
+    const timer = setTimeout(() => {
+      if (mapAreaRef.current) {
+        mapAreaRef.current.style.boxShadow = 'none'
+      }
+    }, 600)
+
+    return () => clearTimeout(timer)
+  }, [selectedCity?.id])
 
   return (
     <>
@@ -120,7 +143,7 @@ export default function App() {
           <Sidebar cities={cities} />
 
           {/* MAP AREA */}
-          <main className="app-map-area">
+          <main className="app-map-area" ref={mapAreaRef}>
             <MapView cities={cities} />
           </main>
         </div>

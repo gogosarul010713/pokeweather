@@ -87,6 +87,13 @@ export default function Sidebar({ cities }: SidebarProps) {
           display: block;
           margin-bottom: 8px;
         }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 767px) {
+          .sb-root {
+            display: none;
+          }
+        }
       `}</style>
 
       <aside className="sb-root">
