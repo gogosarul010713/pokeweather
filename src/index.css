@@ -264,7 +264,6 @@ html.light {
     height: 40vh;
     flex-shrink: 0;
     border-bottom: 1px solid var(--border-default);
-    position: relative;
   }
 
   /* LocationFeed: 60% height, scrolleable */
@@ -278,26 +277,6 @@ html.light {
   /* Hide sidebar completely in mobile */
   .sb-root {
     display: none;
-  }
-
-  /* ── MAP LEGEND — Optimized for mobile ── */
-  .ml-root {
-    min-width: 150px !important;  /* Keep readable width even collapsed */
-    max-height: 50vh !important;  /* Reduce from 70vh to preserve map view */
-    bottom: 12px;                 /* Move up slightly to avoid overlap */
-    right: 12px;
-  }
-
-  /* Legend header: ensure visibility and proper touch targets */
-  .ml-header {
-    padding: 10px 8px;
-    min-height: 40px;             /* Touch-friendly size */
-  }
-
-  /* Legend body: constrain height to prevent overwhelming map */
-  .ml-body {
-    padding: 6px;
-    max-height: 45vh;             /* Limit scrollable area */
   }
 
   /* ── MODALS ── */

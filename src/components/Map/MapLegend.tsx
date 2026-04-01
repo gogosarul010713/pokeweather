@@ -2,7 +2,7 @@
 // Tab 1: Condiciones de clima
 // Tab 2: Filtros de categorías + Toggle de badges en pines
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 import { CONDITION_COLORS, CONDITION_LABEL, BADGE_ICONS } from '../../services/weather/weatherService'
 import type { WeatherCondition } from '../../config/weatherImages'
@@ -24,26 +24,12 @@ const BADGE_ORDER: BadgeType[] = ['stops', 'gyms', 'community', 'best']
 type TabType = 'clima' | 'categorias'
 
 export default function MapLegend() {
-  // Mobile-first: Legend collapsed por defecto en <768px
-  const [collapsed, setCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
+  const [collapsed, setCollapsed] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>('clima')
   const badgeFilter = useStore((s) => s.badgeFilter)
   const setBadgeFilter = useStore((s) => s.setBadgeFilter)
   const showBadgesOnPins = useStore((s) => s.showBadgesOnPins)
   const setShowBadgesOnPins = useStore((s) => s.setShowBadgesOnPins)
-
-  // Detectar cambios de viewport (responsive) — colapsar al cambiar a mobile
-  useEffect(() => {
-    const handleResize = () => {
-      const isMobile = window.innerWidth < 768
-      // Si cambia de desktop → mobile, colapsar automáticamente
-      if (isMobile) {
-        setCollapsed(true)
-      }
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   const handleBadgeToggle = (badge: BadgeType) => {
     const isChecked = badgeFilter.includes(badge)
