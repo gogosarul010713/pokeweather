@@ -3,7 +3,6 @@ import { useStore } from './store/useStore'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import MapView from './components/Map/MapView'
-import LocationFeed from './components/Sidebar/LocationFeed'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
 import FilterPanelModal from './components/UI/FilterPanelModal'
@@ -66,13 +65,6 @@ export default function App() {
           background: var(--bg-primary);
         }
 
-        /* LOCATION FEED — Mobile Only Container */
-        .app-location-feed-mobile {
-          display: none;  /* Hidden on desktop/tablet */
-          height: 0;
-          overflow: hidden;
-        }
-
       `}</style>
 
       <div className="app-root">
@@ -93,20 +85,13 @@ export default function App() {
             />
           )}
 
-          {/* SIDEBAR — desktop/tablet */}
+          {/* SIDEBAR */}
           <Sidebar cities={cities} />
 
           {/* MAP AREA */}
           <main className="app-map-area">
             <MapView cities={cities} />
           </main>
-
-          {/* LOCATION FEED — mobile only (rendered here because Sidebar is hidden) */}
-          <div className="app-location-feed-mobile">
-            {(sidebarMode === 'list' || sidebarMode === 'favorites') && (
-              <LocationFeed cities={cities} />
-            )}
-          </div>
         </div>
 
         {/* LOCATION DETAIL MODAL */}
