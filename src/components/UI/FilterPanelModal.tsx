@@ -12,14 +12,25 @@ const REGION_OPTIONS: SelectOption[] = [
 ]
 
 const CLIMATE_OPTIONS: SelectOption[] = [
-  { label: '☀️ Soleado', value: 'sunny' },
-  { label: '⛅ Parcial', value: 'partly' },
-  { label: '☁️ Nublado', value: 'cloudy' },
-  { label: '🌫️ Niebla', value: 'fog' },
-  { label: '🌧️ Lluvia', value: 'rain' },
-  { label: '❄️ Nieve', value: 'snow' },
-  { label: '💨 Ventoso', value: 'windy' },
+  { label: 'Soleado', value: 'sunny' },
+  { label: 'Parcial', value: 'partly' },
+  { label: 'Nublado', value: 'cloudy' },
+  { label: 'Niebla', value: 'fog' },
+  { label: 'Lluvia', value: 'rain' },
+  { label: 'Nieve', value: 'snow' },
+  { label: 'Ventoso', value: 'windy' },
 ]
+
+// Map condition value to weather image path
+const CONDITION_IMAGES: Record<string, string> = {
+  sunny: '/weather/sunny.png',
+  partly: '/weather/partly.png',
+  cloudy: '/weather/cloudy.png',
+  fog: '/weather/fog.png',
+  rain: '/weather/rain.png',
+  snow: '/weather/snow.png',
+  windy: '/weather/windy.png',
+}
 
 interface FilterPanelModalProps {
   isOpen: boolean
@@ -163,6 +174,13 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           font-size: 16px;
         }
 
+        .fpm-condition-img {
+          width: 20px;
+          height: 20px;
+          object-fit: contain;
+          filter: var(--tile-filter);
+        }
+
         .fpm-footer {
           flex-shrink: 0;
           display: flex;
@@ -261,10 +279,12 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
                       }
                     }}
                   >
-                    <span className="fpm-condition-emoji">
-                      {option.label.split(' ')[0]}
-                    </span>
-                    <span>{option.label.split(' ').slice(1).join(' ')}</span>
+                    <img
+                      src={CONDITION_IMAGES[option.value]}
+                      alt={option.label}
+                      className="fpm-condition-img"
+                    />
+                    <span>{option.label}</span>
                   </button>
                 )
               })}
