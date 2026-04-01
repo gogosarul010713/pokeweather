@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar/Sidebar'
 import MapView from './components/Map/MapView'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
+import FilterPanelModal from './components/UI/FilterPanelModal'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
 import type { City } from './store/useStore'
@@ -15,6 +16,8 @@ export default function App() {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
   const setSidebarOpen = useStore((s) => s.setSidebarOpen)
+  const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
+  const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
   const { run, toastMessage } = useWeather()
 
   // Ref para saber si es el primer load (initial) o auto-refresh posterior
@@ -95,6 +98,12 @@ export default function App() {
         {sidebarMode === 'detail' && selectedCity && (
           <LocationDetail city={selectedCity} />
         )}
+
+        {/* FILTER PANEL MODAL — Mobile bottom-sheet */}
+        <FilterPanelModal
+          isOpen={isFilterPanelOpen}
+          onClose={() => setIsFilterPanelOpen(false)}
+        />
 
         {/* TOAST NOTIFICATIONS — Auto-refresh */}
         {toastMessage && (

@@ -127,6 +127,23 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
         .lf-scroll::-webkit-scrollbar-thumb:hover {
           background: var(--border-strong);
         }
+
+        /* Mobile optimizations */
+        @media (max-width: 767px) {
+          .lf-header {
+            padding: 10px 8px;
+            font-size: 12px;
+          }
+
+          .lf-scroll {
+            gap: 6px;
+            padding: 6px;
+          }
+
+          .lf-empty {
+            padding: 16px;
+          }
+        }
       `}</style>
 
       <div className="lf-root">

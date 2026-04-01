@@ -233,10 +233,57 @@ html.light {
 }
 
 /* ============================================================
-   RESPONSIVE — MOBILE (<768px) — Placeholder para US-702
+   RESPONSIVE — MOBILE (<768px) — Split layout + Bottom-sheet filters
    ============================================================ */
 @media (max-width: 767px) {
-  /* US-702 implementará esto */
+  /* ── HEADER ── */
+  .hd-root {
+    height: 60px;
+    padding: 0 8px;
+    gap: 8px;
+  }
+
+  /* Hide FilterPanel — moved to bottom-sheet modal */
+  .fp-root {
+    display: none;
+  }
+
+  /* Show Filtros button */
+  .hd-filter-btn {
+    display: flex !important;
+  }
+
+  /* ── LAYOUT ── */
+  .app-body {
+    flex-direction: column;
+    height: calc(100vh - 60px);
+  }
+
+  /* Map: 40% height */
+  .app-map-area {
+    height: 40vh;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  /* LocationFeed: 60% height, scrolleable */
+  .lf-root {
+    height: 60vh;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* ── SIDEBAR ── */
+  /* Hide sidebar completely in mobile */
+  .sb-root {
+    display: none;
+  }
+
+  /* ── MODALS ── */
+  /* LocationDetail adjusts height for mobile */
+  .ld-modal {
+    max-height: 90vh;
+  }
 }
 
 /* ============================================================
