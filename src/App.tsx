@@ -3,6 +3,7 @@ import { useStore } from './store/useStore'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import MapView from './components/Map/MapView'
+import LocationFeed from './components/Sidebar/LocationFeed'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
 import { Toast } from './components/UI/Toast'
@@ -123,10 +124,18 @@ export default function App() {
             flex: 1;
             position: relative;
           }
+
+          .app-list-area {
+            display: none;
+          }
         }
 
         /* DESKTOP (1024px+): Default layout */
-        /* No changes needed, default styles apply */
+        @media (min-width: 1024px) {
+          .app-list-area {
+            display: none;
+          }
+        }
 
       `}</style>
 
@@ -146,6 +155,11 @@ export default function App() {
           <main className="app-map-area" ref={mapAreaRef}>
             <MapView cities={cities} />
           </main>
+
+          {/* LIST AREA — Mobile only (LocationFeed extracted from Sidebar) */}
+          <div className="app-list-area">
+            <LocationFeed cities={cities} />
+          </div>
         </div>
 
         {/* LOCATION DETAIL MODAL */}

@@ -132,12 +132,12 @@ export default function Sidebar({ cities }: SidebarProps) {
 
         {/* ── Content ── */}
         <div className="sb-content">
-          {/* Modo Lista / Favoritos: LocationFeed */}
+          {/* Modo Lista / Favoritos: LocationFeed (hidden in mobile, visible in tablet+) */}
           {(sidebarMode === 'list' || sidebarMode === 'favorites') && (
             <LocationFeed cities={cities} />
           )}
 
-          {/* Modo Detalle: Placeholder (será LocationDetail modal en US-404) */}
+          {/* Modo Detalle: Placeholder */}
           {sidebarMode === 'detail' && (
             <div className="sb-detail-placeholder">
               <span className="sb-detail-icon">📍</span>
