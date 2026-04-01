@@ -69,7 +69,6 @@ interface AppStore {
   badgeFilter: string[]
   showBadgesOnPins: boolean
   lastUpdated: number | null
-  isFilterPanelOpen: boolean
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -90,8 +89,6 @@ interface AppStore {
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
   toggleSidebar: () => void
-  setIsFilterPanelOpen: (open: boolean) => void
-  toggleFilterPanel: () => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -129,7 +126,6 @@ export const useStore = create<AppStore>((set, get) => ({
     }
   })(),
   lastUpdated: null,
-  isFilterPanelOpen: false,
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -190,10 +186,6 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   setLastUpdated: (timestamp) => set({ lastUpdated: timestamp }),
-
-  setIsFilterPanelOpen: (open) => set({ isFilterPanelOpen: open }),
-
-  toggleFilterPanel: () => set((state) => ({ isFilterPanelOpen: !state.isFilterPanelOpen })),
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {

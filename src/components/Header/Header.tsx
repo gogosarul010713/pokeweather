@@ -15,7 +15,6 @@ interface HeaderProps {
 export default function Header({ cities = [] }: HeaderProps) {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
   const toggleSidebar = useStore((s) => s.toggleSidebar)
-  const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
 
   return (
     <>
@@ -65,29 +64,6 @@ export default function Header({ cities = [] }: HeaderProps) {
         .hd-menu-toggle:active {
           background: var(--bg-overlay);
         }
-
-        .hd-filter-btn {
-          display: none;
-          width: 32px;
-          height: 32px;
-          background: var(--bg-primary);
-          border: 1px solid var(--border-default);
-          border-radius: 6px;
-          cursor: pointer;
-          color: var(--text-primary);
-          font-size: 16px;
-          align-items: center;
-          justify-content: center;
-          transition: background 200ms ease;
-        }
-
-        .hd-filter-btn:hover {
-          background: var(--bg-tertiary);
-        }
-
-        .hd-filter-btn:active {
-          background: var(--bg-overlay);
-        }
       `}</style>
 
       <header className="hd-root">
@@ -96,16 +72,6 @@ export default function Header({ cities = [] }: HeaderProps) {
 
         {/* Centro — filtros + búsqueda */}
         <FilterPanel />
-
-        {/* Filtros button — visible en mobile <768px */}
-        <button
-          className="hd-filter-btn"
-          onClick={() => setIsFilterPanelOpen(true)}
-          aria-label="Open filters panel"
-          title="Filtros"
-        >
-          ⚙️
-        </button>
 
         {/* Menu toggle (visible en tablet) */}
         <button
