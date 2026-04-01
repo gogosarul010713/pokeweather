@@ -88,6 +88,7 @@ interface AppStore {
   setBadgeFilter: (badges: string[]) => void
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
+  toggleSidebar: () => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -154,6 +155,8 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
   setSidebarMode: (mode) => set({ sidebarMode: mode }),
 
