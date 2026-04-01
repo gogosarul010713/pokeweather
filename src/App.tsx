@@ -60,6 +60,51 @@ export default function App() {
           background: var(--bg-primary);
         }
 
+        /* ──────────────────────────────────────────────
+           RESPONSIVE LAYOUTS
+           ────────────────────────────────────────────── */
+
+        /* MOBILE (<768px): Stack vertical — Map 60vh + List 40vh */
+        @media (max-width: 767px) {
+          .app-body {
+            flex-direction: column;
+            height: calc(100vh - 80px);
+            overflow: hidden;
+          }
+
+          .app-map-area {
+            height: 60vh;
+            flex: none;
+            overflow-y: auto;
+          }
+
+          /* List area will be positioned below map */
+          .app-list-area {
+            height: 40vh;
+            flex: none;
+            overflow-y: auto;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-subtle);
+          }
+        }
+
+        /* TABLET (768px - 1023px): Sidebar as drawer, map expands */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .app-body {
+            flex-direction: row;
+            height: calc(100vh - 80px);
+            overflow: hidden;
+          }
+
+          .app-map-area {
+            flex: 1;
+            position: relative;
+          }
+        }
+
+        /* DESKTOP (1024px+): Default layout */
+        /* No changes needed, default styles apply */
+
       `}</style>
 
       <div className="app-root">
