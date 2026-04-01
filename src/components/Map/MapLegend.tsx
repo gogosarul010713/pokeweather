@@ -24,7 +24,11 @@ const BADGE_ORDER: BadgeType[] = ['stops', 'gyms', 'community', 'best']
 type TabType = 'clima' | 'categorias'
 
 export default function MapLegend() {
-  const [collapsed, setCollapsed] = useState(false)
+  // Mobile (<768px): collapsed by default for space savings
+  // Desktop/Tablet: expanded by default
+  const [collapsed, setCollapsed] = useState(() => {
+    return typeof window !== 'undefined' && window.innerWidth < 768
+  })
   const [activeTab, setActiveTab] = useState<TabType>('clima')
   const badgeFilter = useStore((s) => s.badgeFilter)
   const setBadgeFilter = useStore((s) => s.setBadgeFilter)
@@ -255,6 +259,16 @@ export default function MapLegend() {
 
         .ml-switch.on .ml-switch-thumb {
           transform: translateX(14px);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 767px) {
+          .ml-root {
+            bottom: 75px;
+            right: 8px;
+            max-width: 90vw;
+            max-height: 50vh;
+          }
         }
       `}</style>
 
