@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 import CustomSelect from '../UI/CustomSelect'
 import type { SelectOption } from '../UI/CustomSelect'
@@ -10,56 +9,28 @@ const POKEMON_TYPES = [
   'poison', 'psychic', 'bug', 'grass', 'fighting', 'fairy',
 ]
 
-const TYPE_EMOJIS: Record<string, string> = {
-  fire: '🔥', ground: '⛰️', normal: '⚪', flying: '🦅',
-  ghost: '👻', dark: '🌑', water: '💧', electric: '⚡',
-  ice: '❄️', steel: '⚙️', dragon: '🐲', rock: '🪨',
-  poison: '☠️', psychic: '🧠', bug: '🐛', grass: '🌿',
-  fighting: '👊', fairy: '✨',
+// Map type to image icon (ico_n_type.webp)
+const TYPE_IMAGES: Record<string, string> = {
+  normal: '/types/ico_0_normal.webp',
+  fighting: '/types/ico_1_fighting.webp',
+  flying: '/types/ico_2_flying.webp',
+  poison: '/types/ico_3_poison.webp',
+  ground: '/types/ico_4_ground.webp',
+  rock: '/types/ico_5_rock.webp',
+  bug: '/types/ico_6_bug.webp',
+  ghost: '/types/ico_7_ghost.webp',
+  steel: '/types/ico_8_steel.webp',
+  fire: '/types/ico_9_fire.webp',
+  water: '/types/ico_10_water.webp',
+  grass: '/types/ico_11_grass.webp',
+  electric: '/types/ico_12_electric.webp',
+  psychic: '/types/ico_13_psychic.webp',
+  ice: '/types/ico_14_ice.webp',
+  dragon: '/types/ico_15_dragon.webp',
+  dark: '/types/ico_16_dark.webp',
+  fairy: '/types/ico_17_fairy.webp',
 }
 
-interface TypeFilterDropdownProps {
-  typeFilter: string[]
-  toggleType: (type: string) => void
-}
-
-function TypeFilterDropdown({ typeFilter, toggleType }: TypeFilterDropdownProps) {
-  const [open, setOpen] = useState(false)
-
-  return (
-    <div className="fp-type-container">
-      <button
-        className="fp-type-trigger"
-        onClick={() => setOpen(!open)}
-        title={typeFilter.length > 0 ? `${typeFilter.length} tipos` : 'Seleccionar tipos'}
-        type="button"
-      >
-        🔥 Tipos {typeFilter.length > 0 && `(${typeFilter.length})`}
-      </button>
-
-      {open && (
-        <div className="fp-type-dropdown">
-          <div className="fp-type-grid">
-            {POKEMON_TYPES.map((type) => {
-              const isActive = typeFilter.includes(type)
-              return (
-                <button
-                  key={type}
-                  className={`fp-type-btn ${isActive ? 'active' : ''}`}
-                  onClick={() => toggleType(type)}
-                  title={type}
-                  type="button"
-                >
-                  {TYPE_EMOJIS[type]} {type.charAt(0).toUpperCase()}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 const REGION_OPTIONS: SelectOption[] = [
   { label: 'Todas', value: 'todas' },
@@ -95,8 +66,8 @@ export default function FilterPanel() {
   const sortMode = useStore((s) => s.sortMode)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
+  const setTypeFilter = useStore((s) => s.setTypeFilter)
   const clearConditions = useStore((s) => s.clearConditions)
-  const toggleType = useStore((s) => s.toggleType)
   const setSortMode = useStore((s) => s.setSortMode)
 
   const handleConditionChange = (items: string | string[]) => {
@@ -150,76 +121,6 @@ export default function FilterPanel() {
           display: flex;
           align-items: center;
         }
-
-        /* ── Type Filter Dropdown ── */
-        .fp-type-container {
-          position: relative;
-        }
-
-        .fp-type-trigger {
-          padding: 6px 10px;
-          background: transparent;
-          border: 1px solid var(--border-default);
-          border-radius: 4px;
-          color: var(--text-primary);
-          font-size: 12px;
-          cursor: pointer;
-          transition: all 150ms ease;
-          white-space: nowrap;
-          max-width: 120px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .fp-type-trigger:hover {
-          background: var(--bg-tertiary);
-          border-color: var(--border-default);
-        }
-
-        .fp-type-dropdown {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          margin-top: 4px;
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-default);
-          border-radius: 6px;
-          padding: 8px;
-          z-index: 1001;
-          min-width: 200px;
-          max-height: 250px;
-          overflow-y: auto;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .fp-type-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 4px;
-        }
-
-        .fp-type-btn {
-          padding: 4px;
-          background: var(--bg-primary);
-          border: 1px solid var(--border-default);
-          border-radius: 4px;
-          color: var(--text-primary);
-          cursor: pointer;
-          font-size: 11px;
-          transition: all 100ms ease;
-          text-align: center;
-        }
-
-        .fp-type-btn:hover {
-          background: var(--bg-tertiary);
-        }
-
-        .fp-type-btn.active {
-          background: rgba(88, 166, 255, 0.2);
-          border-color: var(--ui-accent);
-          color: var(--ui-accent);
-          font-weight: 600;
-        }
       `}</style>
 
       <div className="fp-root">
@@ -241,8 +142,21 @@ export default function FilterPanel() {
           isMulti={true}
         />
 
-        {/* Tipo Pokémon - Grid Dropdown */}
-        <TypeFilterDropdown typeFilter={typeFilter} toggleType={toggleType} />
+        {/* Tipo Pokémon - Multi-select with images */}
+        <CustomSelect
+          label="Tipo"
+          selectedItems={typeFilter}
+          options={POKEMON_TYPES.map((type) => ({
+            label: type.charAt(0).toUpperCase() + type.slice(1),
+            value: type,
+            icon: TYPE_IMAGES[type],
+          }))}
+          onChange={(items) => {
+            const selected = Array.isArray(items) ? items : [items]
+            setTypeFilter(selected)
+          }}
+          isMulti={true}
+        />
 
         {/* Ordenar por */}
         <CustomSelect

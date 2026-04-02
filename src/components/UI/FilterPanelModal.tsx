@@ -33,12 +33,26 @@ const POKEMON_TYPES = [
   'poison', 'psychic', 'bug', 'grass', 'fighting', 'fairy',
 ]
 
-const TYPE_EMOJIS: Record<string, string> = {
-  fire: '🔥', ground: '⛰️', normal: '⚪', flying: '🦅',
-  ghost: '👻', dark: '🌑', water: '💧', electric: '⚡',
-  ice: '❄️', steel: '⚙️', dragon: '🐲', rock: '🪨',
-  poison: '☠️', psychic: '🧠', bug: '🐛', grass: '🌿',
-  fighting: '👊', fairy: '✨',
+// Map type to image icon (ico_n_type.webp)
+const TYPE_IMAGES: Record<string, string> = {
+  normal: '/types/ico_0_normal.webp',
+  fighting: '/types/ico_1_fighting.webp',
+  flying: '/types/ico_2_flying.webp',
+  poison: '/types/ico_3_poison.webp',
+  ground: '/types/ico_4_ground.webp',
+  rock: '/types/ico_5_rock.webp',
+  bug: '/types/ico_6_bug.webp',
+  ghost: '/types/ico_7_ghost.webp',
+  steel: '/types/ico_8_steel.webp',
+  fire: '/types/ico_9_fire.webp',
+  water: '/types/ico_10_water.webp',
+  grass: '/types/ico_11_grass.webp',
+  electric: '/types/ico_12_electric.webp',
+  psychic: '/types/ico_13_psychic.webp',
+  ice: '/types/ico_14_ice.webp',
+  dragon: '/types/ico_15_dragon.webp',
+  dark: '/types/ico_16_dark.webp',
+  fairy: '/types/ico_17_fairy.webp',
 }
 
 interface FilterPanelModalProps {
@@ -286,8 +300,11 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           color: var(--ui-accent);
         }
 
-        .fpm-type-emoji {
-          font-size: 16px;
+        .fpm-type-img {
+          width: 24px;
+          height: 24px;
+          object-fit: contain;
+          filter: var(--tile-filter);
         }
 
         .fpm-footer {
@@ -429,7 +446,11 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
                     className={`fpm-type-btn ${isActive ? 'active' : ''}`}
                     onClick={() => toggleType(type)}
                   >
-                    <span className="fpm-type-emoji">{TYPE_EMOJIS[type]}</span>
+                    <img
+                      src={TYPE_IMAGES[type]}
+                      alt={type}
+                      className="fpm-type-img"
+                    />
                     <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
                   </button>
                 )
