@@ -113,7 +113,7 @@ export default function Header({ cities = [] }: HeaderProps) {
             title="Filtros"
             type="button"
           >
-            ⚙️
+            🔍
             {conditionFilter.length > 0 && (
               <span className="hd-filter-badge">{conditionFilter.length}</span>
             )}
