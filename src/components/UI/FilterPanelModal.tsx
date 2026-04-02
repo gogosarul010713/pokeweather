@@ -1,17 +1,12 @@
+import { useState } from 'react'
 import { useStore } from '../../store/useStore'
-import CustomSelect from './CustomSelect'
-import type { SelectOption } from './CustomSelect'
 
-const REGION_OPTIONS: SelectOption[] = [
-  { label: 'Todas', value: 'todas' },
-  { label: '🌏 Asia', value: 'asia' },
-  { label: '🌍 Europa', value: 'europa' },
-  { label: '🌎 América', value: 'america' },
-  { label: '🌊 Oceanía', value: 'oceania' },
-  { label: '🌍 África', value: 'africa' },
-]
+interface ClimateOption {
+  label: string
+  value: string
+}
 
-const CLIMATE_OPTIONS: SelectOption[] = [
+const CLIMATE_OPTIONS: ClimateOption[] = [
   { label: 'Soleado', value: 'sunny' },
   { label: 'Parcial', value: 'partly' },
   { label: 'Nublado', value: 'cloudy' },
@@ -44,17 +39,41 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const clearConditions = useStore((s) => s.clearConditions)
 
+  // For mobile multi-select regions: treat as array internally
+  const [selectedRegions, setSelectedRegions] = useState<string[]>(
+    regionFilter === 'todas' ? [] : [regionFilter]
+  )
+
   const handleConditionChange = (items: string | string[]) => {
     setConditionFilter(Array.isArray(items) ? items : [items])
   }
 
   const handleApply = () => {
+    // Convert selectedRegions to store format
+    // For now: if multiple regions selected, treat as 'todas'
+    // TODO: Full multi-region support requires store refactor
+    if (selectedRegions.length === 0 || selectedRegions.length > 1) {
+      setRegionFilter('todas')
+    } else if (selectedRegions.length === 1) {
+      setRegionFilter(selectedRegions[0] as any)
+    }
     onClose()
   }
 
   const handleClearAll = () => {
     setRegionFilter('todas')
     clearConditions()
+    setSelectedRegions([])
+  }
+
+  const handleRegionToggle = (region: string) => {
+    setSelectedRegions((prev) => {
+      if (prev.includes(region)) {
+        return prev.filter((r) => r !== region)
+      } else {
+        return [...prev, region]
+      }
+    })
   }
 
   if (!isOpen) return null
@@ -181,6 +200,43 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           filter: var(--tile-filter);
         }
 
+        .fpm-regions-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+          margin-bottom: 16px;
+        }
+
+        .fpm-region-btn {
+          padding: 8px;
+          border: 1px solid var(--border-default);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 500;
+          transition: all 150ms ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .fpm-region-btn:hover {
+          background: var(--bg-tertiary);
+        }
+
+        .fpm-region-btn.active {
+          background: rgba(88, 166, 255, 0.2);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
+        }
+
+        .fpm-region-emoji {
+          font-size: 18px;
+        }
+
         .fpm-footer {
           flex-shrink: 0;
           display: flex;
@@ -249,14 +305,31 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
 
         {/* Content */}
         <div className="fpm-content">
-          {/* Dropdowns */}
-          <div className="fpm-dropdowns">
-            <CustomSelect
-              label="Región"
-              value={regionFilter}
-              options={REGION_OPTIONS}
-              onChange={(v) => setRegionFilter(v as any)}
-            />
+          {/* Regions Section */}
+          <div className="fpm-section">
+            <div className="fpm-section-title">🌍 Regiones</div>
+            <div className="fpm-regions-grid">
+              {[
+                { label: 'Asia', value: 'asia', emoji: '🌏' },
+                { label: 'Europa', value: 'europa', emoji: '🌍' },
+                { label: 'América', value: 'america', emoji: '🌎' },
+                { label: 'Oceanía', value: 'oceania', emoji: '🌊' },
+                { label: 'África', value: 'africa', emoji: '🌍' },
+                { label: 'Todas', value: 'todas', emoji: '🌐' },
+              ].map((region) => {
+                const isActive = selectedRegions.includes(region.value)
+                return (
+                  <button
+                    key={region.value}
+                    className={`fpm-region-btn ${isActive ? 'active' : ''}`}
+                    onClick={() => handleRegionToggle(region.value)}
+                  >
+                    <span className="fpm-region-emoji">{region.emoji}</span>
+                    <span>{region.label}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Climate Section */}
