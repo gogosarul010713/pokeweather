@@ -70,6 +70,7 @@ interface AppStore {
   showBadgesOnPins: boolean
   lastUpdated: number | null
   isFilterPanelOpen: boolean
+  typeFilter: string[]
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -90,6 +91,8 @@ interface AppStore {
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
   setIsFilterPanelOpen: (open: boolean) => void
+  setTypeFilter: (types: string[]) => void
+  toggleType: (type: string) => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -128,6 +131,7 @@ export const useStore = create<AppStore>((set, get) => ({
   })(),
   lastUpdated: null,
   isFilterPanelOpen: false,
+  typeFilter: [],
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -189,9 +193,18 @@ export const useStore = create<AppStore>((set, get) => ({
 
   setIsFilterPanelOpen: (open) => set({ isFilterPanelOpen: open }),
 
+  setTypeFilter: (types) => set({ typeFilter: types }),
+
+  toggleType: (type) =>
+    set((state) => ({
+      typeFilter: state.typeFilter.includes(type)
+        ? state.typeFilter.filter((t) => t !== type)
+        : [...state.typeFilter, type],
+    })),
+
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {
-    const { regionFilter, conditionFilter, searchQuery, sortMode } = get()
+    const { regionFilter, conditionFilter, typeFilter, searchQuery, sortMode } = get()
     let result = [...cities]
 
     if (regionFilter !== 'todas') {
@@ -200,6 +213,12 @@ export const useStore = create<AppStore>((set, get) => ({
 
     if (conditionFilter.length > 0) {
       result = result.filter((c) => conditionFilter.includes(c.condition))
+    }
+
+    if (typeFilter.length > 0) {
+      result = result.filter((c) =>
+        c.boostedTypes.some((type) => typeFilter.includes(type))
+      )
     }
 
     if (searchQuery.trim()) {

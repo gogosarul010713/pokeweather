@@ -27,6 +27,20 @@ const CONDITION_IMAGES: Record<string, string> = {
   windy: '/weather/windy.png',
 }
 
+const POKEMON_TYPES = [
+  'fire', 'ground', 'normal', 'flying', 'ghost', 'dark',
+  'water', 'electric', 'ice', 'steel', 'dragon', 'rock',
+  'poison', 'psychic', 'bug', 'grass', 'fighting', 'fairy',
+]
+
+const TYPE_EMOJIS: Record<string, string> = {
+  fire: '🔥', ground: '⛰️', normal: '⚪', flying: '🦅',
+  ghost: '👻', dark: '🌑', water: '💧', electric: '⚡',
+  ice: '❄️', steel: '⚙️', dragon: '🐲', rock: '🪨',
+  poison: '☠️', psychic: '🧠', bug: '🐛', grass: '🌿',
+  fighting: '👊', fairy: '✨',
+}
+
 interface FilterPanelModalProps {
   isOpen: boolean
   onClose: () => void
@@ -35,8 +49,10 @@ interface FilterPanelModalProps {
 export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalProps) {
   const regionFilter = useStore((s) => s.regionFilter)
   const conditionFilter = useStore((s) => s.conditionFilter)
+  const typeFilter = useStore((s) => s.typeFilter)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
+  const toggleType = useStore((s) => s.toggleType)
   const clearConditions = useStore((s) => s.clearConditions)
 
   // For mobile multi-select regions: treat as array internally
@@ -237,6 +253,43 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           font-size: 18px;
         }
 
+        .fpm-type-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+          margin-bottom: 16px;
+        }
+
+        .fpm-type-btn {
+          padding: 8px;
+          border: 1px solid var(--border-default);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 11px;
+          font-weight: 500;
+          transition: all 150ms ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .fpm-type-btn:hover {
+          background: var(--bg-tertiary);
+        }
+
+        .fpm-type-btn.active {
+          background: rgba(88, 166, 255, 0.2);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
+        }
+
+        .fpm-type-emoji {
+          font-size: 16px;
+        }
+
         .fpm-footer {
           flex-shrink: 0;
           display: flex;
@@ -364,11 +417,23 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
             </div>
           </div>
 
-          {/* Types Section (Placeholder) */}
+          {/* Types Section */}
           <div className="fpm-section">
             <div className="fpm-section-title">⚡ Tipos Pokémon</div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
-              Próximamente disponible
+            <div className="fpm-type-grid">
+              {POKEMON_TYPES.map((type) => {
+                const isActive = typeFilter.includes(type)
+                return (
+                  <button
+                    key={type}
+                    className={`fpm-type-btn ${isActive ? 'active' : ''}`}
+                    onClick={() => toggleType(type)}
+                  >
+                    <span className="fpm-type-emoji">{TYPE_EMOJIS[type]}</span>
+                    <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>

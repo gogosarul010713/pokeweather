@@ -1,7 +1,65 @@
+import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 import CustomSelect from '../UI/CustomSelect'
 import type { SelectOption } from '../UI/CustomSelect'
 import SearchInput from './SearchInput'
+
+const POKEMON_TYPES = [
+  'fire', 'ground', 'normal', 'flying', 'ghost', 'dark',
+  'water', 'electric', 'ice', 'steel', 'dragon', 'rock',
+  'poison', 'psychic', 'bug', 'grass', 'fighting', 'fairy',
+]
+
+const TYPE_EMOJIS: Record<string, string> = {
+  fire: '🔥', ground: '⛰️', normal: '⚪', flying: '🦅',
+  ghost: '👻', dark: '🌑', water: '💧', electric: '⚡',
+  ice: '❄️', steel: '⚙️', dragon: '🐲', rock: '🪨',
+  poison: '☠️', psychic: '🧠', bug: '🐛', grass: '🌿',
+  fighting: '👊', fairy: '✨',
+}
+
+interface TypeFilterDropdownProps {
+  typeFilter: string[]
+  toggleType: (type: string) => void
+}
+
+function TypeFilterDropdown({ typeFilter, toggleType }: TypeFilterDropdownProps) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="fp-type-container">
+      <button
+        className="fp-type-trigger"
+        onClick={() => setOpen(!open)}
+        title={typeFilter.length > 0 ? `${typeFilter.length} tipos` : 'Seleccionar tipos'}
+        type="button"
+      >
+        🔥 Tipos {typeFilter.length > 0 && `(${typeFilter.length})`}
+      </button>
+
+      {open && (
+        <div className="fp-type-dropdown">
+          <div className="fp-type-grid">
+            {POKEMON_TYPES.map((type) => {
+              const isActive = typeFilter.includes(type)
+              return (
+                <button
+                  key={type}
+                  className={`fp-type-btn ${isActive ? 'active' : ''}`}
+                  onClick={() => toggleType(type)}
+                  title={type}
+                  type="button"
+                >
+                  {TYPE_EMOJIS[type]} {type.charAt(0).toUpperCase()}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const REGION_OPTIONS: SelectOption[] = [
   { label: 'Todas', value: 'todas' },
@@ -33,10 +91,12 @@ const SORT_OPTIONS: SelectOption[] = [
 export default function FilterPanel() {
   const regionFilter = useStore((s) => s.regionFilter)
   const conditionFilter = useStore((s) => s.conditionFilter)
+  const typeFilter = useStore((s) => s.typeFilter)
   const sortMode = useStore((s) => s.sortMode)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const clearConditions = useStore((s) => s.clearConditions)
+  const toggleType = useStore((s) => s.toggleType)
   const setSortMode = useStore((s) => s.setSortMode)
 
   const handleConditionChange = (items: string | string[]) => {
@@ -90,6 +150,76 @@ export default function FilterPanel() {
           display: flex;
           align-items: center;
         }
+
+        /* ── Type Filter Dropdown ── */
+        .fp-type-container {
+          position: relative;
+        }
+
+        .fp-type-trigger {
+          padding: 6px 10px;
+          background: transparent;
+          border: 1px solid var(--border-default);
+          border-radius: 4px;
+          color: var(--text-primary);
+          font-size: 12px;
+          cursor: pointer;
+          transition: all 150ms ease;
+          white-space: nowrap;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .fp-type-trigger:hover {
+          background: var(--bg-tertiary);
+          border-color: var(--border-default);
+        }
+
+        .fp-type-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          margin-top: 4px;
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-default);
+          border-radius: 6px;
+          padding: 8px;
+          z-index: 1001;
+          min-width: 200px;
+          max-height: 250px;
+          overflow-y: auto;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .fp-type-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 4px;
+        }
+
+        .fp-type-btn {
+          padding: 4px;
+          background: var(--bg-primary);
+          border: 1px solid var(--border-default);
+          border-radius: 4px;
+          color: var(--text-primary);
+          cursor: pointer;
+          font-size: 11px;
+          transition: all 100ms ease;
+          text-align: center;
+        }
+
+        .fp-type-btn:hover {
+          background: var(--bg-tertiary);
+        }
+
+        .fp-type-btn.active {
+          background: rgba(88, 166, 255, 0.2);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
+          font-weight: 600;
+        }
       `}</style>
 
       <div className="fp-root">
@@ -111,14 +241,8 @@ export default function FilterPanel() {
           isMulti={true}
         />
 
-        {/* Tipo Pokémon (placeholder) */}
-        <CustomSelect
-          label="Tipo Pokémon"
-          options={[{ label: 'Todos (próximamente)', value: 'all' }]}
-          onChange={() => {}}
-          disabled={true}
-          isMulti={false}
-        />
+        {/* Tipo Pokémon - Grid Dropdown */}
+        <TypeFilterDropdown typeFilter={typeFilter} toggleType={toggleType} />
 
         {/* Ordenar por */}
         <CustomSelect
