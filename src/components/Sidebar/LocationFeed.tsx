@@ -26,16 +26,16 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
     return badges
   }, [cities])
 
-  // Filtrar ciudades según el modo y los badges seleccionados
+  // Filtrar ciudades según el modo (los filtros de header ya están aplicados en App.tsx)
   const displayedCities = useMemo(() => {
     let result = [...cities]
 
-    // Filtrar por modo
+    // Filtrar por modo (list vs favorites)
     if (sidebarMode === 'favorites') {
       result = result.filter((city) => favorites.includes(city.id))
     }
 
-    // Filtrar por badges seleccionados (OR logic)
+    // Filtrar por badges seleccionados (OR logic) — secundario al filtrado de header
     if (badgeFilter.length > 0) {
       result = result.filter(city => {
         const cityBadges = badgesByCity.get(city.id) || []

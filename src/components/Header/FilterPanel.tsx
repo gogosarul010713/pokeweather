@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useStore } from '../../store/useStore'
 import CustomSelect from '../UI/CustomSelect'
 import type { SelectOption } from '../UI/CustomSelect'
@@ -52,11 +53,11 @@ const CLIMATE_OPTIONS: SelectOption[] = [
 ]
 
 const SORT_OPTIONS: SelectOption[] = [
-  { label: 'Ordenar por', value: '' },
-  { label: 'Nombre', value: 'name' },
-  { label: 'Densidad', value: 'density' },
-  { label: 'Rating', value: 'rating' },
-  { label: 'Hora Local', value: 'time' },
+  { label: 'Ordenar por', value: '', description: '↓ Elige el criterio' },
+  { label: '🔤 Nombre (A-Z)', value: 'name', description: 'Ordenar alfabéticamente' },
+  { label: '📊 Densidad (↓)', value: 'density', description: 'Mayor densidad primero' },
+  { label: '⭐ Rating (↓)', value: 'rating', description: 'Mayor rating primero' },
+  { label: '🕐 Hora Local (↑)', value: 'time', description: 'Más temprano primero' },
 ]
 
 export default function FilterPanel() {
@@ -64,15 +65,28 @@ export default function FilterPanel() {
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
   const sortMode = useStore((s) => s.sortMode)
+  const sortDirection = useStore((s) => s.sortDirection)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const setTypeFilter = useStore((s) => s.setTypeFilter)
   const clearConditions = useStore((s) => s.clearConditions)
   const setSortMode = useStore((s) => s.setSortMode)
+  const setSortDirection = useStore((s) => s.setSortDirection)
 
   const handleConditionChange = (items: string | string[]) => {
     setConditionFilter(Array.isArray(items) ? items : [items])
   }
+
+  const toggleSortDirection = useCallback(() => {
+    const newDirection = sortDirection === 'asc' ? 'desc' : 'asc'
+    console.log('🔄 toggleSortDirection:', {
+      currentDirection: sortDirection,
+      newDirection,
+      sortMode,
+      timestamp: new Date().toISOString(),
+    })
+    setSortDirection(newDirection)
+  }, [sortDirection, setSortDirection])
 
   return (
     <>
@@ -121,6 +135,33 @@ export default function FilterPanel() {
           display: flex;
           align-items: center;
         }
+
+        .fp-sort-direction-btn {
+          padding: 6px 10px;
+          background: var(--bg-tertiary);
+          color: var(--text-primary);
+          border: 1px solid var(--border-default);
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 600;
+          transition: all 200ms ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 36px;
+          height: 32px;
+        }
+
+        .fp-sort-direction-btn:hover:not(:disabled) {
+          background: var(--bg-overlay);
+          border-color: var(--border-strong);
+        }
+
+        .fp-sort-direction-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
       `}</style>
 
       <div className="fp-root">
@@ -166,6 +207,18 @@ export default function FilterPanel() {
           onChange={(v) => setSortMode(v as any)}
           isMulti={false}
         />
+
+        {/* Toggle Dirección (solo si hay ordenamiento activo) */}
+        {sortMode !== '' && (
+          <button
+            className="fp-sort-direction-btn"
+            onClick={toggleSortDirection}
+            title={`Cambiar a ${sortDirection === 'asc' ? 'descendente' : 'ascendente'}`}
+            type="button"
+          >
+            {sortDirection === 'asc' ? '↑' : '↓'}
+          </button>
+        )}
 
         {/* Botón Limpiar (solo si hay filtros activos) */}
         {conditionFilter.length > 0 && (

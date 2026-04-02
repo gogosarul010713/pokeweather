@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useStore } from './store/useStore'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
@@ -14,6 +14,14 @@ export default function App() {
   const [cities, setCities] = useState<City[]>([])
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
+  const getFilteredCities = useStore((s) => s.getFilteredCities)
+  // Dependencias para recalcular filtro cuando cambian
+  const regionFilter = useStore((s) => s.regionFilter)
+  const conditionFilter = useStore((s) => s.conditionFilter)
+  const typeFilter = useStore((s) => s.typeFilter)
+  const searchQuery = useStore((s) => s.searchQuery)
+  const sortMode = useStore((s) => s.sortMode)
+  const sortDirection = useStore((s) => s.sortDirection)
   const { run, toastMessage } = useWeather()
 
   // Ref para saber si es el primer load (initial) o auto-refresh posterior
@@ -30,6 +38,17 @@ export default function App() {
       isInitialLoadRef.current = false
     }
   }, [])
+
+  // Aplicar filtros a las ciudades cargadas — se recalcula cuando cambian filtros
+  const filteredCities = useMemo(() => {
+    console.log('📊 useMemo recalculando filtros:', {
+      sortMode,
+      sortDirection,
+      citiesCount: cities.length,
+      filteredCount: getFilteredCities(cities).length,
+    })
+    return getFilteredCities(cities)
+  }, [cities, regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection])
 
   // Ejecutar una sola vez al montar el componente
   useEffect(() => {
@@ -149,16 +168,16 @@ export default function App() {
         {/* ── BODY ── */}
         <div className="app-body">
           {/* SIDEBAR */}
-          <Sidebar cities={cities} />
+          <Sidebar cities={filteredCities} />
 
           {/* MAP AREA */}
           <main className="app-map-area" ref={mapAreaRef}>
-            <MapView cities={cities} />
+            <MapView cities={filteredCities} />
           </main>
 
           {/* LIST AREA — Mobile only (LocationFeed extracted from Sidebar) */}
           <div className="app-list-area">
-            <LocationFeed cities={cities} />
+            <LocationFeed cities={filteredCities} />
           </div>
         </div>
 
