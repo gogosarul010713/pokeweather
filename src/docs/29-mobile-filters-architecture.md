@@ -61,9 +61,10 @@ Implementación de FilterPanelModal (bottom-sheet) para mobile, resolviendo el p
 
 ```
 ┌────────────────────────────────────┐
-│ Logo  [🔍]  [⚙️] [📊] [🌙]         │ Header 80px
+│ Logo  [🔍] [📊] [🌙]               │ Header 80px
 └────────────────────────────────────┘
-  ⚙️ = Filter button (badge shows count if > 0)
+  🔍 = Filter button (badge shows count if > 0)
+     Click to open FilterPanelModal
 ```
 
 ### FilterPanelModal (Bottom-Sheet)
@@ -72,12 +73,15 @@ Implementación de FilterPanelModal (bottom-sheet) para mobile, resolviendo el p
 ╔════════════════════════════════════╗ z-500
 ║          ───────────────  (handle) ║
 ╠════════════════════════════════════╣
-║  [Región ▼]                        ║ Dropdowns
+║  🌍 REGIONES (2 cols grid)         ║
+║  [🌏 Asia]     [🌍 Europa]         ║ Multi-select buttons
+║  [🌎 América]  [🌊 Oceanía]        ║
+║  [🌍 África]   [🌐 Todas]          ║
 ╠════════════════════════════════════╣
 ║  ☀️ CONDICIONES CLIMÁTICAS         ║
-║  [☀️] [⛅] [☁️]                     ║ Grid 3 cols
-║  [🌫️] [🌧️] [❄️]                     ║
-║  [💨]                              ║
+║  [sunny] [partly] [cloudy]         ║ Grid 3 cols, weather images
+║  [fog]   [rain]   [snow]           ║
+║  [windy]                            ║
 ╠════════════════════════════════════╣
 ║  ⚡ TIPOS POKÉMON                  ║
 ║  Próximamente disponible           ║
@@ -231,6 +235,23 @@ interface FilterPanelModalProps {
 - `setConditionFilter` (setter)
 - `clearConditions` (reset)
 
+### Region Multi-Select Behavior (MT-2.3-REGION-MULTI)
+
+**Current Implementation (v1):**
+- Display regions as 2-column grid of buttons (like climate conditions)
+- Click to toggle region selection (visual feedback with active state)
+- Internal tracking: `selectedRegions[]` state
+- Save logic on "Aplicar Filtros":
+  - Single region selected: apply that region
+  - Multiple or no regions: apply 'todas' (all)
+  - NOTE: Store currently only supports single region (string)
+
+**Future (v2 - Requires Store Refactor):**
+- Extend store `regionFilter: string` → `regionFilter: string[]`
+- Support true multi-region filtering in store
+- Query: "Show all cities in (Asia OR Europa)"
+- Estimated effort: 30min (store + getFilteredCities logic)
+
 ### Condition Button Behavior
 
 ```tsx
@@ -250,10 +271,25 @@ if (isActive) {
 
 ---
 
+## Filter Button Icon (MT-2.3-ICON-CHANGE)
+
+**Icon:** 🔍 (search/magnifying glass)  
+**Rationale:**
+- Universal UX symbol for "search/filter operations"
+- Clear intent: "click to filter"
+- Better than ⚙️ (gear) which suggests "settings"
+- Mobile app standard pattern
+
+**Badge:** Shows active condition count
+- **Position:** Top-right of 🔍 button
+- **Color:** Error red (–ui-error)
+- **Size:** 20×20px, centered number
+- **When shown:** conditionFilter.length > 0
+
 ## Filter Count Badge
 
 **When shown:** conditionFilter.length > 0  
-**Position:** Top-right of ⚙️ button  
+**Position:** Top-right of 🔍 button  
 **Color:** Error red (–ui-error)  
 **Size:** 20×20px, centered count
 
