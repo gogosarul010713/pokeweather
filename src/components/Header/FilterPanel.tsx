@@ -52,13 +52,35 @@ const CLIMATE_OPTIONS: SelectOption[] = [
   { label: 'Windy',  value: 'windy',  icon: '/weather/windy.png'  },
 ]
 
-const SORT_OPTIONS: SelectOption[] = [
+const SORT_OPTIONS_BASE: SelectOption[] = [
   { label: 'Ordenar por', value: '', description: '↓ Elige el criterio' },
-  { label: '🔤 Nombre (A-Z)', value: 'name', description: 'Ordenar alfabéticamente' },
-  { label: '📊 Densidad (↓)', value: 'density', description: 'Mayor densidad primero' },
-  { label: '⭐ Rating (↓)', value: 'rating', description: 'Mayor rating primero' },
-  { label: '🕐 Hora Local (↑)', value: 'time', description: 'Más temprano primero' },
+  { label: '🔤 Nombre', value: 'name', description: 'Ordenar alfabéticamente' },
+  { label: '📊 Densidad', value: 'density', description: 'Mayor densidad primero' },
+  { label: '⭐ Rating', value: 'rating', description: 'Mayor rating primero' },
+  { label: '🕐 Hora Local', value: 'time', description: 'Más temprano primero' },
 ]
+
+// Helper function para generar los labels dinámicos basado en sortDirection
+const getDisplayLabel = (mode: string, direction: string): string => {
+  if (mode === '') return 'Ordenar por'
+
+  const dirIcon = direction === 'asc' ? '↑' : '↓'
+  const emoji: Record<string, string> = {
+    'name': '🔤',
+    'density': '📊',
+    'rating': '⭐',
+    'time': '🕐'
+  }
+
+  const labels: Record<string, string> = {
+    'name': 'Nombre',
+    'density': 'Densidad',
+    'rating': 'Rating',
+    'time': 'Hora Local'
+  }
+
+  return `${emoji[mode] || ''} ${labels[mode] || ''} (${dirIcon})`
+}
 
 export default function FilterPanel() {
   const regionFilter = useStore((s) => s.regionFilter)
@@ -87,6 +109,12 @@ export default function FilterPanel() {
     })
     setSortDirection(newDirection)
   }, [sortDirection, setSortDirection])
+
+  // Generar las opciones de ordenamiento dinámicamente basado en sortDirection
+  const SORT_OPTIONS = SORT_OPTIONS_BASE.map((opt) => ({
+    ...opt,
+    label: opt.value === '' ? 'Ordenar por' : getDisplayLabel(opt.value, sortDirection),
+  }))
 
   return (
     <>
