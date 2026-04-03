@@ -33,58 +33,59 @@ Se unificó la funcionalidad de ordenamiento en un **único componente dropdown 
 **Características:**
 
 #### Iconografía Mejorada
-- `↑↓` → `🔼🔽` (más visibles, más lúdicas)
-- Inactivo: gris/desaturado (opacity: 0.4)
-- Activo: color --ui-accent
+- `↑↓` → `⬆️⬇️` (emojis más prominentes, mejor UX)
+- Inactivo: opacidad 0.5 (desaturado)
+- Activo: color --ui-accent, opacidad 1
 
 #### Header Dinámico
 ```
-INACTIVO:
+INACTIVO (sin selección):
 ┌──────────────────────────┐
-│ 🔤 Ordenar por...  [▼]  │
+│ Ordenar por          [▼] │  ← Solo texto, sin flecha
 
-ACTIVO (asc):
+ACTIVO (asc - próxima será desc):
 ┌──────────────────────────┐
-│ 🔤 Nombre  🔼     [▼]   │
+│ Nombre ⬆️            [▼] │  ← Texto + flecha
 
-ACTIVO (desc):
+ACTIVO (desc - próxima será asc):
 ┌──────────────────────────┐
-│ 🔤 Nombre  🔽     [▼]   │
+│ Nombre ⬇️            [▼] │  ← Texto + flecha
 ```
 
 #### Comportamiento de Dropdown
 ```
-┌──────────────────────────┐
-│ 🔤 Ordenar por...        │
-│ 🔤 Nombre    🔼 🔽       │  ← Inactivo: dos iconos en gris
-│ 📊 Densidad  🔼 🔽       │
-│ ⭐ Rating    🔼 🔽       │
-│ 🕐 Hora      🔼 🔽       │
-└──────────────────────────┘
+INICIAL (dropdown abierto):
+┌────────────────────────────┐
+│ Ordenar por                │  ← Sin icono, sin flecha
+│ 🔤 Nombre        ⬇️        │  ← Inactivo: flecha hacia abajo (gris)
+│ 📊 Densidad      ⬇️        │
+│ ⭐ Rating        ⬇️        │
+│ 🕐 Hora Local    ⬇️        │
+└────────────────────────────┘
 
 CLICK en Nombre:
-┌──────────────────────────┐
-│ 🔤 Nombre    🔼          │  ← Activo: solo un icono en color
-│ 📊 Densidad  🔼 🔽       │
-│ ⭐ Rating    🔼 🔽       │
-│ 🕐 Hora      🔼 🔽       │
-└──────────────────────────┘
+┌────────────────────────────┐
+│ 🔤 Nombre        ⬆️        │  ← Activo (asc): flecha arriba (color)
+│ 📊 Densidad      ⬇️        │  ← Inactivos: flecha abajo (gris)
+│ ⭐ Rating        ⬇️        │
+│ 🕐 Hora Local    ⬇️        │
+└────────────────────────────┘
 
 CLICK nuevamente en Nombre:
-┌──────────────────────────┐
-│ 🔤 Nombre    🔽          │  ← Alterna a desc
-│ 📊 Densidad  🔼 🔽       │
-│ ⭐ Rating    🔼 🔽       │
-│ 🕐 Hora      🔼 🔽       │
-└──────────────────────────┘
+┌────────────────────────────┐
+│ 🔤 Nombre        ⬇️        │  ← Alterna a desc (flecha abajo)
+│ 📊 Densidad      ⬇️        │
+│ ⭐ Rating        ⬇️        │
+│ 🕐 Hora Local    ⬇️        │
+└────────────────────────────┘
 
 CLICK en Densidad:
-┌──────────────────────────┐
-│ 🔤 Nombre    🔼 🔽       │  ← Vuelve a inactivo
-│ 📊 Densidad  🔼          │  ← Densidad activo con asc
-│ ⭐ Rating    🔼 🔽       │
-│ 🕐 Hora      🔼 🔽       │
-└──────────────────────────┘
+┌────────────────────────────┐
+│ 🔤 Nombre        ⬇️        │  ← Vuelve a inactivo
+│ 📊 Densidad      ⬆️        │  ← Densidad activo con asc
+│ ⭐ Rating        ⬇️        │
+│ 🕐 Hora Local    ⬇️        │
+└────────────────────────────┘
 ```
 
 #### Tooltips Contextuales
@@ -146,11 +147,12 @@ Click en opción X:
 | Mejora | Antes | Después |
 |--------|-------|---------|
 | **Elementos** | 2 (dropdown + botón) | 1 (solo dropdown) |
-| **Iconografía** | ↑↓ (pequeño) | 🔼🔽 (grande, visible) |
-| **Estado visual** | Solo el botón mostraba dirección | Opciones muestran estado: inactivo (gris 🔼🔽) vs activo (color 🔼 o 🔽) |
-| **Header info** | Solo muestra criterio | Muestra criterio + dirección (ej: "Nombre 🔼") |
+| **Iconografía** | ↑↓ (pequeño, ASCII) | ⬆️⬇️ (emoji, prominente, visible) |
+| **Estado visual** | Solo el botón mostraba dirección | Opciones muestran flecha: inactivo (gris ⬇️) vs activo (color ⬆️ o ⬇️) |
+| **Header info** | Solo muestra criterio | Muestra criterio + dirección (ej: "Nombre ⬆️"), sin flecha cuando inactivo |
+| **"Ordenar por"** | Sin especificar | Texto plano sin icono (consistente con otros dropdowns) |
 | **Discoverability** | No hay tooltips | Tooltips contextuales al pasar mouse |
-| **Claridad** | El botón confunde (¿para qué sirve?) | Matriz visual clara: "esto es ordenamiento" |
+| **Claridad** | El botón confunde (¿para qué sirve?) | Matriz visual clara: una flecha por opción, significado intuitivo |
 
 ---
 

@@ -340,9 +340,10 @@ src/components/Sidebar/LocationCard.tsx
 | Fase 1 | US-608 | Dashboard de Historial | 8 | ✅ Completada |
 | Fase 2 | **US-606** | **Inspector Visual de Caché** | **5** | **✅ Completada** |
 | Fase 2 | **US-609** | **Métricas de Precisión** | **3** | **✅ Completada** |
+| Fase 3 | **US-703** | **Unified Sort Dropdown UX** | **3** | **✅ Completada** |
 | Fase 3 | US-701 | Layout tablet (768–1024px) | 5 | ⏳ Pendiente |
 | Fase 3 | US-702 | Layout mobile (< 768px) | 8 | ⏳ Pendiente |
-| **Total** | | | **29 SP** | |
+| **Total** | | | **32 SP** | |
 
 ### Archivos modificados en Sprint 7 Fase 1
 
