@@ -6,12 +6,15 @@ import MapView from './components/Map/MapView'
 import LocationFeed from './components/Sidebar/LocationFeed'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
+import MobileNavBar from './components/UI/MobileNavBar'
+import MobileCityPreview from './components/UI/MobileCityPreview'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
 import type { City } from './store/useStore'
 
 export default function App() {
   const [cities, setCities] = useState<City[]>([])
+  const [mobileTab, setMobileTab] = useState<'map' | 'list'>('map')
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
   const getFilteredCities = useStore((s) => s.getFilteredCities)
@@ -22,7 +25,15 @@ export default function App() {
   const searchQuery = useStore((s) => s.searchQuery)
   const sortMode = useStore((s) => s.sortMode)
   const sortDirection = useStore((s) => s.sortDirection)
+  const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
   const { run, toastMessage } = useWeather()
+
+  // Conteo total de filtros activos para badge del NavBar
+  const activeFilterCount =
+    (regionFilter !== 'todas' ? 1 : 0) +
+    conditionFilter.length +
+    typeFilter.length +
+    (sortMode !== '' ? 1 : 0)
 
   // Ref para saber si es el primer load (initial) o auto-refresh posterior
   const isInitialLoadRef = useRef(true)
@@ -107,29 +118,36 @@ export default function App() {
            RESPONSIVE LAYOUTS
            ────────────────────────────────────────────── */
 
-        /* MOBILE (<768px): Stack vertical — Map 55vh + List 45vh */
+        /* MOBILE (<768px): Tab-based — fullscreen map OR fullscreen list */
         @media (max-width: 767px) {
           .app-body {
             flex-direction: column;
             margin-top: 96px;
-            height: auto;
-            min-height: calc(100vh - 96px);
-            overflow-y: auto;  /* ← FIXED: Allow vertical scroll */
+            height: calc(100vh - 96px - 56px); /* 56px = MobileNavBar */
+            overflow: hidden;
           }
 
+          /* Map: fullscreen, hidden when list tab active */
           .app-map-area {
-            height: 55vh;
-            flex: none;
-            overflow: visible;  /* No internal scroll, parent handles it */
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
           }
 
-          /* List area will be positioned below map */
-          /* LocationFeed.lf-root already has border-top, so no need to repeat */
+          .app-map-area.tab-hidden {
+            display: none;
+          }
+
+          /* List: fullscreen, hidden when map tab active */
           .app-list-area {
-            height: 45vh;
-            flex: none;
-            overflow: visible;  /* No internal scroll, parent handles it */
+            flex: 1;
+            height: 100%;
+            overflow-y: auto;
             background: var(--bg-primary);
+          }
+
+          .app-list-area.tab-hidden {
+            display: none;
           }
         }
 
@@ -171,19 +189,35 @@ export default function App() {
 
         {/* ── BODY ── */}
         <div className="app-body">
-          {/* SIDEBAR */}
+          {/* SIDEBAR (desktop/tablet) */}
           <Sidebar cities={filteredCities} />
 
           {/* MAP AREA */}
-          <main className="app-map-area" ref={mapAreaRef}>
+          <main
+            className={`app-map-area${mobileTab === 'list' ? ' tab-hidden' : ''}`}
+            ref={mapAreaRef}
+          >
             <MapView cities={filteredCities} />
           </main>
 
-          {/* LIST AREA — Mobile only (LocationFeed extracted from Sidebar) */}
-          <div className="app-list-area">
+          {/* LIST AREA — Mobile: tab-based fullscreen */}
+          <div className={`app-list-area${mobileTab === 'map' ? ' tab-hidden' : ''}`}>
             <LocationFeed cities={filteredCities} />
           </div>
         </div>
+
+        {/* MOBILE: City preview panel (map tab + city selected) */}
+        {selectedCity && mobileTab === 'map' && (
+          <MobileCityPreview city={selectedCity} />
+        )}
+
+        {/* MOBILE: Bottom NavBar */}
+        <MobileNavBar
+          activeTab={mobileTab}
+          onTabChange={setMobileTab}
+          filterCount={activeFilterCount}
+          onFiltersOpen={() => setIsFilterPanelOpen(true)}
+        />
 
         {/* LOCATION DETAIL MODAL */}
         {sidebarMode === 'detail' && selectedCity && (
