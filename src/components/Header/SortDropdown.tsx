@@ -27,8 +27,8 @@ const SORT_OPTIONS: SortOption[] = [
     tooltip: (isActive, direction) => {
       if (!isActive) return 'Click para ordenar A-Z (ascendente)'
       return direction === 'asc'
-        ? '🔼 Ascendente · Click para cambiar a descendente'
-        : '🔽 Descendente · Click para cambiar a ascendente'
+        ? 'Ascendente · Click para cambiar a descendente'
+        : 'Descendente · Click para cambiar a ascendente'
     },
   },
   {
@@ -38,8 +38,8 @@ const SORT_OPTIONS: SortOption[] = [
     tooltip: (isActive, direction) => {
       if (!isActive) return 'Click para ordenar por mayor densidad'
       return direction === 'asc'
-        ? '🔼 Ascendente (menor primero) · Click para invertir'
-        : '🔽 Descendente (mayor primero) · Click para invertir'
+        ? 'Menor primero · Click para invertir (mayor primero)'
+        : 'Mayor primero · Click para invertir (menor primero)'
     },
   },
   {
@@ -49,8 +49,8 @@ const SORT_OPTIONS: SortOption[] = [
     tooltip: (isActive, direction) => {
       if (!isActive) return 'Click para ordenar por mayor rating'
       return direction === 'asc'
-        ? '🔼 Ascendente (menor primero) · Click para invertir'
-        : '🔽 Descendente (mayor primero) · Click para invertir'
+        ? 'Menor primero · Click para invertir (mayor primero)'
+        : 'Mayor primero · Click para invertir (menor primero)'
     },
   },
   {
@@ -60,8 +60,8 @@ const SORT_OPTIONS: SortOption[] = [
     tooltip: (isActive, direction) => {
       if (!isActive) return 'Click para ordenar por hora más temprana'
       return direction === 'asc'
-        ? '🔼 Ascendente (temprano primero) · Click para invertir'
-        : '🔽 Descendente (tarde primero) · Click para invertir'
+        ? 'Temprano primero · Click para invertir (tarde primero)'
+        : 'Tarde primero · Click para invertir (temprano primero)'
     },
   },
 ]
@@ -115,10 +115,13 @@ export default function SortDropdown({
     return option.label
   }
 
-  // Obtener el icono de dirección para el header
-  const getHeaderDirectionIcon = () => {
-    if (sortMode === '') return null
-    return sortDirection === 'asc' ? '🔼' : '🔽'
+  // Obtener la flecha para el header
+  // La flecha indica la dirección SIGUIENTE (si clickeas):
+  // - ↓ (inactivo o asc) = si clickeas irá hacia arriba (siguiente será desc)
+  // - ↑ (desc) = si clickeas irá hacia abajo (siguiente será asc)
+  const getHeaderDirectionArrow = () => {
+    if (sortMode === '') return '↓'  // Inactivo: flecha hacia abajo
+    return sortDirection === 'asc' ? '↑' : '↓'  // asc→↑, desc→↓
   }
 
   return (
@@ -259,26 +262,23 @@ export default function SortDropdown({
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 24px;
-          height: 24px;
-          font-size: 14px;
+          width: 20px;
+          height: 20px;
+          font-size: 13px;
           background: transparent;
           border: none;
           cursor: pointer;
-          opacity: 0.4;
+          opacity: 0.5;
           transition: opacity 150ms ease;
           padding: 0;
         }
 
         .sd-option:hover .sd-direction-btn {
-          opacity: 1;
-        }
-
-        .sd-option.active .sd-direction-btn {
-          opacity: 1;
+          opacity: 0.8;
         }
 
         .sd-option.active .sd-direction-btn.active {
+          opacity: 1;
           color: var(--ui-accent);
           font-weight: bold;
         }
@@ -328,15 +328,13 @@ export default function SortDropdown({
           className={`sd-trigger ${open ? 'open' : ''}`}
           onClick={() => setOpen(!open)}
           type="button"
-          title={sortMode === '' ? 'Ordenar por...' : `${getHeaderText()} ${getHeaderDirectionIcon()}`}
+          title={sortMode === '' ? 'Ordenar por...' : `${getHeaderText()} ${getHeaderDirectionArrow()}`}
         >
           <div className="sd-trigger-content">
             <span className="sd-trigger-label">
-              {SORT_OPTIONS[0].icon} {getHeaderText()}
+              {getHeaderText()}
             </span>
-            {getHeaderDirectionIcon() && (
-              <span className="sd-trigger-direction">{getHeaderDirectionIcon()}</span>
-            )}
+            <span className="sd-trigger-direction">{getHeaderDirectionArrow()}</span>
           </div>
           <div className="sd-chevron">▼</div>
         </button>
@@ -365,17 +363,13 @@ export default function SortDropdown({
 
                     {/* Direcciones (🔼 🔽 o solo la activa) */}
                     <div className="sd-option-directions">
-                      {option.value === '' ? null : isActive ? (
-                        // Opción activa: muestra solo la dirección seleccionada
-                        <span className="sd-direction-btn active">
-                          {sortDirection === 'asc' ? '🔼' : '🔽'}
+                      {option.value === '' ? null : (
+                        // Mostrar una sola flecha
+                        // Inactivo o asc → ↑ (próxima será desc)
+                        // desc → ↓ (próxima será asc)
+                        <span className={`sd-direction-btn ${isActive ? 'active' : ''}`}>
+                          {isActive ? (sortDirection === 'asc' ? '↑' : '↓') : '↓'}
                         </span>
-                      ) : (
-                        // Opción inactiva: muestra ambas direcciones en gris
-                        <>
-                          <span className="sd-direction-btn">🔼</span>
-                          <span className="sd-direction-btn">🔽</span>
-                        </>
                       )}
                     </div>
 
