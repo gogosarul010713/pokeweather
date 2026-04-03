@@ -117,11 +117,11 @@ export default function SortDropdown({
 
   // Obtener la flecha para el header
   // La flecha indica la dirección SIGUIENTE (si clickeas):
-  // - ↓ (inactivo o asc) = si clickeas irá hacia arriba (siguiente será desc)
-  // - ↑ (desc) = si clickeas irá hacia abajo (siguiente será asc)
+  // - ⬇️ (inactivo o asc) = si clickeas irá hacia arriba (siguiente será desc)
+  // - ⬆️ (desc) = si clickeas irá hacia abajo (siguiente será asc)
   const getHeaderDirectionArrow = () => {
-    if (sortMode === '') return '↓'  // Inactivo: flecha hacia abajo
-    return sortDirection === 'asc' ? '↑' : '↓'  // asc→↑, desc→↓
+    if (sortMode === '') return '⬇️'  // Inactivo: flecha hacia abajo
+    return sortDirection === 'asc' ? '⬆️' : '⬇️'  // asc→⬆️, desc→⬇️
   }
 
   return (
@@ -357,18 +357,20 @@ export default function SortDropdown({
                     title={tooltipText}
                   >
                     <div className="sd-option-left">
-                      <span className="sd-option-icon">{option.icon}</span>
+                      {option.value !== '' && (
+                        <span className="sd-option-icon">{option.icon}</span>
+                      )}
                       <span className="sd-option-label">{option.label}</span>
                     </div>
 
-                    {/* Direcciones (🔼 🔽 o solo la activa) */}
+                    {/* Dirección */}
                     <div className="sd-option-directions">
                       {option.value === '' ? null : (
                         // Mostrar una sola flecha
-                        // Inactivo o asc → ↑ (próxima será desc)
-                        // desc → ↓ (próxima será asc)
+                        // Inactivo o asc → ⬆️ (próxima será desc)
+                        // desc → ⬇️ (próxima será asc)
                         <span className={`sd-direction-btn ${isActive ? 'active' : ''}`}>
-                          {isActive ? (sortDirection === 'asc' ? '↑' : '↓') : '↓'}
+                          {isActive ? (sortDirection === 'asc' ? '⬆️' : '⬇️') : '⬇️'}
                         </span>
                       )}
                     </div>
