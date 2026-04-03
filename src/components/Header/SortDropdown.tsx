@@ -334,7 +334,9 @@ export default function SortDropdown({
             <span className="sd-trigger-label">
               {getHeaderText()}
             </span>
-            <span className="sd-trigger-direction">{getHeaderDirectionArrow()}</span>
+            {sortMode !== '' && (
+              <span className="sd-trigger-direction">{getHeaderDirectionArrow()}</span>
+            )}
           </div>
           <div className="sd-chevron">▼</div>
         </button>
