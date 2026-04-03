@@ -327,6 +327,8 @@ src/components/Sidebar/LocationCard.tsx
 - Fase 1 ✅ (2026-03-31): Dashboard de Historial interactivo (US-608)
 - Fase 2 ✅ (2026-03-31): Debug Tools (US-606 + US-609)
 - Fase 3: Responsive design (tablet + mobile)
+  - ✅ US-701 Tablet layout completado (2026-04-02): sidebar colapsable, toggle header
+  - 🔄 US-702 Mobile layout en progreso: scroll fix, search en header, FilterPanelModal mejorado, botón reset filtros
 
 **Definition of Done (Fase 2):**
 - ✅ US-606: Tab "🔧 Caché" con visualización, filtros, eliminación
@@ -341,8 +343,8 @@ src/components/Sidebar/LocationCard.tsx
 | Fase 2 | **US-606** | **Inspector Visual de Caché** | **5** | **✅ Completada** |
 | Fase 2 | **US-609** | **Métricas de Precisión** | **3** | **✅ Completada** |
 | Fase 3 | **US-703** | **Unified Sort Dropdown UX** | **3** | **✅ Completada** |
-| Fase 3 | US-701 | Layout tablet (768–1024px) | 5 | ⏳ Pendiente |
-| Fase 3 | US-702 | Layout mobile (< 768px) | 8 | ⏳ Pendiente |
+| Fase 3 | **US-701** | **Layout tablet (768–1024px)** | **5** | **✅ Completada (2026-04-02)** |
+| Fase 3 | US-702 | Layout mobile (< 768px) | 8 | 🔄 En progreso |
 | **Total** | | | **32 SP** | |
 
 ### Archivos modificados en Sprint 7 Fase 1
@@ -407,4 +409,4 @@ Sprint 6 (API real) ────────────────────
 | Sprint 4 | ✅ Completado (2026-03-21) |
 | Sprint 5 | ✅ Completado (2026-03-22) — Badges, filtros, auto-scroll, z-index fix |
 | **Sprint 6** | **✅ Completado (2026-03-30)** — Fase 1 ✅ (API real, batch, caching), Fase 2 ✅ (Lazy Load, Auto-refresh, Testing) |
-| **Sprint 7** | **🔄 En progreso (2026-03-31)** — Fase 1 ✅ (Historial + Dashboard), Fase 2 ⏳ (Cache + Métricas), Fase 3 ⏳ (Responsive) |
+| **Sprint 7** | **🔄 En progreso (2026-04-02)** — Fase 1 ✅ Historial, Fase 2 ✅ Debug Tools, Fase 3 🔄 Responsive: US-701 ✅ tablet, US-702 🔄 mobile |

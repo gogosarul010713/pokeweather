@@ -111,8 +111,9 @@ export default function App() {
         @media (max-width: 767px) {
           .app-body {
             flex-direction: column;
+            margin-top: 96px;
             height: auto;
-            min-height: calc(100vh - 80px);
+            min-height: calc(100vh - 96px);
             overflow-y: auto;  /* ← FIXED: Allow vertical scroll */
           }
 

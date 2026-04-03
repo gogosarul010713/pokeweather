@@ -64,10 +64,14 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
   const regionFilter = useStore((s) => s.regionFilter)
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
+  const sortMode = useStore((s) => s.sortMode)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
+  const setTypeFilter = useStore((s) => s.setTypeFilter)
   const toggleType = useStore((s) => s.toggleType)
   const clearConditions = useStore((s) => s.clearConditions)
+  const setSortMode = useStore((s) => s.setSortMode)
+  const setSortDirection = useStore((s) => s.setSortDirection)
 
   // For mobile multi-select regions: treat as array internally
   const [selectedRegions, setSelectedRegions] = useState<string[]>(
@@ -90,9 +94,18 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
     onClose()
   }
 
+  const activeFilterCount =
+    (regionFilter !== 'todas' ? 1 : 0) +
+    conditionFilter.length +
+    typeFilter.length +
+    (sortMode !== '' ? 1 : 0)
+
   const handleClearAll = () => {
     setRegionFilter('todas')
     clearConditions()
+    setTypeFilter([])
+    setSortMode('' as any)
+    setSortDirection('asc')
     setSelectedRegions([])
   }
 
@@ -343,16 +356,41 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           padding: 0 4px;
         }
 
-        .fpm-clear-link {
-          color: var(--ui-error);
-          cursor: pointer;
+        .fpm-reset-btn {
+          width: 100%;
+          padding: 10px 14px;
+          background: var(--bg-tertiary);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-default);
+          border-radius: 6px;
+          font-size: 13px;
           font-weight: 500;
-          transition: opacity 150ms;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 200ms ease;
         }
 
-        .fpm-clear-link:hover {
-          opacity: 0.8;
-          text-decoration: underline;
+        .fpm-reset-btn:hover {
+          background: var(--bg-elevated);
+          color: var(--text-primary);
+          border-color: var(--border-strong);
+        }
+
+        .fpm-reset-badge {
+          background: var(--ui-accent);
+          color: var(--bg-primary);
+          border-radius: 10px;
+          font-size: 10px;
+          font-weight: 700;
+          min-width: 18px;
+          height: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 4px;
         }
 
         .fpm-active-count {
@@ -502,20 +540,27 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
               ✕ Cancelar
             </button>
           </div>
+
+          {/* Botón restablecer — solo visible cuando hay filtros activos */}
+          {activeFilterCount > 0 && (
+            <button className="fpm-reset-btn" onClick={handleClearAll}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 3v5h5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Limpiar todo
+              <span className="fpm-reset-badge">{activeFilterCount}</span>
+            </button>
+          )}
+
           <div className="fpm-footer-meta">
             <span>
               Filtros activos:{' '}
-              {conditionFilter.length > 0 ? (
-                <span className="fpm-active-count">{conditionFilter.length}</span>
+              {activeFilterCount > 0 ? (
+                <span className="fpm-active-count">{activeFilterCount}</span>
               ) : (
                 <span>0</span>
               )}
-            </span>
-            <span
-              className="fpm-clear-link"
-              onClick={handleClearAll}
-            >
-              Limpiar Todos
             </span>
           </div>
         </div>

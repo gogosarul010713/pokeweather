@@ -25,6 +25,7 @@ export default function Header({ cities = [] }: HeaderProps) {
   return (
     <>
       <style>{`
+        /* Header: columna para poder apilar filas */
         .hd-root {
           position: fixed;
           top: 0;
@@ -33,19 +34,25 @@ export default function Header({ cities = [] }: HeaderProps) {
           height: 80px;
           z-index: 1001;
           display: flex;
-          align-items: center;
-          padding: 0 16px;
-          gap: 12px;
+          flex-direction: column;
           background: var(--bg-secondary);
           border-bottom: 1px solid var(--border-default);
           flex-shrink: 0;
         }
 
-        .hd-center {
-          display: none;  /* Hidden by default (desktop) */
-          flex: 0;  /* Desktop: FilterPanel uses flex: 1 */
+        /* Fila principal: Brand + FilterPanel/spacer + Right icons */
+        .hd-row1 {
+          display: flex;
+          flex-direction: row;
           align-items: center;
-          padding: 0 8px;
+          padding: 0 16px;
+          gap: 12px;
+          flex: 1;
+        }
+
+        /* Fila de búsqueda (solo mobile) — oculta por defecto */
+        .hd-center {
+          display: none;
         }
 
         .hd-right {
@@ -112,34 +119,58 @@ export default function Header({ cities = [] }: HeaderProps) {
           border-color: var(--border-strong);
         }
 
-        /* Tablet: show sidebar toggle, hide filter button */
+        /* Tablet: show sidebar toggle */
         @media (min-width: 768px) and (max-width: 1023px) {
           .hd-sidebar-toggle {
             display: flex;
           }
-
-          .hd-filter-btn {
-            display: none;
-          }
         }
 
-        /* Desktop: hide sidebar toggle, hide filter button */
-        @media (min-width: 1024px) {
-          .hd-sidebar-toggle {
-            display: none;
-          }
-
-          .hd-filter-btn {
-            display: none;
-          }
-        }
-
-        /* Mobile: show SearchInput in center, show filter button, hide FilterPanel, hide sidebar toggle */
+        /* ── MOBILE (<768px): Header de 2 filas ── */
         @media (max-width: 767px) {
+          .hd-root {
+            height: 96px;
+          }
+
+          /* Fila 1: Brand (izq) + Right icons (der) */
+          .hd-row1 {
+            flex: 0 0 52px;
+            padding: 0 12px;
+            gap: 8px;
+          }
+
+          /* Spacer entre Brand y hd-right */
+          .hd-filter-panel {
+            display: none;
+          }
+
+          .hd-right {
+            margin-left: auto;
+          }
+
+          /* Fila 2: SearchInput full-width */
           .hd-center {
-            display: flex;  ← Show SearchInput in mobile
-            flex: 1;  ← Let it grow
-            margin: 0 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px 10px;
+          }
+
+          .hd-center .fb-search {
+            flex: 1;
+            width: 100%;
+          }
+
+          .hd-center .fb-search-input {
+            width: 100%;
+            min-width: unset;
+            max-width: none;
+            height: 30px;
+            font-size: 13px;
+            padding: 0 30px 0 30px;
+          }
+
+          .hd-center .fb-search-icon {
+            color: var(--text-secondary);
           }
 
           .hd-filter-btn {
@@ -148,68 +179,69 @@ export default function Header({ cities = [] }: HeaderProps) {
             justify-content: center;
           }
 
-          .hd-filter-panel {
-            display: none;
-          }
-
           .hd-sidebar-toggle {
             display: none;
+          }
+        }
+
+        /* TABLET: FilterPanel más compacto */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .hd-row1 {
+            gap: 6px;
           }
         }
       `}</style>
 
       <header className="hd-root">
-        {/* Izquierda */}
-        <Brand />
+        {/* ── Fila 1: Brand + FilterPanel + Iconos derecha ── */}
+        <div className="hd-row1">
+          <Brand />
 
-        {/* Centro — búsqueda (mobile only) */}
+          {/* Desktop/Tablet: filtros + búsqueda */}
+          <div className="hd-filter-panel">
+            <FilterPanel />
+          </div>
+
+          {/* Iconos derecha */}
+          <div className="hd-right">
+            <button
+              className="hd-sidebar-toggle"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title={sidebarOpen ? 'Colapsar sidebar' : 'Expandir sidebar'}
+              type="button"
+            >
+              {sidebarOpen ? '☰' : '›'}
+            </button>
+
+            <button
+              className="hd-filter-btn"
+              onClick={() => setIsFilterPanelOpen(true)}
+              title="Filtros"
+              type="button"
+            >
+              🔍
+              {conditionFilter.length > 0 && (
+                <span className="hd-filter-badge">{conditionFilter.length}</span>
+              )}
+            </button>
+
+            <TestingButton onClick={() => setIsTestingOpen(true)} />
+            <SyncBadge />
+            <ThemeToggle />
+          </div>
+        </div>
+
+        {/* ── Fila 2: SearchInput (solo mobile) ── */}
         <div className="hd-center">
           <SearchInput />
         </div>
-
-        {/* Centro — filtros + búsqueda (desktop/tablet only) */}
-        <div className="hd-filter-panel">
-          <FilterPanel />
-        </div>
-
-        {/* Derecha — testing + sync + tema + filter button + sidebar toggle */}
-        <div className="hd-right">
-          {/* Sidebar toggle (tablet only) */}
-          <button
-            className="hd-sidebar-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            title={sidebarOpen ? 'Colapsar sidebar' : 'Expandir sidebar'}
-            type="button"
-          >
-            {sidebarOpen ? '☰' : '›'}
-          </button>
-
-          {/* Filter button (mobile only) */}
-          <button
-            className="hd-filter-btn"
-            onClick={() => setIsFilterPanelOpen(true)}
-            title="Filtros"
-            type="button"
-          >
-            🔍
-            {conditionFilter.length > 0 && (
-              <span className="hd-filter-badge">{conditionFilter.length}</span>
-            )}
-          </button>
-
-          <TestingButton onClick={() => setIsTestingOpen(true)} />
-          <SyncBadge />
-          <ThemeToggle />
-        </div>
       </header>
 
-      {/* Filter Panel Modal (mobile only) */}
       <FilterPanelModal
         isOpen={isFilterPanelOpen}
         onClose={() => setIsFilterPanelOpen(false)}
       />
 
-      {/* Testing Tools Drawer */}
       <TestingTools cities={cities} isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
     </>
   )

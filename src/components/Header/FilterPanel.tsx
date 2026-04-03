@@ -63,7 +63,6 @@ export default function FilterPanel() {
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const setTypeFilter = useStore((s) => s.setTypeFilter)
-  const clearConditions = useStore((s) => s.clearConditions)
   const setSortMode = useStore((s) => s.setSortMode)
   const setSortDirection = useStore((s) => s.setSortDirection)
 
@@ -76,6 +75,22 @@ export default function FilterPanel() {
     setSortMode(mode as any)
     setSortDirection(direction as any)
   }, [setSortMode, setSortDirection])
+
+  const activeFilterCount =
+    (regionFilter !== 'todas' ? 1 : 0) +
+    conditionFilter.length +
+    typeFilter.length +
+    (sortMode !== '' ? 1 : 0)
+
+  const hasActiveFilters = activeFilterCount > 0
+
+  const handleClearAll = () => {
+    setRegionFilter('todas')
+    setConditionFilter([])
+    setTypeFilter([])
+    setSortMode('' as any)
+    setSortDirection('asc')
+  }
 
   return (
     <>
@@ -103,20 +118,44 @@ export default function FilterPanel() {
         }
 
         .fp-clear-btn {
-          padding: 8px 12px;
-          background: rgba(248, 81, 73, 0.1);
-          color: var(--ui-error);
+          position: relative;
+          width: 32px;
+          height: 32px;
+          background: var(--bg-tertiary);
+          color: var(--text-secondary);
           border: 1px solid var(--border-default);
           border-radius: 6px;
           cursor: pointer;
-          font-size: 12px;
-          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
           transition: all 200ms ease;
         }
 
         .fp-clear-btn:hover {
-          background: rgba(248, 81, 73, 0.2);
-          border-color: var(--ui-error);
+          background: var(--bg-elevated);
+          color: var(--text-primary);
+          border-color: var(--border-strong);
+          transform: rotate(-20deg);
+        }
+
+        .fp-clear-badge {
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          background: var(--ui-accent);
+          color: var(--bg-primary);
+          border-radius: 10px;
+          font-size: 9px;
+          font-weight: 700;
+          min-width: 16px;
+          height: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 3px;
+          pointer-events: none;
         }
 
         .fp-search-wrapper {
@@ -181,10 +220,18 @@ export default function FilterPanel() {
           onSortChange={handleSortChange}
         />
 
-        {/* Botón Limpiar (solo si hay filtros activos) */}
-        {conditionFilter.length > 0 && (
-          <button className="fp-clear-btn" onClick={clearConditions}>
-            ✕ Limpiar
+        {/* Botón Restablecer — icono compacto con badge de conteo */}
+        {hasActiveFilters && (
+          <button
+            className="fp-clear-btn"
+            onClick={handleClearAll}
+            title={`Restablecer ${activeFilterCount} filtro${activeFilterCount > 1 ? 's' : ''}`}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 3v5h5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="fp-clear-badge">{activeFilterCount}</span>
           </button>
         )}
 

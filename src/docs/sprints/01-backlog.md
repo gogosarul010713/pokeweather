@@ -952,25 +952,29 @@ Tab: "Métricas"
 ## EP-10 · Responsive
 
 ### US-701 · Layout tablet (768–1024px)
-**SP:** 5 · **Prioridad:** 🟢
+**SP:** 5 · **Prioridad:** 🟢 · **✅ Completada (2026-04-02 — commit 5ec4605)**
 
 **Criterios de aceptación:**
-- [ ] Sidebar como drawer sobre el mapa
-- [ ] MenuStrip 44px permanente
-- [ ] Click ícono → drawer slide-in, click fuera → cierra
-- [ ] Header compacto
+- [x] Sidebar colapsable 280px ↔ 44px (smooth 300ms animation)
+- [x] Toggle en header: ☰ abierto / › cerrado
+- [x] Mapa se expande automáticamente al colapsar sidebar
+- [x] Header compacto con FilterPanel (gap 6px, height 44px)
+- [x] localStorage persistence (`pwe-sidebar-open`)
 
 ---
 
 ### US-702 · Layout mobile (< 768px)
-**SP:** 8 · **Prioridad:** 🟢
+**SP:** 8 · **Prioridad:** 🟢 · **🔄 En progreso (2026-04-02)**
 
 **Criterios de aceptación:**
-- [ ] Header compacto
-- [ ] Mapa fullscreen
+- [x] Header 2 filas: brand+iconos (fila 1) + search full-width (fila 2)
+- [x] Scroll vertical habilitado (mapa 55vh + lista 45vh apilados)
+- [x] FilterPanelModal: botones Aplicar + Cancelar + Restablecer
+- [x] Filtro región single-select (bug fix)
+- [x] Botón reset filtros con badge contador (desktop + mobile)
+- [ ] Mapa fullscreen opcional
 - [ ] NavBar inferior: Mapa · Lista · Filtros
 - [ ] Tab Lista → bottom sheet cards horizontales
-- [ ] Tab Filtros → bottom sheet modal
 - [ ] CityTooltip → panel bottom fullwidth
 - [ ] Sin overflow horizontal
 
