@@ -385,7 +385,6 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
                 { label: 'América', value: 'america', emoji: '🌎' },
                 { label: 'Oceanía', value: 'oceania', emoji: '🌊' },
                 { label: 'África', value: 'africa', emoji: '🌍' },
-                { label: 'Todas', value: 'todas', emoji: '🌐' },
               ].map((region) => {
                 const isActive = selectedRegions.includes(region.value)
                 return (
