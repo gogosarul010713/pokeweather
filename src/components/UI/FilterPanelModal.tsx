@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
+import SearchInput from '../Header/SearchInput'
 
 interface ClimateOption {
   label: string
@@ -363,6 +364,46 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           font-weight: 600;
           font-size: 11px;
         }
+
+        /* Search Wrapper */
+        .fpm-search-wrapper {
+          width: 100%;
+          margin-bottom: 8px;
+        }
+
+        /* Buttons Group (Aplicar + Cancelar) */
+        .fpm-buttons-group {
+          display: flex;
+          gap: 8px;
+          width: 100%;
+        }
+
+        .fpm-buttons-group > button {
+          flex: 1;
+        }
+
+        /* Cancel Button */
+        .fpm-cancel-btn {
+          width: 100%;
+          padding: 12px;
+          background: rgba(200, 200, 200, 0.15);
+          color: var(--text-primary);
+          border: 1px solid var(--border-default);
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 200ms ease;
+        }
+
+        .fpm-cancel-btn:hover {
+          background: rgba(200, 200, 200, 0.25);
+          border-color: var(--border-strong);
+        }
+
+        .fpm-cancel-btn:active {
+          opacity: 0.8;
+        }
       `}</style>
 
       {/* Backdrop */}
@@ -375,6 +416,14 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
 
         {/* Content */}
         <div className="fpm-content">
+          {/* Search Section */}
+          <div className="fpm-section">
+            <div className="fpm-section-title">🔍 Buscar</div>
+            <div className="fpm-search-wrapper">
+              <SearchInput />
+            </div>
+          </div>
+
           {/* Regions Section */}
           <div className="fpm-section">
             <div className="fpm-section-title">🌍 Regiones</div>
@@ -460,9 +509,14 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
 
         {/* Footer */}
         <div className="fpm-footer">
-          <button className="fpm-apply-btn" onClick={handleApply}>
-            ✓ Aplicar Filtros
-          </button>
+          <div className="fpm-buttons-group">
+            <button className="fpm-apply-btn" onClick={handleApply}>
+              ✓ Aplicar
+            </button>
+            <button className="fpm-cancel-btn" onClick={onClose} title="Descartar cambios">
+              ✕ Cancelar
+            </button>
+          </div>
           <div className="fpm-footer-meta">
             <span>
               Filtros activos:{' '}
