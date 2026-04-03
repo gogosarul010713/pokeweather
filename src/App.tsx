@@ -126,7 +126,7 @@ export default function App() {
           .app-list-area {
             height: 45vh;
             flex: none;
-            overflow: hidden;
+            overflow-y: auto;
             background: var(--bg-primary);
           }
         }

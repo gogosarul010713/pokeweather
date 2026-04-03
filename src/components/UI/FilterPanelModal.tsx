@@ -99,9 +99,9 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
   const handleRegionToggle = (region: string) => {
     setSelectedRegions((prev) => {
       if (prev.includes(region)) {
-        return prev.filter((r) => r !== region)
+        return []  // Deselecciona si estaba activo
       } else {
-        return [...prev, region]
+        return [region]  // Selecciona este, deselecciona otros (single-select)
       }
     })
   }
