@@ -48,6 +48,7 @@ Documentación de features y user stories implementadas.
 - [07-mobile-filters-architecture.md](features/07-mobile-filters-architecture.md) — Arquitectura de filtros en mobile
 - [08-badges-system.md](features/08-badges-system.md) — Sistema de badges (categorías de ciudades)
 - [09-unified-sort-dropdown.md](features/09-unified-sort-dropdown.md) — US-703: Dropdown unificado de ordenamiento (UX mejorado)
+- [10-us701-tablet-layout.md](features/10-us701-tablet-layout.md) — US-701: Tablet layout (768-1024px) con sidebar colapsable
 
 ---
 
