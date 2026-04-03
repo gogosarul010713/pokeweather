@@ -18,6 +18,8 @@ export default function Header({ cities = [] }: HeaderProps) {
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
   const conditionFilter = useStore((s) => s.conditionFilter)
+  const sidebarOpen = useStore((s) => s.sidebarOpen)
+  const setSidebarOpen = useStore((s) => s.setSidebarOpen)
 
   return (
     <>
@@ -81,7 +83,50 @@ export default function Header({ cities = [] }: HeaderProps) {
           justify-content: center;
         }
 
-        /* Mobile: show filter button, hide FilterPanel */
+        /* Sidebar toggle button (tablet only) */
+        .hd-sidebar-toggle {
+          display: none;
+          width: 36px;
+          height: 36px;
+          background: transparent;
+          border: 1px solid var(--border-default);
+          border-radius: 6px;
+          color: var(--text-primary);
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 150ms ease;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .hd-sidebar-toggle:hover {
+          background: var(--bg-tertiary);
+          border-color: var(--border-strong);
+        }
+
+        /* Tablet: show sidebar toggle, hide filter button */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .hd-sidebar-toggle {
+            display: flex;
+          }
+
+          .hd-filter-btn {
+            display: none;
+          }
+        }
+
+        /* Desktop: hide sidebar toggle, hide filter button */
+        @media (min-width: 1024px) {
+          .hd-sidebar-toggle {
+            display: none;
+          }
+
+          .hd-filter-btn {
+            display: none;
+          }
+        }
+
+        /* Mobile: show filter button, hide FilterPanel, hide sidebar toggle */
         @media (max-width: 767px) {
           .hd-filter-btn {
             display: flex;
@@ -90,6 +135,10 @@ export default function Header({ cities = [] }: HeaderProps) {
           }
 
           .hd-filter-panel {
+            display: none;
+          }
+
+          .hd-sidebar-toggle {
             display: none;
           }
         }
@@ -104,8 +153,18 @@ export default function Header({ cities = [] }: HeaderProps) {
           <FilterPanel />
         </div>
 
-        {/* Derecha — testing + sync + tema + filter button */}
+        {/* Derecha — testing + sync + tema + filter button + sidebar toggle */}
         <div className="hd-right">
+          {/* Sidebar toggle (tablet only) */}
+          <button
+            className="hd-sidebar-toggle"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            title={sidebarOpen ? 'Colapsar sidebar' : 'Expandir sidebar'}
+            type="button"
+          >
+            {sidebarOpen ? '☰' : '›'}
+          </button>
+
           {/* Filter button (mobile only) */}
           <button
             className="hd-filter-btn"

@@ -125,6 +125,18 @@ export default function FilterPanel() {
           align-items: center;
         }
 
+        /* TABLET: Make FilterPanel more compact */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .fp-root {
+            gap: 6px;
+            height: 44px;
+          }
+
+          .fp-filters {
+            gap: 6px;
+          }
+        }
+
       `}</style>
 
       <div className="fp-root">

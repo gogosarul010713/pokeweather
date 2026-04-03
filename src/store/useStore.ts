@@ -112,7 +112,14 @@ export const useStore = create<AppStore>((set, get) => ({
   sortDirection: 'asc',  // Default: ascendente (como solicitó el usuario)
   selectedCity: null,
   theme: (localStorage.getItem('pwe-theme') as 'dark' | 'light') || 'dark',
-  sidebarOpen: true,
+  sidebarOpen: (() => {
+    try {
+      const saved = localStorage.getItem('pwe-sidebar-open')
+      return saved ? JSON.parse(saved) : true
+    } catch {
+      return true
+    }
+  })(),
   loadingStatus: 'idle',
   loadingProgress: { cityName: '', current: 0, total: 0, percent: 0 },
   sidebarMode: 'list',
@@ -169,7 +176,10 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ theme: next })
   },
 
-  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  setSidebarOpen: (open) => {
+    localStorage.setItem('pwe-sidebar-open', JSON.stringify(open))
+    set({ sidebarOpen: open })
+  },
 
   setSidebarMode: (mode) => set({ sidebarMode: mode }),
 

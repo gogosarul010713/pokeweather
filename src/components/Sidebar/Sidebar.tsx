@@ -9,6 +9,7 @@ export default function Sidebar({ cities }: SidebarProps) {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const setSidebarMode = useStore((s) => s.setSidebarMode)
   const selectedCity = useStore((s) => s.selectedCity)
+  const sidebarOpen = useStore((s) => s.sidebarOpen)
 
   return (
     <>
@@ -88,7 +89,23 @@ export default function Sidebar({ cities }: SidebarProps) {
           margin-bottom: 8px;
         }
 
-        /* ── RESPONSIVE ── */
+        /* ── TABLET: Colapsable sidebar ── */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .sb-root {
+            width: 280px;
+            transition: width 300ms ease, transform 300ms ease;
+          }
+
+          .sb-root.sb-collapsed {
+            width: 44px;
+          }
+
+          .sb-root.sb-collapsed .sb-content {
+            display: none;
+          }
+        }
+
+        /* ── MOBILE ── */
         @media (max-width: 767px) {
           .sb-root {
             display: none;
@@ -96,7 +113,7 @@ export default function Sidebar({ cities }: SidebarProps) {
         }
       `}</style>
 
-      <aside className="sb-root">
+      <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
         {/* ── MenuStrip — 3 modos ── */}
         <div className="sb-menu-strip">
           {/* Lista */}

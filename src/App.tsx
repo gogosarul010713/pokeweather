@@ -131,17 +131,19 @@ export default function App() {
           }
         }
 
-        /* TABLET (768px - 1023px): Sidebar as drawer, map expands */
+        /* TABLET (768px - 1023px): Sidebar colapsable, map expands */
         @media (min-width: 768px) and (max-width: 1023px) {
           .app-body {
             flex-direction: row;
             height: calc(100vh - 80px);
             overflow: hidden;
+            transition: all 300ms ease;
           }
 
           .app-map-area {
             flex: 1;
             position: relative;
+            transition: flex 300ms ease;
           }
 
           .app-list-area {
