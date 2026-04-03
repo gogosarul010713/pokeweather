@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useStore } from '../../store/useStore'
 import CustomSelect from '../UI/CustomSelect'
 import type { SelectOption } from '../UI/CustomSelect'
+import SortDropdown from './SortDropdown'
 import SearchInput from './SearchInput'
 
 const POKEMON_TYPES = [
@@ -52,35 +53,6 @@ const CLIMATE_OPTIONS: SelectOption[] = [
   { label: 'Windy',  value: 'windy',  icon: '/weather/windy.png'  },
 ]
 
-const SORT_OPTIONS_BASE: SelectOption[] = [
-  { label: 'Ordenar por', value: '', description: '↓ Elige el criterio' },
-  { label: '🔤 Nombre', value: 'name', description: 'Ordenar alfabéticamente' },
-  { label: '📊 Densidad', value: 'density', description: 'Mayor densidad primero' },
-  { label: '⭐ Rating', value: 'rating', description: 'Mayor rating primero' },
-  { label: '🕐 Hora Local', value: 'time', description: 'Más temprano primero' },
-]
-
-// Helper function para generar los labels dinámicos basado en sortDirection
-const getDisplayLabel = (mode: string, direction: string): string => {
-  if (mode === '') return 'Ordenar por'
-
-  const dirIcon = direction === 'asc' ? '↑' : '↓'
-  const emoji: Record<string, string> = {
-    'name': '🔤',
-    'density': '📊',
-    'rating': '⭐',
-    'time': '🕐'
-  }
-
-  const labels: Record<string, string> = {
-    'name': 'Nombre',
-    'density': 'Densidad',
-    'rating': 'Rating',
-    'time': 'Hora Local'
-  }
-
-  return `${emoji[mode] || ''} ${labels[mode] || ''} (${dirIcon})`
-}
 
 export default function FilterPanel() {
   const regionFilter = useStore((s) => s.regionFilter)
@@ -99,22 +71,11 @@ export default function FilterPanel() {
     setConditionFilter(Array.isArray(items) ? items : [items])
   }
 
-  const toggleSortDirection = useCallback(() => {
-    const newDirection = sortDirection === 'asc' ? 'desc' : 'asc'
-    console.log('🔄 toggleSortDirection:', {
-      currentDirection: sortDirection,
-      newDirection,
-      sortMode,
-      timestamp: new Date().toISOString(),
-    })
-    setSortDirection(newDirection)
-  }, [sortDirection, setSortDirection])
-
-  // Generar las opciones de ordenamiento dinámicamente basado en sortDirection
-  const SORT_OPTIONS = SORT_OPTIONS_BASE.map((opt) => ({
-    ...opt,
-    label: opt.value === '' ? 'Ordenar por' : getDisplayLabel(opt.value, sortDirection),
-  }))
+  // Handler para cambios de ordenamiento (criterio + dirección)
+  const handleSortChange = useCallback((mode: string, direction: string) => {
+    setSortMode(mode as any)
+    setSortDirection(direction as any)
+  }, [setSortMode, setSortDirection])
 
   return (
     <>
@@ -164,32 +125,6 @@ export default function FilterPanel() {
           align-items: center;
         }
 
-        .fp-sort-direction-btn {
-          padding: 6px 10px;
-          background: var(--bg-tertiary);
-          color: var(--text-primary);
-          border: 1px solid var(--border-default);
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 12px;
-          font-weight: 600;
-          transition: all 200ms ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 36px;
-          height: 32px;
-        }
-
-        .fp-sort-direction-btn:hover:not(:disabled) {
-          background: var(--bg-overlay);
-          border-color: var(--border-strong);
-        }
-
-        .fp-sort-direction-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
       `}</style>
 
       <div className="fp-root">
@@ -227,26 +162,12 @@ export default function FilterPanel() {
           isMulti={true}
         />
 
-        {/* Ordenar por */}
-        <CustomSelect
-          label="Ordenar por"
-          value={sortMode || ''}
-          options={SORT_OPTIONS}
-          onChange={(v) => setSortMode(v as any)}
-          isMulti={false}
+        {/* Ordenamiento unificado */}
+        <SortDropdown
+          sortMode={sortMode}
+          sortDirection={sortDirection}
+          onSortChange={handleSortChange}
         />
-
-        {/* Toggle Dirección (solo si hay ordenamiento activo) */}
-        {sortMode !== '' && (
-          <button
-            className="fp-sort-direction-btn"
-            onClick={toggleSortDirection}
-            title={`Cambiar a ${sortDirection === 'asc' ? 'descendente' : 'ascendente'}`}
-            type="button"
-          >
-            {sortDirection === 'asc' ? '↑' : '↓'}
-          </button>
-        )}
 
         {/* Botón Limpiar (solo si hay filtros activos) */}
         {conditionFilter.length > 0 && (
