@@ -111,14 +111,15 @@ export default function App() {
         @media (max-width: 767px) {
           .app-body {
             flex-direction: column;
-            height: calc(100vh - 80px);
-            overflow: hidden;
+            height: auto;
+            min-height: calc(100vh - 80px);
+            overflow-y: auto;  /* ← FIXED: Allow vertical scroll */
           }
 
           .app-map-area {
             height: 55vh;
             flex: none;
-            overflow-y: auto;
+            overflow: visible;  /* No internal scroll, parent handles it */
           }
 
           /* List area will be positioned below map */
@@ -126,7 +127,7 @@ export default function App() {
           .app-list-area {
             height: 45vh;
             flex: none;
-            overflow-y: auto;
+            overflow: visible;  /* No internal scroll, parent handles it */
             background: var(--bg-primary);
           }
         }

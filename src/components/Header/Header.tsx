@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 import Brand from './Brand'
+import SearchInput from './SearchInput'
 import ThemeToggle from './ThemeToggle'
 import SyncBadge from '../UI/SyncBadge'
 import FilterPanel from './FilterPanel'
@@ -38,6 +39,13 @@ export default function Header({ cities = [] }: HeaderProps) {
           background: var(--bg-secondary);
           border-bottom: 1px solid var(--border-default);
           flex-shrink: 0;
+        }
+
+        .hd-center {
+          display: none;  /* Hidden by default (desktop) */
+          flex: 0;  /* Desktop: FilterPanel uses flex: 1 */
+          align-items: center;
+          padding: 0 8px;
         }
 
         .hd-right {
@@ -126,8 +134,14 @@ export default function Header({ cities = [] }: HeaderProps) {
           }
         }
 
-        /* Mobile: show filter button, hide FilterPanel, hide sidebar toggle */
+        /* Mobile: show SearchInput in center, show filter button, hide FilterPanel, hide sidebar toggle */
         @media (max-width: 767px) {
+          .hd-center {
+            display: flex;  ← Show SearchInput in mobile
+            flex: 1;  ← Let it grow
+            margin: 0 8px;
+          }
+
           .hd-filter-btn {
             display: flex;
             align-items: center;
@@ -147,6 +161,11 @@ export default function Header({ cities = [] }: HeaderProps) {
       <header className="hd-root">
         {/* Izquierda */}
         <Brand />
+
+        {/* Centro — búsqueda (mobile only) */}
+        <div className="hd-center">
+          <SearchInput />
+        </div>
 
         {/* Centro — filtros + búsqueda (desktop/tablet only) */}
         <div className="hd-filter-panel">

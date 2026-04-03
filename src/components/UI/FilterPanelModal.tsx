@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
-import SearchInput from '../Header/SearchInput'
 
 interface ClimateOption {
   label: string
@@ -365,12 +364,6 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           font-size: 11px;
         }
 
-        /* Search Wrapper */
-        .fpm-search-wrapper {
-          width: 100%;
-          margin-bottom: 8px;
-        }
-
         /* Buttons Group (Aplicar + Cancelar) */
         .fpm-buttons-group {
           display: flex;
@@ -416,14 +409,6 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
 
         {/* Content */}
         <div className="fpm-content">
-          {/* Search Section */}
-          <div className="fpm-section">
-            <div className="fpm-section-title">🔍 Buscar</div>
-            <div className="fpm-search-wrapper">
-              <SearchInput />
-            </div>
-          </div>
-
           {/* Regions Section */}
           <div className="fpm-section">
             <div className="fpm-section-title">🌍 Regiones</div>
