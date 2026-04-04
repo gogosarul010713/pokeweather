@@ -12,10 +12,19 @@ import type { City } from '../../store/useStore'
 
 interface HeaderProps {
   cities?: City[]
+  onRefresh?: () => void
 }
 
-export default function Header({ cities = [] }: HeaderProps) {
+export default function Header({ cities = [], onRefresh }: HeaderProps) {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefresh = () => {
+    if (refreshing || !onRefresh) return
+    setRefreshing(true)
+    onRefresh()
+    setTimeout(() => setRefreshing(false), 1500)
+  }
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
   const conditionFilter = useStore((s) => s.conditionFilter)
@@ -190,6 +199,45 @@ export default function Header({ cities = [] }: HeaderProps) {
             gap: 6px;
           }
         }
+
+        /* Refresh button */
+        .hd-refresh-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          background: transparent;
+          border: 1px solid var(--border-default);
+          border-radius: 6px;
+          color: var(--text-secondary);
+          cursor: pointer;
+          transition: all 150ms ease;
+          flex-shrink: 0;
+        }
+
+        .hd-refresh-btn:hover {
+          background: var(--bg-tertiary);
+          color: var(--text-primary);
+          border-color: var(--border-strong);
+        }
+
+        .hd-refresh-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .hd-refresh-btn svg {
+          transition: transform 150ms ease;
+        }
+
+        .hd-refresh-btn.spinning svg {
+          animation: hd-refresh-spin 0.8s linear infinite;
+        }
+
+        @keyframes hd-refresh-spin {
+          to { transform: rotate(360deg); }
+        }
       `}</style>
 
       <header className="hd-root">
@@ -224,6 +272,22 @@ export default function Header({ cities = [] }: HeaderProps) {
                 <span className="hd-filter-badge">{conditionFilter.length}</span>
               )}
             </button>
+
+            {/* Refresh button */}
+            {onRefresh && (
+              <button
+                className={`hd-refresh-btn${refreshing ? ' spinning' : ''}`}
+                onClick={handleRefresh}
+                disabled={refreshing}
+                title="Actualizar datos"
+                type="button"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3 3v5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
 
             <TestingButton onClick={() => setIsTestingOpen(true)} />
             <SyncBadge />
