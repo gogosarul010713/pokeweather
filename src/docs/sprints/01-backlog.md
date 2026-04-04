@@ -964,7 +964,7 @@ Tab: "Métricas"
 ---
 
 ### US-702 · Layout mobile (< 768px)
-**SP:** 8 · **Prioridad:** 🟢 · **🔄 En progreso (2026-04-02)**
+**SP:** 8 · **Prioridad:** 🟢 · **🔄 En progreso (2026-04-04)**
 
 **Criterios de aceptación:**
 - [x] Header 2 filas: brand+iconos (fila 1) + search full-width (fila 2)
@@ -972,11 +972,27 @@ Tab: "Métricas"
 - [x] FilterPanelModal: botones Aplicar + Cancelar + Restablecer
 - [x] Filtro región single-select (bug fix)
 - [x] Botón reset filtros con badge contador (desktop + mobile)
-- [ ] Mapa fullscreen opcional
-- [ ] NavBar inferior: Mapa · Lista · Filtros
-- [ ] Tab Lista → bottom sheet cards horizontales
-- [ ] CityTooltip → panel bottom fullwidth
-- [ ] Sin overflow horizontal
+- [x] Brand clickeable → resetToHome() (limpia filtros, deselecciona ciudad)
+- [x] Botón Refresh en header con spin animation
+- [ ] NavBar inferior — redefinida para v2: tabs "Climas" + "Nidos". Pendiente hasta implementar Nidos.
+- [ ] Barra de acciones en lista mobile (US-704)
+
+---
+
+### US-704 · Barra de acciones mobile en lista
+**SP:** 3 · **Prioridad:** 🟢 · **Estado:** 🔨 En progreso (2026-04-04)
+
+**Como** usuario mobile,
+**quiero** acceder a filtros, ordenamiento y refresh desde la barra del header de la lista de ciudades,
+**para** no tener que ir al header para realizar estas acciones.
+
+**Criterios de aceptación:**
+- [ ] Fila "Ciudades • N" incluye botones: Filtros (con badge), Ordenar, Refresh
+- [ ] Los botones se muestran solo en mobile (< 768px)
+- [ ] Filtros abre FilterPanelModal existente
+- [ ] Ordenar abre SortDropdown compacto o mini-modal
+- [ ] Refresh dispara recarga de datos con feedback visual
+- [ ] En desktop/tablet la fila de lista no cambia
 
 ---
 

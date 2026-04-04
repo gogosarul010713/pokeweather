@@ -345,7 +345,8 @@ src/components/Sidebar/LocationCard.tsx
 | Fase 3 | **US-703** | **Unified Sort Dropdown UX** | **3** | **✅ Completada** |
 | Fase 3 | **US-701** | **Layout tablet (768–1024px)** | **5** | **✅ Completada (2026-04-02)** |
 | Fase 3 | US-702 | Layout mobile (< 768px) | 8 | 🔄 En progreso |
-| **Total** | | | **32 SP** | |
+| Fase 3 | US-704 | Barra de acciones mobile en lista | 3 | 🔨 En progreso |
+| **Total** | | | **35 SP** | |
 
 ### Archivos modificados en Sprint 7 Fase 1
 

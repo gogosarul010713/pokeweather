@@ -181,7 +181,7 @@ export default function App() {
 
           {/* LIST AREA — Mobile only (LocationFeed extracted from Sidebar) */}
           <div className="app-list-area">
-            <LocationFeed cities={filteredCities} />
+            <LocationFeed cities={filteredCities} onRefresh={() => run(handleCitiesLoaded)} />
           </div>
         </div>
 
