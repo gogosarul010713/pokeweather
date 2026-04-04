@@ -972,9 +972,9 @@ Tab: "Métricas"
 - [x] FilterPanelModal: botones Aplicar + Cancelar + Restablecer
 - [x] Filtro región single-select (bug fix)
 - [x] Botón reset filtros con badge contador (desktop + mobile)
-- [x] Brand clickeable → resetToHome() (limpia filtros, deselecciona ciudad)
-- [x] Pull-to-refresh en header mobile (deslizar hacia abajo > 60px)
-- [ ] NavBar inferior — **redefinida para v2**: tabs serán "Climas" (app actual) + "Nidos" (nueva funcionalidad v2). Diseño pendiente hasta que se implemente Nidos.
+- [ ] Mapa fullscreen opcional
+- [ ] NavBar inferior: Mapa · Lista · Filtros
+- [ ] Tab Lista → bottom sheet cards horizontales
 - [ ] CityTooltip → panel bottom fullwidth
 - [ ] Sin overflow horizontal
 

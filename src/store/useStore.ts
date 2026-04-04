@@ -96,7 +96,6 @@ interface AppStore {
   setIsFilterPanelOpen: (open: boolean) => void
   setTypeFilter: (types: string[]) => void
   toggleType: (type: string) => void
-  resetToHome: () => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -214,19 +213,6 @@ export const useStore = create<AppStore>((set, get) => ({
   setIsFilterPanelOpen: (open) => set({ isFilterPanelOpen: open }),
 
   setTypeFilter: (types) => set({ typeFilter: types }),
-
-  resetToHome: () => set({
-    regionFilter: 'todas',
-    conditionFilter: [],
-    searchQuery: '',
-    sortMode: '',
-    sortDirection: 'asc',
-    typeFilter: [],
-    selectedCity: null,
-    sidebarMode: 'list',
-    isFilterPanelOpen: false,
-    badgeFilter: [],
-  }),
 
   toggleType: (type) =>
     set((state) => ({

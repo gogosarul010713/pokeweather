@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 import Brand from './Brand'
 import SearchInput from './SearchInput'
@@ -12,47 +12,15 @@ import type { City } from '../../store/useStore'
 
 interface HeaderProps {
   cities?: City[]
-  onRefresh?: () => void
 }
 
-const PTR_THRESHOLD = 60  // px de arrastre para activar refresh
-
-export default function Header({ cities = [], onRefresh }: HeaderProps) {
+export default function Header({ cities = [] }: HeaderProps) {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
-  const [ptrState, setPtrState] = useState<'idle' | 'pulling' | 'refreshing'>('idle')
-  const [ptrDelta, setPtrDelta] = useState(0)
-  const touchStartY = useRef(0)
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
   const conditionFilter = useStore((s) => s.conditionFilter)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
   const setSidebarOpen = useStore((s) => s.setSidebarOpen)
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!onRefresh) return
-    const delta = e.touches[0].clientY - touchStartY.current
-    if (delta > 0) {
-      setPtrState('pulling')
-      setPtrDelta(Math.min(delta, PTR_THRESHOLD + 10))
-    }
-  }
-
-  const handleTouchEnd = () => {
-    if (!onRefresh || ptrState !== 'pulling') return
-    if (ptrDelta >= PTR_THRESHOLD) {
-      setPtrState('refreshing')
-      setPtrDelta(0)
-      onRefresh()
-      setTimeout(() => setPtrState('idle'), 1500)
-    } else {
-      setPtrState('idle')
-      setPtrDelta(0)
-    }
-  }
 
   return (
     <>
@@ -222,60 +190,9 @@ export default function Header({ cities = [], onRefresh }: HeaderProps) {
             gap: 6px;
           }
         }
-
-        /* Pull-to-refresh indicator (mobile only) */
-        .hd-ptr {
-          display: none;
-        }
-
-        @media (max-width: 767px) {
-          .hd-ptr {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 0;
-            overflow: hidden;
-            transition: height 150ms ease;
-            color: var(--text-secondary);
-            font-family: 'Exo 2', sans-serif;
-            font-size: 11px;
-            gap: 6px;
-          }
-
-          .hd-ptr.visible {
-            height: 24px;
-          }
-
-          .hd-ptr-spinner {
-            width: 14px;
-            height: 14px;
-            border: 2px solid var(--border-default);
-            border-top-color: var(--ui-accent);
-            border-radius: 50%;
-            animation: hd-spin 0.7s linear infinite;
-          }
-
-          @keyframes hd-spin {
-            to { transform: rotate(360deg); }
-          }
-        }
       `}</style>
 
-      <header
-        className="hd-root"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Pull-to-refresh indicator */}
-        <div className={`hd-ptr${ptrState !== 'idle' ? ' visible' : ''}`}>
-          {ptrState === 'refreshing' ? (
-            <><div className="hd-ptr-spinner" /> Actualizando...</>
-          ) : (
-            <span>{ptrDelta >= PTR_THRESHOLD ? '↑ Suelta para actualizar' : '↓ Desliza para actualizar'}</span>
-          )}
-        </div>
-
+      <header className="hd-root">
         {/* ── Fila 1: Brand + FilterPanel + Iconos derecha ── */}
         <div className="hd-row1">
           <Brand />

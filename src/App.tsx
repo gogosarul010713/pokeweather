@@ -167,7 +167,7 @@ export default function App() {
         <LoadingScreen mode={isInitialLoadRef.current ? 'initial' : 'refresh'} />
 
         {/* ── HEADER ── */}
-        <Header cities={cities} onRefresh={() => run(handleCitiesLoaded)} />
+        <Header cities={cities} />
 
         {/* ── BODY ── */}
         <div className="app-body">
