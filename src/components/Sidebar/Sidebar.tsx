@@ -9,6 +9,7 @@ export default function Sidebar({ cities }: SidebarProps) {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const setSidebarMode = useStore((s) => s.setSidebarMode)
   const selectedCity = useStore((s) => s.selectedCity)
+  const sidebarOpen = useStore((s) => s.sidebarOpen)
 
   return (
     <>
@@ -87,9 +88,32 @@ export default function Sidebar({ cities }: SidebarProps) {
           display: block;
           margin-bottom: 8px;
         }
+
+        /* ── TABLET: Colapsable sidebar ── */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .sb-root {
+            width: 280px;
+            transition: width 300ms ease, transform 300ms ease;
+          }
+
+          .sb-root.sb-collapsed {
+            width: 44px;
+          }
+
+          .sb-root.sb-collapsed .sb-content {
+            display: none;
+          }
+        }
+
+        /* ── MOBILE ── */
+        @media (max-width: 767px) {
+          .sb-root {
+            display: none;
+          }
+        }
       `}</style>
 
-      <aside className="sb-root">
+      <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
         {/* ── MenuStrip — 3 modos ── */}
         <div className="sb-menu-strip">
           {/* Lista */}
@@ -125,12 +149,12 @@ export default function Sidebar({ cities }: SidebarProps) {
 
         {/* ── Content ── */}
         <div className="sb-content">
-          {/* Modo Lista / Favoritos: LocationFeed */}
+          {/* Modo Lista / Favoritos: LocationFeed (hidden in mobile, visible in tablet+) */}
           {(sidebarMode === 'list' || sidebarMode === 'favorites') && (
             <LocationFeed cities={cities} />
           )}
 
-          {/* Modo Detalle: Placeholder (será LocationDetail modal en US-404) */}
+          {/* Modo Detalle: Placeholder */}
           {sidebarMode === 'detail' && (
             <div className="sb-detail-placeholder">
               <span className="sb-detail-icon">📍</span>

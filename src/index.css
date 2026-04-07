@@ -184,3 +184,36 @@ html.light {
 .fade-refresh {
   animation: fadeInOut 200ms ease-in-out;
 }
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* Desktop (1024px+) — Default layout
+   - Sidebar visible (300px fixed)
+   - Map flexes to fill space
+   - Full header
+   - Legend bottom-right
+*/
+/* No media query needed — this is the default */
+
+/* Tablet (768px - 1023px)
+   - Sidebar as drawer (hamburger toggle)
+   - Map expands to ~70% of width
+   - Header with hamburger icon
+   - Filters in bottom-sheet modal
+*/
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Component-specific rules added in MT-3.x */
+}
+
+/* Mobile (<768px)
+   - Sidebar hidden (only as drawer)
+   - Map 60vh + List 40vh stacked vertical
+   - Compact header
+   - Filters in bottom-sheet modal
+   - Legend collapsed by default
+*/
+@media (max-width: 767px) {
+  /* Component-specific rules added in MT-2.x */
+}

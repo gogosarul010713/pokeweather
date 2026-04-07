@@ -97,32 +97,37 @@ VITE_ACCUWEATHER_KEY=   # ⚠️ REQUERIDA (sin key → error de inicialización
 
 ## SPRINT ACTUAL
 
-**Sprint:** 6 — AccuWeather Real API + Auto-refresh ✅ **COMPLETADO (2026-03-30)**
+**Sprint:** 7 — Filtros + Ordenamiento ✅ **EN PROGRESO (2026-04-02)**
 
-**Fase 1 (2026-03-24):** ✅
-- ✅ Eliminado modo mock completamente (solo API real)
-- ✅ S2_LEVEL corregido: 13 → 10 (Pokémon GO spec)
-- ✅ Batch processing implementado (5 paralelo, 200ms delay)
-- ✅ 3-layer caching: LocationKeys (localStorage) + Weather (IndexedDB, TTL 60min)
-- ✅ Debug tools: debugCaching.ts (8 funciones, console access via pweCache)
-
-**Fase 2 (2026-03-30):** ✅ **COMPLETADO**
-- ✅ **US-602** Refresh automático horario (timer HH:00, Visibility API)
-- ✅ **US-604** Lazy Load Horario (auto-refresh con LoadingScreen contextual)
-- ✅ **US-607** Servicio de Historial de Precisión (WeatherHistoryService, snapshots)
-- ✅ **Fix F1** handleVisibilityChange reschedule (app vuelve visible → refresh inmediato)
-- ✅ **Fix F2** fade-refresh animation (200ms fadeInOut en LocationFeed)
-- ✅ **Fix F3** LoadingScreen visibility (visible=true cuando loadingStatus='loading')
-- ✅ E2E Tests validados: 6/6 PASSED (Playwright)
-- ✅ Build exitoso (npm run build ✓, 1.32s)
-- ✅ Documentación: 23-sprint-6-completion.md con todas las validaciones
+**Fase 1 (2026-04-02):** ✅ COMPLETADO
+- ✅ **US-301-303** Filtros de header completamente funcionales
+  - SearchInput: Búsqueda por nombre/país/coordenadas
+  - FilterPanel: Continente, Clima, Tipo Pokémon, Ordenamiento
+- ✅ **DESCUBRIMIENTO:** El ordenamiento descendente NO era un bug, funcionaba desde el inicio
+  - Botón toggle ↑/↓ existía pero no era evidente en UI
+  - Solución: Agregar `sortDirection` a dependencias de `useMemo` en App.tsx
+  - Resultado: Toggle ahora actualiza la lista inmediatamente
+- ✅ **FIX TIMEZONE:** AccuWeather retorna timezone pero no se extraía
+  - Creada interfaz LocationData con timezone
+  - Se extrae correctamente desde API
+  - Hora local ahora es diferente para cada ciudad
+- ✅ **E2E Validation:** 5/5 Playwright tests PASSED
+  - Labels dinámicos en dropdown
+  - Toggle bidireccional (asc ↔ desc)
+  - Todas las opciones (Nombre, Densidad, Rating, Hora Local)
+  - Múltiples ciclos sin degradación
+- ✅ Build exitoso (npm run build ✓)
+- ✅ Documentación:
+  - BRANCH-STRATEGY.md (versiones y cómo cambiar)
+  - FIRST-SORT-FIX-VERSION.md (primer fix estable)
 
 **Métricas:**
-- API Consumption: ~600-1200 calls/mes (< 15k presupuesto)
-- Test Coverage: 6/6 E2E tests passed
-- Performance: Fade 400ms, progreso <100ms
+- Filtros: 100% funcionales (4/4 criterios)
+- Ordenamiento: ✅ Asc/Desc funcional
+- Validación: 5/5 E2E tests PASSED
+- Estado rama: Merged a sprint-7 (commit f0e45ca)
 
-**Próximo:** Sprint 7 — Responsive (Tablet + Mobile layout)
+**Próximo:** Sprint 7 Fase 2 — Responsive (Tablet + Mobile layout)
 
 ---
 

@@ -72,8 +72,8 @@ export async function loadCitiesInBatch(
     // Procesar batch en paralelo
     const batchPromises = batch.map(async (city) => {
       try {
-        // 1. Obtener locationKey (siempre caché en localStorage — rápido)
-        const locationKey = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
+        // 1. Obtener locationKey y timezone (siempre caché en localStorage — rápido)
+        const { locationKey } = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
 
         // 2. Intentar obtener del caché por locationKey (US-605: Caché geoespacial)
         // Si ignoreCache=true, saltamos caché (para auto-refresh a HH:00)

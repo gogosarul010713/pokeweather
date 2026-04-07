@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv 07-badges.md features/08-badges-system.md)",
+      "Bash(mv 22-sprint-6-testing-fixes.md workflow/03-sprint-6-testing-fixes.md)",
+      "Bash(mv 23-sprint-6-completion.md sprints/04-sprint-6-completion.md)",
+      "Bash(mv 02-verificacion-us605.md 02-verificacion-us605.md.bak)",
+      "Bash(mv 02-first-sort-fix-version.md 03-first-sort-fix-version.md)",
+      "Bash(mv 03-fixes-traceability.md 04-fixes-traceability.md)",
+      "Bash(mv 04-validation-report-sort-icons.md 05-validation-report-sort-icons.md)",
+      "Bash(mv 02-verificacion-us605.md.bak 02-verificacion-us605.md)",
+      "Read(//c/Users/geova/.claude/**)",
+      "Bash(tee /tmp/playwright-output.txt)",
+      "Read(//c/Workspace/React/pokeweather/**)"
+    ]
+  }
+}

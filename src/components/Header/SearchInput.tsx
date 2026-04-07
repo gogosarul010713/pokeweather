@@ -86,6 +86,17 @@ export default function SearchInput() {
         .fb-search-clear:hover {
           color: var(--text-primary);
         }
+
+        /* Mobile responsive */
+        @media (max-width: 767px) {
+          .fb-search-input {
+            min-width: auto;
+            max-width: 160px;
+            font-size: 11px;
+            height: 26px;
+            padding: 0 24px 0 24px;
+          }
+        }
       `}</style>
 
       <div className="fb-search">

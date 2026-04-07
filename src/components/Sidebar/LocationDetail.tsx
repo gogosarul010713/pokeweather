@@ -73,7 +73,7 @@ export default function LocationDetail({ city }: LocationDetailProps) {
           position: fixed;
           inset: 0;
           background: rgba(0, 0, 0, 0.4);
-          z-index: 499;
+          z-index: 1100;
           animation: fadeIn 200ms ease;
         }
 
@@ -86,7 +86,7 @@ export default function LocationDetail({ city }: LocationDetailProps) {
           background: var(--bg-secondary);
           border-top: 1px solid var(--border-default);
           border-radius: 16px 16px 0 0;
-          z-index: 500;
+          z-index: 1101;
           display: flex;
           flex-direction: column;
           animation: slideUp 250ms ease;

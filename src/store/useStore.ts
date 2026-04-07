@@ -41,7 +41,8 @@ export interface City {
 }
 
 type Region = 'todas' | 'asia' | 'europa' | 'america' | 'oceania' | 'africa'
-type SortMode = 'name' | 'density' | 'rating' | 'time'
+type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin ordenar
+type SortDirection = 'asc' | 'desc'
 type LoadingStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 interface LoadingProgress {
@@ -59,6 +60,7 @@ interface AppStore {
   conditionFilter: string[]
   searchQuery: string
   sortMode: SortMode
+  sortDirection: SortDirection
   selectedCity: City | null
   theme: 'dark' | 'light'
   sidebarOpen: boolean
@@ -69,6 +71,8 @@ interface AppStore {
   badgeFilter: string[]
   showBadgesOnPins: boolean
   lastUpdated: number | null
+  isFilterPanelOpen: boolean
+  typeFilter: string[]
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -77,6 +81,7 @@ interface AppStore {
   clearConditions: () => void
   setSearchQuery: (query: string) => void
   setSortMode: (mode: SortMode) => void
+  setSortDirection: (direction: SortDirection) => void
   setSelectedCity: (city: City | null) => void
   toggleTheme: () => void
   setSidebarOpen: (open: boolean) => void
@@ -88,6 +93,10 @@ interface AppStore {
   setBadgeFilter: (badges: string[]) => void
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
+  setIsFilterPanelOpen: (open: boolean) => void
+  setTypeFilter: (types: string[]) => void
+  toggleType: (type: string) => void
+  resetToHome: () => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -100,10 +109,18 @@ export const useStore = create<AppStore>((set, get) => ({
   regionFilter: 'todas',
   conditionFilter: [],
   searchQuery: '',
-  sortMode: 'density',
+  sortMode: '',  // Default: sin ordenar
+  sortDirection: 'asc',  // Default: ascendente (como solicitó el usuario)
   selectedCity: null,
   theme: (localStorage.getItem('pwe-theme') as 'dark' | 'light') || 'dark',
-  sidebarOpen: true,
+  sidebarOpen: (() => {
+    try {
+      const saved = localStorage.getItem('pwe-sidebar-open')
+      return saved ? JSON.parse(saved) : true
+    } catch {
+      return true
+    }
+  })(),
   loadingStatus: 'idle',
   loadingProgress: { cityName: '', current: 0, total: 0, percent: 0 },
   sidebarMode: 'list',
@@ -125,6 +142,8 @@ export const useStore = create<AppStore>((set, get) => ({
     }
   })(),
   lastUpdated: null,
+  isFilterPanelOpen: false,
+  typeFilter: [],
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -144,6 +163,11 @@ export const useStore = create<AppStore>((set, get) => ({
 
   setSortMode: (mode) => set({ sortMode: mode }),
 
+  setSortDirection: (direction) => {
+    console.log('📝 setSortDirection action:', direction)
+    set({ sortDirection: direction })
+  },
+
   setSelectedCity: (city) => set({ selectedCity: city }),
 
   toggleTheme: () => {
@@ -153,7 +177,10 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ theme: next })
   },
 
-  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  setSidebarOpen: (open) => {
+    localStorage.setItem('pwe-sidebar-open', JSON.stringify(open))
+    set({ sidebarOpen: open })
+  },
 
   setSidebarMode: (mode) => set({ sidebarMode: mode }),
 
@@ -184,9 +211,33 @@ export const useStore = create<AppStore>((set, get) => ({
 
   setLastUpdated: (timestamp) => set({ lastUpdated: timestamp }),
 
+  setIsFilterPanelOpen: (open) => set({ isFilterPanelOpen: open }),
+
+  setTypeFilter: (types) => set({ typeFilter: types }),
+
+  resetToHome: () => set({
+    regionFilter: 'todas',
+    conditionFilter: [],
+    searchQuery: '',
+    sortMode: '',
+    sortDirection: 'asc',
+    typeFilter: [],
+    selectedCity: null,
+    sidebarMode: 'list',
+    isFilterPanelOpen: false,
+    badgeFilter: [],
+  }),
+
+  toggleType: (type) =>
+    set((state) => ({
+      typeFilter: state.typeFilter.includes(type)
+        ? state.typeFilter.filter((t) => t !== type)
+        : [...state.typeFilter, type],
+    })),
+
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {
-    const { regionFilter, conditionFilter, searchQuery, sortMode } = get()
+    const { regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection } = get()
     let result = [...cities]
 
     if (regionFilter !== 'todas') {
@@ -195,6 +246,12 @@ export const useStore = create<AppStore>((set, get) => ({
 
     if (conditionFilter.length > 0) {
       result = result.filter((c) => conditionFilter.includes(c.condition))
+    }
+
+    if (typeFilter.length > 0) {
+      result = result.filter((c) =>
+        c.boostedTypes.some((type) => typeFilter.includes(type))
+      )
     }
 
     if (searchQuery.trim()) {
@@ -209,13 +266,25 @@ export const useStore = create<AppStore>((set, get) => ({
       )
     }
 
-    result.sort((a, b) => {
-      if (sortMode === 'name') return a.name.localeCompare(b.name)
-      if (sortMode === 'density') return b.density - a.density
-      if (sortMode === 'rating') return b.rating - a.rating
-      if (sortMode === 'time') return a.localTime.localeCompare(b.localTime)
-      return 0
-    })
+    // Aplicar ordenamiento solo si sortMode !== ''
+    if (sortMode !== '') {
+      result.sort((a, b) => {
+        let comparison = 0
+
+        if (sortMode === 'name') {
+          comparison = a.name.localeCompare(b.name)
+        } else if (sortMode === 'density') {
+          comparison = a.density - b.density
+        } else if (sortMode === 'rating') {
+          comparison = a.rating - b.rating
+        } else if (sortMode === 'time') {
+          comparison = a.localTime.localeCompare(b.localTime)
+        }
+
+        // Invertir si es descendente
+        return sortDirection === 'desc' ? -comparison : comparison
+      })
+    }
 
     return result
   },

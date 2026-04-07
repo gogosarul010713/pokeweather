@@ -204,20 +204,32 @@ interface HourlyForecastData {
   Visibility?: { Value: number }  // ← Para detectar FOG (km)
 }
 
+export interface LocationData {
+  locationKey: string
+  timezone: number  // offset en segundos desde UTC
+}
+
 export const getAccuWeatherLocationKey = async (
   lat: number,
   lon: number,
   apiKey: string
-): Promise<string> => {
+): Promise<LocationData> => {
   const s2Key = getS2Key(lat, lon)
 
   // 1. Verificar caché permanente (localStorage)
   const cached = getCachedLocationKey(s2Key)
-  if (cached) return cached
+  if (cached) {
+    // Parsear el caché (es un JSON string con {locationKey, timezone})
+    try {
+      return JSON.parse(cached) as LocationData
+    } catch {
+      // Si falla el parse, continuar con API
+    }
+  }
 
   // 2. Llamar API
   const url = `${ACCUWEATHER_BASE}/locations/v1/cities/geoposition/search` +
-    `?apikey=${apiKey}&q=${lat},${lon}&toplevel=true`
+    `?apikey=${apiKey}&q=${lat},${lon}&toplevel=true&details=true`
 
   const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
   if (!response.ok) {
@@ -227,10 +239,18 @@ export const getAccuWeatherLocationKey = async (
   const data = await response.json()
   const locationKey = data.Key
 
-  // 3. Cachear permanentemente
-  setCachedLocationKey(s2Key, locationKey)
+  // Extraer timezone: AccuWeather retorna TimeZone.GmtOffset en segundos
+  const timezoneSeconds = data.TimeZone?.GmtOffset ?? 0
 
-  return locationKey
+  const locationData: LocationData = {
+    locationKey,
+    timezone: timezoneSeconds,
+  }
+
+  // 3. Cachear permanentemente (como JSON string)
+  setCachedLocationKey(s2Key, JSON.stringify(locationData))
+
+  return locationData
 }
 
 export const getHourlyForecast = async (
@@ -272,8 +292,8 @@ export const fetchCityWeather = async (
   enableAlerts: boolean = false
 ): Promise<City> => {
   try {
-    // 1. Obtener location key
-    const locationKey = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
+    // 1. Obtener location key y timezone
+    const { locationKey, timezone } = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
 
     // 2. Fetch forecast + alerts (opcional, si plan lo soporta)
     const forecastPromise = getHourlyForecast(locationKey, apiKey)
@@ -307,6 +327,7 @@ export const fetchCityWeather = async (
       visibilityKm: forecast.Visibility?.Value ?? 10,  // ← Default 10km si no viene
       weatherIcon: forecast.WeatherIcon,
       accuLocationKey: locationKey,
+      timezone,  // ← Ahora se asigna correctamente
       updatedAt: Date.now(),
       weatherImage: `/weather/${condition}.png`,
       // localTime será calculado en useWeather con timezone

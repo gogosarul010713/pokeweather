@@ -4,6 +4,7 @@ export interface SelectOption {
   label: string
   value: string
   icon?: string   // ruta a imagen — si existe, reemplaza texto en la opción
+  description?: string  // Descripción adicional (solo para display)
 }
 
 interface CustomSelectProps {
