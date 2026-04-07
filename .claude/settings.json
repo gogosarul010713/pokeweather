@@ -10,7 +10,8 @@
       "Bash(mv 04-validation-report-sort-icons.md 05-validation-report-sort-icons.md)",
       "Bash(mv 02-verificacion-us605.md.bak 02-verificacion-us605.md)",
       "Read(//c/Users/geova/.claude/**)",
-      "Bash(tee /tmp/playwright-output.txt)"
+      "Bash(tee /tmp/playwright-output.txt)",
+      "Read(//c/Workspace/React/pokeweather/**)"
     ]
   }
 }

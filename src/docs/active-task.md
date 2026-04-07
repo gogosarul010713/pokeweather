@@ -1,35 +1,39 @@
-# Active Task — Sprint 8 Prep (2026-04-07)
+# Active Task — Sprint 8 (2026-04-07) — DEBUGGING
 
 ## Sprint Actual
-**Sprint 7 Closing** → **Sprint 8 Starting (2026-04-08)**
+**Sprint 8 — Bottom Sheet Implementation** 
 
-## Último Completado (2026-04-07)
-✅ **US-705** FilterPanelModal V2 Redesign
-- 4 secciones colapsables (REGIONES, CLIMA, TIPOS, ORDENAR)
-- Diseño premium con pills, tarjetas, radio buttons
-- Theme dark con variables CSS (design system)
-- Commits: `00008f9`, `3941f67`, `96ea25b`
+## Estado Anterior Completado
+✅ **Sprint 7**: 13/13 US (FilterPanel Redesign, Responsive, Ordenamiento)
+✅ **BUGFIX**: LocationFeed scroll (c7f34c9)
 
-## Tareas Completadas (2026-04-07)
-### ✅ 1️⃣ **BUGFIX**: LocationFeed scroll bloqueado (mobile)
-- **Problema**: 5 ciudades, solo 4 visibles en mobile
-- **Root Cause**: `.app-list-area { height: 45vh; }` altura fija
-- **Solución**: Cambiar a `flex: 1` + `min-height: 0`
-- **Commit**: `c7f34c9` ✅ BUILD PASSED
-- **Archivo**: `src/App.tsx` (línea 128-133)
+## Trabajo Realizado Hoy (2026-04-07)
+✅ **US-706 Fase 1-5**: Bottom Sheet Implementation + Refactor
+1. Paso 1-4: BottomSheet.tsx + Sidebar mobile integration
+2. Paso 5: `/simplify` code review → refactor a App.tsx root level
+   - Creado `src/hooks/useIsMobile.ts` (reutilizable)
+   - Limpiado BottomSheet (sin dragListenerRef, viewportHeight en handler)
+   - Sidebar simplificado (removido wrapper hacks)
+3. Commits: `d278049` (pasos 1-4), `4f124d6` (visibility fix), `8798f1b` (positioning), `e65fb13` (refactor)
 
-### ✅ 2️⃣ **US-706 DISEÑO COMPLETADO**
-- **Documentación**: `src/docs/26-us706-bottom-sheet-mobile.md`
-- **Arquitectura**: Bottom Sheet con drag handle, 3 snaps (80vh, 40vh, colapsado)
-- **Status**: Diseño Sr completo, listo para implementación Sprint 8
+## Problema Activo (BLOCKER) 🔴
+**BottomSheet no visible en mobile viewport**
+- **Síntoma**: Usuario no ve lista ni handle en browser (<768px)
+- **Paradoja**: Playwright E2E tests dicen `isVisible: true`, DOM correcto, pero browser no muestra
+- **Mapa**: SÍ visible (716px height, correctamente renderizado)
+- **Build**: ✅ PASSED
+- **E2E**: ✅ PASSED (pero contradicción con visual)
 
-## Estado Actual
-- Branch: `sprint-7` (clean, waiting for bugfix)
-- Cambios: 0 (clean working tree)
+## Estado Actual (2026-04-07 EOD)
+- Branch: `sprint-7` (4 commits nuevos)
 - Build: ✅ PASSED
-- E2E Tests: Pendientes (pero funcional)
+- Working tree: clean
+- Playwright: ✅ 1/1 test passed
+- **BLOCKER**: BottomSheet invisible en browser a pesar de estar en DOM
 
-## Sprint 8 Preview
-- **Fase 1**: US-706 Bottom Sheet (13 SP)
-- **Duración**: ~4 horas implementación + testing
-- **Inicio**: 2026-04-08 (después del bugfix)
+## Próxima Sesión (2026-04-08)
+⏳ **DEBUGGEAR**: ¿Por qué Playwright dice visible pero browser no muestra?
+- Revisar Dev Tools: computed styles en vivo
+- Revisar z-index stacking context
+- Comparar con LocationDetail (que SÍ funciona)
+- Posibles causas: clip-path, transform, display none somewhere, CSS media query override

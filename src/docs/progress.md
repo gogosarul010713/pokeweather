@@ -43,14 +43,17 @@
 
 ## Sprint 8 — Bottom Sheet + Polish (2026-04-07 → TBD)
 
-### Fase 1: Bottom Sheet Mobile (2026-04-07) ⏳
-- [ ] **US-706** Bottom Sheet con Drag Handle
-  - ✅ Diseño completado + documentación
-  - [ ] Paso 1: App.tsx media query cleanup
-  - [ ] Paso 2: Crear BottomSheet.tsx (drag + snap)
-  - [ ] Paso 3: Integrar en Sidebar
-  - [ ] Paso 4: Mover Filtros a SheetHeader
-  - [ ] Paso 5-7: Testing + Build
+### Fase 1: Bottom Sheet Mobile (2026-04-07) 🔧 DEBUGGING
+- 🔨 **US-706** Bottom Sheet con Drag Handle (EN DEBUGGING)
+  - ✅ Diseño + documentación completo
+  - ✅ Paso 1-4: Implementación inicial (BottomSheet.tsx + Sidebar integration)
+  - ✅ Paso 5: Refactor via /simplify — movido a App root level (como LocationDetail)
+  - ✅ useIsMobile hook creado
+  - ❌ **PROBLEMA**: BottomSheet sigue sin verse en mobile viewport
+    - Playwright tests dicen que está en DOM (position:fixed, isVisible:true)
+    - Pero usuario no lo ve visualmente en el navegador
+    - Mapa sí se ve correctamente
+  - 🔧 **PRÓXIMA SESIÓN**: Debuggear por qué Playwright dice visible pero browser no muestra
 
 ---
 

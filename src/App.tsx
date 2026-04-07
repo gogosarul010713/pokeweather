@@ -6,7 +6,7 @@ import MapView from './components/Map/MapView'
 import LocationFeed from './components/Sidebar/LocationFeed'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
-import { BottomSheet } from './components/BottomSheet'
+import { BottomSheetPortal } from './components/BottomSheet/BottomSheetPortal'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
 import { useIsMobile } from './hooks/useIsMobile'
@@ -183,11 +183,11 @@ export default function App() {
           </div>
         </div>
 
-        {/* BOTTOM SHEET — Mobile only, rendered at root level like LocationDetail */}
+        {/* BOTTOM SHEET — Mobile only, rendered via portal outside #root */}
         {isMobile && (
-          <BottomSheet>
+          <BottomSheetPortal>
             <LocationFeed cities={filteredCities} />
-          </BottomSheet>
+          </BottomSheetPortal>
         )}
 
         {/* LOCATION DETAIL MODAL */}
