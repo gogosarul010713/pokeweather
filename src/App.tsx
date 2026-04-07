@@ -114,6 +114,7 @@ export default function App() {
             margin-top: 96px;
             height: calc(100vh - 96px);
             overflow: hidden;  /* BottomSheet is fixed, no body scroll */
+            position: relative;  /* Positioning context for absolute children (Sidebar wrapper) */
           }
 
           .app-map-area {

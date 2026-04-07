@@ -29,10 +29,22 @@ export default function Sidebar({ cities }: SidebarProps) {
 
   // Mobile layout: BottomSheet always visible with LocationFeed
   // In detail mode, LocationDetail modal opens above the BottomSheet
+  // Wrapper is position:fixed to escape overflow:hidden clipping
+  // BottomSheet inside is position:absolute relative to wrapper
   if (isMobile) {
     return (
-      <div style={{ position: 'relative', height: '100%', width: '100%' }}>
-        <BottomSheet><LocationFeed cities={cities} /></BottomSheet>
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '100vh',
+        zIndex: 50,
+        pointerEvents: 'none'  /* Let clicks pass through to map */
+      }}>
+        <div style={{ position: 'relative', height: '100%', pointerEvents: 'auto' }}>
+          <BottomSheet><LocationFeed cities={cities} /></BottomSheet>
+        </div>
       </div>
     )
   }
