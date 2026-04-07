@@ -253,8 +253,8 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
         .fpm-pill {
           padding: 8px 16px;
           border: 1.5px solid transparent;
-          background: #f0f0f0;
-          color: #666666;
+          background: var(--bg-tertiary);
+          color: var(--text-secondary);
           border-radius: 999px;
           cursor: pointer;
           font-size: 13px;
@@ -267,13 +267,14 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
         }
 
         .fpm-pill:hover {
-          background: #e8e8e8;
+          background: var(--bg-overlay);
+          border-color: var(--border-default);
         }
 
         .fpm-pill.active {
-          background: white;
-          border-color: #888888;
-          color: #000000;
+          background: var(--bg-secondary);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
           font-weight: 500;
         }
 
@@ -297,14 +298,14 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
 
         .fpm-climate-card {
           padding: 8px;
-          border: none;
-          background: transparent;
+          border: 1.5px solid transparent;
+          background: var(--bg-tertiary);
           border-radius: 8px;
           cursor: pointer;
           font-size: 11px;
           font-weight: 500;
           text-transform: uppercase;
-          color: var(--text-primary);
+          color: var(--text-secondary);
           transition: all 150ms ease;
           display: flex;
           flex-direction: column;
@@ -314,13 +315,14 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
         }
 
         .fpm-climate-card:hover {
-          background: var(--bg-tertiary);
+          background: var(--bg-overlay);
+          border-color: var(--border-strong);
         }
 
         .fpm-climate-card.active {
-          background: var(--bg-primary);
-          border: 1.5px solid var(--text-primary);
-          color: var(--text-primary);
+          background: var(--bg-secondary);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
         }
 
         .fpm-climate-img {
@@ -339,14 +341,14 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
 
         .fpm-type-card {
           padding: 6px 4px;
-          border: none;
-          background: #f2f2f0;
+          border: 1.5px solid transparent;
+          background: var(--bg-tertiary);
           border-radius: 12px;
           cursor: pointer;
           font-size: 11px;
           font-weight: 500;
           text-transform: uppercase;
-          color: #999999;
+          color: var(--text-secondary);
           transition: all 150ms ease;
           display: flex;
           flex-direction: column;
@@ -357,13 +359,14 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
         }
 
         .fpm-type-card:hover {
-          background: #ebebeb;
+          background: var(--bg-overlay);
+          border-color: var(--border-strong);
         }
 
         .fpm-type-card.active {
-          background: var(--bg-primary);
-          border: 1.5px solid var(--text-primary);
-          color: var(--text-primary);
+          background: var(--bg-secondary);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
         }
 
         .fpm-type-icon {
