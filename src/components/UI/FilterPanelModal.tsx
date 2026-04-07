@@ -120,7 +120,7 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           position: fixed;
           inset: 0;
           background: rgba(0, 0, 0, 0.5);
-          z-index: 499;
+          z-index: 1100;
           animation: fadeIn 200ms ease;
         }
 
@@ -135,7 +135,7 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           border-radius: 16px 16px 0 0;
           display: flex;
           flex-direction: column;
-          z-index: 500;
+          z-index: 1101;
           animation: slideUp 300ms ease;
           overflow: hidden;
         }

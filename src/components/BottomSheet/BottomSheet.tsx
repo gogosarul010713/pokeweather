@@ -78,7 +78,7 @@ export default function BottomSheet({ children }: BottomSheetProps) {
           left: 0;
           right: 0;
           height: var(--bs-height);
-          z-index: 50;
+          z-index: 1001;
           background: var(--bg-primary);
           border-top: 1px solid var(--border-default);
           display: flex;
