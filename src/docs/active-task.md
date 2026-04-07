@@ -1,39 +1,24 @@
-# Active Task — Sprint 8 (2026-04-07) — DEBUGGING
+# Active Task — Sprint 8 (2026-04-08) — ANÁLISIS TÉCNICO
 
 ## Sprint Actual
-**Sprint 8 — Bottom Sheet Implementation** 
+**Sprint 8 — Bottom Sheet + Weather Persistence Backend**
 
-## Estado Anterior Completado
-✅ **Sprint 7**: 13/13 US (FilterPanel Redesign, Responsive, Ordenamiento)
-✅ **BUGFIX**: LocationFeed scroll (c7f34c9)
+## Completado en Sprint 8 Fase 1
+✅ **US-706** Bottom Sheet con Drag Handle — RESUELTO (2026-04-08)
+- Portal: BottomSheet renderiza fuera de #root (escapa overflow:hidden) — commit `c5d3e84`
+- z-index: 50 → 1001 (supera paneles internos de Leaflet tiles=200..controls=1000) — commit `723ed8e`
+- Validado con Playwright: screenshot confirma mapa + BottomSheet coexistiendo
+- Merge sprint-7 → develop ✅
 
-## Trabajo Realizado Hoy (2026-04-07)
-✅ **US-706 Fase 1-5**: Bottom Sheet Implementation + Refactor
-1. Paso 1-4: BottomSheet.tsx + Sidebar mobile integration
-2. Paso 5: `/simplify` code review → refactor a App.tsx root level
-   - Creado `src/hooks/useIsMobile.ts` (reutilizable)
-   - Limpiado BottomSheet (sin dragListenerRef, viewportHeight en handler)
-   - Sidebar simplificado (removido wrapper hacks)
-3. Commits: `d278049` (pasos 1-4), `4f124d6` (visibility fix), `8798f1b` (positioning), `e65fb13` (refactor)
+## Trabajo Actual (2026-04-08)
+🔬 **Análisis Técnico — Weather Persistence Backend**
+- Levantamiento de requerimientos para persistencia de datos climáticos
+- Objetivo: mejorar precisión de clasificación clima → tipos Pokémon GO
+- Datos dinámicos: ciudades + climas 12h por ciclo
+- Datos estáticos: catálogo de condiciones y reglas
+- Entregables: arquitectura, viabilidad, riesgos, costo, US
 
-## Problema Activo (BLOCKER) 🔴
-**BottomSheet no visible en mobile viewport**
-- **Síntoma**: Usuario no ve lista ni handle en browser (<768px)
-- **Paradoja**: Playwright E2E tests dicen `isVisible: true`, DOM correcto, pero browser no muestra
-- **Mapa**: SÍ visible (716px height, correctamente renderizado)
-- **Build**: ✅ PASSED
-- **E2E**: ✅ PASSED (pero contradicción con visual)
-
-## Estado Actual (2026-04-07 EOD)
-- Branch: `sprint-7` (4 commits nuevos)
-- Build: ✅ PASSED
-- Working tree: clean
-- Playwright: ✅ 1/1 test passed
-- **BLOCKER**: BottomSheet invisible en browser a pesar de estar en DOM
-
-## Próxima Sesión (2026-04-08)
-⏳ **DEBUGGEAR**: ¿Por qué Playwright dice visible pero browser no muestra?
-- Revisar Dev Tools: computed styles en vivo
-- Revisar z-index stacking context
-- Comparar con LocationDetail (que SÍ funciona)
-- Posibles causas: clip-path, transform, display none somewhere, CSS media query override
+## Próxima Sesión
+⏳ **Sprint 8 Fase 2**: Implementación Weather Backend
+- Elección de stack backend (según análisis)
+- Implementación según US levantadas
