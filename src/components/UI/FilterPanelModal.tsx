@@ -1,31 +1,16 @@
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 
-interface ClimateOption {
-  label: string
-  value: string
-}
-
-const CLIMATE_OPTIONS: ClimateOption[] = [
-  { label: 'Soleado', value: 'sunny' },
-  { label: 'Parcial', value: 'partly' },
-  { label: 'Nublado', value: 'cloudy' },
-  { label: 'Niebla', value: 'fog' },
-  { label: 'Lluvia', value: 'rain' },
-  { label: 'Nieve', value: 'snow' },
-  { label: 'Ventoso', value: 'windy' },
+const CLIMATE_OPTIONS = [
+  { label: 'Todos', value: 'todos', icon: '/weather/all.png' },
+  { label: 'Soleado', value: 'sunny', icon: '/weather/sunny.png' },
+  { label: 'Parcial', value: 'partly', icon: '/weather/partly.png' },
+  { label: 'Nublado', value: 'cloudy', icon: '/weather/cloudy.png' },
+  { label: 'Niebla', value: 'fog', icon: '/weather/fog.png' },
+  { label: 'Lluvia', value: 'rain', icon: '/weather/rain.png' },
+  { label: 'Nieve', value: 'snow', icon: '/weather/snow.png' },
+  { label: 'Ventoso', value: 'windy', icon: '/weather/windy.png' },
 ]
-
-// Map condition value to weather image path
-const CONDITION_IMAGES: Record<string, string> = {
-  sunny: '/weather/sunny.png',
-  partly: '/weather/partly.png',
-  cloudy: '/weather/cloudy.png',
-  fog: '/weather/fog.png',
-  rain: '/weather/rain.png',
-  snow: '/weather/snow.png',
-  windy: '/weather/windy.png',
-}
 
 const POKEMON_TYPES = [
   'fire', 'ground', 'normal', 'flying', 'ghost', 'dark',
@@ -33,7 +18,6 @@ const POKEMON_TYPES = [
   'poison', 'psychic', 'bug', 'grass', 'fighting', 'fairy',
 ]
 
-// Map type to image icon (ico_n_type.webp)
 const TYPE_IMAGES: Record<string, string> = {
   normal: '/types/ico_0_normal.webp',
   fighting: '/types/ico_1_fighting.webp',
@@ -55,6 +39,23 @@ const TYPE_IMAGES: Record<string, string> = {
   fairy: '/types/ico_17_fairy.webp',
 }
 
+const SORT_OPTIONS = [
+  { label: 'Sin orden', value: '', icon: '🔤' },
+  { label: 'Nombre', value: 'name', icon: '🔤' },
+  { label: 'Densidad', value: 'density', icon: '📊' },
+  { label: 'Rating', value: 'rating', icon: '⭐' },
+  { label: 'Hora Local', value: 'time', icon: '🕐' },
+]
+
+const REGIONS = [
+  { label: 'Todas', value: 'todas' },
+  { label: 'Asia', value: 'asia' },
+  { label: 'Europa', value: 'europa' },
+  { label: 'América', value: 'america' },
+  { label: 'Oceanía', value: 'oceania' },
+  { label: 'África', value: 'africa' },
+]
+
 interface FilterPanelModalProps {
   isOpen: boolean
   onClose: () => void
@@ -65,61 +66,52 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
   const sortMode = useStore((s) => s.sortMode)
+  const sortDirection = useStore((s) => s.sortDirection)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const setTypeFilter = useStore((s) => s.setTypeFilter)
-  const toggleType = useStore((s) => s.toggleType)
-  const clearConditions = useStore((s) => s.clearConditions)
   const setSortMode = useStore((s) => s.setSortMode)
   const setSortDirection = useStore((s) => s.setSortDirection)
 
-  // For mobile multi-select regions: treat as array internally
-  const [selectedRegions, setSelectedRegions] = useState<string[]>(
-    regionFilter === 'todas' ? [] : [regionFilter]
-  )
+  // Local state for sections
+  const [expandedSections, setExpandedSections] = useState({
+    regions: false,
+    climate: false,
+    types: false,
+    sort: false,
+  })
+  const [showAllTypes, setShowAllTypes] = useState(false)
 
-  const handleConditionChange = (items: string | string[]) => {
-    setConditionFilter(Array.isArray(items) ? items : [items])
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }))
   }
 
   const handleApply = () => {
-    // Convert selectedRegions to store format
-    // For now: if multiple regions selected, treat as 'todas'
-    // TODO: Full multi-region support requires store refactor
-    if (selectedRegions.length === 0 || selectedRegions.length > 1) {
-      setRegionFilter('todas')
-    } else if (selectedRegions.length === 1) {
-      setRegionFilter(selectedRegions[0] as any)
-    }
     onClose()
   }
 
-  const activeFilterCount =
-    (regionFilter !== 'todas' ? 1 : 0) +
-    conditionFilter.length +
-    typeFilter.length +
-    (sortMode !== '' ? 1 : 0)
-
   const handleClearAll = () => {
     setRegionFilter('todas')
-    clearConditions()
+    setConditionFilter([])
     setTypeFilter([])
     setSortMode('' as any)
     setSortDirection('asc')
-    setSelectedRegions([])
+    setExpandedSections({ regions: false, climate: false, types: false, sort: false })
+    setShowAllTypes(false)
   }
 
-  const handleRegionToggle = (region: string) => {
-    setSelectedRegions((prev) => {
-      if (prev.includes(region)) {
-        return []  // Deselecciona si estaba activo
-      } else {
-        return [region]  // Selecciona este, deselecciona otros (single-select)
-      }
-    })
+  const getSortLabel = () => {
+    if (!sortMode) return 'SIN ORDEN'
+    const option = SORT_OPTIONS.find((o) => o.value === sortMode)
+    if (!option) return 'SIN ORDEN'
+    const direction = sortDirection === 'desc' ? '↓' : '↑'
+    return `${option.label.toUpperCase()} ${direction}`
   }
 
   if (!isOpen) return null
+
+  const visibleTypes = showAllTypes ? POKEMON_TYPES : POKEMON_TYPES.slice(0, 9)
+  const isTodosSelected = conditionFilter.length === 0
 
   return (
     <>
@@ -127,7 +119,7 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
         .fpm-backdrop {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.4);
+          background: rgba(0, 0, 0, 0.5);
           z-index: 499;
           animation: fadeIn 200ms ease;
         }
@@ -137,10 +129,10 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           bottom: 0;
           left: 0;
           right: 0;
-          max-height: 85vh;
+          max-height: 90vh;
           background: var(--bg-secondary);
           border-top: 1px solid var(--border-default);
-          border-radius: 12px 12px 0 0;
+          border-radius: 16px 16px 0 0;
           display: flex;
           flex-direction: column;
           z-index: 500;
@@ -168,158 +160,300 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           cursor: grab;
         }
 
-        .fpm-handle:active {
-          cursor: grabbing;
-        }
-
         .fpm-content {
           flex: 1;
           overflow-y: auto;
-          padding: 0 16px 16px;
+          padding: 8px 16px;
         }
 
+        /* Section Styles */
         .fpm-section {
-          margin-bottom: 20px;
+          margin-bottom: 0;
+          border: 1px solid var(--border-default);
+          border-radius: 8px;
+          margin-bottom: 12px;
+          overflow: hidden;
         }
 
-        .fpm-section-title {
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--text-secondary);
+        .fpm-section-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px;
+          background: var(--bg-tertiary);
+          cursor: pointer;
+          user-select: none;
+          transition: background 150ms ease;
+        }
+
+        .fpm-section-header:hover {
+          background: var(--bg-overlay);
+        }
+
+        .fpm-section-icon {
+          font-size: 18px;
+          flex-shrink: 0;
+        }
+
+        .fpm-section-label {
+          font-size: 13px;
+          font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.5px;
-          margin-bottom: 12px;
-          padding-top: 8px;
-        }
-
-        .fpm-dropdowns {
-          display: flex;
-          gap: 8px;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-        }
-
-        .fpm-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
-          margin-bottom: 16px;
-        }
-
-        .fpm-condition-btn {
-          padding: 8px;
-          border: 1px solid var(--border-default);
-          background: var(--bg-primary);
           color: var(--text-primary);
-          border-radius: 6px;
-          cursor: pointer;
+          flex: 1;
+        }
+
+        .fpm-section-badge {
           font-size: 11px;
-          font-weight: 500;
-          transition: all 150ms ease;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
+          font-weight: 600;
+          background: var(--ui-accent);
+          color: var(--bg-primary);
+          padding: 4px 10px;
+          border-radius: 12px;
+          white-space: nowrap;
+          flex-shrink: 0;
         }
 
-        .fpm-condition-btn:hover {
-          background: var(--bg-tertiary);
-        }
-
-        .fpm-condition-btn.active {
-          background: rgba(88, 166, 255, 0.2);
-          border-color: var(--ui-accent);
-          color: var(--ui-accent);
-        }
-
-        .fpm-condition-emoji {
-          font-size: 16px;
-        }
-
-        .fpm-condition-img {
-          width: 20px;
-          height: 20px;
-          object-fit: contain;
-          filter: var(--tile-filter);
-        }
-
-        .fpm-regions-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
-          margin-bottom: 16px;
-        }
-
-        .fpm-region-btn {
-          padding: 8px;
-          border: 1px solid var(--border-default);
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          border-radius: 6px;
-          cursor: pointer;
+        .fpm-section-chevron {
           font-size: 12px;
-          font-weight: 500;
+          color: var(--text-secondary);
+          transition: transform 200ms ease;
+          flex-shrink: 0;
+        }
+
+        .fpm-section-chevron.open {
+          transform: rotate(180deg);
+        }
+
+        .fpm-section-content {
+          padding: 14px;
+          background: var(--bg-secondary);
+          animation: slideDown 200ms ease;
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            max-height: 0;
+          }
+          to {
+            opacity: 1;
+            max-height: 1000px;
+          }
+        }
+
+        /* Regions Pills */
+        .fpm-regions-pills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .fpm-pill {
+          padding: 8px 16px;
+          border: 1.5px solid transparent;
+          background: #f0f0f0;
+          color: #666666;
+          border-radius: 999px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 400;
           transition: all 150ms ease;
           display: flex;
-          flex-direction: column;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
+          white-space: nowrap;
         }
 
-        .fpm-region-btn:hover {
-          background: var(--bg-tertiary);
+        .fpm-pill:hover {
+          background: #e8e8e8;
         }
 
-        .fpm-region-btn.active {
-          background: rgba(88, 166, 255, 0.2);
-          border-color: var(--ui-accent);
-          color: var(--ui-accent);
+        .fpm-pill.active {
+          background: white;
+          border-color: #888888;
+          color: #000000;
+          font-weight: 500;
         }
 
-        .fpm-region-emoji {
-          font-size: 18px;
+        .fpm-pill::before {
+          content: '🌐';
+          font-size: 14px;
+          filter: saturate(0.6);
         }
 
-        .fpm-type-grid {
+        .fpm-pill.active::before {
+          content: '🌍';
+          filter: saturate(1.2);
+        }
+
+        /* Climate Grid 4x2 */
+        .fpm-climate-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 8px;
-          margin-bottom: 16px;
         }
 
-        .fpm-type-btn {
+        .fpm-climate-card {
           padding: 8px;
-          border: 1px solid var(--border-default);
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          border-radius: 6px;
+          border: none;
+          background: transparent;
+          border-radius: 8px;
           cursor: pointer;
           font-size: 11px;
           font-weight: 500;
+          text-transform: uppercase;
+          color: var(--text-primary);
           transition: all 150ms ease;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
+          aspect-ratio: 1;
         }
 
-        .fpm-type-btn:hover {
+        .fpm-climate-card:hover {
           background: var(--bg-tertiary);
         }
 
-        .fpm-type-btn.active {
-          background: rgba(88, 166, 255, 0.2);
-          border-color: var(--ui-accent);
-          color: var(--ui-accent);
+        .fpm-climate-card.active {
+          background: var(--bg-primary);
+          border: 1.5px solid var(--text-primary);
+          color: var(--text-primary);
         }
 
-        .fpm-type-img {
+        .fpm-climate-img {
           width: 24px;
           height: 24px;
           object-fit: contain;
-          filter: var(--tile-filter);
         }
 
+        /* Types Grid 5x2 */
+        .fpm-types-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 6px;
+          margin-bottom: 8px;
+        }
+
+        .fpm-type-card {
+          padding: 6px 4px;
+          border: none;
+          background: #f2f2f0;
+          border-radius: 12px;
+          cursor: pointer;
+          font-size: 11px;
+          font-weight: 500;
+          text-transform: uppercase;
+          color: #999999;
+          transition: all 150ms ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          aspect-ratio: 1 / 1.1;
+        }
+
+        .fpm-type-card:hover {
+          background: #ebebeb;
+        }
+
+        .fpm-type-card.active {
+          background: var(--bg-primary);
+          border: 1.5px solid var(--text-primary);
+          color: var(--text-primary);
+        }
+
+        .fpm-type-icon {
+          width: 28px;
+          height: 28px;
+          object-fit: contain;
+        }
+
+        .fpm-expand-types-btn {
+          width: 100%;
+          padding: 8px 12px;
+          border: 2px dashed var(--border-default);
+          background: transparent;
+          color: var(--text-secondary);
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 600;
+          transition: all 150ms ease;
+        }
+
+        .fpm-expand-types-btn:hover {
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
+        }
+
+        /* Sort Radio Buttons */
+        .fpm-sort-options {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .fpm-sort-option {
+          padding: 12px 14px;
+          border: 1.5px solid var(--border-default);
+          background: transparent;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-primary);
+          transition: all 150ms ease;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .fpm-sort-option:hover {
+          border-color: var(--ui-accent);
+        }
+
+        .fpm-sort-option.active {
+          background: rgba(88, 166, 255, 0.1);
+          border-color: var(--ui-accent);
+          color: var(--text-primary);
+        }
+
+        .fpm-sort-radio {
+          width: 18px;
+          height: 18px;
+          border: 2px solid var(--border-default);
+          border-radius: 50%;
+          flex-shrink: 0;
+          transition: all 150ms ease;
+        }
+
+        .fpm-sort-option.active .fpm-sort-radio {
+          border-color: var(--ui-accent);
+          border-width: 3px;
+        }
+
+        .fpm-sort-icon {
+          font-size: 16px;
+          flex-shrink: 0;
+        }
+
+        .fpm-sort-label {
+          flex: 1;
+          text-align: left;
+        }
+
+        .fpm-sort-direction {
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--ui-accent);
+          flex-shrink: 0;
+        }
+
+        /* Footer */
         .fpm-footer {
           flex-shrink: 0;
           display: flex;
@@ -330,110 +464,66 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           background: var(--bg-primary);
         }
 
-        .fpm-apply-btn {
-          width: 100%;
+        .fpm-buttons-group {
+          display: flex;
+          gap: 8px;
+        }
+
+        .fpm-btn {
+          flex: 1;
           padding: 12px;
-          background: var(--ui-accent);
-          color: var(--bg-primary);
           border: none;
           border-radius: 6px;
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: background 200ms ease;
-        }
-
-        .fpm-apply-btn:hover {
-          background: rgba(88, 166, 255, 0.8);
-        }
-
-        .fpm-footer-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 12px;
-          color: var(--text-secondary);
-          padding: 0 4px;
-        }
-
-        .fpm-reset-btn {
-          width: 100%;
-          padding: 10px 14px;
-          background: var(--bg-tertiary);
-          color: var(--text-secondary);
-          border: 1px solid var(--border-default);
-          border-radius: 6px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
           transition: all 200ms ease;
         }
 
-        .fpm-reset-btn:hover {
-          background: var(--bg-elevated);
-          color: var(--text-primary);
-          border-color: var(--border-strong);
-        }
-
-        .fpm-reset-badge {
+        .fpm-btn-primary {
           background: var(--ui-accent);
           color: var(--bg-primary);
-          border-radius: 10px;
-          font-size: 10px;
-          font-weight: 700;
-          min-width: 18px;
-          height: 18px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 4px;
         }
 
-        .fpm-active-count {
-          background: rgba(88, 166, 255, 0.15);
-          color: var(--ui-accent);
-          padding: 2px 6px;
-          border-radius: 3px;
-          font-weight: 600;
-          font-size: 11px;
+        .fpm-btn-primary:hover {
+          background: rgba(88, 166, 255, 0.9);
         }
 
-        /* Buttons Group (Aplicar + Cancelar) */
-        .fpm-buttons-group {
-          display: flex;
-          gap: 8px;
-          width: 100%;
+        .fpm-btn-primary:active {
+          opacity: 0.9;
         }
 
-        .fpm-buttons-group > button {
-          flex: 1;
-        }
-
-        /* Cancel Button */
-        .fpm-cancel-btn {
-          width: 100%;
-          padding: 12px;
-          background: rgba(200, 200, 200, 0.15);
+        .fpm-btn-secondary {
+          background: var(--bg-tertiary);
           color: var(--text-primary);
           border: 1px solid var(--border-default);
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 200ms ease;
         }
 
-        .fpm-cancel-btn:hover {
-          background: rgba(200, 200, 200, 0.25);
+        .fpm-btn-secondary:hover {
+          background: var(--bg-overlay);
           border-color: var(--border-strong);
         }
 
-        .fpm-cancel-btn:active {
-          opacity: 0.8;
+        .fpm-btn-secondary:active {
+          opacity: 0.9;
+        }
+
+        .fpm-btn-clear {
+          width: 100%;
+          padding: 10px 12px;
+          background: transparent;
+          color: var(--text-secondary);
+          border: 1px dashed var(--border-default);
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 150ms ease;
+        }
+
+        .fpm-btn-clear:hover {
+          border-color: var(--ui-error);
+          color: var(--ui-error);
         }
       `}</style>
 
@@ -442,127 +532,223 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
 
       {/* Modal */}
       <div className="fpm-modal">
-        {/* Drag Handle */}
         <div className="fpm-handle" />
 
-        {/* Content */}
         <div className="fpm-content">
-          {/* Regions Section */}
+          {/* REGIONS Section */}
           <div className="fpm-section">
-            <div className="fpm-section-title">🌍 Regiones</div>
-            <div className="fpm-regions-grid">
-              {[
-                { label: 'Asia', value: 'asia', emoji: '🌏' },
-                { label: 'Europa', value: 'europa', emoji: '🌍' },
-                { label: 'América', value: 'america', emoji: '🌎' },
-                { label: 'Oceanía', value: 'oceania', emoji: '🌊' },
-                { label: 'África', value: 'africa', emoji: '🌍' },
-              ].map((region) => {
-                const isActive = selectedRegions.includes(region.value)
-                return (
-                  <button
-                    key={region.value}
-                    className={`fpm-region-btn ${isActive ? 'active' : ''}`}
-                    onClick={() => handleRegionToggle(region.value)}
-                  >
-                    <span className="fpm-region-emoji">{region.emoji}</span>
-                    <span>{region.label}</span>
-                  </button>
-                )
-              })}
+            <div className="fpm-section-header" onClick={() => toggleSection('regions')}>
+              <span className="fpm-section-icon">🌍</span>
+              <span className="fpm-section-label">Regiones</span>
+              <span className="fpm-section-badge">
+                {regionFilter === 'todas' ? 'TODAS' : regionFilter.toUpperCase()}
+              </span>
+              <span className={`fpm-section-chevron ${expandedSections.regions ? 'open' : ''}`}>
+                ▼
+              </span>
             </div>
+            {expandedSections.regions && (
+              <div className="fpm-section-content">
+                <div className="fpm-regions-pills">
+                  {REGIONS.map((region) => (
+                    <button
+                      key={region.value}
+                      className={`fpm-pill ${regionFilter === region.value ? 'active' : ''}`}
+                      onClick={() => setRegionFilter(region.value as any)}
+                    >
+                      {region.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Climate Section */}
+          {/* CLIMATE Section */}
           <div className="fpm-section">
-            <div className="fpm-section-title">☀️ Condiciones Climáticas</div>
-            <div className="fpm-grid">
-              {CLIMATE_OPTIONS.map((option) => {
-                const isActive = conditionFilter.includes(option.value)
-                return (
-                  <button
-                    key={option.value}
-                    className={`fpm-condition-btn ${isActive ? 'active' : ''}`}
-                    onClick={() => {
-                      if (isActive) {
-                        handleConditionChange(
-                          conditionFilter.filter((c) => c !== option.value)
-                        )
-                      } else {
-                        handleConditionChange([...conditionFilter, option.value])
-                      }
-                    }}
-                  >
-                    <img
-                      src={CONDITION_IMAGES[option.value]}
-                      alt={option.label}
-                      className="fpm-condition-img"
-                    />
-                    <span>{option.label}</span>
-                  </button>
-                )
-              })}
+            <div className="fpm-section-header" onClick={() => toggleSection('climate')}>
+              <span className="fpm-section-icon">🌤️</span>
+              <span className="fpm-section-label">Clima</span>
+              <span className="fpm-section-badge">
+                {isTodosSelected
+                  ? 'TODOS'
+                  : conditionFilter.length === 1
+                    ? (CLIMATE_OPTIONS.find((c) => c.value === conditionFilter[0])?.label || 'SELEC.').toUpperCase()
+                    : `${conditionFilter.length} SELEC.`}
+              </span>
+              <span className={`fpm-section-chevron ${expandedSections.climate ? 'open' : ''}`}>
+                ▼
+              </span>
             </div>
+            {expandedSections.climate && (
+              <div className="fpm-section-content">
+                <div className="fpm-climate-grid">
+                  {CLIMATE_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      className={`fpm-climate-card ${
+                        (option.value === 'todos' && isTodosSelected) ||
+                        (option.value !== 'todos' && conditionFilter.includes(option.value))
+                          ? 'active'
+                          : ''
+                      }`}
+                      onClick={() => {
+                        if (option.value === 'todos') {
+                          setConditionFilter([])
+                        } else {
+                          if (conditionFilter.includes(option.value)) {
+                            setConditionFilter(
+                              conditionFilter.filter((c) => c !== option.value)
+                            )
+                          } else {
+                            setConditionFilter([...conditionFilter, option.value])
+                          }
+                        }
+                      }}
+                    >
+                      <img
+                        src={option.icon}
+                        alt={option.label}
+                        className="fpm-climate-img"
+                      />
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Types Section */}
+          {/* TYPES Section */}
           <div className="fpm-section">
-            <div className="fpm-section-title">⚡ Tipos Pokémon</div>
-            <div className="fpm-type-grid">
-              {POKEMON_TYPES.map((type) => {
-                const isActive = typeFilter.includes(type)
-                return (
-                  <button
-                    key={type}
-                    className={`fpm-type-btn ${isActive ? 'active' : ''}`}
-                    onClick={() => toggleType(type)}
-                  >
-                    <img
-                      src={TYPE_IMAGES[type]}
-                      alt={type}
-                      className="fpm-type-img"
-                    />
-                    <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
-                  </button>
-                )
-              })}
+            <div className="fpm-section-header" onClick={() => toggleSection('types')}>
+              <span className="fpm-section-icon">⚡</span>
+              <span className="fpm-section-label">Tipos</span>
+              <span className="fpm-section-badge">
+                {typeFilter.length === 0
+                  ? 'TODOS'
+                  : typeFilter.length === 1
+                    ? typeFilter[0].toUpperCase()
+                    : `${typeFilter.length} SELEC.`}
+              </span>
+              <span className={`fpm-section-chevron ${expandedSections.types ? 'open' : ''}`}>
+                ▼
+              </span>
             </div>
+            {expandedSections.types && (
+              <div className="fpm-section-content">
+                <div className="fpm-types-grid">
+                  {/* TODOS button */}
+                  <button
+                    className={`fpm-type-card ${typeFilter.length === 0 ? 'active' : ''}`}
+                    onClick={() => setTypeFilter([])}
+                  >
+                    <span style={{ fontSize: '20px' }}>🔄</span>
+                    <span>Todos</span>
+                  </button>
+
+                  {/* Individual type cards */}
+                  {visibleTypes.map((type) => (
+                    <button
+                      key={type}
+                      className={`fpm-type-card ${typeFilter.includes(type) ? 'active' : ''}`}
+                      onClick={() => {
+                        if (typeFilter.includes(type)) {
+                          setTypeFilter(typeFilter.filter((t) => t !== type))
+                        } else {
+                          setTypeFilter([...typeFilter, type])
+                        }
+                      }}
+                    >
+                      <img
+                        src={TYPE_IMAGES[type]}
+                        alt={type}
+                        className="fpm-type-icon"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                      <span>{type}</span>
+                    </button>
+                  ))}
+                </div>
+                {!showAllTypes && POKEMON_TYPES.length > 9 && (
+                  <button
+                    className="fpm-expand-types-btn"
+                    onClick={() => setShowAllTypes(true)}
+                  >
+                    + Más tipos
+                  </button>
+                )}
+                {showAllTypes && POKEMON_TYPES.length > 9 && (
+                  <button
+                    className="fpm-expand-types-btn"
+                    onClick={() => setShowAllTypes(false)}
+                  >
+                    - Menos tipos
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* SORT Section */}
+          <div className="fpm-section">
+            <div className="fpm-section-header" onClick={() => toggleSection('sort')}>
+              <span className="fpm-section-icon">📊</span>
+              <span className="fpm-section-label">Ordenar</span>
+              <span className="fpm-section-badge">{getSortLabel()}</span>
+              <span className={`fpm-section-chevron ${expandedSections.sort ? 'open' : ''}`}>
+                ▼
+              </span>
+            </div>
+            {expandedSections.sort && (
+              <div className="fpm-section-content">
+                <div className="fpm-sort-options">
+                  {SORT_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      className={`fpm-sort-option ${sortMode === option.value ? 'active' : ''}`}
+                      onClick={() => {
+                        // If clicking same sort, toggle direction
+                        if (sortMode === option.value) {
+                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        } else {
+                          // Different sort: set to new sort + reset direction to asc
+                          setSortMode(option.value as any)
+                          setSortDirection('asc')
+                        }
+                      }}
+                    >
+                      <div className="fpm-sort-radio" />
+                      <span className="fpm-sort-icon">{option.icon}</span>
+                      <span className="fpm-sort-label">{option.label}</span>
+                      {sortMode === option.value && (
+                        <span className="fpm-sort-direction">
+                          {sortDirection === 'desc' ? '↓' : '↑'}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Footer */}
         <div className="fpm-footer">
           <div className="fpm-buttons-group">
-            <button className="fpm-apply-btn" onClick={handleApply}>
+            <button className="fpm-btn fpm-btn-primary" onClick={handleApply}>
               ✓ Aplicar
             </button>
-            <button className="fpm-cancel-btn" onClick={onClose} title="Descartar cambios">
+            <button className="fpm-btn fpm-btn-secondary" onClick={onClose}>
               ✕ Cancelar
             </button>
           </div>
-
-          {/* Botón restablecer — solo visible cuando hay filtros activos */}
-          {activeFilterCount > 0 && (
-            <button className="fpm-reset-btn" onClick={handleClearAll}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3 3v5h5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Limpiar todo
-              <span className="fpm-reset-badge">{activeFilterCount}</span>
-            </button>
-          )}
-
-          <div className="fpm-footer-meta">
-            <span>
-              Filtros activos:{' '}
-              {activeFilterCount > 0 ? (
-                <span className="fpm-active-count">{activeFilterCount}</span>
-              ) : (
-                <span>0</span>
-              )}
-            </span>
-          </div>
+          <button className="fpm-btn-clear" onClick={handleClearAll}>
+            ✕ Limpiar todos los filtros
+          </button>
         </div>
       </div>
     </>

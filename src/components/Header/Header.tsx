@@ -267,7 +267,14 @@ export default function Header({ cities = [], onRefresh }: HeaderProps) {
               title="Filtros"
               type="button"
             >
-              🔍
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <circle cx="8" cy="6" r="2" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <circle cx="16" cy="12" r="2" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+                <circle cx="12" cy="18" r="2" />
+              </svg>
               {conditionFilter.length > 0 && (
                 <span className="hd-filter-badge">{conditionFilter.length}</span>
               )}
