@@ -96,7 +96,7 @@ export default function BottomSheet({ children }: BottomSheetProps) {
     <>
       <style>{`
         .bs-root {
-          position: fixed;
+          position: absolute;
           bottom: 0;
           left: 0;
           right: 0;

@@ -30,7 +30,11 @@ export default function Sidebar({ cities }: SidebarProps) {
   // Mobile layout: BottomSheet always visible with LocationFeed
   // In detail mode, LocationDetail modal opens above the BottomSheet
   if (isMobile) {
-    return <BottomSheet><LocationFeed cities={cities} /></BottomSheet>
+    return (
+      <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+        <BottomSheet><LocationFeed cities={cities} /></BottomSheet>
+      </div>
+    )
   }
 
   return (
