@@ -107,29 +107,23 @@ export default function App() {
            RESPONSIVE LAYOUTS
            ────────────────────────────────────────────── */
 
-        /* MOBILE (<768px): Stack vertical — Map 55vh + List 45vh */
+        /* MOBILE (<768px): Full height, Map 100% + BottomSheet fixed overlay */
         @media (max-width: 767px) {
           .app-body {
             flex-direction: column;
             margin-top: 96px;
-            height: auto;
-            min-height: calc(100vh - 96px);
-            overflow-y: auto;  /* ← FIXED: Allow vertical scroll */
+            height: calc(100vh - 96px);
+            overflow: hidden;  /* BottomSheet is fixed, no body scroll */
           }
 
           .app-map-area {
-            height: 55vh;
-            flex: none;
-            overflow: visible;  /* No internal scroll, parent handles it */
+            flex: 1;
+            overflow: hidden;  /* Map container, no internal scroll */
           }
 
-          /* List area will be positioned below map */
-          /* LocationFeed.lf-root already has border-top, so no need to repeat */
+          /* LocationFeed now inside BottomSheet component */
           .app-list-area {
-            flex: 1;
-            min-height: 0;  /* Critical: allows flex:1 to work with overflow content */
-            overflow: visible;  /* Parent (.app-body) handles scroll */
-            background: var(--bg-primary);
+            display: none;  /* Hidden — moved to BottomSheet */
           }
         }
 

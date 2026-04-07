@@ -79,7 +79,8 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
         .lf-root {
           display: flex;
           flex-direction: column;
-          height: 100%;
+          flex: 1;
+          min-height: 0;  /* Critical: allows flex:1 with children that have content */
           background: var(--bg-primary);
           border-top: 1px solid var(--border-default);
           overflow: hidden;

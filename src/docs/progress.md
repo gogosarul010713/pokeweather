@@ -33,6 +33,25 @@
 - ✅ Cambió filter icon a SVG sliders
 - ✅ Commit: `3941f67`
 
+### Fase 5b: Bug Fix (2026-04-07) ✅
+- ✅ **BUGFIX**: LocationFeed scroll bloqueado en mobile (5 ciudades, 4 visibles)
+  - Root cause: `.app-list-area { height: 45vh; }` altura fija
+  - Solución: Cambiar a `flex: 1` + `min-height: 0`
+  - Commit: `c7f34c9` ✅ BUILD PASSED
+
+---
+
+## Sprint 8 — Bottom Sheet + Polish (2026-04-07 → TBD)
+
+### Fase 1: Bottom Sheet Mobile (2026-04-07) ⏳
+- [ ] **US-706** Bottom Sheet con Drag Handle
+  - ✅ Diseño completado + documentación
+  - [ ] Paso 1: App.tsx media query cleanup
+  - [ ] Paso 2: Crear BottomSheet.tsx (drag + snap)
+  - [ ] Paso 3: Integrar en Sidebar
+  - [ ] Paso 4: Mover Filtros a SheetHeader
+  - [ ] Paso 5-7: Testing + Build
+
 ---
 
 ## Métricas Sprint 7
@@ -46,10 +65,11 @@
 ## Total Proyecto
 - **Sprint 1-6**: ✅ 42 US (100%)
 - **Sprint 7**: ✅ 13 US (100%)
-- **Total**: 55 US (100%)
+- **Sprint 8**: ⏳ Diseño (US-706 completado)
+- **Total**: 56+ US (en progreso)
 
 ## Estado Rama
 - Current: `sprint-7`
 - Working tree: clean
-- Commits pendientes: 0
-- Ready for: Testing + Merge a main
+- Commits pendientes: 1 (BUGFIX scroll LocationFeed)
+- Ready for: BUGFIX + Sprint 8 planning

@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
+import { BottomSheet } from '../BottomSheet'
 
 interface SidebarProps {
   cities: City[]
@@ -10,6 +12,28 @@ export default function Sidebar({ cities }: SidebarProps) {
   const setSidebarMode = useStore((s) => s.setSidebarMode)
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
+
+  // Detect mobile viewport (< 768px)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Mobile layout: BottomSheet with LocationFeed only in list/favorites mode
+  if (isMobile) {
+    if (sidebarMode === 'list' || sidebarMode === 'favorites') {
+      return <BottomSheet><LocationFeed cities={cities} /></BottomSheet>
+    }
+    // In detail mode on mobile, render nothing (detail opens as modal above map)
+    return null
+  }
 
   return (
     <>
