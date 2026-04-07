@@ -1,14 +1,13 @@
-import { useMemo, useEffect, useRef, useState } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { useStore, type City } from '../../store/useStore'
 import { calculateBadges } from '../../services/weather/weatherService'
 import LocationCard from './LocationCard'
 
 interface LocationFeedProps {
   cities: City[]
-  onRefresh?: () => void
 }
 
-export default function LocationFeed({ cities, onRefresh }: LocationFeedProps) {
+export default function LocationFeed({ cities }: LocationFeedProps) {
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
   const favorites = useStore((s) => s.favorites)
@@ -18,44 +17,12 @@ export default function LocationFeed({ cities, onRefresh }: LocationFeedProps) {
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
   const regionFilter = useStore((s) => s.regionFilter)
-  const sortMode = useStore((s) => s.sortMode)
-  const setSortMode = useStore((s) => s.setSortMode)
-  const setSortDirection = useStore((s) => s.setSortDirection)
-  const sortDirection = useStore((s) => s.sortDirection)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [refreshing, setRefreshing] = useState(false)
-  const [sortOpen, setSortOpen] = useState(false)
 
   const activeFilterCount =
     (regionFilter !== 'todas' ? 1 : 0) +
     conditionFilter.length +
-    typeFilter.length +
-    (sortMode !== '' ? 1 : 0)
-
-  const handleRefresh = () => {
-    if (refreshing || !onRefresh) return
-    setRefreshing(true)
-    onRefresh()
-    setTimeout(() => setRefreshing(false), 1500)
-  }
-
-  const SORT_OPTIONS = [
-    { label: 'Sin orden', value: '', icon: '—' },
-    { label: 'Nombre', value: 'name', icon: '🔤' },
-    { label: 'Densidad', value: 'density', icon: '📊' },
-    { label: 'Rating', value: 'rating', icon: '⭐' },
-    { label: 'Hora local', value: 'time', icon: '🕐' },
-  ]
-
-  const handleSortSelect = (value: string) => {
-    if (value === sortMode) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortMode(value as any)
-      setSortDirection('asc')
-    }
-    setSortOpen(false)
-  }
+    typeFilter.length
 
   // Calcular badges por ciudad
   const badgesByCity = useMemo(() => {
@@ -309,71 +276,18 @@ export default function LocationFeed({ cities, onRefresh }: LocationFeedProps) {
               title="Filtros"
               type="button"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="10" y1="18" x2="14" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <circle cx="8" cy="6" r="2" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <circle cx="16" cy="12" r="2" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+                <circle cx="12" cy="18" r="2" />
               </svg>
               {activeFilterCount > 0 && (
                 <span className="lf-action-badge">{activeFilterCount}</span>
               )}
             </button>
-
-            {/* Ordenar */}
-            <div style={{ position: 'relative' }}>
-              <button
-                className={`lf-action-btn${sortMode !== '' ? ' active' : ''}`}
-                onClick={() => setSortOpen((v) => !v)}
-                title="Ordenar"
-                type="button"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 6h18M6 12h12M9 18h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                {sortMode !== '' && (
-                  <span className="lf-action-badge">
-                    {sortDirection === 'asc' ? '↑' : '↓'}
-                  </span>
-                )}
-              </button>
-
-              {sortOpen && (
-                <div className="lf-sort-popup">
-                  {SORT_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      className={`lf-sort-option${sortMode === opt.value ? ' active' : ''}`}
-                      onClick={() => handleSortSelect(opt.value)}
-                      type="button"
-                    >
-                      <span>{opt.icon}</span>
-                      <span>{opt.label}</span>
-                      {sortMode === opt.value && opt.value !== '' && (
-                        <span className="lf-sort-dir">
-                          {sortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Refresh */}
-            {onRefresh && (
-              <button
-                className={`lf-action-btn${refreshing ? ' spinning' : ''}`}
-                onClick={handleRefresh}
-                disabled={refreshing}
-                title="Actualizar"
-                type="button"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M3 3v5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )}
           </div>
         </div>
 

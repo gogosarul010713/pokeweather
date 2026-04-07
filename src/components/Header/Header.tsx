@@ -15,19 +15,11 @@ interface HeaderProps {
   onRefresh?: () => void
 }
 
-export default function Header({ cities = [], onRefresh }: HeaderProps) {
+export default function Header({ cities = [] }: HeaderProps) {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
 
-  const handleRefresh = () => {
-    if (refreshing || !onRefresh) return
-    setRefreshing(true)
-    onRefresh()
-    setTimeout(() => setRefreshing(false), 1500)
-  }
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
-  const conditionFilter = useStore((s) => s.conditionFilter)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
   const setSidebarOpen = useStore((s) => s.setSidebarOpen)
 
@@ -260,41 +252,6 @@ export default function Header({ cities = [], onRefresh }: HeaderProps) {
             >
               {sidebarOpen ? '☰' : '›'}
             </button>
-
-            <button
-              className="hd-filter-btn"
-              onClick={() => setIsFilterPanelOpen(true)}
-              title="Filtros"
-              type="button"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="4" y1="6" x2="20" y2="6" />
-                <circle cx="8" cy="6" r="2" />
-                <line x1="4" y1="12" x2="20" y2="12" />
-                <circle cx="16" cy="12" r="2" />
-                <line x1="4" y1="18" x2="20" y2="18" />
-                <circle cx="12" cy="18" r="2" />
-              </svg>
-              {conditionFilter.length > 0 && (
-                <span className="hd-filter-badge">{conditionFilter.length}</span>
-              )}
-            </button>
-
-            {/* Refresh button */}
-            {onRefresh && (
-              <button
-                className={`hd-refresh-btn${refreshing ? ' spinning' : ''}`}
-                onClick={handleRefresh}
-                disabled={refreshing}
-                title="Actualizar datos"
-                type="button"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M3 3v5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )}
 
             <TestingButton onClick={() => setIsTestingOpen(true)} />
             <SyncBadge />
