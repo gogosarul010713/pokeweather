@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
-import { BottomSheet } from '../BottomSheet'
 
 interface SidebarProps {
   cities: City[]
@@ -12,42 +10,6 @@ export default function Sidebar({ cities }: SidebarProps) {
   const setSidebarMode = useStore((s) => s.setSidebarMode)
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
-
-  // Detect mobile viewport (< 768px) — initialize from window immediately
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
-  )
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  // Mobile layout: BottomSheet always visible with LocationFeed
-  // In detail mode, LocationDetail modal opens above the BottomSheet
-  // Wrapper is position:fixed to escape overflow:hidden clipping
-  // BottomSheet inside is position:absolute relative to wrapper
-  if (isMobile) {
-    return (
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '100vh',
-        zIndex: 50,
-        pointerEvents: 'none'  /* Let clicks pass through to map */
-      }}>
-        <div style={{ position: 'relative', height: '100%', pointerEvents: 'auto' }}>
-          <BottomSheet><LocationFeed cities={cities} /></BottomSheet>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <>

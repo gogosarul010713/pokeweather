@@ -6,14 +6,17 @@ import MapView from './components/Map/MapView'
 import LocationFeed from './components/Sidebar/LocationFeed'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
+import { BottomSheet } from './components/BottomSheet'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
+import { useIsMobile } from './hooks/useIsMobile'
 import type { City } from './store/useStore'
 
 export default function App() {
   const [cities, setCities] = useState<City[]>([])
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
+  const isMobile = useIsMobile()
   const getFilteredCities = useStore((s) => s.getFilteredCities)
   // Dependencias para recalcular filtro cuando cambian
   const regionFilter = useStore((s) => s.regionFilter)
@@ -179,6 +182,13 @@ export default function App() {
             <LocationFeed cities={filteredCities} />
           </div>
         </div>
+
+        {/* BOTTOM SHEET — Mobile only, rendered at root level like LocationDetail */}
+        {isMobile && (
+          <BottomSheet>
+            <LocationFeed cities={filteredCities} />
+          </BottomSheet>
+        )}
 
         {/* LOCATION DETAIL MODAL */}
         {sidebarMode === 'detail' && selectedCity && (

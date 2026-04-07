@@ -4,7 +4,6 @@ interface BottomSheetProps {
   children: React.ReactNode
 }
 
-// Snap positions (as % of viewport height)
 const SNAP_POSITIONS = {
   collapsed: 5,
   middle: 40,
@@ -14,69 +13,47 @@ const SNAP_POSITIONS = {
 function findClosestSnap(currentPercent: number): number {
   const snaps = [SNAP_POSITIONS.collapsed, SNAP_POSITIONS.middle, SNAP_POSITIONS.expanded]
   return snaps.reduce((closest, snap) =>
-    Math.abs(snap - currentPercent) < Math.abs(closest - currentPercent)
-      ? snap
-      : closest
+    Math.abs(snap - currentPercent) < Math.abs(closest - currentPercent) ? snap : closest
   )
 }
 
 export default function BottomSheet({ children }: BottomSheetProps) {
   const [sheetHeightPercent, setSheetHeightPercent] = useState(SNAP_POSITIONS.middle)
   const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ y: 0, heightPercent: 0 })
+  const dragStartRef = useRef({ y: 0, heightPercent: 0 })
+  const sheetHeightRef = useRef(sheetHeightPercent)
 
-  const rootRef = useRef<HTMLDivElement>(null)
-  const dragListenerRef = useRef<{ move: (e: MouseEvent | TouchEvent) => void; end: () => void } | null>(null)
+  // Keep ref in sync with state so drag handlers always have fresh value
+  useEffect(() => {
+    sheetHeightRef.current = sheetHeightPercent
+  }, [sheetHeightPercent])
 
-  // Get viewport height for calculations
-  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 812
-
-  // Handle drag start (mouse + touch)
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    const clientY = 'touches' in e ? e.touches[0]?.clientY : (e as React.MouseEvent).clientY
+    const clientY = 'touches' in e ? e.touches[0]?.clientY ?? 0 : e.clientY
+    dragStartRef.current = { y: clientY, heightPercent: sheetHeightRef.current }
     setIsDragging(true)
-    setDragStart({ y: clientY, heightPercent: sheetHeightPercent })
   }
 
-  // Create and attach drag listeners
   useEffect(() => {
     if (!isDragging) return
 
     const handleDragMove = (e: MouseEvent | TouchEvent) => {
-      const clientY = 'touches' in e ? (e as TouchEvent).touches[0]?.clientY : (e as MouseEvent).clientY
+      const clientY = 'touches' in e
+        ? (e as TouchEvent).touches[0]?.clientY ?? 0
+        : (e as MouseEvent).clientY
 
-      const deltaY = clientY - dragStart.y
-      // Moving down = positive deltaY = reducing height
-      // Moving up = negative deltaY = increasing height
-      const deltaPercent = (deltaY / viewportHeight) * 100
-
-      let newHeightPercent = dragStart.heightPercent - deltaPercent
-
-      // Clamp between min (collapsed) and max (expanded)
-      newHeightPercent = Math.max(SNAP_POSITIONS.collapsed, Math.min(newHeightPercent, SNAP_POSITIONS.expanded))
-
-      setSheetHeightPercent(newHeightPercent)
+      const viewportHeight = window.innerHeight
+      const deltaPercent = ((clientY - dragStartRef.current.y) / viewportHeight) * 100
+      const next = Math.max(
+        SNAP_POSITIONS.collapsed,
+        Math.min(dragStartRef.current.heightPercent - deltaPercent, SNAP_POSITIONS.expanded)
+      )
+      setSheetHeightPercent(next)
     }
 
     const handleDragEnd = () => {
-      const closestSnap = findClosestSnap(sheetHeightPercent)
-      setSheetHeightPercent(closestSnap)
+      setSheetHeightPercent(findClosestSnap(sheetHeightRef.current))
       setIsDragging(false)
-
-      // Cleanup listeners
-      if (dragListenerRef.current) {
-        document.removeEventListener('mousemove', dragListenerRef.current.move)
-        document.removeEventListener('touchmove', dragListenerRef.current.move)
-        document.removeEventListener('mouseup', dragListenerRef.current.end)
-        document.removeEventListener('touchend', dragListenerRef.current.end)
-        dragListenerRef.current = null
-      }
-    }
-
-    // Store listeners for cleanup
-    dragListenerRef.current = {
-      move: handleDragMove,
-      end: handleDragEnd,
     }
 
     document.addEventListener('mousemove', handleDragMove)
@@ -90,13 +67,13 @@ export default function BottomSheet({ children }: BottomSheetProps) {
       document.removeEventListener('mouseup', handleDragEnd)
       document.removeEventListener('touchend', handleDragEnd)
     }
-  }, [isDragging, dragStart, sheetHeightPercent, viewportHeight])
+  }, [isDragging])
 
   return (
     <>
       <style>{`
         .bs-root {
-          position: absolute;
+          position: fixed;
           bottom: 0;
           left: 0;
           right: 0;
@@ -107,8 +84,8 @@ export default function BottomSheet({ children }: BottomSheetProps) {
           display: flex;
           flex-direction: column;
           transition: var(--bs-transition);
-          user-select: var(--bs-user-select);
-          -webkit-user-select: var(--bs-user-select);
+          user-select: none;
+          -webkit-user-select: none;
         }
 
         .bs-handle-area {
@@ -118,8 +95,6 @@ export default function BottomSheet({ children }: BottomSheetProps) {
           justify-content: center;
           flex-shrink: 0;
           cursor: grab;
-          user-select: none;
-          -webkit-user-select: none;
           -webkit-touch-callout: none;
         }
 
@@ -139,49 +114,27 @@ export default function BottomSheet({ children }: BottomSheetProps) {
           flex: 1;
           overflow-y: auto;
           overflow-x: hidden;
-          min-height: 0;  /* Critical: allows flex:1 with scrollable content */
+          min-height: 0;
           display: flex;
           flex-direction: column;
         }
 
-        /* Scrollbar styling */
-        .bs-content::-webkit-scrollbar {
-          width: 4px;
-        }
-
-        .bs-content::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        .bs-content::-webkit-scrollbar-thumb {
-          background: var(--border-default);
-          border-radius: 2px;
-        }
-
-        .bs-content::-webkit-scrollbar-thumb:hover {
-          background: var(--border-strong);
-        }
+        .bs-content::-webkit-scrollbar { width: 4px; }
+        .bs-content::-webkit-scrollbar-track { background: transparent; }
+        .bs-content::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
+        .bs-content::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
       `}</style>
 
       <div
         className="bs-root"
-        ref={rootRef}
         style={{
           '--bs-height': `${sheetHeightPercent}vh`,
           '--bs-transition': isDragging ? 'none' : 'height 0.3s ease',
-          '--bs-user-select': isDragging ? 'none' : 'auto',
         } as React.CSSProperties}
       >
-        {/* Drag Handle */}
-        <div
-          className="bs-handle-area"
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-        >
+        <div className="bs-handle-area" onMouseDown={handleDragStart} onTouchStart={handleDragStart}>
           <div className="bs-handle" />
         </div>
-
-        {/* Content (LocationFeed will be here) */}
         <div className="bs-content">
           {children}
         </div>
