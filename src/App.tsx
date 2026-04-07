@@ -126,9 +126,9 @@ export default function App() {
           /* List area will be positioned below map */
           /* LocationFeed.lf-root already has border-top, so no need to repeat */
           .app-list-area {
-            height: 45vh;
-            flex: none;
-            overflow: visible;  /* No internal scroll, parent handles it */
+            flex: 1;
+            min-height: 0;  /* Critical: allows flex:1 to work with overflow content */
+            overflow: visible;  /* Parent (.app-body) handles scroll */
             background: var(--bg-primary);
           }
         }
