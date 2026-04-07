@@ -13,26 +13,24 @@ export default function Sidebar({ cities }: SidebarProps) {
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
 
-  // Detect mobile viewport (< 768px)
-  const [isMobile, setIsMobile] = useState(false)
+  // Detect mobile viewport (< 768px) — initialize from window immediately
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  )
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
 
-    checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Mobile layout: BottomSheet with LocationFeed only in list/favorites mode
+  // Mobile layout: BottomSheet always visible with LocationFeed
+  // In detail mode, LocationDetail modal opens above the BottomSheet
   if (isMobile) {
-    if (sidebarMode === 'list' || sidebarMode === 'favorites') {
-      return <BottomSheet><LocationFeed cities={cities} /></BottomSheet>
-    }
-    // In detail mode on mobile, render nothing (detail opens as modal above map)
-    return null
+    return <BottomSheet><LocationFeed cities={cities} /></BottomSheet>
   }
 
   return (

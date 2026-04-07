@@ -92,8 +92,6 @@ export default function BottomSheet({ children }: BottomSheetProps) {
     }
   }, [isDragging, dragStart, sheetHeightPercent, viewportHeight])
 
-  const sheetHeightVh = `${sheetHeightPercent}vh`
-
   return (
     <>
       <style>{`
@@ -102,15 +100,15 @@ export default function BottomSheet({ children }: BottomSheetProps) {
           bottom: 0;
           left: 0;
           right: 0;
-          height: ${sheetHeightVh};
+          height: var(--bs-height);
           z-index: 50;
           background: var(--bg-primary);
           border-top: 1px solid var(--border-default);
           display: flex;
           flex-direction: column;
-          transition: ${isDragging ? 'none' : 'height 0.3s ease'};
-          user-select: ${isDragging ? 'none' : 'auto'};
-          -webkit-user-select: ${isDragging ? 'none' : 'auto'};
+          transition: var(--bs-transition);
+          user-select: var(--bs-user-select);
+          -webkit-user-select: var(--bs-user-select);
         }
 
         .bs-handle-area {
@@ -165,7 +163,15 @@ export default function BottomSheet({ children }: BottomSheetProps) {
         }
       `}</style>
 
-      <div className="bs-root" ref={rootRef}>
+      <div
+        className="bs-root"
+        ref={rootRef}
+        style={{
+          '--bs-height': `${sheetHeightPercent}vh`,
+          '--bs-transition': isDragging ? 'none' : 'height 0.3s ease',
+          '--bs-user-select': isDragging ? 'none' : 'auto',
+        } as React.CSSProperties}
+      >
         {/* Drag Handle */}
         <div
           className="bs-handle-area"
