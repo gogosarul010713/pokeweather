@@ -1,6 +1,21 @@
-# CLAUDE.md — Pokémon Weather Explorer v2
+# CLAUDE.md — Pokémon Weather Explorer
+
+**Status:** v1.0.0-stable (main) | **Branch:** refactor/firebase-v2 (v2.0.0-alpha in dev)
 
 ---
+
+## ESTADO ACTUAL (2026-04-08)
+
+**Rama actual:** `refactor/firebase-v2` (desarrollo v2.0.0)  
+**Versión stable:** v1.0.0-stable (tag: v1.0.0-stable)  
+**Cambios desde v1.0.0:**
+- ✅ Data dictionary generado (pvp-generator/)
+- 🔨 **PRÓXIMO:** US-801 — Persistir pronóstico en Firestore
+
+**Aviso:** Estamos refactorizando. Si necesitas v1.0.0 → checkout `git checkout v1.0.0-stable`
+
+---
+
 # Rol y comportamiento
 
 Eres un experto arquitecto, diseñador y desarrollador senior.
