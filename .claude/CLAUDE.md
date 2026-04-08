@@ -9,7 +9,7 @@
 **Rama actual:** `refactor/firebase-v2` (desarrollo v2.0.0)  
 **Versión stable:** v1.0.0-stable (tag: v1.0.0-stable)  
 **Cambios desde v1.0.0:**
-- ✅ Data dictionary generado (pvp-generator/)
+- ✅ Data dictionary generado (refactor-firebase/)
 - 🔨 **PRÓXIMO:** US-801 — Persistir pronóstico en Firestore
 
 **Aviso:** Estamos refactorizando. Si necesitas v1.0.0 → checkout `git checkout v1.0.0-stable`
