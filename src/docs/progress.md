@@ -74,22 +74,32 @@
 ---
 
 ## Total Proyecto
-- **Sprint 1-6**: ✅ 42 US (100%)
-- **Sprint 7**: ✅ 13 US (100%)
-- **Sprint 8**: ✅ 3 US + análisis completo
-- **Total**: 58+ US completadas
 
-## Estado Rama
-- Current: `refactor/firebase-v2` (v2.0.0-alpha)
-- Last commit: `2e06a2d` (US-801)
-- Working tree: clean
-- Tag stable: `v1.0.0-stable`
+| Período | US | Status |
+|---------|-----|--------|
+| Sprint 1-6 | 42 | ✅ 100% |
+| Sprint 7 | 13 | ✅ 100% |
+| Sprint 8 | 4+ | ✅ 57% (10 SP de 22) |
+| **TOTAL** | **59+** | **✅ 98%** |
+
+## Estado Rama Final (2026-04-08)
+
+| Aspecto | Valor |
+|---------|-------|
+| **Stable** | v1.0.0-stable (tag) — en main, locked |
+| **Development** | refactor/firebase-v2 (v2.0.0-alpha) |
+| **Commits** | 5 (20d4558 latest — docs) |
+| **Build** | ✅ PASSED |
+| **Firestore** | 2,256 writes/day (11.3% quota) |
+| **Known issues** | 1 (env vars — documented, non-blocking) |
 
 ---
 
-## Próximas US
+## Próximas US (Pendientes)
 
-- **US-802:** Catálogo estático (weather_catalog collection) — 2 SP
-- **US-803:** Dashboard Firestore (analytics + queries) — 3 SP
-- **US-805:** Reportes de clasificación — 5 SP
-- **US-806:** TTL 7 días (auto-delete) — 1 SP
+| US | Descripción | SP | Next |
+|----|-------------|-----|------|
+| **US-803** | Dashboard Firestore (analytics + queries) | 3 | 🔨 NEXT |
+| **US-805** | Reportes de clasificación | 5 | ⏳ |
+| **US-806** | TTL 7 días (auto-delete) | 1 | ⏳ |
+| **Benchmark** | v1.0.0 vs v2.0.0-alpha | — | Final |

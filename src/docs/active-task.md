@@ -110,13 +110,66 @@ Pushed to: origin/refactor/firebase-v2 ✅
 
 ---
 
-## ⏰ Resumen de Hoy
+## ⏰ Resumen de Hoy (2026-04-08)
 
-- **Tiempo**: ~4 horas
-- **Issues**: 2 identificados, 1 resuelto (duplicado), 1 documentado (env vars)
-- **Features**: US-801 + US-802 completadas
+- **Time**: ~4 horas
+- **Issues**: 2 identificados, 1 resuelto (50% writes reduction), 1 documentado
+- **Features**: US-706, US-804, US-801, US-802 completadas (10 SP)
 - **Code**: 1,500+ LOC nuevas
-- **Tests**: Build ✅, manual validation ✅
-- **Quality**: 0 regressions (fix aplicado)
+- **Tests**: Build ✅ PASSED, manual validation ✅
+- **Quality**: 0 regressions, duplicate writes removed
 
-**Next decision:** ¿Continuar con US-803, US-805, o parar para benchmark?
+---
+
+## 🚀 CÓMO CONTINUAR EN PRÓXIMA SESIÓN
+
+### Paso 1: Inicializar Contexto
+```bash
+cd c:/Workspace/React/pokeweather
+git status  # Debe ser: branch refactor/firebase-v2, clean
+git log --oneline -5  # Debe mostrar: 20d4558 (docs)...
+```
+
+### Paso 2: Leer Documentación
+1. `src/docs/progress.md` — Resumen US completadas (59+)
+2. `src/docs/active-task.md` — Este archivo
+3. `pvp-generator/PENDING-ISSUES.md` — Issue no-blocker (env vars warning)
+
+### Paso 3: Elegir Próxima Tarea
+**Opciones:**
+
+**OPCIÓN A: US-803 Dashboard (3 SP)** — Recomendado
+- Queries dinámicas desde Firestore
+- Analytics: frecuencia condiciones por región/ciudad
+- Archivo spec: `src/docs/features/sprint8/us-803-dashboard-firestore.md`
+
+**OPCIÓN B: US-805 Reportes (5 SP)** — Más grande
+- Stats precisión clima (AccuWeather vs PGO)
+- Export a Excel con ExcelJS
+- Archivo spec: `src/docs/features/sprint8/us-805-reporte-clasificacion.md`
+
+**OPCIÓN C: Benchmark Final** — Al terminar todo
+- Comparar v1.0.0-stable vs v2.0.0-alpha
+- Precisión, performance, regresiones
+- Plan en: `pvp-generator/04-architectural-strategy.md`
+
+### Paso 4: npm run dev & Continuar
+```bash
+npm run dev  # Inicia dev server
+# Abre http://localhost:5173
+# Comienza con US-803, US-805, o Benchmark según selección
+```
+
+---
+
+## 📋 CHECKLIST ESTADO ACTUAL
+
+✅ v1.0.0-stable locked en main (tag)  
+✅ refactor/firebase-v2 en desarrollo (5 commits)  
+✅ US-706, US-804, US-801, US-802 completadas  
+✅ Build PASSED  
+✅ Firestore: 2,256 writes/day (11.3% quota)  
+✅ Documentación actualizada  
+✅ 1 known issue (non-blocking, documented)  
+
+**Status:** Ready para continuar con US-803, US-805, o Benchmark

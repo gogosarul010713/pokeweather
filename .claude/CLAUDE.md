@@ -4,15 +4,18 @@
 
 ---
 
-## ESTADO ACTUAL (2026-04-08)
+## ESTADO ACTUAL (2026-04-08 EOD)
 
-**Rama actual:** `refactor/firebase-v2` (desarrollo v2.0.0)  
-**Versión stable:** v1.0.0-stable (tag: v1.0.0-stable)  
-**Cambios desde v1.0.0:**
-- ✅ Data dictionary generado (refactor-firebase/)
-- 🔨 **PRÓXIMO:** US-801 — Persistir pronóstico en Firestore
+**Rama actual:** `refactor/firebase-v2` (v2.0.0-alpha)  
+**Versión stable:** v1.0.0-stable (tag: v1.0.0-stable) — locked en main  
+**Completado hoy:** US-706, US-804, US-801, US-802 (10 SP)  
+**Cambios:**
+- ✅ Weather persistence backend (Firestore)
+- ✅ Static weather catalog (seeded)
+- ✅ Data dictionary (pvp-generator/)
+- ✅ Fixes: duplicate writes (-50%), env vars warning (documented)
 
-**Aviso:** Estamos refactorizando. Si necesitas v1.0.0 → checkout `git checkout v1.0.0-stable`
+**Proxima sesión:** Leer `src/docs/active-task.md` → elegir US-803/US-805 o iniciar benchmark final
 
 ---
 
