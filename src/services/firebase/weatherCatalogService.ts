@@ -277,13 +277,4 @@ export function clearCatalogCache() {
   catalogCache = null
 }
 
-// Importar CONDITION_COLORS desde weatherService (si no está definido localmente)
-const CONDITION_COLORS: Record<WeatherCondition, string> = {
-  sunny: '#FFB347',
-  partly: '#87CEEB',
-  cloudy: '#9E9E9E',
-  fog: '#C8C8C8',
-  rain: '#5B9BD5',
-  snow: '#B0E0E6',
-  windy: '#78C896',
-}
+// CONDITION_COLORS ya se importa desde weatherService en línea 8
