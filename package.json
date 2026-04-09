@@ -13,7 +13,7 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "validate:firebase": "tsx scripts/validate-firestore.ts"
+    "validate:firebase": "npx tsx scripts/validate-firestore.ts"
   },
   "dependencies": {
     "exceljs": "^4.4.0",
