@@ -3,7 +3,7 @@
 // US-801: Guardar 12 horas de pronóstico clasificado a Pokémon GO
 
 import { db } from './firebaseConfig'
-import { doc, setDoc, Timestamp, collectionGroup, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
+import { doc, setDoc, Timestamp, collectionGroup, getDocs } from 'firebase/firestore'
 import type { City } from '../../store/useStore'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -109,7 +109,10 @@ export async function saveCityForecast(
 
 /**
  * Obtener pronósticos recientes desde Firestore (últimas N horas)
- * Query: collectionGroup('forecasts') filtrado por created_at
+ * STRATEGY: Procesar sin índice Firestore
+ * - Obtiene todos los forecasts (sin where/orderBy)
+ * - Filtra + ordena en memoria (JavaScript)
+ * - Razón: Firestore requiere índice para collectionGroup().where().orderBy()
  *
  * @param timeRange - '1h' | '6h' | '24h' | '7d'
  * @returns Promise<ForecastDoc[]> — array de documentos (vacío si offline o error)
@@ -146,32 +149,38 @@ export async function getRecentForecasts(
 
     const minDate = new Date(now.getTime() - hoursBack * 60 * 60 * 1000)
 
-    // Query: todos los forecasts creados en el rango, ordenados desc
-    const q = query(
-      collectionGroup(db, 'forecasts'),
-      where('created_at', '>=', Timestamp.fromDate(minDate)),
-      orderBy('created_at', 'desc'),
-      limit(500) // max 500 documentos (suficiente para ~40 ciudades × múltiples horas)
-    )
+    // ⚠️ NOTA: NO usamos where() ni orderBy() porque Firestore requiere un índice
+    // STRATEGY: Obtener todos, procesar en memoria (data es pequeña: ~45 docs)
+    const allSnapshot = await getDocs(collectionGroup(db, 'forecasts'))
 
-    const snapshot = await getDocs(q)
-    const documents: ForecastDoc[] = snapshot.docs.map(doc => {
-      const data = doc.data()
-      return {
-        city_id: data.city_id,
-        city_name: data.city_name,
-        country: data.country,
-        region: data.region,
-        lat: data.lat,
-        lon: data.lon,
-        date_hour: data.date_hour,
-        snapshots: data.snapshots || [],
-        ttl: data.ttl,
-        created_at: data.created_at,
-      } as ForecastDoc
-    })
+    // Filtrar y ordenar en JavaScript
+    const filtered = allSnapshot.docs
+      .map(doc => {
+        const data = doc.data()
+        const createdAt = data.created_at?.toDate?.() || new Date(data.created_at)
+        return {
+          ...data,
+          _createdAtDate: createdAt,
+        } as any
+      })
+      .filter(doc => doc._createdAtDate >= minDate)
+      .sort((a, b) => b._createdAtDate.getTime() - a._createdAtDate.getTime())
+      .slice(0, 500) // limit
 
-    console.log(`[Firebase] ✅ Loaded ${documents.length} forecasts from last ${timeRange}`)
+    const documents: ForecastDoc[] = filtered.map(data => ({
+      city_id: data.city_id,
+      city_name: data.city_name,
+      country: data.country,
+      region: data.region,
+      lat: data.lat,
+      lon: data.lon,
+      date_hour: data.date_hour,
+      snapshots: data.snapshots || [],
+      ttl: data.ttl,
+      created_at: data.created_at,
+    }))
+
+    console.log(`[Firebase] ✅ Loaded ${documents.length} forecasts from last ${timeRange} (processed in-memory)`)
     return documents
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
