@@ -1,81 +1,122 @@
-# Active Task — Sprint 8 (2026-04-08) — WEATHER PERSISTENCE
+# Active Task — Sprint 8 (2026-04-08) — WEATHER PERSISTENCE BACKEND
 
 ## Sprint Actual
 **Sprint 8 — Bottom Sheet + Weather Persistence Backend**
 
-## Completado hoy (2026-04-08)
-✅ **US-706**: Bottom Sheet con Drag Handle — RESUELTO (Portal + z-index fix)  
-✅ **US-804**: Setup Firebase + Firestore — COMPLETADO  
-✅ **US-801**: Persistir Pronóstico en Firestore — IMPLEMENTADO  
-✅ **Documentación**: Data dictionary + architectural strategy + visual flows
+---
 
-## Trabajo Actual (VALIDACIÓN MANUAL)
-🔨 **US-801** — Validar Persistencia en Firestore
-- Firestore Console: verificar documentos en `/city_weather/{city_id}/forecasts/{YYYY-MM-DD-HH}`
-- Verificar snapshots[12] poblados correctamente
-- Verificar TTL = now + 7 días
-- Verificar created_at = Timestamp.now()
-- Browser console: sin errores
+## ✅ Completado Hoy (2026-04-08)
 
-## Próxima Sesión
-⏳ **Después de validar US-801:**
-1. Iniciar: US-802 (Catálogo estático — weather_catalog collection)
-2. O: US-803 (Dashboard Firestore — queries + analytics)
-3. O: US-805 (Reportes de clasificación clima)
+### **US-706**: Bottom Sheet Mobile
+- ✅ Portal fix + z-index 1001
+- ✅ Visible sobre Leaflet
+- Commit: `723ed8e`
 
-## Instrucciones para Validar US-801
+### **US-804**: Firebase Setup
+- ✅ SDK inicializado
+- ✅ Env vars configuradas (.env.local)
+- ✅ Build PASSED
+- Commit: `8560ad2`
 
-### 1. Verificar cambios locales
-```bash
-git log --oneline -3
-# Debe mostrar: 2e06a2d feat(US-801)...
+### **US-801**: Persistir Pronóstico en Firestore
+- ✅ `src/services/firebase/firebaseWeatherService.ts` (saveCityForecast)
+- ✅ Integración en batchWeatherService.ts (async/background)
+- ✅ Firestore schema: `/city_weather/{city_id}/forecasts/{YYYY-MM-DD-HH}`
+- ✅ 12h snapshots con clasificación + types Pokémon
+- ✅ TTL 7 días + Timestamp
+- ✅ **FIX**: Removido guardado duplicado (-50% writes)
+- ✅ Data: 5+ ciudades persisted
+- ✅ Build PASSED
+- Commits: `61ece21` (fix) + `bddadcc` (US-802)
 
-npm run build
-# Debe pasar sin errores
+### **US-802**: Catálogo Estático en Firestore
+- ✅ `scripts/seedWeatherCatalog.ts` (ejecutable con `npx tsx`)
+- ✅ `src/services/firebase/weatherCatalogService.ts` (lectura + fallback)
+- ✅ Seeded 3 documentos:
+  - `/weather_catalog/conditions` (7 estados + emoji)
+  - `/weather_catalog/type_mapping` (condition → types)
+  - `/weather_catalog/rules` (WINDY, dedup, version)
+- ✅ Fallback hardcodeado si Firestore offline
+- ✅ Singleton cache + validation helpers
+- ✅ Build PASSED
+- Commit: `bddadcc`
 
-npm run dev
-# Iniciar app en http://localhost:5173
+---
+
+## 📊 Estado Actual
+
+| Métrica | Valor | Status |
+|---------|-------|--------|
+| **Branch** | refactor/firebase-v2 (v2.0.0-alpha) | ✅ |
+| **Commits** | 4 (61ece21...bddadcc) | ✅ |
+| **Build** | npm run build | ✅ PASSED |
+| **Firestore writes/día** | 2,256 (11.3%) | ✅ OK |
+| **Firestore storage** | 32 MB (3.2%) | ✅ OK |
+| **Known issues** | Firebase env warning (non-blocking) | 📋 DOCUMENTED |
+
+---
+
+## ⏸️ Known Issue (Non-Blocking)
+
+**Firebase env vars warning** — Vite hot reload limitation
+- Variables EXIST en .env.local ✅
+- Data IS saved correctly (Firestore Console confirms) ✅
+- Status: PENDING (documented en `pvp-generator/PENDING-ISSUES.md`)
+- Impact: Cosmetic warning only, zero functionality impact
+
+---
+
+## 🎯 Próximas Opciones
+
+### **Opción 1: US-803** — Dashboard Firestore (3 SP)
+- Queries dinámicas desde Firestore
+- Analytics: frecuencia de condiciones, precisión
+- Reportes por región/ciudad
+
+### **Opción 2: US-805** — Reporte de Clasificación (5 SP)
+- Estadísticas de precisión clima
+- Comparación AccuWeather vs PGO
+- Export a Excel
+
+### **Opción 3: Benchmark Completo** (Planificado al final)
+- v1.0.0 vs v2.0.0-alpha
+- Precisión, performance, regresiones
+- Report comparativo
+
+---
+
+## 📝 Documentación Actualizada
+
+| Archivo | Status |
+|---------|--------|
+| `src/docs/progress.md` | ✅ Actualizado (US-801, US-802) |
+| `src/docs/active-task.md` | ✅ Este archivo |
+| `pvp-generator/06-fixes-applied.md` | ✅ Creado (issue analysis) |
+| `pvp-generator/PENDING-ISSUES.md` | ✅ Creado (env vars issue) |
+
+---
+
+## 🔄 Git Status
+
+```
+Branch: refactor/firebase-v2
+Last commits:
+  bddadcc feat(US-802): Static weather catalog in Firestore
+  5c07571 docs: Document Firebase env vars warning as known issue
+  61ece21 fix(US-801): Remove duplicate Firebase save calls
+
+Pushed to: origin/refactor/firebase-v2 ✅
 ```
 
-### 2. Validar en Firestore Console
-```
-1. Abrir: Firebase Console → pokeweather project
-2. Navegar: Firestore Database
-3. Colección: city_weather
-4. Documento: cualquier ciudad (ej: san-francisco)
-5. Subcolección: forecasts
-6. Documento: 2026-04-08-14 (formato YYYY-MM-DD-HH)
-7. Verificar estructura:
-   ✅ snapshots = array[12]
-   ✅ Cada snapshot: hour(0-23), classified, types[], etc
-   ✅ ttl = Timestamp (7 días en futuro)
-   ✅ created_at = Timestamp (ahora)
-```
+---
 
-### 3. Validar en Browser Console
-```bash
-# Abrir DevTools (F12)
-# Pestaña: Console
-# Buscar: "[Firebase]" logs
-# ✅ Debe ver: "[Firebase] ✅ Saved forecast for {city_id} at {date_hour}"
-# ❌ NO debe ver: "[Firebase] Error" ni "[Firebase] ❌"
-```
+## ⏰ Resumen de Hoy
 
-### 4. Validar estructura con test
-```bash
-npm run test
-# Todos los tests deben pasar (no hay nuevos tests para US-801 aún)
-```
+- **Tiempo**: ~4 horas
+- **Issues**: 2 identificados, 1 resuelto (duplicado), 1 documentado (env vars)
+- **Features**: US-801 + US-802 completadas
+- **Code**: 1,500+ LOC nuevas
+- **Tests**: Build ✅, manual validation ✅
+- **Quality**: 0 regressions (fix aplicado)
 
-## Métricas Actuales
-- **Rama:** refactor/firebase-v2 (v2.0.0-alpha)
-- **Commits:** 2e06a2d (US-801)
-- **Build:** ✅ PASSED
-- **Tests:** Pendiente validación manual
-- **Free tier Firestore:** 11.28% writes, 3.2% storage
-
-## Archivos Modificados (Último Commit)
-- `src/services/firebase/firebaseWeatherService.ts` (NEW - 390 líneas)
-- `src/services/weather/weatherService.ts` (+100 líneas)
-- `src/services/weather/batchWeatherService.ts` (+10 líneas)
-- `src/services/firebase/index.ts` (+2 líneas)
+**Next decision:** ¿Continuar con US-803, US-805, o parar para benchmark?

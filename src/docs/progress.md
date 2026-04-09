@@ -23,20 +23,41 @@
 - **Validación:** Credenciales cargadas ✅
 
 #### US-801 — Persistir Pronóstico ✅ COMPLETADO (2026-04-08)
-- **Commit:** `2e06a2d`
-- **Status:** ✅ Implementación completada, validación manual pendiente
+- **Commit:** `61ece21` (fix duplicados) + `bddadcc` (catalog)
+- **Status:** ✅ Implementado y optimizado
 - **Entregables:**
   - `src/services/firebase/firebaseWeatherService.ts` — saveCityForecast()
-  - Modified: `src/services/weather/weatherService.ts` — createForecastSnapshots() + getHourlyForecasts()
-  - Modified: `src/services/weather/batchWeatherService.ts` — integración Firestore
-  - Modified: `src/services/firebase/index.ts` — exports
+  - `src/services/weather/batchWeatherService.ts` — integración Firestore (sync)
+  - `src/hooks/useWeather.ts` — removido guardado duplicado
 - **Schema:** 
   - Path: `/city_weather/{city_id}/forecasts/{YYYY-MM-DD-HH}`
   - Snapshots: ForecastSnapshot[] (12 elementos)
   - TTL: Timestamp (now + 7 días)
   - created_at: Timestamp.now()
-- **Build:** ✅ PASSED (npm run build)
-- **Testing:** Validación manual pendiente (Firestore Console)
+- **Optimizaciones:**
+  - ✅ Removido guardado duplicado (50% reducción writes)
+  - ✅ Async/background (no bloquea UI)
+  - ✅ Falla silenciosa si offline
+- **Data:** 5+ ciudades persisted en Firestore ✅
+- **Build:** ✅ PASSED
+
+#### US-802 — Catálogo Estático ✅ COMPLETADO (2026-04-08)
+- **Commit:** `bddadcc`
+- **Status:** ✅ Seeded a Firestore
+- **Entregables:**
+  - `scripts/seedWeatherCatalog.ts` — script ejecutable (npx tsx)
+  - `src/services/firebase/weatherCatalogService.ts` — servicio lectura + fallback
+  - Updated: `src/services/firebase/index.ts` — exports
+- **Documentos Firestore (Seeded):**
+  - ✅ `/weather_catalog/conditions` (7 estados + emoji)
+  - ✅ `/weather_catalog/type_mapping` (condition → types)
+  - ✅ `/weather_catalog/rules` (WINDY, dedup, version)
+- **Características:**
+  - Idempotente (safe múltiples ejecuciones)
+  - Fallback hardcodeado si Firestore offline
+  - Singleton cache + validation helpers
+- **Build:** ✅ PASSED
+- **Seed Status:** ✅ SUCCESSFUL
 
 ---
 
