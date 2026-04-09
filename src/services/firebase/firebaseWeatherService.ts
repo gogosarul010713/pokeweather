@@ -41,7 +41,7 @@ export interface ForecastDoc {
  * Path: /city_weather/{city_id}/forecasts/{YYYY-MM-DD-HH}
  *
  * @param city - Ciudad con datos estáticos y actuales
- * @param snapshots - Array de 12 ForecastSnapshot (1 por hora)
+ * @param snapshots - Array de ForecastSnapshot (1 por hora). Puede estar vacío (caché geoespacial hit).
  *
  * @returns Promise<void>
  *   - Resolve: sin errores (exitoso o falla silenciosa)
@@ -51,25 +51,22 @@ export interface ForecastDoc {
  */
 export async function saveCityForecast(
   city: City,
-  snapshots: ForecastSnapshot[]
+  snapshots: ForecastSnapshot[] = []
 ): Promise<void> {
   // Validación: Firebase no inicializado
   if (!db) {
-    console.warn('[Firebase] Firestore not initialized, skipping save')
+    console.error('[Firebase] ❌ CRITICAL: Firestore not initialized (db is null), skipping save for', city.id)
     return
   }
 
-  // Validación: array vacío
-  if (snapshots.length === 0) {
-    console.warn(`[Firebase] No forecasts to save for ${city.id}`)
-    return
-  }
-
-  // Validación: array incompleto
-  if (snapshots.length < 12) {
+  // Validación: array incompleto (pero no rechazamos si está vacío — caché geoespacial hit)
+  if (snapshots.length > 0 && snapshots.length < 12) {
     console.warn(
       `[Firebase] Warning: ${city.id} has ${snapshots.length} snapshots (expected 12)`
     )
+  }
+  if (snapshots.length === 0) {
+    console.log(`[Firebase] ℹ️ ${city.id}: No snapshots (from cache), saving aggregated data only`)
   }
 
   try {

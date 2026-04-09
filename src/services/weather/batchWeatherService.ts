@@ -89,6 +89,14 @@ export async function loadCitiesInBatch(
             { ...city, accuLocationKey: locationKey },
             cached
           )
+
+          // 🔥 US-801: Persistir en Firestore incluso desde caché (sin snapshots)
+          const firebasePromiseCache = saveCityForecast(enrichedCity, [])
+          console.log(`[Firebase] 🔄 Iniciando guardado de pronóstico CACHÉ para ${enrichedCity.id} (0 snapshots)`)
+          firebasePromiseCache.catch((err) => {
+            console.warn(`[Firebase] ⚠️ Error guardando pronóstico CACHÉ de ${enrichedCity.id}:`, err)
+          })
+
           return {
             success: true as const,
             data: enrichedCity,
@@ -110,8 +118,10 @@ export async function loadCitiesInBatch(
 
         // 5. US-801: Persistir pronóstico en Firestore (async/background, sin await)
         // No bloquea: falla silenciosa si Firebase no está disponible
-        saveCityForecast(enrichedCity, snapshots).catch((err) => {
-          console.warn(`[Firebase] Error guardando pronóstico de ${enrichedCity.id}:`, err)
+        const firebasePromise = saveCityForecast(enrichedCity, snapshots)
+        console.log(`[Firebase] 🔄 Iniciando guardado de pronóstico para ${enrichedCity.id} con ${snapshots.length} snapshots`)
+        firebasePromise.catch((err) => {
+          console.warn(`[Firebase] ⚠️ Error guardando pronóstico de ${enrichedCity.id}:`, err)
           // No rethrow — falla silenciosa
         })
 

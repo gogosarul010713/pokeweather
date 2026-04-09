@@ -9,6 +9,7 @@ import { getS2Key } from '../services/geo/s2Service'
 import { shouldRefreshCities, setLastUpdateHour, getCachedWeather } from '../services/cache/cacheService'
 import { msUntilNextHour } from '../utils/timeUtils'
 import { saveSnapshots, clearOldSnapshots } from '../services/history/weatherHistoryService'
+import { saveCityForecast } from '../services/firebase/firebaseWeatherService'
 import type { City } from '../store/useStore'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -197,6 +198,14 @@ export function useWeather() {
 
       // US-607: Guardar snapshots históricos para análisis de precisión
       await saveSnapshots(resultWithTime)
+
+      // US-801: Persistir en Firestore de forma async (background, sin bloquear)
+      // Esto cubre casos donde no se ejecuta loadCitiesInBatch (caché temporal vigente)
+      resultWithTime.forEach((city) => {
+        saveCityForecast(city, []).catch((err) => {
+          console.warn(`[Firebase] 🔄 Background persist para ${city.id}:`, err)
+        })
+      })
 
       return resultWithTime
     } catch (error) {
