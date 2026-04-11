@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStore, type City } from '../../store/useStore'
 import { TYPE_ICON } from '../../config/typeIcons'
 import { CONDITION_LABEL } from '../../services/weather/weatherService'
+import ClassificationReportModal from './ClassificationReportModal'
 
 function formatTime(time: string): string {
   const [h, m] = time.split(':').map(Number)
@@ -42,11 +43,18 @@ export default function LocationDetail({ city }: LocationDetailProps) {
 
   const isFavorite = favorites.includes(city.id)
   const [copied, setCopied] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [showReportToast, setShowReportToast] = useState(false)
 
   const handleCopyCoords = () => {
     navigator.clipboard.writeText(`${city.lat.toFixed(4)}, ${city.lon.toFixed(4)}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleReportSuccess = () => {
+    setShowReportToast(true)
+    setTimeout(() => setShowReportToast(false), 3000)
   }
 
   useEffect(() => {
@@ -208,6 +216,36 @@ export default function LocationDetail({ city }: LocationDetailProps) {
 
         .ld-btn:hover { color: var(--text-primary); }
         .ld-btn.active { color: #ff4757; }
+        .ld-btn.report { color: var(--text-secondary); }
+
+        /* Toast */
+        .ld-toast {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: var(--ui-accent, #58a6ff);
+          color: white;
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-family: 'Exo 2', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          z-index: 2000;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          animation: slideInUp 300ms ease;
+        }
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
 
         /* ── Content ── */
         .ld-content {
@@ -408,6 +446,16 @@ export default function LocationDetail({ city }: LocationDetailProps) {
             >
               {isFavorite ? '❤️' : '🤍'}
             </button>
+            {city.condition && (
+              <button
+                className="ld-btn report"
+                onClick={() => setShowReportModal(true)}
+                title="Reportar clasificación incorrecta"
+                type="button"
+              >
+                ⚠️
+              </button>
+            )}
             <button
               className="ld-btn"
               onClick={() => setSidebarMode('list')}
@@ -516,6 +564,20 @@ export default function LocationDetail({ city }: LocationDetailProps) {
           </button>
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <ClassificationReportModal
+          city={city}
+          onClose={() => setShowReportModal(false)}
+          onSuccess={handleReportSuccess}
+        />
+      )}
+
+      {/* Toast */}
+      {showReportToast && (
+        <div className="ld-toast">✓ Reporte enviado correctamente</div>
+      )}
     </>
   )
 }

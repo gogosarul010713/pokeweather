@@ -3,6 +3,7 @@ import { getRetentionDays, setRetentionDays } from '../../services/history/weath
 import HistoryGrid from './HistoryGrid'
 import CachePanel from './CachePanel'
 import PrecisionMetrics from './PrecisionMetrics'
+import ReportsPanel from './ReportsPanel'
 import type { City } from '../../store/useStore'
 
 interface TestingToolsProps {
@@ -11,7 +12,7 @@ interface TestingToolsProps {
   onClose: () => void
 }
 
-type TabType = 'historial' | 'cache' | 'metricas'
+type TabType = 'historial' | 'cache' | 'metricas' | 'reportes'
 
 export default function TestingTools({ cities, isOpen, onClose }: TestingToolsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('historial')
@@ -314,6 +315,12 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
             >
               📈 Métricas
             </button>
+            <button
+              className={`tt-tab ${activeTab === 'reportes' ? 'active' : ''}`}
+              onClick={() => setActiveTab('reportes')}
+            >
+              ⚠️ Reportes
+            </button>
           </div>
 
           {/* Content */}
@@ -332,6 +339,9 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
 
             {/* Tab: Métricas */}
             {activeTab === 'metricas' && <PrecisionMetrics retentionDays={retentionDays} />}
+
+            {/* Tab: Reportes */}
+            {activeTab === 'reportes' && <ReportsPanel />}
           </div>
         </div>
       )}
