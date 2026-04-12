@@ -15,7 +15,8 @@
 | 5 | Mapa Completo | 14 | Pines, tooltips, navegación geográfica |
 | 6 | AccuWeather Real | 21 | API real, refresh automático, alertas extremo |
 | 7 | Responsive | 13 | Tablet y mobile |
-| **Total** | | **110 SP** | |
+| 8 | Weather Backend | 22 | Bottom Sheet mobile + Firestore persistence |
+| **Total** | | **132 SP** | |
 
 ---
 

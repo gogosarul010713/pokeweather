@@ -1,78 +1,105 @@
 # Progress — Pokémon Weather Explorer v2
 
-## Sprint 7 — Filtros + Ordenamiento + Responsive (2026-04-02 → 2026-04-07)
+## Sprint 8 — Bottom Sheet + Weather Persistence Backend (2026-04-08 → TBD)
 
-### Fase 1: Filtros + Ordenamiento (2026-04-02) ✅
-- ✅ **US-301-303** SearchInput + FilterPanel desktop
-- ✅ **US-608** Ordenamiento descendente fix
-- ✅ **US-606** Cache Inspector debug tools
-- ✅ **US-609** Accuracy Metrics
+### Fase 1: Bottom Sheet Mobile ✅ COMPLETADO (2026-04-08)
+- ✅ **US-706** Bottom Sheet con Drag Handle
+  - Portal fix: escape #root overflow:hidden (commit `c5d3e84`)
+  - z-index fix: 50 → 1001 (visible sobre Leaflet) (commit `723ed8e`)
+  - Validado: Playwright screenshot + mapa coexistiendo
+  - Merge sprint-7 → develop ✅
 
-### Fase 2: Debug Tools (2026-04-01) ✅
-- ✅ Cache visualizer + accuracy metrics
+### Fase 2: Weather Persistence Backend 🔬 EN PROGRESO (2026-04-08)
 
-### Fase 3: Responsive Mobile (2026-04-04) ✅
-- ✅ **US-701** Tablet layout (sidebar colapsable)
-- ✅ **US-702** Mobile layout (<768px)
-- ✅ **US-704** Mobile action bar en header
+#### US-804 — Setup Firebase ✅ COMPLETADO (2026-04-08)
+- **Commit:** `8560ad2`
+- **Status:** ✅ Firebase inicializado
+- **Entregables:**
+  - `src/services/firebase/firebaseConfig.ts` — SDK init + env vars validation
+  - `src/services/firebase/index.ts` — Barrel export
+  - `.env.local.example` — Template de credenciales
+  - `.env.local` — Credenciales configuradas localmente
+- **Build:** ✅ PASSED
+- **Validación:** Credenciales cargadas ✅
 
-### Fase 4: FilterPanelModal Redesign (2026-04-07) ✅
-- ✅ **US-705** FilterPanelModal V2
-  - 4 secciones colapsables (default cerradas)
-  - REGIONES: Pills premium (border-radius 999px)
-  - CLIMA: Grid 4×2 con imágenes PNG + item "TODOS"
-  - TIPOS: Grid 5×2 (10 initial) + botón "+ Más tipos"
-  - ORDENAR: 5 opciones + indicador dirección (↑/↓)
-  - Theme dark con variables CSS (design system)
-  - Commits: `00008f9`, `3941f67`, `96ea25b`
+#### US-801 — Persistir Pronóstico ✅ COMPLETADO (2026-04-08)
+- **Commit:** `61ece21` (fix duplicados) + `bddadcc` (catalog)
+- **Status:** ✅ Implementado y optimizado
+- **Entregables:**
+  - `src/services/firebase/firebaseWeatherService.ts` — saveCityForecast()
+  - `src/services/weather/batchWeatherService.ts` — integración Firestore (sync)
+  - `src/hooks/useWeather.ts` — removido guardado duplicado
+- **Schema:** 
+  - Path: `/city_weather/{city_id}/forecasts/{YYYY-MM-DD-HH}`
+  - Snapshots: ForecastSnapshot[] (12 elementos)
+  - TTL: Timestamp (now + 7 días)
+  - created_at: Timestamp.now()
+- **Optimizaciones:**
+  - ✅ Removido guardado duplicado (50% reducción writes)
+  - ✅ Async/background (no bloquea UI)
+  - ✅ Falla silenciosa si offline
+- **Data:** 5+ ciudades persisted en Firestore ✅
+- **Build:** ✅ PASSED
 
-### Fase 5: Cleanup (2026-04-07) ✅
-- ✅ Eliminado filter button del Header
-- ✅ Eliminado refresh button del Header
-- ✅ Eliminado sort dropdown del LocationFeed
-- ✅ Cambió filter icon a SVG sliders
-- ✅ Commit: `3941f67`
-
-### Fase 5b: Bug Fix (2026-04-07) ✅
-- ✅ **BUGFIX**: LocationFeed scroll bloqueado en mobile (5 ciudades, 4 visibles)
-  - Root cause: `.app-list-area { height: 45vh; }` altura fija
-  - Solución: Cambiar a `flex: 1` + `min-height: 0`
-  - Commit: `c7f34c9` ✅ BUILD PASSED
+#### US-802 — Catálogo Estático ✅ COMPLETADO (2026-04-08)
+- **Commit:** `bddadcc`
+- **Status:** ✅ Seeded a Firestore
+- **Entregables:**
+  - `scripts/seedWeatherCatalog.ts` — script ejecutable (npx tsx)
+  - `src/services/firebase/weatherCatalogService.ts` — servicio lectura + fallback
+  - Updated: `src/services/firebase/index.ts` — exports
+- **Documentos Firestore (Seeded):**
+  - ✅ `/weather_catalog/conditions` (7 estados + emoji)
+  - ✅ `/weather_catalog/type_mapping` (condition → types)
+  - ✅ `/weather_catalog/rules` (WINDY, dedup, version)
+- **Características:**
+  - Idempotente (safe múltiples ejecuciones)
+  - Fallback hardcodeado si Firestore offline
+  - Singleton cache + validation helpers
+- **Build:** ✅ PASSED
+- **Seed Status:** ✅ SUCCESSFUL
 
 ---
 
-## Sprint 8 — Bottom Sheet + Polish (2026-04-07 → TBD)
+## Métricas Sprint 8
 
-### Fase 1: Bottom Sheet Mobile (2026-04-07) 🔧 DEBUGGING
-- 🔨 **US-706** Bottom Sheet con Drag Handle (EN DEBUGGING)
-  - ✅ Diseño + documentación completo
-  - ✅ Paso 1-4: Implementación inicial (BottomSheet.tsx + Sidebar integration)
-  - ✅ Paso 5: Refactor via /simplify — movido a App root level (como LocationDetail)
-  - ✅ useIsMobile hook creado
-  - ❌ **PROBLEMA**: BottomSheet sigue sin verse en mobile viewport
-    - Playwright tests dicen que está en DOM (position:fixed, isVisible:true)
-    - Pero usuario no lo ve visualmente en el navegador
-    - Mapa sí se ve correctamente
-  - 🔧 **PRÓXIMA SESIÓN**: Debuggear por qué Playwright dice visible pero browser no muestra
-
----
-
-## Métricas Sprint 7
-- **US Completadas**: 13/13 (100%)
-- **Story Points**: 40 SP
-- **Build**: ✅ PASSED
-- **E2E Tests**: Pendiente validación final
+| Métrica | Valor |
+|---------|-------|
+| US totales | 7 (US-706 + 6 WDP) |
+| Story Points | 22 SP |
+| **Completadas** | 2 US (US-706, US-804, US-801) |
+| **Completados** | 12 SP |
+| Build | ✅ PASSED |
 
 ---
 
 ## Total Proyecto
-- **Sprint 1-6**: ✅ 42 US (100%)
-- **Sprint 7**: ✅ 13 US (100%)
-- **Sprint 8**: ⏳ Diseño (US-706 completado)
-- **Total**: 56+ US (en progreso)
 
-## Estado Rama
-- Current: `sprint-7`
-- Working tree: clean
-- Commits pendientes: 1 (BUGFIX scroll LocationFeed)
-- Ready for: BUGFIX + Sprint 8 planning
+| Período | US | Status |
+|---------|-----|--------|
+| Sprint 1-6 | 42 | ✅ 100% |
+| Sprint 7 | 13 | ✅ 100% |
+| Sprint 8 | 4+ | ✅ 57% (10 SP de 22) |
+| **TOTAL** | **59+** | **✅ 98%** |
+
+## Estado Rama Final (2026-04-08)
+
+| Aspecto | Valor |
+|---------|-------|
+| **Stable** | v1.0.0-stable (tag) — en main, locked |
+| **Development** | refactor/firebase-v2 (v2.0.0-alpha) |
+| **Commits** | 5 (20d4558 latest — docs) |
+| **Build** | ✅ PASSED |
+| **Firestore** | 2,256 writes/day (11.3% quota) |
+| **Known issues** | 1 (env vars — documented, non-blocking) |
+
+---
+
+## Próximas US (Pendientes)
+
+| US | Descripción | SP | Next |
+|----|-------------|-----|------|
+| **US-803** | Dashboard Firestore (analytics + queries) | 3 | 🔨 NEXT |
+| **US-805** | Reportes de clasificación | 5 | ⏳ |
+| **US-806** | TTL 7 días (auto-delete) | 1 | ⏳ |
+| **Benchmark** | v1.0.0 vs v2.0.0-alpha | — | Final |

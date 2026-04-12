@@ -198,6 +198,9 @@ export function useWeather() {
       // US-607: Guardar snapshots históricos para análisis de precisión
       await saveSnapshots(resultWithTime)
 
+      // US-801: Firebase persistence ya se ejecuta en loadCitiesInBatch
+      // (no duplicar aquí — evita writes duplicados a Firestore)
+
       return resultWithTime
     } catch (error) {
       console.error('❌ Error loading cities:', error)

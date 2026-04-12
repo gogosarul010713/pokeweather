@@ -180,6 +180,63 @@ export const resolveCondition = (
 export const isExtremeWeather = (alerts: unknown[]): boolean =>
   Array.isArray(alerts) && alerts.length > 0
 
+// ─── US-801: Crear snapshots para Firestore ────────────────────────────────────
+// Convierte array de HourlyForecastData en array de ForecastSnapshot clasificados
+
+export interface ForecastSnapshot {
+  hour: number
+  raw_condition_code: number
+  raw_condition_text: string
+  classified: string
+  types: string[]
+  temperature_c: number
+  wind_kmh: number
+  precipitation_mm: number
+  humidity_pct: number
+  is_windy_override: boolean
+}
+
+/**
+ * Crear array de 12 ForecastSnapshot desde datos horarios de AccuWeather
+ * Cada snapshot es una hora completa con condición clasificada a PGO
+ *
+ * @param hourlyData Array de HourlyForecastData (máximo 12 elementos)
+ * @param startHour Hora inicial para calcular 'hour' de cada snapshot (default 0)
+ * @returns Array de ForecastSnapshot (0-12 elementos, típicamente 12)
+ */
+export function createForecastSnapshots(
+  hourlyData: HourlyForecastData[],
+  startHour: number = 0
+): ForecastSnapshot[] {
+  return hourlyData.map((data, index) => {
+    const hour = (startHour + index) % 24
+
+    const iconId = data.WeatherIcon
+    const windKmh = data.Wind.Speed.Value
+    const gustKmh = data.WindGust.Speed.Value
+    const precip = data.HasPrecipitation ? 2.5 : 0 // placeholder: 2.5mm si hay lluvia
+
+    // Clasificar condición y obtener tipos Pokémon
+    const classified = resolveCondition(iconId, windKmh, gustKmh)
+    const types = CONDITION_TO_TYPES[classified]
+    const baseCondition = getBaseCondition(iconId)
+    const isWindyOverride = classified === 'windy' && baseCondition !== 'windy'
+
+    return {
+      hour,
+      raw_condition_code: iconId,
+      raw_condition_text: WEATHER_TRANSLATIONS[iconId]?.iconText ?? 'Unknown',
+      classified,
+      types,
+      temperature_c: data.Temperature.Value,
+      wind_kmh: windKmh,
+      precipitation_mm: precip,
+      humidity_pct: data.RelativeHumidity,
+      is_windy_override: isWindyOverride,
+    }
+  })
+}
+
 // ─── AccuWeather API Functions (Sprint 6) ─────────────────────────────────────
 
 import { getCachedLocationKey, setCachedLocationKey } from '../cache/cacheService'
@@ -269,6 +326,30 @@ export const getHourlyForecast = async (
   return data[0] // primer slot = hora actual
 }
 
+/**
+ * Obtener pronóstico completo de 12 horas desde AccuWeather
+ * US-801: Para persistencia en Firestore
+ *
+ * @param locationKey AccuWeather location identifier
+ * @param apiKey AccuWeather API key
+ * @returns Array de 12 HourlyForecastData (típicamente)
+ */
+export const getHourlyForecasts = async (
+  locationKey: string,
+  apiKey: string
+): Promise<HourlyForecastData[]> => {
+  const url = `${ACCUWEATHER_BASE}/forecasts/v1/hourly/12hour/${locationKey}` +
+    `?apikey=${apiKey}&details=true&metric=true`
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!response.ok) {
+    throw new Error(`AccuWeather forecast error: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return Array.isArray(data) ? data : [] // retorna array vacío si no es array
+}
+
 export const getAlerts = async (
   locationKey: string,
   apiKey: string
@@ -290,21 +371,31 @@ export const fetchCityWeather = async (
   city: City,
   apiKey: string,
   enableAlerts: boolean = false
-): Promise<City> => {
+): Promise<{ city: City; snapshots: ForecastSnapshot[] }> => {
   try {
     // 1. Obtener location key y timezone
     const { locationKey, timezone } = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
 
-    // 2. Fetch forecast + alerts (opcional, si plan lo soporta)
-    const forecastPromise = getHourlyForecast(locationKey, apiKey)
+    // 2. Fetch forecast (12 horas) + alerts (opcional, si plan lo soporta)
+    // US-801: Obtener array completo de 12 horas para Firestore
+    const hourlyForecastsPromise = getHourlyForecasts(locationKey, apiKey)
     const alertsPromise = enableAlerts ? getAlerts(locationKey, apiKey) : Promise.resolve([])
 
-    const [forecast, alerts] = await Promise.all([
-      forecastPromise,
+    const [hourlyForecasts, alerts] = await Promise.all([
+      hourlyForecastsPromise,
       alertsPromise,
     ])
 
-    // 3. Calcular condición y tipos
+    // 3. Usar primer elemento para datos de UI (actual behavior)
+    const forecast = hourlyForecasts[0]
+    if (!forecast) {
+      throw new Error('No hourly forecast data returned')
+    }
+
+    // 4. Crear snapshots para persistencia (US-801)
+    const snapshots = createForecastSnapshots(hourlyForecasts)
+
+    // 5. Calcular condición y tipos (para City)
     const condition = resolveCondition(
       forecast.WeatherIcon,
       forecast.Wind.Speed.Value,
@@ -313,7 +404,7 @@ export const fetchCityWeather = async (
     const boostedTypes = CONDITION_TO_TYPES[condition]
     const isExtreme = isExtremeWeather(alerts)
 
-    // 4. Construir objeto City actualizado
+    // 6. Construir objeto City actualizado
     const weatherData: City = {
       ...city,
       condition,
@@ -333,7 +424,7 @@ export const fetchCityWeather = async (
       // localTime será calculado en useWeather con timezone
     }
 
-    return weatherData
+    return { city: weatherData, snapshots }
   } catch (error) {
     // Lanzar error para que useWeather lo maneje y muestre estado informativo
     throw new Error(`Failed to fetch weather for ${city.name}: ${error instanceof Error ? error.message : String(error)}`)
