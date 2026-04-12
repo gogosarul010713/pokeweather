@@ -1,86 +1,108 @@
-# 🎯 Sprint 8 — COMPLETADO ✅
+# 🎯 Sprint 8 — COMPLETADO + Arquitectura Validada
 
 **Período:** 2026-04-08 → 2026-04-12  
-**Estado:** ✅ **SPRINT CERRADO**  
+**Estado:** ✅ **SPRINT CERRADO** | 🔄 **Benchmark pendiente**  
 **Progreso:** 7/7 US — 19/22 SP (86%)
 
 ---
 
-## ✅ US-805 — Reporte de Clasificación Incorrecta (2026-04-11)
-
-**Implementación:** Dataset de entrenamiento para mejorar algoritmo de clasificación
-
-**Completado:**
-- ✅ Modal en LocationDetail (botón ⚠️)
-- ✅ Servicio Firebase: `classificationReportService.ts` (save, getRecent, getCityReports, isDuplicate)
-- ✅ Panel en TestingTools con tab "⚠️ Reportes"
-- ✅ Export a CSV
-- ✅ Validación manual en navegador sin errores
-- ✅ Build: PASSED
-- ✅ Commit: `7f33506`
-
-**Criterios:** ✅ TODOS CUMPLIDOS
-
----
-
-## ✅ US-806 — TTL Automático para Documentos de Pronóstico (2026-04-12)
-
-**Implementación:** Auto-delete de forecasts > 7 días
-
-**Completado:**
-- ✅ Plan Blaze activado (facturación, seguimos en $0/mes)
-- ✅ TTL Policy creada en Firebase Console
-  - Collection group: `forecasts`
-  - Timestamp field: `ttl`
-- ✅ Verificado en Firestore Console
-  - Documento: `city_weather/adelaide-waterfront/forecasts/2026-04-11-10`
-  - `created_at: 11 abril 10:32:25 UTC-6`
-  - `ttl: 18 abril 10:32:25 UTC-6` (7 días después) ✅
-- ✅ Commit: `2b0dc9e`
-
-**Criterios:** ✅ TODOS CUMPLIDOS
-
----
-
-## 📊 Estado Final Sprint 8
+## ✅ Sprint 8 — Todas las US Completadas
 
 | US | SP | Estado | Commit |
 |----|-----|--------|--------|
-| US-706 | 2 | ✅ Completada | `723ed8e` |
-| US-804 | 2 | ✅ Completada | `8560ad2` |
-| US-801 | 3 | ✅ Completada | `61ece21` |
-| US-802 | 2 | ✅ Completada | `bddadcc` |
-| US-803 | 3 | ✅ Completada | `6802752` |
-| US-805 | 5 | ✅ Completada | `7f33506` |
-| US-806 | 1 | ✅ Completada | `2b0dc9e` |
-
-**Total:** 7/7 US — 19/22 SP (86%)
+| US-706 | 2 | ✅ | `723ed8e` |
+| US-804 | 2 | ✅ | `8560ad2` |
+| US-801 | 3 | ✅ | `61ece21` |
+| US-802 | 2 | ✅ | `bddadcc` |
+| US-803 | 3 | ✅ | `6802752` |
+| US-805 | 5 | ✅ | `7f33506` |
+| US-806 | 1 | ✅ | `2b0dc9e` |
 
 ---
 
-## 🚀 Próximos Pasos
+## 📋 Arquitectura v2.0.0-alpha — Confirmada
 
-### Sprint 9 (siguiente sesión)
+### ✅ Decisiones Validadas (Sesión 2026-04-12)
 
-1. **Benchmark v1.0.0 vs v2.0.0-alpha**
-   - Comparar performance, metrics, UX
-   - Documentar hallazgos
+1. **IndexedDB + Firestore (Hybrid)**
+   - IndexedDB: Caché pronósticos (6h), catálogos (propuesto 30d)
+   - Firestore: Reportes (30d), histórico pronósticos (7d)
+   - ✅ Portabilidad: reportes en cloud
+   - ✅ Offline-first: IndexedDB fallback
 
-2. **Merge a `develop`**
-   - PR: `refactor/firebase-v2` → `develop`
-   - Review, testing, merge
+2. **Catálogos Estáticos desde Firestore**
+   - `/weather_catalog/conditions`, `/type_mapping`, `/rules`
+   - Fallback: hardcodeado en código
+   - Cache: singleton en memory (1 read/sesión)
+   - ✅ Actualizables sin redeploy
+   - ✅ Funciona offline
 
-3. **Release v2.0.0-alpha** (si aplica)
-   - Tag en Git
-   - Update docs
+3. **Consumo Firebase Optimizado**
+   - ~68K writes/mes (11.3% of free tier)
+   - Catálogos: 1 read/sesión (singleton)
+   - Reportes: on-demand (lazy load)
+   - Dashboard: sin índice (procesamiento en-memoria)
+   - ✅ Dentro de límite free tier Blaze ($0/mes)
+
+4. **TTL Policies en Firestore**
+   - Pronósticos: **7 días** (US-806)
+   - Reportes: **30 días** (US-805)
+   - ✅ Auto-delete automático (eventual)
+
+### ⏳ Optimización Propuesta (NO BLOQUEANTE)
+
+**Opción A:** Cachear catálogos en IndexedDB (30d) — mejoraría offline-first  
+**Opción B:** Cachear reportes recientes en IndexedDB (24h) — reduciría reads Firestore
+
+---
+
+## 🎯 Próximas Tareas
+
+### 📊 Benchmark v1 vs v2 (PENDIENTE)
+
+**Documento:** `BENCHMARK-v1-vs-v2.md` (en raíz)
+
+**3 fases:**
+1. Validar funcionalidades en v1 (main) vs v2 (refactor/firebase-v2)
+2. Medir performance: bundle size, Lighthouse, network requests
+3. Documentar hallazgos y recomendación de merge
+
+**Tiempo estimado:** 60 min
+
+### 📤 Merge a develop (después de benchmark)
+
+```bash
+git checkout develop
+git pull origin develop
+git merge refactor/firebase-v2
+# Resolver conflictos si hay
+git push origin develop
+```
+
+### 🚀 Release v2.0.0-alpha (opcional)
+
+```bash
+git tag v2.0.0-alpha
+git push origin v2.0.0-alpha
+```
+
+---
+
+## 📝 Contexto Importante
+
+- **Blaze plan:** Habilitado, $0/mes en free tier
+- **Firebase env vars warning:** Non-blocking, documentado en PENDING-ISSUES.md
+- **Build:** ✅ PASSING (chunk warning es normal)
+- **Console:** ✅ Clean (excepto Firebase env vars warning)
 
 ---
 
 ## 💾 Estado Guardado — 2026-04-12
 
-**Rama activa:** `refactor/firebase-v2` (v2.0.0-alpha)  
+**Rama:** `refactor/firebase-v2` (v2.0.0-alpha)  
 **Build:** ✅ PASSED  
-**Tests:** Validación manual completada ✅
+**Tests:** Validación manual completada  
+**Decisiones:** Documentadas en `decisions.md`
 
 **Para retomar:**
 "Continuemos con benchmark v1 vs v2 o merge a develop"
