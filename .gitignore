@@ -32,4 +32,4 @@ dist-ssr
 .vercel
 
 # Archivos de ejemplo con valores reales — nunca subir
-.env.example
+.env.example.env.serviceAccountKey.json
