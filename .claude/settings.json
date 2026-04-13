@@ -14,7 +14,24 @@
       "Read(//c/Workspace/React/pokeweather/**)",
       "Skill(us-start)",
       "Skill(us-start:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Read(//c/Workspace/React/pokeweather-nests/src/docs/features/nests//**)",
+      "Read(//c/Workspace/React/pokeweather-nests/src/**)",
+      "Bash(mv 03-us-801-carga-nidos.md ../../sprints/09-nests/US/US-801.md)",
+      "Bash(mv 04-us-802-pins-mapa.md ../../sprints/09-nests/US/US-802.md)",
+      "Bash(mv 05-us-803-sidebar-listado.md ../../sprints/09-nests/US/US-803.md)",
+      "Bash(mv 06-us-804-panel-detalle.md ../../sprints/09-nests/US/US-804.md)",
+      "Bash(mv 07-us-805-toggle-modo.md ../../sprints/09-nests/US/US-805.md)",
+      "Bash(mv 10-sesion-1-servicios.md ../../sprints/09-nests/01-sesion-1-servicios.md)",
+      "Bash(mv 11-sesion-2-componentes.md ../../sprints/09-nests/02-sesion-2-componentes.md)",
+      "Bash(mv 12-sesion-3-integracion.md ../../sprints/09-nests/03-sesion-3-integracion.md)",
+      "Bash(mv 20-estructura-proyecto.md ../../sprints/09-nests/ESTRUCTURA-PROYECTO.md)",
+      "Bash(mv 40-checklist-fase-1.md ../../sprints/09-nests/CHECKLIST-FASE-1.md)",
+      "Bash(xargs -I {} basename {})",
+      "Read(//c/Workspace/React/pokeweather-nests/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Workspace\\React\\pokeweather-nests\\src\\docs\\sprints\\09-nests"
     ]
   }
 }
