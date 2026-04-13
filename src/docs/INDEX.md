@@ -3,7 +3,7 @@
 Guía centralizada de navegación.  
 **Última actualización:** 2026-04-12
 
-**👉 EMPIEZA AQUÍ:** [📖 ROADMAP.md](../ROADMAP.md) — Visión de Sprints 8-12 | [📊 Progress](progress.md) — Estado actual
+**👉 EMPIEZA AQUÍ:** [📖 ROADMAP.md](ROADMAP.md) — Visión de Sprints 8-12 | [📊 Sprint Status](sprints/) — Historial completo
 
 ---
 
@@ -32,14 +32,11 @@ Guía centralizada de navegación.
 
 ## 🎯 [sprints/](sprints/) — Planificación y seguimiento
 
-- [01-backlog.md](sprints/01-backlog.md) — Product backlog con criterios de aceptación
-- [02-sprints.md](sprints/02-sprints.md) — Cronograma de sprints planeado
-- [03-sprint7-checkpoint.md](sprints/03-sprint7-checkpoint.md) — Sprint 7 (completado)
-- [04-sprint-6-completion.md](sprints/04-sprint-6-completion.md) — Sprint 6 (completado)
-- [05-sprint8.md](sprints/05-sprint8.md) — Sprint 8 planeado
-
-**📦 Archivo Histórico: [04-archive/](04-archive/)**
-- [sprint-8.md](04-archive/sprint-8.md) — Sprint 8 resumen final (✅ COMPLETADO 2026-04-12)
+**Guía rápida:**
+- [00-INDEX.md](sprints/00-INDEX.md) — Índice de todos los sprints
+- [sprint-8/](sprints/sprint-8/) — Sprint 8 (✅ COMPLETADO: 7 US, 22 SP)
+- [sprint-9/](sprints/sprint-9/) — Sprint 9 (Planificado: Bundle Optimization)
+- Sprint 1-7: Histórico en archivos individuales
 
 ---
 

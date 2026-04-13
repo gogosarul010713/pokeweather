@@ -65,7 +65,7 @@ Code-splitting, lazy loading, Lighthouse optimization
 **Período:** 2026-04-20 → 2026-06-07 | **60-80 SP** | 🔮  
 Sistema de Nesting, descubrimiento, social features
 
-Ver: [ROADMAP.md](../../ROADMAP.md#sprint-10-12-nests-feature)
+Ver: [ROADMAP.md](../ROADMAP.md#sprint-10-12-nests-feature)
 
 ---
 
@@ -88,9 +88,9 @@ Ver: [ROADMAP.md](../../ROADMAP.md#sprint-10-12-nests-feature)
 | Ver objetivo de Sprint N | `sprint-N/README.md` |
 | Ver detalle de US-XXX | `sprint-N/us/US-XXX.md` |
 | Ver decisiones del sprint | `sprint-N/decisions.md` |
-| Datos históricos (1-7) | [04-archive/](../04-archive/) |
-| Roadmap completo | [ROADMAP.md](../../ROADMAP.md) |
-| Estado actual | [.claude/context/active-task.md](../../.claude/context/active-task.md) |
+| Roadmap completo | [ROADMAP.md](../ROADMAP.md) |
+| Documentación principal | [INDEX.md](../INDEX.md) |
+| Arquitectura del proyecto | [architecture/](../architecture/) |
 
 ---
 
@@ -120,22 +120,23 @@ Cuando comience un nuevo sprint:
 # Leer:
 cat sprint-N/README.md         # Objetivo, timeline
 cat sprint-N/us/US-XXX.md      # Detalle de US actual
-cat .claude/context/active-task.md  # Estado vivo
+cat INDEX.md                   # Documentación general
 ```
 
 **Al completar US:**
 ```bash
 # Actualizar:
-.claude/context/active-task.md → sesión completada
-sprint-N/decisions.md          → decisión tomada
+sprint-N/decisions.md          # Decisión tomada
+sprint-N/README.md             # Progreso y métricas
 ```
 
 ---
 
 ## 📚 Documentación Relacionada
 
-- **Arquitectura:** `src/docs/architecture/`
-- **Referencia:** `src/docs/technical/`
-- **Histórico:** `src/docs/04-archive/`
-- **Roadmap:** `ROADMAP.md` (en raíz)
+- **Arquitectura:** [architecture/](../architecture/)
+- **Técnico:** [technical/](../technical/)
+- **Flujo de trabajo:** [workflow/](../workflow/)
+- **Roadmap:** [ROADMAP.md](../ROADMAP.md)
+- **Overview:** [overview/](../overview/)
 
