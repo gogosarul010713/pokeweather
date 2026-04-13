@@ -3,173 +3,66 @@
 ## Sprint Actual
 **Sprint 8 — Bottom Sheet + Weather Persistence Backend**
 
----
-
-## ✅ Completado Hoy (2026-04-08)
-
-### **US-706**: Bottom Sheet Mobile
-- ✅ Portal fix + z-index 1001
-- ✅ Visible sobre Leaflet
-- Commit: `723ed8e`
-
-### **US-804**: Firebase Setup
-- ✅ SDK inicializado
-- ✅ Env vars configuradas (.env.local)
-- ✅ Build PASSED
-- Commit: `8560ad2`
-
-### **US-801**: Persistir Pronóstico en Firestore
-- ✅ `src/services/firebase/firebaseWeatherService.ts` (saveCityForecast)
-- ✅ Integración en batchWeatherService.ts (async/background)
-- ✅ Firestore schema: `/city_weather/{city_id}/forecasts/{YYYY-MM-DD-HH}`
-- ✅ 12h snapshots con clasificación + types Pokémon
-- ✅ TTL 7 días + Timestamp
-- ✅ **FIX**: Removido guardado duplicado (-50% writes)
-- ✅ Data: 5+ ciudades persisted
-- ✅ Build PASSED
-- Commits: `61ece21` (fix) + `bddadcc` (US-802)
-
-### **US-802**: Catálogo Estático en Firestore
-- ✅ `scripts/seedWeatherCatalog.ts` (ejecutable con `npx tsx`)
-- ✅ `src/services/firebase/weatherCatalogService.ts` (lectura + fallback)
-- ✅ Seeded 3 documentos:
-  - `/weather_catalog/conditions` (7 estados + emoji)
-  - `/weather_catalog/type_mapping` (condition → types)
-  - `/weather_catalog/rules` (WINDY, dedup, version)
-- ✅ Fallback hardcodeado si Firestore offline
-- ✅ Singleton cache + validation helpers
-- ✅ Build PASSED
-- Commit: `bddadcc`
+✅ **STATUS: 100% COMPLETADO (2026-04-12)**
 
 ---
 
-## 📊 Estado Actual
+## ✅ Todas las 7 US Completadas
 
-| Métrica | Valor | Status |
-|---------|-------|--------|
-| **Branch** | refactor/firebase-v2 (v2.0.0-alpha) | ✅ |
-| **Commits** | 4 (61ece21...bddadcc) | ✅ |
-| **Build** | npm run build | ✅ PASSED |
-| **Firestore writes/día** | 2,256 (11.3%) | ✅ OK |
-| **Firestore storage** | 32 MB (3.2%) | ✅ OK |
-| **Known issues** | Firebase env warning (non-blocking) | 📋 DOCUMENTED |
-
----
-
-## ⏸️ Known Issue (Non-Blocking)
-
-**Firebase env vars warning** — Vite hot reload limitation
-- Variables EXIST en .env.local ✅
-- Data IS saved correctly (Firestore Console confirms) ✅
-- Status: PENDING (documented en `pvp-generator/PENDING-ISSUES.md`)
-- Impact: Cosmetic warning only, zero functionality impact
+| US | Descripción | Commit | Status |
+|----|----|--------|--------|
+| **US-706** | Bottom Sheet Mobile | `723ed8e` | ✅ |
+| **US-804** | Firebase Setup | `8560ad2` | ✅ |
+| **US-801** | Persistir Pronóstico | `61ece21` | ✅ |
+| **US-802** | Catálogo Estático | `bddadcc` | ✅ |
+| **US-806** | TTL Automático | `2b0dc9e` | ✅ |
+| **US-803** | Dashboard Firestore | `6802752` | ✅ |
+| **US-805** | Reporte Clasificación | `7f33506` | ✅ |
 
 ---
 
-## 🎯 Próximas Opciones
+## 📊 Estado Actual (2026-04-12)
 
-### **Opción 1: US-803** — Dashboard Firestore (3 SP)
-- Queries dinámicas desde Firestore
-- Analytics: frecuencia de condiciones, precisión
-- Reportes por región/ciudad
-
-### **Opción 2: US-805** — Reporte de Clasificación (5 SP)
-- Estadísticas de precisión clima
-- Comparación AccuWeather vs PGO
-- Export a Excel
-
-### **Opción 3: Benchmark Completo** (Planificado al final)
-- v1.0.0 vs v2.0.0-alpha
-- Precisión, performance, regresiones
-- Report comparativo
+| Métrica | Valor |
+|---------|-------|
+| **Branch** | develop (Sprint 8 merged) |
+| **Version** | v2.0.0-alpha |
+| **Story Points** | 22 SP ✅ 100% |
+| **Build** | npm run build ✅ PASSED |
+| **Commits adelante** | 2 (no pusheados aún) |
+| **Firestore** | 2,256 writes/día (11.3% quota) ✅ |
+| **Bundle size** | 1.7 MB gzip (Firebase +813%) |
 
 ---
 
-## 📝 Documentación Actualizada
+## 🎯 Próximos Pasos
 
-| Archivo | Status |
-|---------|--------|
-| `src/docs/progress.md` | ✅ Actualizado (US-801, US-802) |
-| `src/docs/active-task.md` | ✅ Este archivo |
-| `pvp-generator/06-fixes-applied.md` | ✅ Creado (issue analysis) |
-| `pvp-generator/PENDING-ISSUES.md` | ✅ Creado (env vars issue) |
+### **Sprint 8: Completado** ✅
+- 7 US implementadas (22 SP)
+- Documentación reorganizada por sprint
+- Todas US pasaron build ✅
 
----
+### **Sprint 9: Comienza 2026-04-13** ⏰
+- **US-901**: Code Splitting (Lazy load de Firebase)
+- **US-902**: Lighthouse Audit
+- **US-903**: Bundle Optimization (<1MB gzip)
+- Objetivo: Resolver warning de chunk size > 500 kB
 
-## 🔄 Git Status
-
-```
-Branch: refactor/firebase-v2
-Last commits:
-  bddadcc feat(US-802): Static weather catalog in Firestore
-  5c07571 docs: Document Firebase env vars warning as known issue
-  61ece21 fix(US-801): Remove duplicate Firebase save calls
-
-Pushed to: origin/refactor/firebase-v2 ✅
-```
+### **Próximas Sesiones:**
+1. **Hoy (2026-04-12)**: Pushear cambios, revisar estado
+2. **Mañana (2026-04-13)**: Iniciar Sprint 9 — US-901 Code Splitting
+3. **Paralelo**: Feature/nests en worktree (opcional)
 
 ---
 
-## ⏰ Resumen de Hoy (2026-04-08)
+## 📋 CHECKLIST FINAL SPRINT 8
 
-- **Time**: ~4 horas
-- **Issues**: 2 identificados, 1 resuelto (50% writes reduction), 1 documentado
-- **Features**: US-706, US-804, US-801, US-802 completadas (10 SP)
-- **Code**: 1,500+ LOC nuevas
-- **Tests**: Build ✅ PASSED, manual validation ✅
-- **Quality**: 0 regressions, duplicate writes removed
+✅ v1.0.0-stable locked en main (tag `v1.0.0-stable`)  
+✅ develop contiene Sprint 8 completo (v2.0.0-alpha)  
+✅ 7 US completadas (22 SP)  
+✅ Build ✅ PASSED  
+✅ Firestore validado ✅  
+✅ Documentación reorganizada por sprint  
+✅ 2 commits listos para push a origin/develop  
 
----
-
-## 🚀 CÓMO CONTINUAR EN PRÓXIMA SESIÓN
-
-### Paso 1: Inicializar Contexto
-```bash
-cd c:/Workspace/React/pokeweather
-git status  # Debe ser: branch refactor/firebase-v2, clean
-git log --oneline -5  # Debe mostrar: 20d4558 (docs)...
-```
-
-### Paso 2: Leer Documentación
-1. `src/docs/progress.md` — Resumen US completadas (59+)
-2. `src/docs/active-task.md` — Este archivo
-3. `pvp-generator/PENDING-ISSUES.md` — Issue no-blocker (env vars warning)
-
-### Paso 3: Elegir Próxima Tarea
-**Opciones:**
-
-**OPCIÓN A: US-803 Dashboard (3 SP)** — Recomendado
-- Queries dinámicas desde Firestore
-- Analytics: frecuencia condiciones por región/ciudad
-- Archivo spec: `src/docs/features/sprint8/us-803-dashboard-firestore.md`
-
-**OPCIÓN B: US-805 Reportes (5 SP)** — Más grande
-- Stats precisión clima (AccuWeather vs PGO)
-- Export a Excel con ExcelJS
-- Archivo spec: `src/docs/features/sprint8/us-805-reporte-clasificacion.md`
-
-**OPCIÓN C: Benchmark Final** — Al terminar todo
-- Comparar v1.0.0-stable vs v2.0.0-alpha
-- Precisión, performance, regresiones
-- Plan en: `pvp-generator/04-architectural-strategy.md`
-
-### Paso 4: npm run dev & Continuar
-```bash
-npm run dev  # Inicia dev server
-# Abre http://localhost:5173
-# Comienza con US-803, US-805, o Benchmark según selección
-```
-
----
-
-## 📋 CHECKLIST ESTADO ACTUAL
-
-✅ v1.0.0-stable locked en main (tag)  
-✅ refactor/firebase-v2 en desarrollo (5 commits)  
-✅ US-706, US-804, US-801, US-802 completadas  
-✅ Build PASSED  
-✅ Firestore: 2,256 writes/day (11.3% quota)  
-✅ Documentación actualizada  
-✅ 1 known issue (non-blocking, documented)  
-
-**Status:** Ready para continuar con US-803, US-805, o Benchmark
+**Status:** Ready para Sprint 9

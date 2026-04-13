@@ -33,3 +33,4 @@ dist-ssr
 
 # Archivos de ejemplo con valores reales — nunca subir
 .env.example.env.serviceAccountKey.json
+.env.serviceAccountKey.json
