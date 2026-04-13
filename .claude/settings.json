@@ -12,15 +12,9 @@
       "Read(//c/Users/geova/.claude/**)",
       "Bash(tee /tmp/playwright-output.txt)",
       "Read(//c/Workspace/React/pokeweather/**)",
-      "Bash(git status:*)",
-      "Bash(git filter-branch:*)",
-      "Bash(git stash:*)",
-      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --tree-filter 'rm -f .env.serviceAccountKey.json' ed711ff..HEAD)",
-      "Bash(ls -la ROADMAP*)",
-      "Bash(cd /d c:\\\\Workspace\\\\React\\\\pokeweather)",
-      "Bash(mv ROADMAP.md src/docs/ROADMAP.md)",
-      "Bash(ls -la src/docs/26-us706-*.md)",
-      "Bash(ls -la *.md)"
+      "Skill(us-start)",
+      "Skill(us-start:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
