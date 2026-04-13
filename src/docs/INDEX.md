@@ -94,7 +94,7 @@ Guía centralizada de navegación.
 | Setup AccuWeather API | [technical/03-setup-accuweather.md](technical/03-setup-accuweather.md) |
 | Setup Firebase (Sprint 8) | [technical/08-firebase-setup.md](technical/08-firebase-setup.md) |
 | Debuggear caché | [technical/02-debugging-cache.md](technical/02-debugging-cache.md) |
-| Ver próxima sesión | [NEXT-SESSION.md](NEXT-SESSION.md) |
+| Sprint 9 (próximo) | [sprints/sprint-9/](sprints/sprint-9/) — Bundle Optimization |
 | Arquitectura Firestore | [architecture/09-weather-persistence-backend.md](architecture/09-weather-persistence-backend.md) |
 | Data schema Firestore | [architecture/10-firestore-data-schema.md](architecture/10-firestore-data-schema.md) |
 | Firebase credentials setup | [technical/08-firebase-setup.md](technical/08-firebase-setup.md) |
