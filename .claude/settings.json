@@ -28,10 +28,13 @@
       "Bash(mv 20-estructura-proyecto.md ../../sprints/09-nests/ESTRUCTURA-PROYECTO.md)",
       "Bash(mv 40-checklist-fase-1.md ../../sprints/09-nests/CHECKLIST-FASE-1.md)",
       "Bash(xargs -I {} basename {})",
-      "Read(//c/Workspace/React/pokeweather-nests/**)"
+      "Read(//c/Workspace/React/pokeweather-nests/**)",
+      "Bash(mv src/docs/sprints/sprint-9/09-nests/US/* src/docs/sprints/sprint-9/US/)",
+      "Bash(mv src/docs/sprints/sprint-9/09-nests/*.md src/docs/sprints/sprint-9/)"
     ],
     "additionalDirectories": [
-      "c:\\Workspace\\React\\pokeweather-nests\\src\\docs\\sprints\\09-nests"
+      "c:\\Workspace\\React\\pokeweather-nests\\src\\docs\\sprints\\09-nests",
+      "C:\\Workspace\\React\\pokeweather-nests\\src\\docs\\sprints\\sprint-9\\09-nests"
     ]
   }
 }

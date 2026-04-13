@@ -30,9 +30,9 @@ Cada US contiene criterios de aceptación, pseudocódigo y pasos de implementaci
 
 ### 🛠️ Plan de Trabajo por Sesión
 
-- **[01-sesion-1-servicios.md](01-sesion-1-servicios.md)** — SESIÓN 1 (2h): Tipos, servicios, store, useNests hook
-- **[02-sesion-2-componentes.md](02-sesion-2-componentes.md)** — SESIÓN 2 (3h): Componentes principales (Map, Sidebar, Detail)
-- **[03-sesion-3-integracion.md](03-sesion-3-integracion.md)** — SESIÓN 3 (2h): Integración, ModeToggle, E2E testing, Build
+- **[01-sesion-1-servicios.md](../../sessions/01-sesion-1-servicios.md)** — SESIÓN 1 (2h): Tipos, servicios, store, useNests hook
+- **[02-sesion-2-componentes.md](../../sessions/02-sesion-2-componentes.md)** — SESIÓN 2 (3h): Componentes principales (Map, Sidebar, Detail)
+- **[03-sesion-3-integracion.md](../../sessions/03-sesion-3-integracion.md)** — SESIÓN 3 (2h): Integración, ModeToggle, E2E testing, Build
 
 ### 📁 Referencias
 - **[ESTRUCTURA-PROYECTO.md](ESTRUCTURA-PROYECTO.md)** — Árbol completo de archivos a crear, ubicaciones y responsabilidades
@@ -83,7 +83,7 @@ Implementar módulo **Nidos de Pokémon** como feature independiente e integrado
 ## 🗓️ Timeline Recomendado
 
 ### Fase 1 — Sesión 1: Servicios (2 horas)
-**Leer:** [01-sesion-1-servicios.md](01-sesion-1-servicios.md)
+**Leer:** [01-sesion-1-servicios.md](../../sessions/01-sesion-1-servicios.md)
 
 **Tareas:**
 1. Crear `src/types/nests.ts` (Nest, NestPokemon, NestBadge interfaces)
@@ -100,7 +100,7 @@ Implementar módulo **Nidos de Pokémon** como feature independiente e integrado
 ---
 
 ### Fase 2 — Sesión 2: Componentes (3 horas)
-**Leer:** [02-sesion-2-componentes.md](02-sesion-2-componentes.md)
+**Leer:** [02-sesion-2-componentes.md](../../sessions/02-sesion-2-componentes.md)
 
 **Tareas:**
 1. Crear `src/components/Nests/NestMapView.tsx` + NestPin.tsx
@@ -118,7 +118,7 @@ Implementar módulo **Nidos de Pokémon** como feature independiente e integrado
 ---
 
 ### Fase 3 — Sesión 3: Integración (2 horas)
-**Leer:** [03-sesion-3-integracion.md](03-sesion-3-integracion.md)
+**Leer:** [03-sesion-3-integracion.md](../../sessions/03-sesion-3-integracion.md)
 
 **Tareas:**
 1. Crear `src/components/UI/NestModeToggle.tsx` (botón Clima/Nidos)
