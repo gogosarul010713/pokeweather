@@ -1,0 +1,124 @@
+{
+  "nests": [
+    {
+      "id": "shinjuku-sandshrew",
+      "name": "Shinjuku Central Park",
+      "lat": 35.6839,
+      "lon": 139.7462,
+      "country": "Japan",
+      "region": "asia",
+      "city": "Tokyo",
+      "nestPokemon": [
+        {
+          "pokemonId": 27,
+          "name": "Sandshrew",
+          "type": "ground",
+          "rarity": "common",
+          "spawnRate": 45,
+          "minIV": 60
+        }
+      ],
+      "discoveredAt": "2026-01-15",
+      "lastVerifiedAt": "2026-04-09",
+      "radius": 250,
+      "accuracy": "high",
+      "badges": ["verified", "hot"]
+    },
+    {
+      "id": "harajuku-vulpix",
+      "name": "Harajuku Omotesando",
+      "lat": 35.6653,
+      "lon": 139.7297,
+      "country": "Japan",
+      "region": "asia",
+      "city": "Tokyo",
+      "nestPokemon": [
+        {
+          "pokemonId": 37,
+          "name": "Vulpix",
+          "type": "fire",
+          "rarity": "uncommon",
+          "spawnRate": 32,
+          "minIV": 55
+        }
+      ],
+      "discoveredAt": "2026-02-01",
+      "lastVerifiedAt": "2026-04-08",
+      "radius": 200,
+      "accuracy": "high",
+      "badges": ["verified"]
+    },
+    {
+      "id": "hyde-park-squirtle",
+      "name": "Hyde Park Serpentine",
+      "lat": 51.5044,
+      "lon": -0.1653,
+      "country": "United Kingdom",
+      "region": "europa",
+      "city": "London",
+      "nestPokemon": [
+        {
+          "pokemonId": 7,
+          "name": "Squirtle",
+          "type": "water",
+          "rarity": "rare",
+          "spawnRate": 28,
+          "minIV": 65
+        }
+      ],
+      "discoveredAt": "2026-01-20",
+      "lastVerifiedAt": "2026-04-09",
+      "radius": 300,
+      "accuracy": "high",
+      "badges": ["verified", "hot", "new"]
+    },
+    {
+      "id": "sydney-charmander",
+      "name": "Sydney Botanic Garden",
+      "lat": -33.8568,
+      "lon": 151.2153,
+      "country": "Australia",
+      "region": "oceania",
+      "city": "Sydney",
+      "nestPokemon": [
+        {
+          "pokemonId": 4,
+          "name": "Charmander",
+          "type": "fire",
+          "rarity": "uncommon",
+          "spawnRate": 38,
+          "minIV": 58
+        }
+      ],
+      "discoveredAt": "2026-03-05",
+      "lastVerifiedAt": "2026-04-09",
+      "radius": 280,
+      "accuracy": "medium",
+      "badges": ["verified", "common_spawn"]
+    },
+    {
+      "id": "central-park-bulbasaur",
+      "name": "Central Park Main Mall",
+      "lat": 40.785,
+      "lon": -73.9681,
+      "country": "United States",
+      "region": "america",
+      "city": "New York",
+      "nestPokemon": [
+        {
+          "pokemonId": 1,
+          "name": "Bulbasaur",
+          "type": "grass",
+          "rarity": "rare",
+          "spawnRate": 41,
+          "minIV": 70
+        }
+      ],
+      "discoveredAt": "2026-01-10",
+      "lastVerifiedAt": "2026-04-07",
+      "radius": 320,
+      "accuracy": "high",
+      "badges": ["verified", "hot"]
+    }
+  ]
+}
