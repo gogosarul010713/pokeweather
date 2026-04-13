@@ -19,7 +19,8 @@
       "Bash(ls -la ROADMAP*)",
       "Bash(cd /d c:\\\\Workspace\\\\React\\\\pokeweather)",
       "Bash(mv ROADMAP.md src/docs/ROADMAP.md)",
-      "Bash(ls -la src/docs/26-us706-*.md)"
+      "Bash(ls -la src/docs/26-us706-*.md)",
+      "Bash(ls -la *.md)"
     ]
   }
 }

@@ -1,22 +1,22 @@
-# 🚀 Continuación Próxima Sesión (2026-04-08 → 2026-04-???)
+# 🚀 Continuación Próxima Sesión (2026-04-13 Sprint 9)
 
-## 5 Líneas: Cómo Empezar
+**⚡ Quick Start para Nueva Sesión:**
 
-1. **Leer 2 documentos:** `src/docs/active-task.md` (status actual) + `src/docs/progress.md` (métricas).
-2. **Verificar estado:** `git log --oneline -5` debe mostrar `d98425e (docs)...` y estar en `refactor/firebase-v2`.
-3. **Elegir tarea:** US-803 (Dashboard Firestore, 3 SP) **RECOMENDADO** → o US-805 (Reportes, 5 SP) → o Benchmark final.
-4. **Leer especificación:** `src/docs/features/sprint8/us-[803|805].md` según elección.
-5. **Continuar:** `npm run dev` y empezar implementación.
+1. **Rama actual:** `develop` (v2.0.0-alpha) — Sprint 8 ✅ completado
+2. **Leer:** `src/docs/sprints/sprint-9/README.md` + `src/docs/sprints/00-INDEX.md`
+3. **Task:** US-901 Code Splitting (5 SP) — Bundle optimization
+4. **Verificar:** `npm run build` debe mostrar chunks < 500 kB
+5. **Empezar:** `npm run dev` y comienza Sprint 9
 
 ---
 
-## Estado Actual (End-of-Day 2026-04-08)
+## Estado Actual (2026-04-12 EOD)
 
-- **Rama:** `refactor/firebase-v2` (v2.0.0-alpha) → 6 commits
-- **Stable:** v1.0.0-stable (locked en main) → tag v1.0.0-stable
-- **Completadas:** US-706, US-804, US-801, US-802 (10 SP de 22)
-- **Firestore:** 2,256 writes/day (11.3% quota), 3 documentos en weather_catalog
-- **Build:** ✅ PASSED | **Known issues:** 1 (env vars warning — non-blocking)
+- **Rama:** `develop` (v2.0.0-alpha) — todas las US de Sprint 8 mergeadas
+- **Stable:** v1.0.0-stable (main, locked) — Sprint 1-7
+- **Completadas:** Sprint 8 ✅ 7 US (22 SP)
+- **Firestore:** 2,256 writes/day (11.3% quota)
+- **Build:** ✅ PASSED | Bundle: 1.7 MB gzipped
 
 ---
 

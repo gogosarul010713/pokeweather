@@ -46,10 +46,10 @@ Guía centralizada de navegación.
 - Detalles en [features/](features/) (16 archivos)
 - Resumen: Mapa + Búsqueda + Filtros + Responsive
 
-**Sprint 8** (resumen):
+**Sprint 8** (✅ COMPLETADO):
 - 7 US completadas (US-706 a US-806)
-- Ver: [04-archive/sprint-8.md](04-archive/sprint-8.md) para resumen completo
-- Detalles: [04-archive/](04-archive/) o [refactor-firebase/sprint/](refactor-firebase/sprint/) (histórico)
+- Ver: [sprints/sprint-8/README.md](sprints/sprint-8/README.md) para resumen
+- Detalles: [sprints/sprint-8/us/](sprints/sprint-8/us/) para documentación individual
 
 ---
 
@@ -88,13 +88,13 @@ Guía centralizada de navegación.
 
 | Necesidad | Documento |
 |-----------|-----------|
-| **📖 Visión del proyecto** | [📈 ROADMAP.md](../ROADMAP.md) — Sprints 8-12 |
+| **📖 Visión del proyecto** | [📈 ROADMAP.md](ROADMAP.md) — Sprints 8-12 |
 | Iniciar en el proyecto | [overview/01-project.md](overview/01-project.md) |
 | Entender clasificación clima → Pokémon | [architecture/03-weather-classification-algorithm.md](architecture/03-weather-classification-algorithm.md) |
 | Setup AccuWeather API | [technical/03-setup-accuweather.md](technical/03-setup-accuweather.md) |
 | Setup Firebase (Sprint 8) | [technical/08-firebase-setup.md](technical/08-firebase-setup.md) |
 | Debuggear caché | [technical/02-debugging-cache.md](technical/02-debugging-cache.md) |
-| Estado del sprint actual | [progress.md](progress.md) |
+| Ver próxima sesión | [NEXT-SESSION.md](NEXT-SESSION.md) |
 | Arquitectura Firestore | [architecture/09-weather-persistence-backend.md](architecture/09-weather-persistence-backend.md) |
 | Data schema Firestore | [architecture/10-firestore-data-schema.md](architecture/10-firestore-data-schema.md) |
-| Sprint 8 completado | [04-archive/sprint-8.md](04-archive/sprint-8.md) |
+| Firebase credentials setup | [technical/08-firebase-setup.md](technical/08-firebase-setup.md) |
