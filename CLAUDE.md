@@ -1,7 +1,14 @@
-# CLAUDE.md — Pokémon Weather Explorer v2
-# Este archivo lo lee Claude Code automáticamente al abrir el proyecto.
+# CLAUDE.md — Pokémon Weather Explorer
+
+Este archivo lo lee Claude Code automáticamente al abrir el proyecto.
+
+**IMPORTANTE:** Leer primero:
+1. 📈 [ROADMAP.md](ROADMAP.md) — Visión Sprints 8-12 (NUEVO 2026-04-12)
+2. 📚 [src/docs/INDEX.md](src/docs/INDEX.md) — Índice de documentación
+3. 📊 [src/docs/progress.md](src/docs/progress.md) — Estado actual del sprint
 
 ---
+
 # Rol y comportamiento
 
 Eres un experto arquitecto, diseñador y desarrollador senior.
@@ -49,23 +56,22 @@ Stack: React 18 + Vite 5 + Leaflet + Zustand 4 + AccuWeather API + idb-keyval + 
 
 ---
 
-## DOCUMENTACIÓN — carpeta docs/
+## DOCUMENTACIÓN — navegación centralizada
 
-Lee el archivo correspondiente antes de trabajar en esa área:
+**EMPIEZA AQUÍ:**
+- 📈 [ROADMAP.md](ROADMAP.md) — Visión de Sprints 8-12 (roadmap del proyecto)
+- 📚 [src/docs/INDEX.md](src/docs/INDEX.md) — Índice completo de documentación
 
-| Archivo | Cuándo leerlo |
-|---------|--------------|
-| `docs/01-project.md` | **Siempre** — arquitectura, estructura, convenciones |
-| `docs/02-design.md` | Al tocar `index.css` o cualquier componente |
-| `docs/03-weather-logic.md` | Al tocar `weatherService.js`, `useWeather.js`, `cacheService.js`, `mockCities.js` |
-| `docs/04-api.md` | Al tocar fetch de AccuWeather o lógica de caché de API |
-| `docs/05-backlog.md` | Para ver criterios de aceptación de cualquier US |
-| `docs/06-sprints.md` | Para ver el plan de sprints y en qué US estamos |
-| `docs/07-badges.md` | Sistema de categorías y filtros por badges (Sprint 5) |
-| `docs/08-git-workflow.md` | Flujo Git Flow, ramas, commits, versionado semántico |
-| `docs/09-cicd.md` | CI/CD: GitHub Actions + Vercel, secrets, branch protection, checklist |
-| `docs/20-weather-classification-algorithm.md` | Algoritmo completo de clasificación clima AccuWeather → Pokémon GO (tablas, umbrales, dedup) |
-| `docs/21-refactor-weather-algorithm.md` | Plan de refactorización del algoritmo de clima (8 pasos, status tracking) |
+**Por contexto de trabajo:**
+
+| Necesidad | Archivo |
+|-----------|---------|
+| Iniciar en el proyecto | [src/docs/overview/01-project.md](src/docs/overview/01-project.md) |
+| Decisiones arquitectónicas | [src/docs/architecture/](src/docs/architecture/) (09 archivos) |
+| Setup credenciales Firebase | [src/docs/technical/08-firebase-setup.md](src/docs/technical/08-firebase-setup.md) |
+| Data schema Firestore | [src/docs/architecture/10-firestore-data-schema.md](src/docs/architecture/10-firestore-data-schema.md) |
+| Sprint 8 detalles | [src/docs/04-archive/sprint-8.md](src/docs/04-archive/sprint-8.md) |
+| Estado actual del sprint | [src/docs/progress.md](src/docs/progress.md) |
 
 ---
 
@@ -95,39 +101,24 @@ VITE_ACCUWEATHER_KEY=   # ⚠️ REQUERIDA (sin key → error de inicialización
 
 ---
 
-## SPRINT ACTUAL
+## ESTADO ACTUAL
 
-**Sprint:** 7 — Filtros + Ordenamiento ✅ **EN PROGRESO (2026-04-02)**
+**Sprint 8:** ✅ **COMPLETADO** (2026-04-08 → 2026-04-12)
 
-**Fase 1 (2026-04-02):** ✅ COMPLETADO
-- ✅ **US-301-303** Filtros de header completamente funcionales
-  - SearchInput: Búsqueda por nombre/país/coordenadas
-  - FilterPanel: Continente, Clima, Tipo Pokémon, Ordenamiento
-- ✅ **DESCUBRIMIENTO:** El ordenamiento descendente NO era un bug, funcionaba desde el inicio
-  - Botón toggle ↑/↓ existía pero no era evidente en UI
-  - Solución: Agregar `sortDirection` a dependencias de `useMemo` en App.tsx
-  - Resultado: Toggle ahora actualiza la lista inmediatamente
-- ✅ **FIX TIMEZONE:** AccuWeather retorna timezone pero no se extraía
-  - Creada interfaz LocationData con timezone
-  - Se extrae correctamente desde API
-  - Hora local ahora es diferente para cada ciudad
-- ✅ **E2E Validation:** 5/5 Playwright tests PASSED
-  - Labels dinámicos en dropdown
-  - Toggle bidireccional (asc ↔ desc)
-  - Todas las opciones (Nombre, Densidad, Rating, Hora Local)
-  - Múltiples ciclos sin degradación
-- ✅ Build exitoso (npm run build ✓)
-- ✅ Documentación:
-  - BRANCH-STRATEGY.md (versiones y cómo cambiar)
-  - FIRST-SORT-FIX-VERSION.md (primer fix estable)
+**7/7 US COMPLETADAS** (22 SP)
+- ✅ US-706: Bottom Sheet mobile (z-index 1001 fix)
+- ✅ US-804: Firebase + Firestore setup
+- ✅ US-801: Persistir pronóstico (12h snapshots)
+- ✅ US-802: Catálogo estático
+- ✅ US-806: TTL automático (7 días)
+- ✅ US-803: Dashboard Firestore
+- ✅ US-805: Reportes clasificación
 
-**Métricas:**
-- Filtros: 100% funcionales (4/4 criterios)
-- Ordenamiento: ✅ Asc/Desc funcional
-- Validación: 5/5 E2E tests PASSED
-- Estado rama: Merged a sprint-7 (commit f0e45ca)
+**Versión:** v2.0.0-alpha — merged a develop (commit: 5c48694)
 
-**Próximo:** Sprint 7 Fase 2 — Responsive (Tablet + Mobile layout)
+**Bundle:** ⚠️ +813% (194 kB → 1,771 kB) — será optimizado Sprint 9
+
+**Próximo:** Sprint 9 — Bundle Optimization (2026-04-13)
 
 ---
 

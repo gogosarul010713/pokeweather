@@ -1,8 +1,8 @@
 # 🎯 Sprint 8 — COMPLETADO + Arquitectura Validada
 
 **Período:** 2026-04-08 → 2026-04-12  
-**Estado:** ✅ **SPRINT CERRADO** | 🔄 **Benchmark pendiente**  
-**Progreso:** 7/7 US — 19/22 SP (86%)
+**Estado:** ✅ **SPRINT CERRADO** | ✅ **BENCHMARK COMPLETADO** | ✅ **MERGED a develop**  
+**Progreso:** 7/7 US — 19/22 SP (86%) | 🎉 v2.0.0-alpha finalizado y merged
 
 ---
 
@@ -56,30 +56,29 @@
 
 ---
 
-## 🎯 Próximas Tareas
+## 🎯 Tareas Completadas — 2026-04-12
 
-### 📊 Benchmark v1 vs v2 (PENDIENTE)
+### ✅ 📊 Benchmark v1 vs v2 — COMPLETADO
 
 **Documento:** `BENCHMARK-v1-vs-v2.md` (en raíz)
 
-**3 fases:**
-1. Validar funcionalidades en v1 (main) vs v2 (refactor/firebase-v2)
-2. Medir performance: bundle size, Lighthouse, network requests
-3. Documentar hallazgos y recomendación de merge
+**Hallazgos:**
+- ✅ v1 features: 100% funcionales (mapa, búsqueda, filtros, ordenamiento)
+- ✅ v2 features: +7 nuevas (Dashboard, Reportes, Persistencia Firestore, TTL)
+- ⚠️ Bundle size: +813% (194 kB → 1,771 kB) debido a Firebase SDK
+- ✅ Recomendación: MERGE porque valor > costo
 
-**Tiempo estimado:** 60 min
+**Commit de merge:** `5c48694` (2026-04-12)
 
-### 📤 Merge a develop (después de benchmark)
+### ✅ 📤 Merge a develop — COMPLETADO
 
 ```bash
-git checkout develop
-git pull origin develop
-git merge refactor/firebase-v2
-# Resolver conflictos si hay
-git push origin develop
+✅ git checkout develop
+✅ git merge refactor/firebase-v2 (success, no conflicts)
+✅ git push origin develop
 ```
 
-### 🚀 Release v2.0.0-alpha (opcional)
+### 🚀 Release v2.0.0-alpha (OPCIONAL)
 
 ```bash
 git tag v2.0.0-alpha
@@ -97,12 +96,15 @@ git push origin v2.0.0-alpha
 
 ---
 
-## 💾 Estado Guardado — 2026-04-12
+## 💾 Estado Guardado — 2026-04-12 23:59 UTC
 
-**Rama:** `refactor/firebase-v2` (v2.0.0-alpha)  
-**Build:** ✅ PASSED  
-**Tests:** Validación manual completada  
-**Decisiones:** Documentadas en `decisions.md`
+**Rama:** `develop` (v2.0.0-alpha merged)  
+**Build:** ✅ PASSED (v1: 194 kB | v2: 1,771 kB)  
+**Tests:** ✅ Validación manual completada  
+**Benchmark:** ✅ COMPLETADO — Documento: `BENCHMARK-v1-vs-v2.md`  
+**Merge:** ✅ COMPLETADO a develop (commit: `5c48694`)
 
-**Para retomar:**
-"Continuemos con benchmark v1 vs v2 o merge a develop"
+**Próximas opciones:**
+1. 🏷️ Release v2.0.0-alpha (tag) — opcional
+2. 🎯 Sprint 9: Bundle optimization (code-splitting, lazy loading)
+3. 🏠 Nests feature (parallel branch)
