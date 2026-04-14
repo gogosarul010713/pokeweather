@@ -29,24 +29,24 @@ Implementar un módulo completo de **Nidos de Pokémon** que funcione en paralel
 2. Ve directo a [ESTRUCTURA-PROYECTO.md](ESTRUCTURA-PROYECTO.md) — lista de archivos a crear
 
 ### Opción 2: Arquitectura Completa (20 min)
-1. Lee [../../architecture/11-nests-architecture.md](../../architecture/11-nests-architecture.md) — design de módulos
-2. Lee [../../architecture/12-nests-data-dictionary.md](../../architecture/12-nests-data-dictionary.md) — tipos de datos
+1. Lee [../architecture/11-nests-architecture.md](../architecture/11-nests-architecture.md) — design de módulos
+2. Lee [../architecture/12-nests-data-dictionary.md](../architecture/12-nests-data-dictionary.md) — tipos de datos
 3. Lee [ESTRUCTURA-PROYECTO.md](ESTRUCTURA-PROYECTO.md) — dónde va cada archivo
 
 ### Opción 3: Sesión por Sesión (7 horas)
-1. **Sesión 1 (2h):** Sigue [01-sesion-1-servicios.md](../../sessions/01-sesion-1-servicios.md) paso a paso
-2. **Sesión 2 (3h):** Sigue [02-sesion-2-componentes.md](../../sessions/02-sesion-2-componentes.md) paso a paso
-3. **Sesión 3 (2h):** Sigue [03-sesion-3-integracion.md](../../sessions/03-sesion-3-integracion.md) paso a paso
+1. **Sesión 1 (2h):** Sigue [01-sesion-1-servicios.md](../sessions/01-sesion-1-servicios.md) paso a paso
+2. **Sesión 2 (3h):** Sigue [02-sesion-2-componentes.md](../sessions/02-sesion-2-componentes.md) paso a paso
+3. **Sesión 3 (2h):** Sigue [03-sesion-3-integracion.md](../sessions/03-sesion-3-integracion.md) paso a paso
 
 ### Opción 4: Por US Individual (Flexible)
 Cada User Story está documentada en [US/](US/) — puedes trabajar en el orden que prefieras:
-- [US/US-801.md](US/US-801.md) — Cargar datos
-- [US/US-802.md](US/US-802.md) — Pins en mapa
-- [US/US-803.md](US/US-803.md) — Sidebar
-- [US/US-804.md](US/US-804.md) — Detalle panel
-- [US/US-805.md](US/US-805.md) — Toggle modo
-- [US/US-806.md](US/US-806.md) — Caché IndexedDB
-- [US/US-807.md](US/US-807.md) — Popup tooltip
+- [../sprints/sprint-9/US/US-801.md](../sprints/sprint-9/US/US-801.md) — Cargar datos
+- [../sprints/sprint-9/US/US-802.md](../sprints/sprint-9/US/US-802.md) — Pins en mapa
+- [../sprints/sprint-9/US/US-803.md](../sprints/sprint-9/US/US-803.md) — Sidebar
+- [../sprints/sprint-9/US/US-804.md](../sprints/sprint-9/US/US-804.md) — Detalle panel
+- [../sprints/sprint-9/US/US-805.md](../sprints/sprint-9/US/US-805.md) — Toggle modo
+- [../sprints/sprint-9/US/US-806.md](../sprints/sprint-9/US/US-806.md) — Caché IndexedDB
+- [../sprints/sprint-9/US/US-807.md](../sprints/sprint-9/US/US-807.md) — Popup tooltip
 
 ---
 
@@ -153,27 +153,27 @@ NIDOS (Módulo Independiente)
 - **[00-index.md](00-index.md)** — índice estructurado
 
 ### Diseño y Arquitectura
-- **[../../architecture/11-nests-architecture.md](../../architecture/11-nests-architecture.md)** — módulos, responsabilidades, diagramas
-- **[../../architecture/12-nests-data-dictionary.md](../../architecture/12-nests-data-dictionary.md)** — interfaces TS, schemas JSON
+- **[../architecture/11-nests-architecture.md](../architecture/11-nests-architecture.md)** — módulos, responsabilidades, diagramas
+- **[../architecture/12-nests-data-dictionary.md](../architecture/12-nests-data-dictionary.md)** — interfaces TS, schemas JSON
 
 ### User Stories
-- **[US/US-801.md](US/US-801.md)** — Cargar nidos
-- **[US/US-802.md](US/US-802.md)** — Pins en mapa
-- **[US/US-803.md](US/US-803.md)** — Sidebar
-- **[US/US-804.md](US/US-804.md)** — Detalle
-- **[US/US-805.md](US/US-805.md)** — Toggle
-- **[US/US-806.md](US/US-806.md)** — Caché
-- **[US/US-807.md](US/US-807.md)** — Popup
+- **[../sprints/sprint-9/US/US-801.md](../sprints/sprint-9/US/US-801.md)** — Cargar nidos
+- **[../sprints/sprint-9/US/US-802.md](../sprints/sprint-9/US/US-802.md)** — Pins en mapa
+- **[../sprints/sprint-9/US/US-803.md](../sprints/sprint-9/US/US-803.md)** — Sidebar
+- **[../sprints/sprint-9/US/US-804.md](../sprints/sprint-9/US/US-804.md)** — Detalle
+- **[../sprints/sprint-9/US/US-805.md](../sprints/sprint-9/US/US-805.md)** — Toggle
+- **[../sprints/sprint-9/US/US-806.md](../sprints/sprint-9/US/US-806.md)** — Caché
+- **[../sprints/sprint-9/US/US-807.md](../sprints/sprint-9/US/US-807.md)** — Popup
 
 ### Plan de Trabajo
-- **[01-sesion-1-servicios.md](../../sessions/01-sesion-1-servicios.md)** — guía paso a paso Sesión 1
-- **[02-sesion-2-componentes.md](../../sessions/02-sesion-2-componentes.md)** — guía paso a paso Sesión 2
-- **[03-sesion-3-integracion.md](../../sessions/03-sesion-3-integracion.md)** — guía paso a paso Sesión 3
+- **[01-sesion-1-servicios.md](../sessions/01-sesion-1-servicios.md)** — guía paso a paso Sesión 1
+- **[02-sesion-2-componentes.md](../sessions/02-sesion-2-componentes.md)** — guía paso a paso Sesión 2
+- **[03-sesion-3-integracion.md](../sessions/03-sesion-3-integracion.md)** — guía paso a paso Sesión 3
 
 ### Referencias
 - **[ESTRUCTURA-PROYECTO.md](ESTRUCTURA-PROYECTO.md)** — árbol de archivos, ubicaciones, responsabilidades
 - **[CHECKLIST-FASE-1.md](CHECKLIST-FASE-1.md)** — checklist maestro (16 tareas granulares)
-- **[../../overview/04-nests-design-system.md](../../overview/04-nests-design-system.md)** — paleta CSS, colores, badges
+- **[../overview/04-nests-design-system.md](../overview/04-nests-design-system.md)** — paleta CSS, colores, badges
 
 ---
 
@@ -201,9 +201,9 @@ R: Este sprint es E2E (Playwright). Los tests unitarios pueden agregarse en futu
 
 ## 🔗 Enlaces Útiles
 
-- **Feature Nests (Punto de Entrada):** [../../features/nests/](../../features/nests/)
-- **Todos los Sprints:** [../00-INDEX.md](../00-INDEX.md)
-- **Proyecto Completo:** [../../01-project.md](../../overview/01-project.md)
+- **Feature Nests (Punto de Entrada):** [README.md](README.md)
+- **Todos los Sprints:** [../sprints/00-INDEX.md](../sprints/00-INDEX.md)
+- **Proyecto Completo:** [../overview/01-project.md](../overview/01-project.md)
 
 ---
 

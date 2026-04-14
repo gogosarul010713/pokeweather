@@ -12,34 +12,34 @@
 ## 📚 Documentación por Sección
 
 ### 🏗️ Arquitectura (leer primero)
-- **[11-nests-architecture.md](../../architecture/11-nests-architecture.md)** — Diseño de módulos, separación Nidos vs Clima, responsabilidades
-- **[12-nests-data-dictionary.md](../../architecture/12-nests-data-dictionary.md)** — Interfaces TypeScript completas, schemas JSON, modelos de datos
+- **[11-nests-architecture.md](../architecture/11-nests-architecture.md)** — Diseño de módulos, separación Nidos vs Clima, responsabilidades
+- **[12-nests-data-dictionary.md](../architecture/12-nests-data-dictionary.md)** — Interfaces TypeScript completas, schemas JSON, modelos de datos
 
 ### 📋 User Stories Detalladas
 Cada US contiene criterios de aceptación, pseudocódigo y pasos de implementación:
 
 | US | Descripción | SP | Prioridad |
 |----|-----------|----|-----------|
-| **[US-801](US/US-801.md)** | Cargar 5 nidos desde JSON → IndexedDB | 2 | P0 |
-| **[US-802](US/US-802.md)** | Renderizar pins púrpura en mapa con hover/clic | 3 | P0 |
-| **[US-803](US/US-803.md)** | Listado de nidos en sidebar (modos list/detalle/favoritos) | 2 | P0 |
-| **[US-804](US/US-804.md)** | Panel deslizante con info completa del nido | 3 | P0 |
-| **[US-805](US/US-805.md)** | Toggle para cambiar entre Clima ⇄ Nidos | 2 | P0 |
-| **[US-806](US/US-806.md)** | Cache persistente en IndexedDB (CRUD) | 2 | P0 |
-| **[US-807](US/US-807.md)** | Popup de información rápida al clic en pins | 2 | P0 |
+| **[US-801](../sprints/sprint-9/US/US-801.md)** | Cargar 5 nidos desde JSON → IndexedDB | 2 | P0 |
+| **[US-802](../sprints/sprint-9/US/US-802.md)** | Renderizar pins púrpura en mapa con hover/clic | 3 | P0 |
+| **[US-803](../sprints/sprint-9/US/US-803.md)** | Listado de nidos en sidebar (modos list/detalle/favoritos) | 2 | P0 |
+| **[US-804](../sprints/sprint-9/US/US-804.md)** | Panel deslizante con info completa del nido | 3 | P0 |
+| **[US-805](../sprints/sprint-9/US/US-805.md)** | Toggle para cambiar entre Clima ⇄ Nidos | 2 | P0 |
+| **[US-806](../sprints/sprint-9/US/US-806.md)** | Cache persistente en IndexedDB (CRUD) | 2 | P0 |
+| **[US-807](../sprints/sprint-9/US/US-807.md)** | Popup de información rápida al clic en pins | 2 | P0 |
 
 ### 🛠️ Plan de Trabajo por Sesión
 
-- **[01-sesion-1-servicios.md](../../sessions/01-sesion-1-servicios.md)** — SESIÓN 1 (2h): Tipos, servicios, store, useNests hook
-- **[02-sesion-2-componentes.md](../../sessions/02-sesion-2-componentes.md)** — SESIÓN 2 (3h): Componentes principales (Map, Sidebar, Detail)
-- **[03-sesion-3-integracion.md](../../sessions/03-sesion-3-integracion.md)** — SESIÓN 3 (2h): Integración, ModeToggle, E2E testing, Build
+- **[01-sesion-1-servicios.md](../sessions/01-sesion-1-servicios.md)** — SESIÓN 1 (2h): Tipos, servicios, store, useNests hook
+- **[02-sesion-2-componentes.md](../sessions/02-sesion-2-componentes.md)** — SESIÓN 2 (3h): Componentes principales (Map, Sidebar, Detail)
+- **[03-sesion-3-integracion.md](../sessions/03-sesion-3-integracion.md)** — SESIÓN 3 (2h): Integración, ModeToggle, E2E testing, Build
 
 ### 📁 Referencias
 - **[ESTRUCTURA-PROYECTO.md](ESTRUCTURA-PROYECTO.md)** — Árbol completo de archivos a crear, ubicaciones y responsabilidades
 - **[CHECKLIST-FASE-1.md](CHECKLIST-FASE-1.md)** — Checklist maestro con todas las tareas granulares por sesión
 
 ### 🎨 Diseño
-- **[04-nests-design-system.md](../../overview/04-nests-design-system.md)** — Paleta de colores, CSS variables, estilos de badges y tipos Pokémon
+- **[04-nests-design-system.md](../overview/04-nests-design-system.md)** — Paleta de colores, CSS variables, estilos de badges y tipos Pokémon
 
 ---
 
@@ -83,7 +83,7 @@ Implementar módulo **Nidos de Pokémon** como feature independiente e integrado
 ## 🗓️ Timeline Recomendado
 
 ### Fase 1 — Sesión 1: Servicios (2 horas)
-**Leer:** [01-sesion-1-servicios.md](../../sessions/01-sesion-1-servicios.md)
+**Leer:** [01-sesion-1-servicios.md](../sessions/01-sesion-1-servicios.md)
 
 **Tareas:**
 1. Crear `src/types/nests.ts` (Nest, NestPokemon, NestBadge interfaces)
@@ -100,7 +100,7 @@ Implementar módulo **Nidos de Pokémon** como feature independiente e integrado
 ---
 
 ### Fase 2 — Sesión 2: Componentes (3 horas)
-**Leer:** [02-sesion-2-componentes.md](../../sessions/02-sesion-2-componentes.md)
+**Leer:** [02-sesion-2-componentes.md](../sessions/02-sesion-2-componentes.md)
 
 **Tareas:**
 1. Crear `src/components/Nests/NestMapView.tsx` + NestPin.tsx
@@ -118,7 +118,7 @@ Implementar módulo **Nidos de Pokémon** como feature independiente e integrado
 ---
 
 ### Fase 3 — Sesión 3: Integración (2 horas)
-**Leer:** [03-sesion-3-integracion.md](../../sessions/03-sesion-3-integracion.md)
+**Leer:** [03-sesion-3-integracion.md](../sessions/03-sesion-3-integracion.md)
 
 **Tareas:**
 1. Crear `src/components/UI/NestModeToggle.tsx` (botón Clima/Nidos)
@@ -163,8 +163,8 @@ Implementar módulo **Nidos de Pokémon** como feature independiente e integrado
 ## 🚀 Checklist Rápido
 
 ### Antes de Empezar
-- [ ] Leer [11-nests-architecture.md](../../architecture/11-nests-architecture.md) (15 min)
-- [ ] Leer [12-nests-data-dictionary.md](../../architecture/12-nests-data-dictionary.md) (10 min)
+- [ ] Leer [11-nests-architecture.md](../architecture/11-nests-architecture.md) (15 min)
+- [ ] Leer [12-nests-data-dictionary.md](../architecture/12-nests-data-dictionary.md) (10 min)
 - [ ] Crear rama `sprint-9-nests` (ya hecho ✓)
 - [ ] Confirmar node_modules actualizado (`npm install`)
 
@@ -193,9 +193,9 @@ Implementar módulo **Nidos de Pokémon** como feature independiente e integrado
 
 ## 📞 Referencias Cruzadas
 
-- **Features Nests (Punto de Entrada):** [../../features/nests/README.md](../../features/nests/README.md)
-- **Índice de Sprints:** [../00-INDEX.md](../00-INDEX.md)
-- **Arquitectura General:** [../../architecture/01-project.md](../../architecture/01-project.md)
+- **Features Nests (Punto de Entrada):** [README.md](README.md)
+- **Índice de Sprints:** [../sprints/00-INDEX.md](../sprints/00-INDEX.md)
+- **Proyecto Completo:** [../overview/01-project.md](../overview/01-project.md)
 
 ---
 

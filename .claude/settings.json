@@ -30,7 +30,10 @@
       "Bash(xargs -I {} basename {})",
       "Read(//c/Workspace/React/pokeweather-nests/**)",
       "Bash(mv src/docs/sprints/sprint-9/09-nests/US/* src/docs/sprints/sprint-9/US/)",
-      "Bash(mv src/docs/sprints/sprint-9/09-nests/*.md src/docs/sprints/sprint-9/)"
+      "Bash(mv src/docs/sprints/sprint-9/09-nests/*.md src/docs/sprints/sprint-9/)",
+      "Bash(sed -i 's|\\\\[../sprints/sprint-9/US/US-\\\\\\([0-9]*\\\\\\)\\\\.md\\\\]\\(US/US-\\\\1\\\\.md\\)|[../sprints/sprint-9/US/US-\\\\1.md]\\(../sprints/sprint-9/US/US-\\\\1.md\\)|g' src/docs/features/nests/README.md)",
+      "Bash(sed -i 's|\\\\[../../features/nests/\\\\]\\(../../features/nests/\\)|[Features Nests]\\(./\\)|g' src/docs/features/nests/README.md)",
+      "Bash(sed -i 's|\\\\[../../01-project\\\\.md\\\\]\\(../overview/01-project\\\\.md\\)|\\\\[../overview/01-project.md\\\\]\\(../overview/01-project.md\\)|g' src/docs/features/nests/README.md)"
     ],
     "additionalDirectories": [
       "c:\\Workspace\\React\\pokeweather-nests\\src\\docs\\sprints\\09-nests",
