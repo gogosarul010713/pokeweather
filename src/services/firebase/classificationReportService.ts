@@ -1,10 +1,5 @@
-import {
-  collection,
-  addDoc,
-  getDocs,
-  Timestamp,
-} from 'firebase/firestore'
-import { db } from './index'
+import { getDb } from './firebaseConfig'
+import type { Timestamp } from 'firebase/firestore'
 import type { City } from '../../store/useStore'
 
 /**
@@ -48,6 +43,12 @@ export async function saveClassificationReport(
   comment: string,
   dateHour?: string
 ): Promise<string> {
+  // Dynamic import Firestore functions (lazy)
+  const { collection, addDoc, Timestamp } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
   try {
     if (!db) {
       throw new Error('Firebase no inicializado')
@@ -93,14 +94,25 @@ export async function saveClassificationReport(
 export async function getRecentClassificationReports(
   hours: number = 24
 ): Promise<ClassificationReport[]> {
+  // Dynamic import Firestore functions (lazy)
+  const { collection, getDocs, Timestamp } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
   try {
     const minDate = new Timestamp(
       Math.floor((Date.now() - hours * 60 * 60 * 1000) / 1000),
       0
     )
 
+    if (!db) {
+      console.warn('[Firebase] Firestore not initialized, returning empty reports')
+      return []
+    }
+
     // Fallback: obtener sin where/orderBy para evitar índice, procesar en memoria
-    const allReports = await getDocs(collection(db!, 'classification_reports'))
+    const allReports = await getDocs(collection(db, 'classification_reports'))
 
     const filtered = allReports.docs
       .map((doc) => ({
@@ -127,8 +139,19 @@ export async function getRecentClassificationReports(
 export async function getCityClassificationReports(
   cityId: string
 ): Promise<ClassificationReport[]> {
+  // Dynamic import Firestore functions (lazy)
+  const { collection, getDocs } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
   try {
-    const allReports = await getDocs(collection(db!, 'classification_reports'))
+    if (!db) {
+      console.warn('[Firebase] Firestore not initialized, returning empty reports')
+      return []
+    }
+
+    const allReports = await getDocs(collection(db, 'classification_reports'))
 
     const filtered = allReports.docs
       .map((doc) => ({
@@ -157,8 +180,19 @@ export async function isDuplicateReport(
   cityId: string,
   dateHour: string
 ): Promise<boolean> {
+  // Dynamic import Firestore functions (lazy)
+  const { collection, getDocs } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
   try {
-    const allReports = await getDocs(collection(db!, 'classification_reports'))
+    if (!db) {
+      console.warn('[Firebase] Firestore not initialized, skipping duplicate check')
+      return false
+    }
+
+    const allReports = await getDocs(collection(db, 'classification_reports'))
 
     const exists = allReports.docs.some((doc) => {
       const data = doc.data() as Omit<ClassificationReport, 'report_id'>

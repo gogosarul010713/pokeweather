@@ -1,30 +1,16 @@
 import { useState } from 'react'
-import { getRetentionDays, setRetentionDays } from '../../services/history/weatherHistoryService'
-import HistoryGrid from './HistoryGrid'
-import CachePanel from './CachePanel'
-import PrecisionMetrics from './PrecisionMetrics'
 import ReportsPanel from './ReportsPanel'
-import type { City } from '../../store/useStore'
 
 interface TestingToolsProps {
-  cities: City[]
   isOpen: boolean
   onClose: () => void
 }
 
-type TabType = 'historial' | 'cache' | 'metricas' | 'reportes'
+type TabType = 'reportes'
 
-export default function TestingTools({ cities, isOpen, onClose }: TestingToolsProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('historial')
-  const [retentionDays, setRetentionDaysLocal] = useState<7 | 14 | 30>(
-    (getRetentionDays() as 7 | 14 | 30) || 7
-  )
+export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('reportes')
   const [isMaximized, setIsMaximized] = useState(false)
-
-  const handleRetentionChange = (days: 7 | 14 | 30) => {
-    setRetentionDaysLocal(days)
-    setRetentionDays(days)
-  }
 
   const handleToggleMaximize = () => {
     setIsMaximized(!isMaximized)
@@ -298,24 +284,6 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
           {/* Tab Navigation */}
           <div className="tt-tabs">
             <button
-              className={`tt-tab ${activeTab === 'historial' ? 'active' : ''}`}
-              onClick={() => setActiveTab('historial')}
-            >
-              📊 Historial
-            </button>
-            <button
-              className={`tt-tab ${activeTab === 'cache' ? 'active' : ''}`}
-              onClick={() => setActiveTab('cache')}
-            >
-              🔧 Caché
-            </button>
-            <button
-              className={`tt-tab ${activeTab === 'metricas' ? 'active' : ''}`}
-              onClick={() => setActiveTab('metricas')}
-            >
-              📈 Métricas
-            </button>
-            <button
               className={`tt-tab ${activeTab === 'reportes' ? 'active' : ''}`}
               onClick={() => setActiveTab('reportes')}
             >
@@ -325,21 +293,6 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
 
           {/* Content */}
           <div className="tt-content">
-            {/* Tab: Historial */}
-            {activeTab === 'historial' && (
-              <HistoryGrid
-                cities={cities}
-                retentionDays={retentionDays}
-                onRetentionChange={handleRetentionChange}
-              />
-            )}
-
-            {/* Tab: Caché */}
-            {activeTab === 'cache' && <CachePanel />}
-
-            {/* Tab: Métricas */}
-            {activeTab === 'metricas' && <PrecisionMetrics retentionDays={retentionDays} />}
-
             {/* Tab: Reportes */}
             {activeTab === 'reportes' && <ReportsPanel />}
           </div>

@@ -1,0 +1,162 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "PokéWeather Map Tracker" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+        - generic [ref=e13]:
+          - generic [ref=e14]: PokéWeather
+          - generic [ref=e15]: Map Tracker
+      - generic [ref=e17]:
+        - button "Todas ▼" [ref=e19] [cursor=pointer]:
+          - generic [ref=e21]: Todas
+          - generic [ref=e22]: ▼
+        - button "Clima ▼" [ref=e24] [cursor=pointer]:
+          - generic [ref=e26]: Clima
+          - generic [ref=e27]: ▼
+        - button "Tipo ▼" [ref=e29] [cursor=pointer]:
+          - generic [ref=e31]: Tipo
+          - generic [ref=e32]: ▼
+        - button "Ordenar por ▼" [ref=e34] [cursor=pointer]:
+          - generic [ref=e36]: Ordenar por
+          - generic [ref=e37]: ▼
+        - generic [ref=e40]:
+          - img
+          - textbox "Buscar ciudad" [ref=e41]:
+            - /placeholder: Buscar ciudad...
+      - generic [ref=e42]:
+        - button "Testing Tools" [ref=e43] [cursor=pointer]: 🧪
+        - generic [ref=e44]: ✓ Ahora
+        - button "Cambiar a tema claro" [ref=e45] [cursor=pointer]: ☀️
+  - generic [ref=e46]:
+    - complementary [ref=e47]:
+      - generic [ref=e48]:
+        - button "📋" [ref=e49] [cursor=pointer]
+        - button "📍" [ref=e50] [cursor=pointer]
+        - button "⭐" [ref=e51] [cursor=pointer]
+      - generic [ref=e53]:
+        - generic [ref=e55]: 📋 Ciudades • 5
+        - generic [ref=e56]:
+          - generic [ref=e58] [cursor=pointer]:
+            - img "windy" [ref=e59]
+            - generic [ref=e60]:
+              - generic [ref=e61]:
+                - generic "Pier 39, San Francisco" [ref=e62]
+                - generic [ref=e63]:
+                  - img "flying" [ref=e64]
+                  - img "dragon" [ref=e65]
+                  - img "psychic" [ref=e66]
+                - button "🤍" [ref=e67]
+              - generic [ref=e68]:
+                - generic [ref=e69]: EE.UU.
+                - generic [ref=e70]: 13/04 · 08:21 PM
+          - generic [ref=e72] [cursor=pointer]:
+            - img "partly" [ref=e73]
+            - generic [ref=e74]:
+              - generic [ref=e75]:
+                - generic "Times Square / Midtown, NYC" [ref=e76]
+                - generic [ref=e77]:
+                  - img "normal" [ref=e78]
+                  - img "rock" [ref=e79]
+                - button "🤍" [ref=e80]
+              - generic [ref=e81]:
+                - generic [ref=e82]: EE.UU.
+                - generic [ref=e83]: 13/04 · 11:21 PM
+          - generic [ref=e85] [cursor=pointer]:
+            - img "windy" [ref=e86]
+            - generic [ref=e87]:
+              - generic [ref=e88]:
+                - generic "Zaragoza Centro" [ref=e89]
+                - generic [ref=e90]:
+                  - img "flying" [ref=e91]
+                  - img "dragon" [ref=e92]
+                  - img "psychic" [ref=e93]
+                - button "🤍" [ref=e94]
+              - generic [ref=e95]:
+                - generic [ref=e96]: España
+                - generic [ref=e97]: 14/04 · 05:21 AM
+          - generic [ref=e99] [cursor=pointer]:
+            - img "windy" [ref=e100]
+            - generic [ref=e101]:
+              - generic [ref=e102]:
+                - generic "Auckland Waterfront" [ref=e103]
+                - generic [ref=e104]:
+                  - img "flying" [ref=e105]
+                  - img "dragon" [ref=e106]
+                  - img "psychic" [ref=e107]
+                - button "🤍" [ref=e108]
+              - generic [ref=e109]:
+                - generic [ref=e110]: Nueva Zelanda
+                - generic [ref=e111]: 14/04 · 03:21 PM
+          - generic [ref=e113] [cursor=pointer]:
+            - img "partly" [ref=e114]
+            - generic [ref=e115]:
+              - generic [ref=e116]:
+                - generic "Itaewon / Jung-gu, Seúl" [ref=e117]
+                - generic [ref=e118]:
+                  - img "normal" [ref=e119]
+                  - img "rock" [ref=e120]
+                - button "🤍" [ref=e121]
+              - generic [ref=e122]:
+                - generic [ref=e123]: Corea del Sur
+                - generic [ref=e124]: 14/04 · 12:21 PM
+    - main [ref=e125]:
+      - generic [ref=e126]:
+        - generic [ref=e127]:
+          - generic:
+            - generic:
+              - button "👥" [ref=e128] [cursor=pointer]:
+                - generic [ref=e129]:
+                  - img [ref=e130]
+                  - generic [ref=e133]: 👥
+              - button "💪 👥" [ref=e134] [cursor=pointer]:
+                - generic [ref=e135]:
+                  - img [ref=e136]
+                  - generic [ref=e139]: 💪
+                  - generic [ref=e140]: 👥
+              - button "🎯 👥" [ref=e141] [cursor=pointer]:
+                - generic [ref=e142]:
+                  - img [ref=e143]
+                  - generic [ref=e146]: 🎯
+                  - generic [ref=e147]: 👥
+              - button "👥" [ref=e148] [cursor=pointer]:
+                - generic [ref=e149]:
+                  - img [ref=e150]
+                  - generic [ref=e153]: 👥
+              - button "✨" [ref=e154] [cursor=pointer]:
+                - generic [ref=e155]:
+                  - img [ref=e156]
+                  - generic [ref=e159]: ✨
+          - generic:
+            - generic [ref=e160]:
+              - button "Zoom in" [ref=e161] [cursor=pointer]: +
+              - button "Zoom out" [disabled] [ref=e162]: −
+            - generic [ref=e163]:
+              - link "Leaflet" [ref=e164] [cursor=pointer]:
+                - /url: https://leafletjs.com
+                - img [ref=e165]
+                - text: Leaflet
+              - text: "| ©"
+              - link "OSM" [ref=e169] [cursor=pointer]:
+                - /url: https://www.openstreetmap.org/copyright
+              - text: ©
+              - link "CARTO" [ref=e170] [cursor=pointer]:
+                - /url: https://carto.com/
+        - generic [ref=e171]:
+          - generic [ref=e172] [cursor=pointer]:
+            - generic [ref=e173]: Leyenda
+            - generic [ref=e174]: ▼
+          - generic [ref=e175]:
+            - button "Clima" [ref=e176] [cursor=pointer]
+            - button "Categorías" [ref=e177] [cursor=pointer]
+          - generic [ref=e178]:
+            - generic [ref=e181]: Soleado
+            - generic [ref=e184]: Parcial
+            - generic [ref=e187]: Nublado
+            - generic [ref=e190]: Niebla
+            - generic [ref=e193]: Lluvia
+            - generic [ref=e196]: Nieve
+            - generic [ref=e199]: Ventoso
+```

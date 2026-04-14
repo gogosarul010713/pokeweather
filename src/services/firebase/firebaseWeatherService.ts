@@ -1,9 +1,10 @@
 // firebaseWeatherService.ts
 // Persistencia de pronósticos climáticos en Firestore
 // US-801: Guardar 12 horas de pronóstico clasificado a Pokémon GO
+// US-901: Dynamic imports (lazy Firestore SDK)
 
-import { db } from './firebaseConfig'
-import { doc, setDoc, Timestamp, collectionGroup, getDocs } from 'firebase/firestore'
+import { getDb } from './firebaseConfig'
+import type { Timestamp } from 'firebase/firestore'
 import type { City } from '../../store/useStore'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -53,6 +54,12 @@ export async function saveCityForecast(
   city: City,
   snapshots: ForecastSnapshot[] = []
 ): Promise<void> {
+  // Dynamic import Firestore functions (lazy)
+  const { doc, setDoc, Timestamp } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
   // Validación: Firebase no inicializado
   if (!db) {
     console.error('[Firebase] ❌ CRITICAL: Firestore not initialized (db is null), skipping save for', city.id)
@@ -120,6 +127,12 @@ export async function saveCityForecast(
 export async function getRecentForecasts(
   timeRange: '1h' | '6h' | '24h' | '7d' = '24h'
 ): Promise<ForecastDoc[]> {
+  // Dynamic import Firestore functions (lazy)
+  const { collectionGroup, getDocs } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
   if (!db) {
     console.warn('[Firebase] Firestore not initialized, returning empty forecasts')
     return []

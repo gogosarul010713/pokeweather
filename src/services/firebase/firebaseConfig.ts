@@ -1,11 +1,12 @@
-import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
-
 /**
- * Firebase configuration
+ * Firebase configuration — Lazy Singleton Pattern (US-901)
  * Credentials from environment variables (VITE_FIREBASE_*)
  * Safe for frontend: APIKey is restricted in Firebase Console
+ *
+ * Firebase SDK is dynamically imported on first access.
+ * This reduces main bundle size (890KB → ~300KB lazy-loaded).
  */
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -33,18 +34,82 @@ if (missingVars.length > 0) {
   )
 }
 
-// Initialize Firebase
-let app: ReturnType<typeof initializeApp> | null = null
-let db: ReturnType<typeof getFirestore> | null = null
+// ─── Lazy Singleton State ────────────────────────────────────────────────
 
-try {
-  if (firebaseConfig.projectId) {
-    app = initializeApp(firebaseConfig)
-    db = getFirestore(app)
-    console.log('✅ Firebase initialized:', firebaseConfig.projectId)
-  }
-} catch (error) {
-  console.error('❌ Firebase initialization failed:', error)
+let app: any = null
+let db: any = null
+let initialized = false
+let initPromise: Promise<void> | null = null
+
+// ─── Lazy Initialization ─────────────────────────────────────────────────
+
+/**
+ * Ensure Firebase is initialized (lazy singleton pattern)
+ * First call triggers dynamic import + initialization.
+ * Subsequent calls reuse the same instance.
+ *
+ * @returns Promise<void> — resolves when Firebase is ready (or fails silently if env vars missing)
+ */
+async function ensureInitialized(): Promise<void> {
+  // Already initialized
+  if (initialized) return
+
+  // Initialization in progress — wait for it
+  if (initPromise) return initPromise
+
+  // Start initialization
+  initPromise = (async () => {
+    try {
+      if (!firebaseConfig.projectId) {
+        console.warn('[Firebase] Skipping initialization: projectId not set')
+        initialized = true
+        return
+      }
+
+      // Dynamic import Firebase modules
+      const { initializeApp: initApp } = await import('firebase/app')
+      const { getFirestore: getFs } = await import('firebase/firestore')
+
+      // Initialize
+      app = initApp(firebaseConfig)
+      db = getFs(app)
+      initialized = true
+
+      console.log('✅ Firebase initialized (lazy):', firebaseConfig.projectId)
+    } catch (error) {
+      console.error('❌ Firebase initialization failed (lazy):', error)
+      initialized = true
+      // Don't rethrow — allow app to continue without Firebase
+    }
+  })()
+
+  return initPromise
 }
 
+// ─── Public API ──────────────────────────────────────────────────────────
+
+/**
+ * Get Firestore instance (triggers lazy initialization if needed)
+ * @returns Firestore instance or null if initialization failed
+ */
+export async function getDb(): Promise<any> {
+  await ensureInitialized()
+  return db
+}
+
+/**
+ * Get Firebase app instance (triggers lazy initialization if needed)
+ * @returns Firebase app instance or null if initialization failed
+ */
+export async function getApp(): Promise<any> {
+  await ensureInitialized()
+  return app
+}
+
+// ─── Backward Compatibility (Deprecated) ─────────────────────────────────
+
+/**
+ * @deprecated Use getDb() instead
+ * These are lazy getters that may be null until first await getDb() call
+ */
 export { app, db }

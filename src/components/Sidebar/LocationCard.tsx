@@ -170,6 +170,9 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           className="lc-weather"
           src={`/weather/${city.condition}.png`}
           alt={city.condition}
+          loading="lazy"
+          width={36}
+          height={36}
           onError={(e) => { e.currentTarget.style.display = 'none' }}
         />
 
@@ -188,6 +191,9 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
                     src={src}
                     alt={type}
                     title={type}
+                    loading="lazy"
+                    width={22}
+                    height={22}
                     onError={(e) => { e.currentTarget.style.display = 'none' }}
                   />
                 )

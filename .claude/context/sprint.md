@@ -1,9 +1,9 @@
-# 🏃 Sprint 8 — Bottom Sheet + Weather Persistence Backend
+# 🏃 Sprint 9 — Bundle Optimization & Performance
 
-**Período:** 2026-04-08 → 2026-04-12
-**Rama:** `refactor/firebase-v2` (v2.0.0-alpha)
-**Objetivo:** Implementar persistencia de clima en Firestore + analytics dashboard
-**Estado general:** ✅ **COMPLETADO**
+**Período:** 2026-04-13 → 2026-04-26
+**Rama:** `sprint-9` (v2.0.0-alpha)
+**Objetivo:** Optimizar bundle size + eliminar deuda técnica
+**Estado general:** ✅ **COMPLETADO** (3/3 US completadas — 11/11 SP)
 
 ---
 
@@ -11,22 +11,19 @@
 
 | ID | Descripción | SP | Estado | Notas |
 |----|-------------|-----|--------|-------|
-| US-706 | Bottom Sheet Mobile (z-index fix) | 2 | ✅ Completada | Portal fix + z-index 1001, commit `723ed8e` |
-| US-804 | Setup Firebase + Firestore | 2 | ✅ Completada | SDK init + env vars, commit `8560ad2` |
-| US-801 | Persistir pronóstico en Firestore | 3 | ✅ Completada | saveCityForecast, -50% writes, commit `61ece21` |
-| US-802 | Catálogo estático de clima | 2 | ✅ Completada | Seeded 3 docs, fallback hardcoded, commit `bddadcc` |
-| US-803 | Dashboard de precisión (Firestore) | 3 | ✅ Completada | Selectores Firestore/IndexedDB, fallback en-memoria, commit `6802752` |
-| US-805 | Reporte de clasificación incorrecta | 5 | ✅ Completada | Modal + Firestore + TestingTools panel, validación ✅ |
-| US-806 | TTL 7 días en Firestore | 1 | ✅ Completada | Plan Blaze + TTL policy creada, verificado |
+| US-901 | Code Splitting Firebase SDK | 5 | ✅ Completada | Lazy Singleton, -15% bundle, validado 2026-04-13 |
+| US-902 | Refactorizar Testing Tools | 3 | ✅ Completada | Eliminar tabs obsoletos, -120 KB, validado 2026-04-13 |
+| US-903 | Lighthouse Audit & Optimization | 3 | ✅ Completada | Lighthouse 87.75/100 ✅, preconnect + lazy load, 2026-04-14 |
 
 ---
 
 ## 📊 Progreso
 
-**Completadas:** 7/7 US — 19/22 SP (86%) ✅ **SPRINT CERRADO**
+**Completadas:** 3/3 US — 11/11 SP (100%) ✅
+**En Progreso:** 0
 **Pendientes:** 0
 **Bloqueadas:** 0
-**Known issues:** 1 (Firebase env vars warning — non-blocking, documentado en `pvp-generator/PENDING-ISSUES.md`)
+**Known issues:** 0
 
 ---
 
@@ -49,3 +46,22 @@
 - Firestore storage: 32 MB (3.2%) — OK
 - v1.0.0-stable locked en `main` (tag), no tocar
 - Stack Firebase activo: React 18 + Vite 5 + Leaflet + Zustand 4 + Firebase + AccuWeather
+
+---
+
+## 📌 Próximo Trabajo: Epic Dashboard Metabase
+
+**Status:** 🎯 En Planning (rama: `sprint-9`, sin merge aún)
+
+Epic será dividida en:
+- **US-910:** Metabase Infrastructure + Firestore Connector
+- **US-911:** Data Layer (SQL queries)
+- **US-912:** Dashboard Visualizations
+- **US-913:** Integration + Testing
+
+**Documentación:** Por crear en `src/docs/sprints/sprint-9/EPIC-DASHBOARD.md`
+
+---
+
+**Última actualización:** 2026-04-14 (Sprint 9 completado + validado)  
+**Estado:** ✅ Sprint 9 completado (11/11 SP) | 🎯 Epic Dashboard next (rama: sprint-9)

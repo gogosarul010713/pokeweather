@@ -3,9 +3,9 @@
 Este archivo lo lee Claude Code automáticamente al abrir el proyecto.
 
 **IMPORTANTE:** Leer primero:
-1. 📈 [ROADMAP.md](ROADMAP.md) — Visión Sprints 8-12 (NUEVO 2026-04-12)
+1. 📈 [src/docs/ROADMAP.md](src/docs/ROADMAP.md) — Visión Sprints 8-12
 2. 📚 [src/docs/INDEX.md](src/docs/INDEX.md) — Índice de documentación
-3. 📊 [src/docs/progress.md](src/docs/progress.md) — Estado actual del sprint
+3. 📊 [src/docs/sprints/sprint-8/README.md](src/docs/sprints/sprint-8/README.md) — Sprint 8 actual
 
 ---
 
@@ -24,8 +24,8 @@ comandos correr. Yo soy el desarrollador que ejecuta todo en mi máquina local.
 1. Al iniciar sesión, preséntate y confirma que entendiste el proyecto
    leyendo los docs en `src/docs/`
 2. Explícame cada decisión de arquitectura antes de tomarla
-3. Sigue el plan de trabajo definido en `src/docs/05-backlog.md` y
-   `src/docs/06-sprints.md`
+3. Sigue el plan de trabajo definido en `src/docs/sprints/01-backlog.md` y
+   `src/docs/sprints/02-sprints.md`
 4. Ejecuta fase por fase — no avances a la siguiente hasta que yo confirme
    que la anterior funciona
 5. En cada paso dime exactamente qué archivo crear y qué código poner.
@@ -59,7 +59,7 @@ Stack: React 18 + Vite 5 + Leaflet + Zustand 4 + AccuWeather API + idb-keyval + 
 ## DOCUMENTACIÓN — navegación centralizada
 
 **EMPIEZA AQUÍ:**
-- 📈 [ROADMAP.md](ROADMAP.md) — Visión de Sprints 8-12 (roadmap del proyecto)
+- 📈 [src/docs/ROADMAP.md](src/docs/ROADMAP.md) — Visión de Sprints 8-12 (roadmap del proyecto)
 - 📚 [src/docs/INDEX.md](src/docs/INDEX.md) — Índice completo de documentación
 
 **Por contexto de trabajo:**
@@ -67,11 +67,11 @@ Stack: React 18 + Vite 5 + Leaflet + Zustand 4 + AccuWeather API + idb-keyval + 
 | Necesidad | Archivo |
 |-----------|---------|
 | Iniciar en el proyecto | [src/docs/overview/01-project.md](src/docs/overview/01-project.md) |
-| Decisiones arquitectónicas | [src/docs/architecture/](src/docs/architecture/) (09 archivos) |
+| Decisiones arquitectónicas | [src/docs/architecture/](src/docs/architecture/) (10 archivos) |
 | Setup credenciales Firebase | [src/docs/technical/08-firebase-setup.md](src/docs/technical/08-firebase-setup.md) |
 | Data schema Firestore | [src/docs/architecture/10-firestore-data-schema.md](src/docs/architecture/10-firestore-data-schema.md) |
-| Sprint 8 detalles | [src/docs/04-archive/sprint-8.md](src/docs/04-archive/sprint-8.md) |
-| Estado actual del sprint | [src/docs/progress.md](src/docs/progress.md) |
+| Sprint 8 detalles | [src/docs/sprints/sprint-8/README.md](src/docs/sprints/sprint-8/README.md) |
+| Plan de trabajo | [src/docs/sprints/01-backlog.md](src/docs/sprints/01-backlog.md) |
 
 ---
 
@@ -195,3 +195,18 @@ VITE_ACCUWEATHER_KEY=   # ⚠️ REQUERIDA (sin key → error de inicialización
 - --glow-rgb como variable local
 
 ---
+
+Nunca implementes sin confirmación explícita. Cada fase termina con checkpoint.
+
+### Contexto del proyecto
+- `.claude/context/sprint.md` — estado del sprint y US
+- `.claude/context/active_task.md` — US activa con detalle
+- `.claude/context/decisions.md` — decisiones de arquitectura
+
+### Regla Git
+Nunca hagas `git push` ni `git merge` sin confirmación explícita.
+Pregunta antes: "¿Puedo hacer [push/merge] a [rama]?"
+
+### Gestión de contexto
+NO uses el sistema de memory nativo de Claude Code para estado del proyecto.
+Los archivos `.claude/context/` son la fuente de verdad.

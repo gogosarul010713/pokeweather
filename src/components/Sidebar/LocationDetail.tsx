@@ -418,6 +418,9 @@ export default function LocationDetail({ city }: LocationDetailProps) {
             className="ld-weather-icon"
             src={`/weather/${city.condition}.png`}
             alt={city.condition}
+            loading="lazy"
+            width={48}
+            height={48}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
 
@@ -478,6 +481,9 @@ export default function LocationDetail({ city }: LocationDetailProps) {
                 className="ld-climate-img"
                 src={`/weather/${city.condition}.png`}
                 alt={city.condition}
+                loading="lazy"
+                width={32}
+                height={32}
                 onError={(e) => { e.currentTarget.style.display = 'none' }}
               />
               <div>
@@ -502,6 +508,9 @@ export default function LocationDetail({ city }: LocationDetailProps) {
                       src={src}
                       alt={type}
                       title={type}
+                      loading="lazy"
+                      width={36}
+                      height={36}
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
                   )

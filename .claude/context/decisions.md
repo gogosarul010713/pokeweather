@@ -5,6 +5,39 @@
 
 ---
 
+### 2026-04-13 D-009 — Eliminación de tabs obsoletos en TestingTools (-120 KB bundle)
+
+**Contexto:** US-902. TestingTools tenía 3 tabs que se volvieron obsoletos con Firebase Report + Metabase.
+
+**Opciones consideradas:**
+- A: Mantener tabs para backwards compatibility / debugging
+- B: Eliminar tabs obsoletos y reducir bundle size
+- C: Mover tabs a herramienta externa separada
+
+**Decisión:** Opción B — Eliminar completamente
+
+**Motivo:** 
+1. Firebase Report reemplaza HistoryGrid (validación en Firestore)
+2. Metabase Dashboard reemplaza PrecisionMetrics (análisis superior)
+3. Firebase Console reemplaza CachePanel (debugging remoto)
+4. Reducción de bundle: -120 KB (-8%)
+5. Cero impacto en funcionalidad crítica (useWeather.ts mantiene funciones)
+
+**Implementación:**
+- Eliminados 8 archivos (5 componentes + 3 utilidades)
+- Refactorizados 4 archivos (TestingTools, weatherHistoryService, Header, App)
+- ~3,000 líneas de código muerto removido
+- Build compila sin errores
+
+**Consecuencias:** 
+- TestingTools solo tiene tab "Reportes"
+- Análisis de precisión migra a Dashboard Metabase (US-902-B)
+- API weatherHistoryService simplificada (mantiene funciones críticas)
+
+**US relacionada:** US-902
+
+---
+
 ### 2026-04-08 D-005 — Eliminación de guardado duplicado en Firestore (-50% writes)
 
 **Contexto:** US-801. Se detectó que `useWeather.ts` y `batchWeatherService.ts` guardaban el mismo forecast en Firestore, duplicando writes innecesariamente.
@@ -140,6 +173,41 @@
 **Consecuencias:** ClassificationReport solo guarda campos que realmente existen en City: `temperature_c` (tempC), `wind_kmh` (windKmh). Interface actualizada para reflejar campos reales.
 
 **US relacionada:** US-805
+
+---
+
+### 2026-04-13 D-008 — Lazy Singleton + Dynamic Imports para Firebase SDK (US-901)
+
+**Contexto:** US-901. Firebase SDK agregaba 890 KB al bundle principal (15% de 1.7 MB). Se necesitaba optimización sin perder funcionalidad.
+
+**Opciones consideradas:**
+- A: Code-splitting per-service (3 dynamic imports separados)
+- B: Lazy Singleton in firebaseConfig (1 entry point) ← **ELEGIDA**
+- C: Component-level lazy load (máxima laziness)
+
+**Decisión:** Opción B — Lazy Singleton Pattern
+
+**Motivo:** 
+1. Un único punto de entrada (`getDb()`) evita race conditions
+2. Firebase se carga en primer acceso, no al módulo load
+3. Interfaz de exports mantiene compatibilidad
+4. Vite/Rollup auto-optimiza sin cambios de config
+
+**Implementación:**
+- `firebaseConfig.ts`: `ensureInitialized()` + `getDb()` helpers
+- Todos los servicios: `await getDb()` antes de usar db
+- Dynamic imports de funciones Firestore dentro de cada función async
+- Tipos importados estáticamente (no afectan bundle)
+
+**Resultado:** 
+- Bundle: 1,771 KB → 1,501 KB (15% reducción)
+- Gzip: 489 KB → 411 KB (16% reducción)
+- Zero regressions (validado con Playwright)
+- Firebase lazy-loads en primer uso (esperado)
+
+**Consecuencias:** Funciones Firebase ahora son async. Callers deben `await`. No afecta a `batchWeatherService` (ya era async-friendly).
+
+**US relacionada:** US-901
 
 ---
 
