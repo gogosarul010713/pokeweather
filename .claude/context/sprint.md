@@ -1,9 +1,9 @@
-# 🏃 Sprint 8 — Bottom Sheet + Weather Persistence Backend
+# 🏃 Sprint 9 — Nidos de Pokémon (Fase 1)
 
-**Período:** 2026-04-08 → 2026-04-12
-**Rama:** `refactor/firebase-v2` (v2.0.0-alpha)
-**Objetivo:** Implementar persistencia de clima en Firestore + analytics dashboard
-**Estado general:** ✅ **COMPLETADO**
+**Período:** 2026-04-13 → 2026-04-26  
+**Rama:** `sprint-9-nests` (basada en `sprint-9`)  
+**Objetivo:** Implementar módulo Nidos de Pokémon como feature independiente  
+**Estado general:** 🚀 **INICIANDO** (Sesión 1: Servicios)
 
 ---
 
@@ -11,41 +11,127 @@
 
 | ID | Descripción | SP | Estado | Notas |
 |----|-------------|-----|--------|-------|
-| US-706 | Bottom Sheet Mobile (z-index fix) | 2 | ✅ Completada | Portal fix + z-index 1001, commit `723ed8e` |
-| US-804 | Setup Firebase + Firestore | 2 | ✅ Completada | SDK init + env vars, commit `8560ad2` |
-| US-801 | Persistir pronóstico en Firestore | 3 | ✅ Completada | saveCityForecast, -50% writes, commit `61ece21` |
-| US-802 | Catálogo estático de clima | 2 | ✅ Completada | Seeded 3 docs, fallback hardcoded, commit `bddadcc` |
-| US-803 | Dashboard de precisión (Firestore) | 3 | ✅ Completada | Selectores Firestore/IndexedDB, fallback en-memoria, commit `6802752` |
-| US-805 | Reporte de clasificación incorrecta | 5 | ✅ Completada | Modal + Firestore + TestingTools panel, validación ✅ |
-| US-806 | TTL 7 días en Firestore | 1 | ✅ Completada | Plan Blaze + TTL policy creada, verificado |
+| US-801 | Cargar 5 nidos desde JSON → IndexedDB | 2 | ⏳ Pendiente | Tipos + nestService |
+| US-802 | Renderizar pins púrpura en mapa | 3 | ⏳ Pendiente | NestMapView + NestPin |
+| US-803 | Listado de nidos en sidebar | 2 | ⏳ Pendiente | NestFeed + NestCard |
+| US-804 | Panel deslizante con detalles | 3 | ⏳ Pendiente | NestDetail modal |
+| US-805 | Toggle Clima ⇄ Nidos | 2 | ⏳ Pendiente | ModeToggle en header |
+| US-806 | Cache IndexedDB | 2 | ⏳ Pendiente | CRUD persistencia |
+| US-807 | Popup tooltip información | 2 | ⏳ Pendiente | NestTooltip + NestLegend |
 
 ---
 
 ## 📊 Progreso
 
-**Completadas:** 7/7 US — 19/22 SP (86%) ✅ **SPRINT CERRADO**
-**Pendientes:** 0
-**Bloqueadas:** 0
-**Known issues:** 1 (Firebase env vars warning — non-blocking, documentado en `pvp-generator/PENDING-ISSUES.md`)
+**Completadas:** 0/7 US  
+**Pendientes:** 7/7 US (16 SP)  
+**Bloqueadas:** 0  
+**En progreso:** Sesión 1 (servicios y store)
 
 ---
 
-## 🎯 Orden recomendado para pendientes
+## 🎯 Sesiones Planificadas
 
-1. **US-806** (1 SP) — TTL 7 días ← **PRÓXIMA (2026-04-11)** → rápido para cerrar sprint
-2. **Benchmark** — v1.0.0-stable vs v2.0.0-alpha → cierre de sprint
+### 📍 Sesión 1 — Servicios (2h) ← ACTUAL
+**Objetivo:** Crear base de datos (tipos, servicios, hook, store)
 
-**Completadas en sesiones recientes:**
-- ✅ US-803 (Firestore Dashboard) — commit `6802752` — Selectores + fallback en-memoria
-- ✅ US-805 (Reporte Incorrecto) — commit `7f33506` — Modal + TestingTools panel + validación ✅
-- ✅ US-806 (TTL Automático) — Blaze + TTL policy en Firestore Console
+**Tareas:**
+1. Crear `src/types/nests.ts` (5 interfaces)
+2. Crear `src/services/nests/nestService.ts` (datos, transformación)
+3. Crear `src/services/nests/nestCacheService.ts` (IndexedDB CRUD)
+4. Crear `src/hooks/useNests.ts` (hook personalizado)
+5. Extender `src/store/useStore.ts` con slice Nests
+
+**US incluidas:** US-801, US-806  
+**Validación:** 5 nidos en console + IndexedDB visible
 
 ---
 
-## 📝 Notas del Sprint
+### 📍 Sesión 2 — Componentes (3h)
+**Objetivo:** Crear UI (mapa, sidebar, panel detalle)
 
-- Build ✅ PASSED en rama `refactor/firebase-v2`
-- Firestore: 2,256 writes/día (11.3% quota) — dentro del límite
-- Firestore storage: 32 MB (3.2%) — OK
-- v1.0.0-stable locked en `main` (tag), no tocar
-- Stack Firebase activo: React 18 + Vite 5 + Leaflet + Zustand 4 + Firebase + AccuWeather
+**Tareas:**
+- NestMapView + NestPin (componentes mapa)
+- NestFeed + NestCard (listado sidebar)
+- NestDetail (modal deslizante)
+- NestTooltip + NestLegend (info rápida)
+- Styling CSS completo
+
+**US incluidas:** US-802, US-803, US-804, US-807  
+**Validación:** Pins visibles, interactividad funcionando
+
+---
+
+### 📍 Sesión 3 — Integración (2h)
+**Objetivo:** Integrar todo y preparar deployment
+
+**Tareas:**
+- NestModeToggle.tsx (botón Clima/Nidos)
+- App.tsx (renderización condicional)
+- E2E Tests (Playwright 5 scenarios)
+- Build exitoso
+
+**US incluidas:** US-805  
+**Validación:** Build ok, tests passed, 0 TS errors
+
+---
+
+## 📁 Documentación Referencia
+
+- **Inicio:** `docs/features/nests/README.md`
+- **Índice:** `docs/features/nests/00-index.md`
+- **Arquitectura:** `docs/architecture/11-nests-architecture.md`
+- **Data Dictionary:** `docs/architecture/12-nests-data-dictionary.md`
+- **Sesiones:** `docs/sessions/`
+- **Decisiones:** `docs/sprints/sprint-9/decisions.md`
+- **Estructura:** `docs/features/nests/ESTRUCTURA-PROYECTO.md`
+
+---
+
+## 🏗️ Arquitectura en Breve
+
+```
+NIDOS (Feature Independiente)
+├── Tipos (nest.ts)
+│   └── Nest, NestPokemon, NestBadge, Region
+├── Servicios
+│   ├── nestService.ts (datos 5 nidos)
+│   └── nestCacheService.ts (IndexedDB)
+├── Hook
+│   └── useNests.ts (fetch + caché)
+├── Store
+│   └── nests slice (state + favoritos)
+└── Componentes
+    ├── Mapa: NestMapView, NestPin
+    ├── Sidebar: NestFeed, NestDetail
+    └── UI: NestTooltip, NestLegend, NestCard
+```
+
+---
+
+## 🔑 Decisiones Clave
+
+| Decisión | Valor |
+|----------|-------|
+| **Módulo separado** | Nidos no afectan Clima (datos, caché, componentes propios) |
+| **5 nidos estáticos** | MVP para validar arquitectura |
+| **IndexedDB** | Tabla `nests_data` separada de `weather_data` |
+| **Zustand** | Estado simple, auto-persistente en localStorage |
+| **Toggle Clima/Nidos** | Cambio de vista en header, reduce UI clutter |
+
+---
+
+## 📝 Stack Utilizado
+
+- **React 18** + TypeScript
+- **Vite 5** (bundling)
+- **Zustand 4** (state management)
+- **Leaflet** (mapa — compartido con Clima)
+- **IndexedDB** (persistencia local)
+- **Playwright** (E2E testing)
+
+---
+
+**Creado:** 2026-04-13  
+**Última actualización:** 2026-04-13  
+**Estado:** Listo para Sesión 1

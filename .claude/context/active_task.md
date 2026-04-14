@@ -1,72 +1,191 @@
-# 🎯 Sprint 9 — Bundle Optimization & Performance
+# 🎯 Tarea Activa: Sesión 1 — Servicios de Nests
 
-**Período:** 2026-04-13 → 2026-04-26  
-**Estado:** 🔨 **EN PROGRESO** — Optimización de bundle y performance  
-**Sprint Points:** 11 SP (3 US)  
-**Rama:** `sprint-9` (creada 2026-04-12 EOD)
-
----
-
-## 📊 Sprint 9 — US en Queue
-
-| US | SP | Descripción | Estado |
-|----|-----|-------------|--------|
-| **US-901** | 5 | Code Splitting + Dynamic Import | 🔨 **NEXT** |
-| **US-902** | 3 | Lazy Load Components | ⏳ Planificado |
-| **US-903** | 3 | Lighthouse Audit & Optimization | ⏳ Planificado |
+**Sprint:** 9 — Nidos de Pokémon  
+**Rama:** `sprint-9-nests`  
+**Sesión:** 1/3 (Servicios y Store)  
+**Duración estimada:** 2 horas  
+**Story Points:** 6 SP (US-801 + US-806)
 
 ---
 
-## 🎯 US-901 — Code Splitting (PRÓXIMA)
+## 📋 Objetivo de Sesión 1
 
-**Objetivo:** Reducir bundle size de 1.7 MB gzipped a < 500 kB
+Crear la base de datos del módulo Nests: tipos, servicios, hook personalizado y estado global.
 
-**Problema:** Firebase SDK agrega +813% al bundle (v1: 194 kB → v2: 1,771 kB)
-
-**Solución:**
-- Dynamic import() para Firestore features (Dashboard, Reports)
-- Code-split: core app vs. Firebase features
-- Lazy load en-demand cuando usuario abre Dashboard/Reports
-
-**Criterios de Aceptación:**
-- ✅ Main bundle: < 500 kB gzipped
-- ✅ Firebase chunk: cargado on-demand
-- ✅ No regresiones en features principales
-- ✅ Build warnings: 0
-
-**Especificación:** `src/docs/sprints/sprint-9/us/US-901.md`
+**Resultado:** 5 nidos visibles en console.log + IndexedDB funcionando
 
 ---
 
-## 📋 Cómo Continuar
+## 🎯 Tareas (en orden)
 
-### Sesión Próxima:
-1. Checkout `sprint-9` → `git checkout sprint-9`
-2. Leer `src/docs/sprints/sprint-9/us/US-901.md`
-3. Ejecutar `npm run build` → validar size actual
-4. Implementar dynamic import para Firebase features
+### ✅ 1. Crear `src/types/nests.ts` (15 min)
+**Interfaces necesarias:**
+- `Nest` — id, name, latitude, longitude, pokemonType, description
+- `NestPokemon` — type, percentage, rarity
+- `NestBadge` — icon, label, color
+- `Region` — 'asia', 'europa', 'america', 'oceania', 'africa'
 
-### Estructura Propuesta:
+**Referencia:** `docs/architecture/12-nests-data-dictionary.md`
+
+---
+
+### ✅ 2. Crear `src/services/nests/nestService.ts` (30 min)
+**Responsabilidades:**
+- Datos estáticos: 5 nidos JSON
+- Transformar datos crudos → tipos TypeScript
+- Getters: getNestById(), getAllNests(), getNestsByRegion()
+- Helpers: getPokemonColor(), formatNestData()
+
+**Datos de ejemplo (5 nidos):**
+```
+1. San Francisco - Water type - Squirtle
+2. Central Park NY - Grass type - Bulbasaur
+3. Tokyo Shibuya - Fire type - Charmander
+4. London Hyde Park - Electric type - Pikachu
+5. Sydney Opera House - Dragon type - Dratini
+```
+
+---
+
+### ✅ 3. Crear `src/services/nests/nestCacheService.ts` (30 min)
+**Responsabilidades:**
+- CRUD en IndexedDB (tabla: `nests_data`)
+- Métodos: save(), getById(), getAll(), delete(), clear()
+- Validación de datos antes de guardar
+- Error handling
+
+**Tabla schema:**
+```
+name: 'nests_data'
+keyPath: 'id'
+indexes: ['region', 'pokemonType']
+```
+
+---
+
+### ✅ 4. Crear `src/hooks/useNests.ts` (30 min)
+**Responsabilidades:**
+- Hook personalizado que:
+  - Fetch datos (nestService)
+  - Cache automático (nestCacheService)
+  - Estado loading/error
+  - Auto-actualiza cuando dependencias cambian
+- Return: { nests, loading, error, refresh }
+
+**Implementación:**
+```typescript
+const useNests = (region?: string) => {
+  const [nests, setNests] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  
+  useEffect(() => {
+    // Cargar de cache o service
+  }, [region])
+  
+  return { nests, loading, error, refresh }
+}
+```
+
+---
+
+### ✅ 5. Extender `src/store/useStore.ts` (15 min)
+**Añadir slice de Nests:**
+- `nests: Nest[]` — array de nidos
+- `selectedNest: Nest | null` — nido seleccionado
+- `nestFavorites: string[]` — IDs de nidos favoritos
+- `setSelectedNest(nest)` — setter
+- `toggleFavorite(nestId)` — agregar/remover de favoritos
+
+**Integración Zustand:**
+```typescript
+const useStore = create((set) => ({
+  // ... existing weather state
+  nests: [],
+  selectedNest: null,
+  nestFavorites: [],
+  setSelectedNest: (nest) => set({ selectedNest: nest }),
+  toggleFavorite: (id) => set((state) => ({ 
+    nestFavorites: state.nestFavorites.includes(id)
+      ? state.nestFavorites.filter(fid => fid !== id)
+      : [...state.nestFavorites, id]
+  }))
+}))
+```
+
+---
+
+## ✅ Validación Sesión 1
+
+**En console:**
+```javascript
+// Verificar que esto funciona:
+const store = useStore()
+console.log(store.nests) // Array de 5 objetos Nest
+console.log(store.nests[0].name) // e.g., "San Francisco"
+```
+
+**En DevTools:**
+```
+IndexedDB
+└── [app-db]
+    └── nests_data (5 documentos)
+```
+
+**Criterios de éxito:**
+- ✅ 5 nidos en console sin errores
+- ✅ IndexedDB contiene tabla `nests_data` con 5 docs
+- ✅ TypeScript: 0 errores en `npm run build`
+- ✅ No hay warnings en console
+
+---
+
+## 📁 Archivos a Crear
+
 ```
 src/
-├── modules/
-│   ├── core/          ← Siempre cargado (mapa, búsqueda, filtros)
-│   ├── firebase/      ← Dynamic import (Dashboard, Reports)
-│   └── ...
+├── types/
+│   └── nests.ts                    ← NUEVO
+├── services/nests/                 ← NUEVO DIR
+│   ├── nestService.ts              ← NUEVO
+│   └── nestCacheService.ts         ← NUEVO
+├── hooks/
+│   └── useNests.ts                 ← NUEVO (si no existe)
+└── store/
+    └── useStore.ts                 ← MODIFICAR (agregar slice)
 ```
 
 ---
 
 ## 🔗 Referencias Rápidas
 
-- **Rama actual:** sprint-9
-- **Base:** develop (v2.0.0-alpha)
-- **Build warning:** "chunks larger than 500kB" → target a resolver
-- **Lighthouse:** Usar para validar performance improvements
-- **Documentación Sprint 9:** `src/docs/sprints/sprint-9/`
+- **Arquitectura Nests:** `docs/architecture/11-nests-architecture.md`
+- **Data Dictionary:** `docs/architecture/12-nests-data-dictionary.md`
+- **Sesión 1 detallada:** `docs/sessions/01-sesion-1-servicios.md`
+- **Checklist:** `docs/features/nests/CHECKLIST-FASE-1.md`
+- **Estructura proyecto:** `docs/features/nests/ESTRUCTURA-PROYECTO.md`
 
 ---
 
-**Creado:** 2026-04-12  
-**Última actualización:** 2026-04-12 EOD  
-**Status:** Listo para comenzar Sprint 9
+## 📝 Notas Importantes
+
+1. **TypeScript Strict Mode:** Sin `any`, todos los tipos explícitos
+2. **No hardcodear colores:** Usar variables CSS (`var(--nest-purple)`)
+3. **Separar de Clima:** Datos/caché/componentes propios, no mezclar
+4. **Indexación IndexedDB:** Agregar índices por `region` y `pokemonType` para queries futuras
+5. **Error handling:** Try-catch en async functions, return null en errores
+
+---
+
+## ⏭️ Próximo
+
+Después de Sesión 1 completada:
+- Validar que todo funciona sin errores
+- Hacer commit con mensaje: `feat(US-801, US-806): Implementar servicios y store de Nests`
+- Proceder a **Sesión 2: Componentes** (NestMapView, NestPin, etc.)
+
+---
+
+**Creado:** 2026-04-13  
+**Última actualización:** 2026-04-13  
+**Estado:** ✅ Listo para comenzar
