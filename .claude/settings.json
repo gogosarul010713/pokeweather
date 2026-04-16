@@ -47,7 +47,13 @@
       "Bash(pkill -f \"vite preview\")",
       "Bash(node -e \"const fs = require\\('fs'\\); const data = JSON.parse\\(fs.readFileSync\\('lighthouse-report-final.json'\\)\\); console.log\\('=== FINAL SCORES ==='\\); Object.entries\\(data.categories\\).forEach\\(\\([k, v]\\) => console.log\\(\\\\`\\\\${k}: \\\\${\\(v.score * 100\\).toFixed\\(0\\)}\\\\`\\)\\); const lcp = data.audits['largest-contentful-paint']; const cls = data.audits['cumulative-layout-shift']; console.log\\('\\\\\\\\n=== CORE WEB VITALS ==='\\); console.log\\(\\\\`LCP: \\\\${\\(lcp.numericValue / 1000\\).toFixed\\(2\\)}s\\\\`\\); console.log\\(\\\\`CLS: \\\\${cls.numericValue.toFixed\\(4\\)}\\\\`\\);\")",
       "Bash(tee playwright-results.log)",
-      "Bash(pkill -f \"vite preview|vite dev\")"
+      "Bash(pkill -f \"vite preview|vite dev\")",
+      "Bash(taskkill /PID 49064 /F)",
+      "Bash(taskkill /PID 20396 /F)",
+      "Bash(taskkill /PID 39824 /F)",
+      "Bash(taskkill /PID 33816 /F)",
+      "Bash(cmd /c \"taskkill /PID 49064 /F & taskkill /PID 20396 /F & taskkill /PID 39824 /F & taskkill /PID 33816 /F\")",
+      "Bash(powershell -Command \"Get-Process node | Stop-Process -Force -ErrorAction SilentlyContinue; echo 'Done'\")"
     ]
   }
 }
