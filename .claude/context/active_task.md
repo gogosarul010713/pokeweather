@@ -1,137 +1,82 @@
-# 🎯 Sprint 9 — Bundle Optimization & Performance ✅ COMPLETADO
+# 🎯 Sprint 10 — Epic Dashboard Looker Studio 🔄 EN PROGRESO
 
-**Período:** 2026-04-13 → 2026-04-14 (acelerado)
-**Estado:** ✅ **COMPLETADO** — 3/3 US, 11/11 SP (100%)
-**Sprint Points:** 11 SP (3 US completadas)  
-**Rama:** `sprint-9` (sin merge a develop aún)
-**Progreso:** 3/3 US completadas (11/11 SP)
+**Período:** 2026-04-16 → 2026-04-22 (estimado)
+**Estado:** 🔄 **EN PROGRESO** — 1/6 US completadas, 1/12 SP
+**Sprint Points:** 12 SP (6 US)
+**Rama:** `sprint-10`
+**Progreso:** 1/6 US completadas (12/12 SP estimados)
 
 ---
 
-## 📊 Sprint 9 — US en Queue
+## 📊 Sprint 10 — US en Queue
 
 | US | SP | Descripción | Estado | Completado |
 |----|-----|-------------|--------|-----------|
-| **US-901** | 5 | Code Splitting + Dynamic Import | ✅ **COMPLETADA** | 2026-04-13 |
-| **US-902** | 3 | Refactorizar Testing Tools | ✅ **COMPLETADA** | 2026-04-13 |
-| **US-903** | 3 | Lighthouse Audit & Optimization | ⏳ Planificado | — |
+| **US-1001** | 2 | Firebase Extension + BigQuery | ✅ **COMPLETADA** | 2026-04-17 |
+| **US-1002** | 2 | SQL View (Snapshot Flattening) | ✅ **COMPLETADA** | 2026-04-17 |
+| **US-1003** | 1 | Looker Studio Connection | ⏳ Pendiente | — |
+| **US-1004** | 2 | Dashboard Performance Global | ⏳ Pendiente | — |
+| **US-1005** | 3 | Dashboards Análisis | ⏳ Pendiente | — |
+| **US-1006** | 2 | Integración React + Docs | ⏳ Pendiente | — |
 
 ---
 
-## ✅ US-901 — Code Splitting (COMPLETADA)
+## ✅ US-1001 — Firebase Extension + BigQuery (COMPLETADA)
 
-**Resultado:** ✅ Lazy Singleton + Dynamic Imports implementado
-
-**Logros:**
-- ✅ Firebase SDK dynamic imported (lazy initialization)
-- ✅ Bundle: 1,501 KB (was 1,771 KB) — 15% reducción
-- ✅ Gzip: 411 KB (was 489 KB) — 16% reducción  
-- ✅ Zero Firebase errors en consola
-- ✅ Zero functional regressions
-- ✅ Build exitoso sin errores de compilación
-
-**Validación:** ✅ Playwright testing completado
-- App carga sin errores
-- Firebase lazy-loads correctamente
-- Todos los features funcionan
-
----
-
-## ✅ US-902 — Refactorizar Testing Tools (COMPLETADA)
-
-**Objetivo:** Eliminar tabs obsoletos de TestingTools (Historial, Caché, Métricas)
-
-**Motivo:** Firebase Report + Metabase Dashboard reemplazan la funcionalidad. Eliminar deuda técnica.
-
-**Resultado:** ✅ COMPLETADA
+**Resultado:** ✅ Extensión instalada, tabla creada, datos sincronizando
 
 **Logros:**
-- ✅ 8 archivos eliminados (HistoryGrid, CachePanel, PrecisionMetrics, utilidades)
-- ✅ 4 archivos refactorizados (TestingTools, weatherHistoryService, Header, App)
-- ✅ ~3,000 líneas de código muerto removido
-- ✅ Bundle reducción: -120 KB (~8%)
-- ✅ Zero referencias rotas
-- ✅ Zero regresiones funcionales
-- ✅ ReportsPanel sigue operativo
-- ✅ useWeather.ts funciones críticas mantienen
+- ✅ Extensión `firebase/firestore-bigquery-export` instalada en Firebase Console
+- ✅ Dataset `weather_analytics` creado automáticamente
+- ✅ Tabla `city_weather_raw_changelog` creada y sincronizando
+- ✅ 300+ registros ya sincronizados desde Firestore
+- ✅ Streaming activo (cambios nuevos se exportan <5 min)
+- ✅ Tabla `city_weather_raw_latest` (VIEW) creada automáticamente
 
-**Build:** ✅ Exitoso sin errores
+**Configuración:**
+- Collection path: `city_weather/{city_id}/forecasts`
+- BigQuery location: us-central1
+- Cloud Functions: Todas ACTIVE
+
+**Nota:** Backfill de datos históricos (7 días) pendiente — no bloqueador, se puede hacer después
 
 **Documentación:**
-- `src/docs/sprints/sprint-9/us/US-902.md`
-- `src/docs/sprints/sprint-9/us/ANALYSIS-US-902-Investigation.md`
-- `src/docs/sprints/sprint-9/us/EVIDENCE-*.md`
-- `src/docs/sprints/sprint-9/us/ELIMINACION-Lista-Exacta.md`
+- `src/docs/sprints/sprint-10/us/US-1001-FirebaseExtensionBigquery.md` — Actualizado con instalación
 
 ---
 
-## ✅ US-903 — Lighthouse Audit & Optimization (👁️ EN VALIDACIÓN)
+## ✅ US-1002 — SQL View (Snapshot Flattening) (COMPLETADA)
 
-**Resultado:** ✅ COMPLETADA
+**Resultado:** ✅ Vista SQL `snapshots_flat` creada y validada
 
 **Logros:**
-- ✅ Baseline Lighthouse audit completado (87.25/100)
-- ✅ Preconnect hints agregados (Google Fonts, CartoDB CDN)
-- ✅ Lazy loading + dimensiones explícitas en imágenes (LocationCard, LocationDetail)
-- ✅ Code Splitting validado (US-901 activo)
-- ✅ Final Lighthouse score: **87.75/100** ✅
-- ✅ Core Web Vitals green (CLS: 0.0086)
-- ✅ Zero regresiones funcionales
-- ✅ Build time: 489ms
+- ✅ Vista creada en BigQuery con UNNEST para expandir snapshots
+- ✅ 3,540 registros expandidos (una fila por snapshot)
+- ✅ Estructura correcta: city_id, hour, temperature_c, classified_condition, etc.
+- ✅ Campos extraídos sin errores de JSON parsing
+- ✅ GROUP BY funciona sin problemas
+
+**Validación:**
+- city_id: Presente ✅
+- Horas: 0-23 ✅
+- Counts consistentes por ciudad/hora/condición ✅
+- Vista persistente en BigQuery ✅
 
 **Documentación:**
-- `src/docs/sprints/sprint-9/us/LIGHTHOUSE-BASELINE.md` — Baseline audit
-- `src/docs/sprints/sprint-9/us/LIGHTHOUSE-FINAL.md` — Final audit + análisis
-
----
-
----
-
-## 📊 Sprint 9 — Validación Final
-
-**Validación:** ✅ Completada con Playwright CLI  
-**Reporte:** `src/docs/sprints/sprint-9/VALIDATION-REPORT.md`
-
-**Resultados:**
-- ✅ Lighthouse: 87.75/100 (≥85 meta)
-- ✅ Zero regresiones funcionales
-- ✅ App carga en 693ms
-- ✅ Build: 510 kB (gzip: 143 kB)
-- ✅ 20+ optimizaciones detectadas
-
----
-
-## 🎯 Epic: Dashboard Metabase (PRÓXIMA)
-
-**Objetivo:** Crear dashboard interactivo para análisis de precisión climática y patrones de tipos Pokémon
-
-**Scope:** 
-- Epic será dividida en 4-5 US + subtareas
-- Estará en rama `sprint-9` como feature branch
-- Base: Firestore queries + análisis de históricos
-
-**Áreas:**
-1. **Infrastructure:** Metabase setup + Firestore connector
-2. **Data Layer:** SQL queries para análisis
-3. **Dashboards:** Visuales interactivos
-4. **Integration:** Embed en UI o link externo
-
-**Documentación:** (por crear)
-- `src/docs/sprints/sprint-9/EPIC-DASHBOARD.md`
-- `src/docs/sprints/sprint-9/us/US-XX-*.md` (cada US)
+- `src/docs/sprints/sprint-10/us/US-1002-SqlViewSnapshotsFlat.md` — Actualizado
 
 ---
 
 ## 🔗 Referencias Rápidas
 
-- **Rama actual:** `sprint-9` (sin merge)
-- **Estado:** Sprint 9 completado, Epic Dashboard en planning
-- **Bundle:** 510 kB (gzip: 143 kB)
-- **Validación:** ✅ PASSED (Playwright)
-- **Próximo:** Epic Dashboard design + planificación
+- **Rama actual:** `sprint-10` (feature branch)
+- **Estado:** Sprint 10 en progreso (1/6 US completada)
+- **BigQuery:** Dataset `weather_analytics` ✅, tabla `city_weather_raw_changelog` ✅
+- **Streaming:** 300+ registros, actualizándose continuamente
+- **Próximo:** US-1002 SQL View (aplanar snapshots)
 
 ---
 
-**Creado:** 2026-04-12  
-**Última actualización:** 2026-04-14 (US-903 completada + validada)  
-**Status:** ✅ Sprint 9 completado | 🎯 Epic Dashboard planeada
+**Creado:** 2026-04-16  
+**Última actualización:** 2026-04-17 (US-1001 ✅, US-1002 ✅)  
+**Status:** 🔄 Sprint 10 en progreso | US-1001 ✅ | US-1002 ✅ | Próximo: US-1003
