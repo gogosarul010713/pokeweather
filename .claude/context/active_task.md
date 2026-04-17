@@ -1,191 +1,202 @@
-# 🎯 Tarea Activa: Sesión 1 — Servicios de Nests
+# 🎯 Tarea Activa: Sesión 1 — Fundación Nidos (Arquitectura v2)
 
 **Sprint:** 9 — Nidos de Pokémon  
 **Rama:** `sprint-9-nests`  
-**Sesión:** 1/3 (Servicios y Store)  
-**Duración estimada:** 2 horas  
-**Story Points:** 6 SP (US-801 + US-806)
+**Sesión:** 1/3 (Fundación: Tabs + Pins + Datos + Overlay)  
+**Duración estimada:** 3-4 horas  
+**Story Points:** 9 SP (US-811, US-812, US-817, US-819)  
+**Última actualización:** 2026-04-17
 
 ---
 
 ## 📋 Objetivo de Sesión 1
 
-Crear la base de datos del módulo Nests: tipos, servicios, hook personalizado y estado global.
+Implementar la **base funcional** de Nidos con:
+1. Tabs en sidebar como control de capas (fuente única de verdad)
+2. Pins diferenciados (hexágonos para nidos, círculos para clima)
+3. Datos estáticos cargando desde JSON
+4. Overlay en modo "Todo" para bloquear sidebar/filtros
 
-**Resultado:** 5 nidos visibles en console.log + IndexedDB funcionando
-
----
-
-## 🎯 Tareas (en orden)
-
-### ✅ 1. Crear `src/types/nests.ts` (15 min)
-**Interfaces necesarias:**
-- `Nest` — id, name, latitude, longitude, pokemonType, description
-- `NestPokemon` — type, percentage, rarity
-- `NestBadge` — icon, label, color
-- `Region` — 'asia', 'europa', 'america', 'oceania', 'africa'
-
-**Referencia:** `docs/architecture/12-nests-data-dictionary.md`
+**Resultado esperado:** 
+- ✅ Tres tabs en sidebar funcionando
+- ✅ Cambiar entre tabs actualiza el mapa
+- ✅ Modo "Todo" muestra ambas capas + overlay bloqueante
+- ✅ Toast informativo al entrar en modo "Todo"
+- ✅ 0 errores TypeScript
 
 ---
 
-### ✅ 2. Crear `src/services/nests/nestService.ts` (30 min)
-**Responsabilidades:**
-- Datos estáticos: 5 nidos JSON
-- Transformar datos crudos → tipos TypeScript
-- Getters: getNestById(), getAllNests(), getNestsByRegion()
-- Helpers: getPokemonColor(), formatNestData()
+## 🎯 User Stories (En Orden de Implementación)
 
-**Datos de ejemplo (5 nidos):**
-```
-1. San Francisco - Water type - Squirtle
-2. Central Park NY - Grass type - Bulbasaur
-3. Tokyo Shibuya - Fire type - Charmander
-4. London Hyde Park - Electric type - Pikachu
-5. Sydney Opera House - Dragon type - Dratini
-```
+### 1️⃣ **US-811** — Tabs del Sidebar (3 SP) ← COMENZAR AQUÍ
 
----
+📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-811.md`](../src/docs/sprints/sprint-9/US/US-811.md)
 
-### ✅ 3. Crear `src/services/nests/nestCacheService.ts` (30 min)
-**Responsabilidades:**
-- CRUD en IndexedDB (tabla: `nests_data`)
-- Métodos: save(), getById(), getAll(), delete(), clear()
-- Validación de datos antes de guardar
-- Error handling
+**Objetivo:** Control de capas mediante tabs en sidebar
 
-**Tabla schema:**
-```
-name: 'nests_data'
-keyPath: 'id'
-indexes: ['region', 'pokemonType']
-```
+**Archivos a crear:**
+- `src/components/Sidebar/TabControl.tsx` (~120 líneas)
+  - 3 tabs: Clima / Nidos / Todo
+  - Uno siempre activo (pill style activo)
+  - Contador contextual (Ciudades · N / Nidos · N / etc)
 
----
-
-### ✅ 4. Crear `src/hooks/useNests.ts` (30 min)
-**Responsabilidades:**
-- Hook personalizado que:
-  - Fetch datos (nestService)
-  - Cache automático (nestCacheService)
-  - Estado loading/error
-  - Auto-actualiza cuando dependencias cambian
-- Return: { nests, loading, error, refresh }
-
-**Implementación:**
-```typescript
-const useNests = (region?: string) => {
-  const [nests, setNests] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  
-  useEffect(() => {
-    // Cargar de cache o service
-  }, [region])
-  
-  return { nests, loading, error, refresh }
-}
-```
-
----
-
-### ✅ 5. Extender `src/store/useStore.ts` (15 min)
-**Añadir slice de Nests:**
-- `nests: Nest[]` — array de nidos
-- `selectedNest: Nest | null` — nido seleccionado
-- `nestFavorites: string[]` — IDs de nidos favoritos
-- `setSelectedNest(nest)` — setter
-- `toggleFavorite(nestId)` — agregar/remover de favoritos
-
-**Integración Zustand:**
-```typescript
-const useStore = create((set) => ({
-  // ... existing weather state
-  nests: [],
-  selectedNest: null,
-  nestFavorites: [],
-  setSelectedNest: (nest) => set({ selectedNest: nest }),
-  toggleFavorite: (id) => set((state) => ({ 
-    nestFavorites: state.nestFavorites.includes(id)
-      ? state.nestFavorites.filter(fid => fid !== id)
-      : [...state.nestFavorites, id]
-  }))
-}))
-```
-
----
-
-## ✅ Validación Sesión 1
-
-**En console:**
-```javascript
-// Verificar que esto funciona:
-const store = useStore()
-console.log(store.nests) // Array de 5 objetos Nest
-console.log(store.nests[0].name) // e.g., "San Francisco"
-```
-
-**En DevTools:**
-```
-IndexedDB
-└── [app-db]
-    └── nests_data (5 documentos)
-```
+**Archivos a modificar:**
+- `src/store/useStore.ts` → agregar state `activeTab: 'clima' | 'nidos' | 'todo'` + setter
+- `src/components/Sidebar/Sidebar.tsx` → integrar `<TabControl>`
+- `src/App.tsx` → renderización condicional según `activeTab`
 
 **Criterios de éxito:**
-- ✅ 5 nidos en console sin errores
-- ✅ IndexedDB contiene tabla `nests_data` con 5 docs
-- ✅ TypeScript: 0 errores en `npm run build`
-- ✅ No hay warnings en console
+- ✅ Tabs visibles en sidebar
+- ✅ Click en tab → cambio instantáneo
+- ✅ localStorage persiste `activeTab`
+- ✅ Al recargar se restaura último tab
+- ✅ No hay errores de TypeScript
 
 ---
 
-## 📁 Archivos a Crear
+### 2️⃣ **US-812** — Pins Diferenciados (2 SP)
 
+📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-812.md`](../src/docs/sprints/sprint-9/US/US-812.md)
+
+**Objetivo:** Visual diferenciación entre pins
+
+**Archivos a crear:**
+- `src/components/Map/NestPin.tsx` (~150 líneas)
+  - SVG hexágono (32×32px)
+  - Color según tipo de Pokémon
+  - Click abre popup
+
+**Archivos a modificar:**
+- `src/components/Map/MapView.tsx` → renderizar condicional `<NestPin>` cuando tab=nidos/todo
+
+**Criterios de éxito:**
+- ✅ En tab Clima: solo pines circulares
+- ✅ En tab Nidos: solo hexágonos
+- ✅ En tab Todo: ambos visibles simultáneamente
+- ✅ Hexágonos con color correcto
+
+---
+
+### 3️⃣ **US-819** — Datos JSON (1 SP)
+
+📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-819.md`](../src/docs/sprints/sprint-9/US/US-819.md)
+
+**Objetivo:** Fuente de datos estática
+
+**Archivos a crear:**
+- `src/data/nests.json`
+  - Array con 5-8 nidos
+  - Estructura: id, name, city, country, lat, lng, pokemon, pokemonType[], spawnRate, lastReported
+  - Distribución geográfica variada
+
+**Criterios de éxito:**
+- ✅ JSON válido
+- ✅ Mínimo 5 nidos
+- ✅ Tipos válidos (Water, Fire, Grass, Electric, Dragon, etc)
+- ✅ Coordenadas realistas
+
+---
+
+### 4️⃣ **US-817** — Overlay Modo Todo (2 SP)
+
+📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-817.md`](../src/docs/sprints/sprint-9/US/US-817.md)
+
+**Objetivo:** Feedback visual cuando modo = "todo"
+
+**Archivos a crear:**
+- `src/components/UI/Overlay.tsx` (~50 líneas)
+  - Fondo semi-transparente + mensaje centrado
+  - Reutilizable
+
+- `src/components/UI/Toast.tsx` (~80 líneas)
+  - Notificación bottom-right
+  - Auto-dismiss 3s o click ✕
+
+**Archivos a modificar:**
+- `src/components/Sidebar/Sidebar.tsx` → integrar `<Overlay>` cuando tab=todo
+- `src/components/UI/FilterBar.tsx` → integrar `<Overlay>` cuando tab=todo
+- `src/App.tsx` → mostrar `<Toast>` cuando tab cambia a 'todo'
+
+**Criterios de éxito:**
+- ✅ Toast aparece al entrar en modo Todo
+- ✅ Overlay visible en sidebar y filtros
+- ✅ Cursor `not-allowed` en área bloqueada
+- ✅ Desaparece al cambiar de tab
+
+---
+
+## 📊 Checklist Sesión 1
+
+- [ ] **US-811:** TabControl.tsx creado y visible
+- [ ] **US-811:** `activeTab` state en Zustand
+- [ ] **US-811:** App.tsx renderiza condicional
+- [ ] **US-811:** localStorage persiste activeTab
+- [ ] **US-812:** NestPin.tsx crea hexágonos SVG
+- [ ] **US-812:** MapView renderiza NestPin cuando tab=nidos/todo
+- [ ] **US-812:** Pins diferenciados visualmente (forma + color)
+- [ ] **US-819:** nests.json creado con 5+ nidos
+- [ ] **US-819:** JSON válido y estructura correcta
+- [ ] **US-817:** Overlay.tsx visible cuando tab=todo
+- [ ] **US-817:** Toast aparece al cambiar a todo
+- [ ] **US-817:** Cursor bloqueado en overlay
+- [ ] ✅ **npm run build** sin errores
+- [ ] ✅ Console limpia (0 TS errors)
+- [ ] ✅ Prueba E2E básica (Playwright): cambiar de tabs
+
+---
+
+## 🔑 Conceptos Clave
+
+**`activeTab` es la fuente única de verdad:**
+```typescript
+// En Zustand
+activeTab: 'clima' | 'nidos' | 'todo'
+
+// En React
+const activeTab = useStore(s => s.activeTab)
+
+// Renderización
+{activeTab === 'clima' && <LocationFeed />}
+{activeTab === 'nidos' && <NestFeed />}
+{(activeTab === 'clima' || activeTab === 'todo') && <MapPin />}
+{(activeTab === 'nidos' || activeTab === 'todo') && <NestPin />}
 ```
-src/
-├── types/
-│   └── nests.ts                    ← NUEVO
-├── services/nests/                 ← NUEVO DIR
-│   ├── nestService.ts              ← NUEVO
-│   └── nestCacheService.ts         ← NUEVO
-├── hooks/
-│   └── useNests.ts                 ← NUEVO (si no existe)
-└── store/
-    └── useStore.ts                 ← MODIFICAR (agregar slice)
+
+**localStorage.**
+```typescript
+// Persistencia
+const setActiveTab = (tab) => {
+  set({ activeTab: tab })
+  localStorage.setItem('pwe-activeTab', tab)
+}
+
+// Recuperación
+activeTab: localStorage.getItem('pwe-activeTab') ?? 'clima'
 ```
 
 ---
 
-## 🔗 Referencias Rápidas
+## 📁 Archivos Documentación
 
-- **Arquitectura Nests:** `docs/architecture/11-nests-architecture.md`
-- **Data Dictionary:** `docs/architecture/12-nests-data-dictionary.md`
-- **Sesión 1 detallada:** `docs/sessions/01-sesion-1-servicios.md`
-- **Checklist:** `docs/features/nests/CHECKLIST-FASE-1.md`
-- **Estructura proyecto:** `docs/features/nests/ESTRUCTURA-PROYECTO.md`
-
----
-
-## 📝 Notas Importantes
-
-1. **TypeScript Strict Mode:** Sin `any`, todos los tipos explícitos
-2. **No hardcodear colores:** Usar variables CSS (`var(--nest-purple)`)
-3. **Separar de Clima:** Datos/caché/componentes propios, no mezclar
-4. **Indexación IndexedDB:** Agregar índices por `region` y `pokemonType` para queries futuras
-5. **Error handling:** Try-catch en async functions, return null en errores
+- 🎯 **Índice Sprint:** [`src/docs/sprints/sprint-9/00-INDEX.md`](../src/docs/sprints/sprint-9/00-INDEX.md)
+- 📋 **Requirements:** [`src/docs/sprints/sprint-9/feature-nest/Requirements_nest.md`](../src/docs/sprints/sprint-9/feature-nest/Requirements_nest.md)
+- 📝 **US-811:** [`src/docs/sprints/sprint-9/US/US-811.md`](../src/docs/sprints/sprint-9/US/US-811.md)
+- 📝 **US-812:** [`src/docs/sprints/sprint-9/US/US-812.md`](../src/docs/sprints/sprint-9/US/US-812.md)
+- 📝 **US-817:** [`src/docs/sprints/sprint-9/US/US-817.md`](../src/docs/sprints/sprint-9/US/US-817.md)
+- 📝 **US-819:** [`src/docs/sprints/sprint-9/US/US-819.md`](../src/docs/sprints/sprint-9/US/US-819.md)
 
 ---
 
-## ⏭️ Próximo
+## ⚠️ Notas Importantes
 
-Después de Sesión 1 completada:
-- Validar que todo funciona sin errores
-- Hacer commit con mensaje: `feat(US-801, US-806): Implementar servicios y store de Nests`
-- Proceder a **Sesión 2: Componentes** (NestMapView, NestPin, etc.)
+1. **No crear servicios/hooks complejos en Sesión 1** — Arquitectura v2 es más simple (datos JSON directos)
+2. **Validar con `@design.md`** si existe — UI debe coincidir con diseño
+3. **Cambiar de tab resetea filtros** (no persistir entre tabs)
+4. **Sesión 2 construye sobre esto** — Mantener código limpio y modular
 
 ---
 
-**Creado:** 2026-04-13  
-**Última actualización:** 2026-04-13  
-**Estado:** ✅ Listo para comenzar
+**Creado:** 2026-04-17  
+**Rama:** sprint-9-nests  
+**Commit base:** 7f0bbeb  
+**Estado:** Listo para comenzar — Todos los requerimientos documentados

@@ -5,6 +5,105 @@
 
 ---
 
+### 2026-04-17 D-009 — Arquitectura v2 Nidos: Tabs en sidebar (no toggle)
+
+**Contexto:** Sprint 9. Rediseño completo de feature Nidos. Arquitectura original (v1) propuso toggle Clima ⇄ Nidos en header. UX testing sugirió cambio a tabs.
+
+**Opciones consideradas:**
+- A: Mantener toggle en header (Clima ⇄ Nidos) — arquitectura v1
+- B: Mover control a tabs en sidebar + agregar modo "Todo" (ambas capas)
+- C: Tabs en header
+
+**Decisión:** Opción B
+
+**Motivo:** 
+1. Tabs en sidebar es más natural (user testing confirmó)
+2. Permite modo "Todo" (ver ambas capas) de forma elegante
+3. Sidebar es ya la fuente de control de lista → coherencia
+4. Reduce UI clutter en header (que es crítico para responsive mobile)
+
+**Consecuencias:**
+- ❌ Eliminado: ModeToggle en header, arquitectura v1 completa (US-801-807)
+- ✅ Nuevo: TabControl en sidebar, nueva architecture (US-811-819)
+- ✅ Nuevo: Modo "Todo" con ambas capas + overlay bloqueante
+
+**US relacionada:** US-811, US-812, US-814, US-815, US-816, US-817, US-818, US-819
+
+**Documentación:** `src/docs/sprints/sprint-9/04-archive/` (v1 archivada), `src/docs/sprints/sprint-9/feature-nest/Requirements_nest.md` (v2 especificación)
+
+---
+
+### 2026-04-17 D-008 — Pins diferenciados: forma (no solo color)
+
+**Contexto:** US-812. En modo "Todo", ambas capas (Clima + Nidos) se renderizan simultáneamente. Necesitaba diferenciación clara sin depender solo de color (accesibilidad).
+
+**Opciones consideradas:**
+- A: Solo color diferente (rojo vs azul)
+- B: Solo forma diferente (tamaño distinto)
+- C: Forma + color combinado
+
+**Decisión:** Opción C
+
+**Motivo:** Forma + color = máxima accesibilidad. Círculo (clima) vs Hexágono (nidos) es visualmente evidente sin leer leyenda.
+
+**Consecuencias:** 
+- Pins Clima: círculos (sin cambios actuales)
+- Pins Nidos: hexágonos SVG (32×32px, color por tipo)
+
+**US relacionada:** US-812
+
+---
+
+### 2026-04-17 D-007 — Datos Nidos: JSON estático (no API)
+
+**Contexto:** US-819. MVP de Nidos necesitaba fuente de datos. Considerar API externa vs datos locales.
+
+**Opciones consideradas:**
+- A: API externa (PokeGO API, Overpass, etc) — complejidad alta, actualización dinámica
+- B: JSON estático en src/data/ — simple, actualizable, sin API calls
+- C: Firestore (como Clima) — introduces new datastore para Nidos
+
+**Decisión:** Opción B (v1), con roadmap a Opción C (v2+)
+
+**Motivo:** 
+1. MVP simple: 5-8 nidos hardcodeados
+2. Sin dependencias externas
+3. Fácil de iterar
+4. V2: migración a API es trivial (crear nestService con fetch)
+
+**Consecuencias:** 
+- Nidos actualizables solo en código (commit)
+- Futura v2 puede conectar API real
+
+**US relacionada:** US-819
+
+---
+
+### 2026-04-17 D-006 — Overlay en modo "Todo" para bloquear interacción
+
+**Contexto:** US-817. Modo "Todo" muestra ambas capas pero es estado "exploración de mapa" sin posibilidad de filtrar. Necesitaba UI clara comunicando limitación.
+
+**Opciones consideradas:**
+- A: Deshabilitar componentes (remove del DOM) — confuso, desaparece el UI
+- B: Overlay semi-transparente + mensaje centrado — visualmente claro
+- C: Toast solamente — insuficiente, falta indicador visual
+
+**Decisión:** Opción B (overlay) + Toast (notificación)
+
+**Motivo:**
+- Overlay mantiene UI visible pero intuitivamente bloqueada
+- Mensaje centrado explica por qué
+- Toast notifica al entrar en modo
+- Cursor `not-allowed` refuerza estado
+
+**Consecuencias:**
+- Sidebar/filtros no son completamente inaccesibles (solo visual)
+- Estado claro incluso para usuarios nuevos
+
+**US relacionada:** US-817
+
+---
+
 ### 2026-04-08 D-005 — Eliminación de guardado duplicado en Firestore (-50% writes)
 
 **Contexto:** US-801. Se detectó que `useWeather.ts` y `batchWeatherService.ts` guardaban el mismo forecast en Firestore, duplicando writes innecesariamente.

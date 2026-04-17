@@ -1,123 +1,143 @@
-# 🏃 Sprint 9 — Nidos de Pokémon (Fase 1)
+# 🏃 Sprint 9 — Nidos de Pokémon (Arquitectura v2)
 
-**Período:** 2026-04-13 → 2026-04-26  
-**Rama:** `sprint-9-nests` (basada en `sprint-9`)  
-**Objetivo:** Implementar módulo Nidos de Pokémon como feature independiente  
-**Estado general:** 🚀 **INICIANDO** (Sesión 1: Servicios)
+**Período:** 2026-04-17 → TBD  
+**Rama:** `sprint-9-nests`  
+**Objetivo:** Implementar Nidos con **tabs en sidebar** (control único de capas) + modo "Todo"  
+**Estado general:** ✅ **DOCUMENTACIÓN COMPLETADA** (17-04-2026) → Listo para Sesión 1 implementación
 
 ---
 
-## 📋 User Stories
+## 📋 User Stories (Arquitectura v2)
 
-| ID | Descripción | SP | Estado | Notas |
-|----|-------------|-----|--------|-------|
-| US-801 | Cargar 5 nidos desde JSON → IndexedDB | 2 | ⏳ Pendiente | Tipos + nestService |
-| US-802 | Renderizar pins púrpura en mapa | 3 | ⏳ Pendiente | NestMapView + NestPin |
-| US-803 | Listado de nidos en sidebar | 2 | ⏳ Pendiente | NestFeed + NestCard |
-| US-804 | Panel deslizante con detalles | 3 | ⏳ Pendiente | NestDetail modal |
-| US-805 | Toggle Clima ⇄ Nidos | 2 | ⏳ Pendiente | ModeToggle en header |
-| US-806 | Cache IndexedDB | 2 | ⏳ Pendiente | CRUD persistencia |
-| US-807 | Popup tooltip información | 2 | ⏳ Pendiente | NestTooltip + NestLegend |
+### Sesión 1 (Crítica) — 9 SP
+
+| ID | Descripción | SP | Estado | Docs |
+|----|-------------|-----|--------|------|
+| **US-811** | Tabs sidebar (Clima/Nidos/Todo) — fuente única verdad | 3 | ⏳ Pendiente | [`US-811.md`](../src/docs/sprints/sprint-9/US/US-811.md) |
+| **US-812** | Pins diferenciados: hexágonos vs círculos | 2 | ⏳ Pendiente | [`US-812.md`](../src/docs/sprints/sprint-9/US/US-812.md) |
+| **US-817** | Overlay sidebar/filtros en modo Todo | 2 | ⏳ Pendiente | [`US-817.md`](../src/docs/sprints/sprint-9/US/US-817.md) |
+| **US-819** | Datos Nidos (JSON estático) | 1 | ⏳ Pendiente | [`US-819.md`](../src/docs/sprints/sprint-9/US/US-819.md) |
+
+### Sesión 2 — 11 SP
+
+| ID | Descripción | SP | Estado | Docs |
+|----|-------------|-----|--------|------|
+| **US-814** | Filtros dinámicos por tab | 3 | ⏳ Pendiente | [`US-814.md`](../src/docs/sprints/sprint-9/US/US-814.md) |
+| **US-815** | Leyenda dinámica (Clima/Nidos) | 3 | ⏳ Pendiente | [`US-815.md`](../src/docs/sprints/sprint-9/US/US-815.md) |
+| **US-816** | Leyenda acordeón en modo Todo | 2 | ⏳ Pendiente | [`US-816.md`](../src/docs/sprints/sprint-9/US/US-816.md) |
+| **US-818** | Listado Nidos en sidebar | 3 | ⏳ Pendiente | [`US-818.md`](../src/docs/sprints/sprint-9/US/US-818.md) |
 
 ---
 
 ## 📊 Progreso
 
-**Completadas:** 0/7 US  
-**Pendientes:** 7/7 US (16 SP)  
-**Bloqueadas:** 0  
-**En progreso:** Sesión 1 (servicios y store)
+**Completadas:** 0/8 US (documentación ✅ completada 17-04)  
+**Pendientes:** 8/8 US (20 SP)  
+**En progreso:** Sesión 1 (implementación — comenzar por US-811)  
+**Nota:** US antiguas (US-801-807) archivadas en `04-archive/` — arquitectura reemplazada
 
 ---
 
-## 🎯 Sesiones Planificadas
+## 🎯 Sesiones Implementación
 
-### 📍 Sesión 1 — Servicios (2h) ← ACTUAL
-**Objetivo:** Crear base de datos (tipos, servicios, hook, store)
+### 📍 Sesión 1 — FUNDACIÓN (COMENZAR AQUÍ) ← 9 SP
+**Objetivo:** Tabs del sidebar + pins diferenciados + datos + overlay
 
-**Tareas:**
-1. Crear `src/types/nests.ts` (5 interfaces)
-2. Crear `src/services/nests/nestService.ts` (datos, transformación)
-3. Crear `src/services/nests/nestCacheService.ts` (IndexedDB CRUD)
-4. Crear `src/hooks/useNests.ts` (hook personalizado)
-5. Extender `src/store/useStore.ts` con slice Nests
+**US:**
+- **US-811** (3 SP): TabControl.tsx + Zustand `activeTab` + renderización condicional
+- **US-812** (2 SP): NestPin.tsx (SVG hexágono) + renderizado condicional en mapa
+- **US-817** (2 SP): Overlay.tsx + Toast.tsx + bloqueo sidebar/filtros
+- **US-819** (1 SP): nests.json con 5-8 nidos estáticos
 
-**US incluidas:** US-801, US-806  
-**Validación:** 5 nidos en console + IndexedDB visible
+**Archivos clave:**
+- `src/components/Sidebar/TabControl.tsx` ← NUEVA
+- `src/components/Map/NestPin.tsx` ← NUEVA
+- `src/components/UI/Overlay.tsx` ← NUEVA
+- `src/data/nests.json` ← NUEVA
+- `src/store/useStore.ts` ← MODIFICAR (agregar `activeTab`)
+- `src/App.tsx` ← MODIFICAR (renderización condicional)
 
----
-
-### 📍 Sesión 2 — Componentes (3h)
-**Objetivo:** Crear UI (mapa, sidebar, panel detalle)
-
-**Tareas:**
-- NestMapView + NestPin (componentes mapa)
-- NestFeed + NestCard (listado sidebar)
-- NestDetail (modal deslizante)
-- NestTooltip + NestLegend (info rápida)
-- Styling CSS completo
-
-**US incluidas:** US-802, US-803, US-804, US-807  
-**Validación:** Pins visibles, interactividad funcionando
+**Resultado esperado:** Tabs funcionales + pins diferenciados + modo Todo con overlay + 0 errores
 
 ---
 
-### 📍 Sesión 3 — Integración (2h)
-**Objetivo:** Integrar todo y preparar deployment
+### 📍 Sesión 2 — INTERFAZ COMPLETA — 11 SP
+**Objetivo:** Filtros dinámicos + leyenda dinámica + listado nidos
 
-**Tareas:**
-- NestModeToggle.tsx (botón Clima/Nidos)
-- App.tsx (renderización condicional)
-- E2E Tests (Playwright 5 scenarios)
-- Build exitoso
+**US:**
+- **US-814** (3 SP): FilterBarClima.tsx + FilterBarNests.tsx + dinámico
+- **US-815** (3 SP): NestLegend.tsx (grid 2col + búsqueda + tabs)
+- **US-816** (2 SP): CombinedLegend.tsx (acordeón Clima/Nidos)
+- **US-818** (3 SP): NestCard.tsx + NestFeed.tsx (listado)
 
-**US incluidas:** US-805  
-**Validación:** Build ok, tests passed, 0 TS errors
-
----
-
-## 📁 Documentación Referencia
-
-- **Inicio:** `docs/features/nests/README.md`
-- **Índice:** `docs/features/nests/00-index.md`
-- **Arquitectura:** `docs/architecture/11-nests-architecture.md`
-- **Data Dictionary:** `docs/architecture/12-nests-data-dictionary.md`
-- **Sesiones:** `docs/sessions/`
-- **Decisiones:** `docs/sprints/sprint-9/decisions.md`
-- **Estructura:** `docs/features/nests/ESTRUCTURA-PROYECTO.md`
+**Resultado esperado:** Filtros funcionando + leyenda dinámica + listado browseable
 
 ---
 
-## 🏗️ Arquitectura en Breve
+### 📍 Sesión 3 — VALIDACIÓN (Opcional)
+- E2E testing completo
+- Optimizaciones performance
+- Integración búsqueda/filtros avanzados
+
+---
+
+## 📁 Documentación Referencia (Sprint 9)
+
+**COMENZAR AQUÍ:**
+- 📄 [`src/docs/sprints/sprint-9/00-INDEX.md`](../src/docs/sprints/sprint-9/00-INDEX.md) — Índice general + sesiones
+- 📄 [`src/docs/sprints/sprint-9/feature-nest/Requirements_nest.md`](../src/docs/sprints/sprint-9/feature-nest/Requirements_nest.md) — Especificación (9 requisitos)
+
+**Individual US:**
+- Sesión 1: [`US-811`](../src/docs/sprints/sprint-9/US/US-811.md) | [`US-812`](../src/docs/sprints/sprint-9/US/US-812.md) | [`US-817`](../src/docs/sprints/sprint-9/US/US-817.md) | [`US-819`](../src/docs/sprints/sprint-9/US/US-819.md)
+- Sesión 2: [`US-814`](../src/docs/sprints/sprint-9/US/US-814.md) | [`US-815`](../src/docs/sprints/sprint-9/US/US-815.md) | [`US-816`](../src/docs/sprints/sprint-9/US/US-816.md) | [`US-818`](../src/docs/sprints/sprint-9/US/US-818.md)
+
+**Otros:**
+- 📝 [`src/docs/sprints/sprint-9/04-archive/README.md`](../src/docs/sprints/sprint-9/04-archive/README.md) — Explica por qué v1 fue archivada
+- 📝 [`src/docs/sprints/sprint-9/decisions.md`](../src/docs/sprints/sprint-9/decisions.md) — Decisiones arquitectónicas
+
+---
+
+## 🏗️ Arquitectura v2 (Tabs en Sidebar)
 
 ```
-NIDOS (Feature Independiente)
-├── Tipos (nest.ts)
-│   └── Nest, NestPokemon, NestBadge, Region
-├── Servicios
-│   ├── nestService.ts (datos 5 nidos)
-│   └── nestCacheService.ts (IndexedDB)
-├── Hook
-│   └── useNests.ts (fetch + caché)
+NIDOS → Controlado por TABS en Sidebar
+
+Componentes principales:
 ├── Store
-│   └── nests slice (state + favoritos)
-└── Componentes
-    ├── Mapa: NestMapView, NestPin
-    ├── Sidebar: NestFeed, NestDetail
-    └── UI: NestTooltip, NestLegend, NestCard
+│   └── activeTab: 'clima' | 'nidos' | 'todo' ← FUENTE ÚNICA VERDAD
+├── Sidebar
+│   ├── TabControl.tsx (Clima / Nidos / Todo)
+│   ├── LocationFeed.tsx (cuando tab='clima')
+│   ├── NestFeed.tsx (cuando tab='nidos')
+│   └── Overlay (cuando tab='todo')
+├── Mapa
+│   ├── MapPin.tsx (circulares, clima)
+│   ├── NestPin.tsx (hexágonos, nidos)
+│   ├── MapLegend.tsx (dinámica por tab)
+│   └── CombinedLegend.tsx (acordeón en todo)
+├── Filtros
+│   ├── FilterBarClima.tsx
+│   ├── FilterBarNests.tsx
+│   └── Overlay (cuando tab='todo')
+└── Datos
+    └── nests.json (5-8 nidos estáticos)
 ```
+
+**Clave:** `activeTab` determina TODO lo que se renderiza
 
 ---
 
-## 🔑 Decisiones Clave
+## 🔑 Decisiones Clave (v2)
 
-| Decisión | Valor |
-|----------|-------|
-| **Módulo separado** | Nidos no afectan Clima (datos, caché, componentes propios) |
-| **5 nidos estáticos** | MVP para validar arquitectura |
-| **IndexedDB** | Tabla `nests_data` separada de `weather_data` |
-| **Zustand** | Estado simple, auto-persistente en localStorage |
-| **Toggle Clima/Nidos** | Cambio de vista en header, reduce UI clutter |
+| Decisión | Valor | Razón |
+|----------|-------|-------|
+| **Tabs en sidebar** | Control único de capas (no toggle en header) | UX: es más natural, permite modo combinado |
+| **3 modos** | Clima, Nidos, Todo | Feedback: usuarios querían ver ambas capas |
+| **Pins diferenciados** | Hexágonos (nidos) vs Círculos (clima) | Usabilidad: forma + color = distinción clara |
+| **Modo Todo con overlay** | Bloquea sidebar/filtros visualmente | UX: comunica claramente limitaciones |
+| **JSON estático** | 5-8 nidos hardcodeados (v1) | MVP: futura API externa en v3 |
+| **Datos independientes** | Nidos ≠ Clima (JSON, caché, componentes) | Arquitectura limpia, no afecta módulo clima |
+| **Filtros dinámicos** | Cambian según tab (contextuales) | UX: menos confusión, menos clutter |
 
 ---
 
@@ -133,5 +153,6 @@ NIDOS (Feature Independiente)
 ---
 
 **Creado:** 2026-04-13  
-**Última actualización:** 2026-04-13  
-**Estado:** Listo para Sesión 1
+**Última actualización:** 2026-04-17 (Documentación v2 completada)  
+**Estado:** ✅ **DOCUMENTACIÓN COMPLETA** → Listo para Sesión 1 implementación  
+**Rama:** `sprint-9-nests` (commit `7f0bbeb`)
