@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import ReportsPanel from './ReportsPanel'
+import { PredictionAnalysisDemo } from '../Analytics/PredictionAnalysisDemo'
 
 interface TestingToolsProps {
   isOpen: boolean
   onClose: () => void
 }
 
-type TabType = 'reportes'
+type TabType = 'reportes' | 'predicciones'
 
 export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('reportes')
@@ -289,12 +290,20 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
             >
               ⚠️ Reportes
             </button>
+            <button
+              className={`tt-tab ${activeTab === 'predicciones' ? 'active' : ''}`}
+              onClick={() => setActiveTab('predicciones')}
+            >
+              📊 Predicciones
+            </button>
           </div>
 
           {/* Content */}
           <div className="tt-content">
             {/* Tab: Reportes */}
             {activeTab === 'reportes' && <ReportsPanel />}
+            {/* Tab: Predicciones */}
+            {activeTab === 'predicciones' && <PredictionAnalysisDemo />}
           </div>
         </div>
       )}

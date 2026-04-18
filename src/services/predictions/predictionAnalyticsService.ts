@@ -5,7 +5,8 @@
  */
 
 import type { PredictionRow, LookbackItem } from '../../components/Analytics/PredictionAnalysisTable'
-import { getRecentForecasts, type ForecastDoc, type ForecastSnapshot } from '../firebase/firebaseWeatherService'
+import { getRecentForecasts, type ForecastDoc } from '../firebase/firebaseWeatherService'
+import { getRecentClassificationReports, type ClassificationReport } from '../firebase/classificationReportService'
 
 /**
  * Obtener predicciones para análisis (últimas 24h)
@@ -23,40 +24,55 @@ export async function fetchPredictions(): Promise<PredictionRow[]> {
       return []
     }
 
-    // 2. Transformar a PredictionRow[]
+    // 2. Cargar reportes de clasificación (para obtener el "actual" confirmado)
+    const reports = await getRecentClassificationReports(24)
+
+    // 3. Crear índice por city|date_hour para búsqueda O(1)
+    const reportIndex = new Map<string, ClassificationReport>()
+    reports.forEach(report => {
+      const key = `${report.city_id}|${report.date_hour}`
+      reportIndex.set(key, report)
+    })
+
+    // 4. Transformar a PredictionRow[]
     const rows: PredictionRow[] = []
 
     forecasts.forEach(forecast => {
       forecast.snapshots.forEach(snapshot => {
         const queryTime = timestampToDate(forecast.created_at)
 
+        // Buscar reporte de confirmación para esta city+hour
+        const reportKey = `${forecast.city_id}|${forecast.date_hour}`
+        const report = reportIndex.get(reportKey)
+
         // Crear row con campos básicos
+        // Nota: prediction y actual son CONDICIONES CLIMÁTICAS, no tipos Pokémon
         const row: PredictionRow = {
           queryTime,
           hour: snapshot.hour,
           cityId: forecast.city_id,
           cityName: forecast.city_name,
           prediction: snapshot.classified || 'Unknown',
-          confidence: estimateConfidence(snapshot),
-          actual: snapshot.types?.[0] || 'Unknown',
-          correct: snapshot.types?.includes(snapshot.classified) ?? false,
+          actual: report?.should_be ?? null, // null = "Sin datos"
+          correct: report ? snapshot.classified === report.should_be : null,
           lookback12h: [], // Se calcula abajo
         }
 
-        // 3. Generar lookback: buscar en forecasts previos de ESTA CIUDAD
-        // Lookback es: "¿en las últimas 12h, qué tipos habría sido correcto?"
+        // 5. Generar lookback: buscar en forecasts previos de ESTA CIUDAD
+        // Lookback es: "¿en las últimas 12h, qué condición habría sido correcta?"
         row.lookback12h = generateLookback(
           forecast.city_id,
           snapshot.hour,
           queryTime,
-          forecasts
+          forecasts,
+          reportIndex
         )
 
         rows.push(row)
       })
     })
 
-    console.log(`[PredictionAnalytics] ✅ Generated ${rows.length} prediction rows`)
+    console.log(`[PredictionAnalytics] ✅ Generated ${rows.length} prediction rows (${reports.length} reports loaded)`)
     return rows
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
@@ -66,28 +82,24 @@ export async function fetchPredictions(): Promise<PredictionRow[]> {
 }
 
 /**
- * Estimar confianza del modelo (placeholder)
- * Idea futura: usar accuracy_report de Firestore
+ * Nota: Confianza por row individual no es significativa
+ * La confianza real es acumulada (ej: 88/100 aciertos en Auckland)
+ * Future work: Agregar dashboard de confianza acumulada por ciudad/hora
+ * Para ahora: No se usa en tabla individual (columna removida)
  */
-function estimateConfidence(snapshot: ForecastSnapshot): number {
-  // Placeholder: confianza basada en condiciones
-  // En datos reales, vendría del report de precisión
-  const baseConfidence = 75
-  const windModifier = snapshot.is_windy_override ? 5 : 0
-  const extremeModifier = snapshot.is_windy_override ? 10 : 0
-
-  return Math.min(99, baseConfidence + windModifier + extremeModifier)
-}
 
 /**
- * Generar lookback 12h: encontrar qué tipos habría sido correcto
+ * Generar lookback 12h: encontrar qué condición climática habría sido correcta
  * en las 12 horas previas a esta predicción
+ *
+ * Busca en reports si la predicción (classified) coincidía con lo real (should_be)
  */
 function generateLookback(
   cityId: string,
   targetHour: number,
   targetTime: Date,
-  allForecasts: ForecastDoc[]
+  allForecasts: ForecastDoc[],
+  reportIndex: Map<string, ClassificationReport>
 ): LookbackItem[] {
   const lookbackItems: LookbackItem[] = []
 
@@ -116,16 +128,25 @@ function generateLookback(
       )
 
       if (targetSnapshot) {
-        // ¿Este tipo habría sido correcto?
-        // Nota: no sabemos el "actual" de hace 12h, así que usamos el classified
-        // En datos reales, tendrás accuracy_report.actual_types_seen
-        const wouldBeCorrect = targetSnapshot.types?.includes(targetSnapshot.classified) ?? false
+        // Buscar el reporte para esta fecha_hora
+        const reportKey = `${cityId}|${nearbyForecast.date_hour}`
+        const report = reportIndex.get(reportKey)
 
-        lookbackItems.push({
-          hoursAgo,
-          pokemonType: targetSnapshot.classified || 'Unknown',
-          wouldBeCorrect,
-        })
+        // ¿Esta condición habría sido correcta?
+        // Solo sí hay reporte (si no hay, no sabemos qué fue real)
+        const wouldBeCorrect = report
+          ? targetSnapshot.classified === report.should_be
+          : false
+
+        // Si no hay reporte, omitir este item (no incluir si no hay confirmación)
+        if (report) {
+          lookbackItems.push({
+            hoursAgo,
+            condition: targetSnapshot.classified || 'Unknown',
+            wouldBeCorrect,
+            timestamp: `${String(targetSnapshot.hour).padStart(2, '0')}:00`,
+          })
+        }
       }
     }
   }

@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { WEATHER_IMAGES, CONDITION_LABEL } from '../../config/weatherImages';
+import type { WeatherCondition } from '../../config/weatherImages';
 
 /**
  * Tipos de datos
  */
 export interface LookbackItem {
   hoursAgo: number;
-  pokemonType: string;
+  condition: string; // Condición climática: "sunny", "rain", "cloudy", etc.
   wouldBeCorrect: boolean;
+  timestamp?: string; // "HH:MM" para mostrar en lookback
 }
 
 export interface PredictionRow {
@@ -14,10 +17,9 @@ export interface PredictionRow {
   hour: number;
   cityId: string;
   cityName: string;
-  prediction: string;
-  confidence: number;
-  actual: string;
-  correct: boolean;
+  prediction: string; // Condición climática: "sunny", "rain", "cloudy", etc.
+  actual: string | null; // Condición climática o null si "Sin datos"
+  correct: boolean | null; // null si aún no hay reporte de confirmación
   lookback12h: LookbackItem[];
 }
 
@@ -26,26 +28,6 @@ interface Props {
   title?: string;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  Water: '💧',
-  Fire: '🔥',
-  Electric: '⚡',
-  Grass: '🌿',
-  Ground: '⛰️',
-  Normal: '⭐',
-  Ice: '🧊',
-  Rock: '🪨',
-  Flying: '🪶',
-  Poison: '☠️',
-  Psychic: '🧠',
-  Bug: '🐛',
-  Ghost: '👻',
-  Dark: '🌑',
-  Steel: '⚙️',
-  Dragon: '🐉',
-  Fairy: '✨',
-  Fighting: '🥊',
-};
 
 /**
  * Formatea queryTime a "DD/MM HH:MM UTC"
@@ -65,16 +47,62 @@ function formatQueryTime(queryTime: string | Date): string {
 /**
  * PredictionAnalysisTable: Tabla detallada de predicciones con lookback 12h
  */
+type SortColumn = 'hora' | 'ciudad' | 'prediccion' | 'real' | 'resultado' | null;
+type SortDirection = 'asc' | 'desc';
+
 export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas' }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [openLookbacks, setOpenLookbacks] = useState<Set<number>>(new Set());
+  const [sortColumn, setSortColumn] = useState<SortColumn>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const PAGE_SIZE = 20;
 
-  // Paginación
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  // Ordenamiento (solo página actual, 20 filas)
+  const sortedPageRows = useMemo(() => {
+    if (!sortColumn) return rows;
+
+    const sorted = [...rows].sort((a, b) => {
+      let aVal: any, bVal: any;
+
+      switch (sortColumn) {
+        case 'hora':
+          aVal = new Date(a.queryTime).getTime();
+          bVal = new Date(b.queryTime).getTime();
+          break;
+        case 'ciudad':
+          aVal = a.cityName.toLowerCase();
+          bVal = b.cityName.toLowerCase();
+          break;
+        case 'prediccion':
+          aVal = a.prediction.toLowerCase();
+          bVal = b.prediction.toLowerCase();
+          break;
+        case 'real':
+          aVal = (a.actual ?? 'zzz').toLowerCase();
+          bVal = (b.actual ?? 'zzz').toLowerCase();
+          break;
+        case 'resultado':
+          // null < false < true
+          aVal = a.correct === null ? -1 : a.correct ? 1 : 0;
+          bVal = b.correct === null ? -1 : b.correct ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [rows, sortColumn, sortDirection]);
+
+  // Paginación (sobre filas ya ordenadas)
+  const totalPages = Math.max(1, Math.ceil(sortedPageRows.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
   const startIdx = (safePage - 1) * PAGE_SIZE;
-  const pageRows = rows.slice(startIdx, startIdx + PAGE_SIZE);
+  const pageRows = sortedPageRows.slice(startIdx, startIdx + PAGE_SIZE);
 
   const toggleLookback = (globalIdx: number) => {
     const newSet = new Set(openLookbacks);
@@ -86,15 +114,34 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
     setOpenLookbacks(newSet);
   };
 
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      // Alternar dirección si es la misma columna
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Nueva columna, empezar con asc
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+    // Resetear a página 1
+    setCurrentPage(1);
+  };
+
+  const renderSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) return ' ⇅';
+    return sortDirection === 'asc' ? ' ↑' : ' ↓';
+  };
+
   const handleExportCSV = () => {
-    const headers = ['Hora UTC', 'Ciudad', 'Predicción', 'Real', 'Acierto', 'Confianza'];
+    const headers = ['Hora UTC', 'Ciudad', 'Predicción', 'Real', 'Resultado'];
     const lines = [headers.join(',')];
 
-    rows.forEach(row => {
+    sortedPageRows.forEach(row => {
       const time = formatQueryTime(row.queryTime) + ' UTC';
-      const acierto = row.correct ? 'SÍ' : 'NO';
+      const real = row.actual ?? 'Sin datos';
+      const resultado = row.correct === null ? 'No confirmado' : row.correct ? 'Acierto' : 'Fallo';
       lines.push(
-        `"${time}","${row.cityName}","${row.prediction}","${row.actual}","${acierto}","${row.confidence}%"`
+        `"${time}","${row.cityName}","${row.prediction}","${real}","${resultado}"`
       );
     });
 
@@ -251,24 +298,6 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           white-space: nowrap;
         }
 
-        .pat-badge.water    { color: var(--type-water);    background: rgba(104, 144, 240, 0.1); }
-        .pat-badge.fire     { color: var(--type-fire);     background: rgba(255, 107, 53, 0.1); }
-        .pat-badge.electric { color: var(--type-electric); background: rgba(248, 208, 48, 0.1); }
-        .pat-badge.grass    { color: var(--type-grass);    background: rgba(120, 200, 80, 0.1); }
-        .pat-badge.ground   { color: var(--type-ground);   background: rgba(194, 160, 98, 0.1); }
-        .pat-badge.normal   { color: var(--type-normal);   background: rgba(168, 168, 120, 0.1); }
-        .pat-badge.ice      { color: var(--type-ice);      background: rgba(152, 216, 216, 0.1); }
-        .pat-badge.rock     { color: var(--type-rock);     background: rgba(182, 161, 54, 0.1); }
-        .pat-badge.flying   { color: var(--type-flying);   background: rgba(126, 200, 227, 0.1); }
-        .pat-badge.poison   { color: var(--type-poison);   background: rgba(163, 62, 161, 0.1); }
-        .pat-badge.psychic  { color: var(--type-psychic);  background: rgba(248, 88, 136, 0.1); }
-        .pat-badge.bug      { color: var(--type-bug);      background: rgba(168, 184, 32, 0.1); }
-        .pat-badge.ghost    { color: var(--type-ghost);    background: rgba(112, 88, 152, 0.1); }
-        .pat-badge.dark     { color: var(--type-dark);     background: rgba(112, 88, 72, 0.1); }
-        .pat-badge.steel    { color: var(--type-steel);    background: rgba(184, 184, 208, 0.1); }
-        .pat-badge.dragon   { color: var(--type-dragon);   background: rgba(112, 56, 248, 0.1); }
-        .pat-badge.fairy    { color: var(--type-fairy);    background: rgba(238, 153, 172, 0.1); }
-
         .pat-result {
           font-weight: 700;
           font-size: 12px;
@@ -276,35 +305,6 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
 
         .pat-result.hit  { color: var(--ui-success); }
         .pat-result.miss { color: var(--ui-error); }
-
-        .pat-confidence {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          min-width: 90px;
-        }
-
-        .pat-conf-bar {
-          flex: 1;
-          height: 4px;
-          background: var(--bg-tertiary);
-          border-radius: 2px;
-          overflow: hidden;
-        }
-
-        .pat-conf-fill {
-          height: 100%;
-          border-radius: 2px;
-          transition: width 0.2s;
-        }
-
-        .pat-conf-val {
-          font-family: 'Rajdhani', monospace;
-          font-size: 11px;
-          color: var(--text-secondary);
-          min-width: 35px;
-          text-align: right;
-        }
 
         .pat-btn-lookback {
           padding: 2px 8px;
@@ -372,13 +372,13 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
         }
 
         .pat-lookback-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+          gap: 8px;
         }
 
         .pat-lookback-item {
-          padding: 5px 8px;
+          padding: 6px 6px;
           border-radius: 6px;
           border: 1px solid var(--border-subtle);
           font-family: 'Rajdhani', monospace;
@@ -388,24 +388,40 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           flex-direction: column;
           align-items: center;
           gap: 2px;
-          min-width: 60px;
           text-align: center;
+          background: var(--bg-tertiary);
         }
 
         .pat-lookback-item.hit {
           border-color: var(--ui-success);
-          background: rgba(63, 185, 80, 0.08);
+          background: rgba(63, 185, 80, 0.12);
           color: var(--ui-success);
         }
 
         .pat-lookback-hours {
           font-size: 9px;
-          opacity: 0.7;
+          opacity: 0.8;
+          font-weight: 600;
         }
 
-        .pat-lookback-type {
-          font-size: 11px;
+        .pat-lookback-ago {
+          font-size: 8px;
+          opacity: 0.6;
+        }
+
+        .pat-lookback-condition {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          font-size: 10px;
+          font-weight: 600;
+          margin-top: 2px;
+        }
+
+        .pat-lookback-check {
+          font-size: 12px;
           font-weight: 700;
+          color: var(--ui-success);
         }
 
         .pat-pagination {
@@ -493,12 +509,21 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
         <table className="pat-table">
           <thead>
             <tr>
-              <th>Hora UTC</th>
-              <th>Ciudad</th>
-              <th>Predicción</th>
-              <th>Real</th>
-              <th>Resultado</th>
-              <th>Confianza</th>
+              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('hora')}>
+                Hora UTC{renderSortIcon('hora')}
+              </th>
+              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('ciudad')}>
+                Ciudad{renderSortIcon('ciudad')}
+              </th>
+              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('prediccion')}>
+                Predicción{renderSortIcon('prediccion')}
+              </th>
+              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('real')}>
+                Real{renderSortIcon('real')}
+              </th>
+              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('resultado')}>
+                Resultado{renderSortIcon('resultado')}
+              </th>
               <th>Lookback</th>
             </tr>
           </thead>
@@ -507,12 +532,20 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
               const globalIdx = startIdx + idx;
               const isOpen = openLookbacks.has(globalIdx);
               const time = formatQueryTime(row.queryTime);
-              const confColor = row.confidence >= 85 ? 'var(--ui-success)' :
-                                row.confidence >= 70 ? 'var(--ui-warning)' :
-                                'var(--ui-error)';
-              const typeKeyPred = row.prediction.toLowerCase();
-              const typeKeyActual = row.actual.toLowerCase();
+
+              // Condiciones climáticas (no tipos Pokémon)
+              const predCondition = (row.prediction || 'Unknown').toLowerCase() as WeatherCondition;
+              const actualCondition = (row.actual || 'Unknown').toLowerCase() as WeatherCondition;
               const hasLookback = row.lookback12h.length > 0;
+              const hasActual = row.actual !== null;
+
+              // Información de predicción (siempre disponible)
+              const predWeatherImg = WEATHER_IMAGES[predCondition] || '/weather/cloudy.png';
+              const predLabel = CONDITION_LABEL[predCondition] || row.prediction;
+
+              // Información de real (puede ser null)
+              const actualWeatherImg = hasActual ? (WEATHER_IMAGES[actualCondition] || '/weather/cloudy.png') : '';
+              const actualLabel = hasActual ? (CONDITION_LABEL[actualCondition] || row.actual) : '';
 
               return (
                 <React.Fragment key={`row-${globalIdx}`}>
@@ -523,38 +556,34 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                       <span className={`pat-city ${row.cityId}`}>{row.cityName}</span>
                     </td>
                     <td>
-                      <span className={`pat-badge ${typeKeyPred}`}>
-                        {TYPE_ICONS[row.prediction] || '?'} {row.prediction}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`pat-badge ${typeKeyActual}`}>
-                        {TYPE_ICONS[row.actual] || '?'} {row.actual}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`pat-result ${row.correct ? 'hit' : 'miss'}`}>
-                        {row.correct ? '✓ Acierto' : '✕ Fallo'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="pat-confidence">
-                        <div className="pat-conf-bar">
-                          <div
-                            className="pat-conf-fill"
-                            style={{
-                              width: `${row.confidence}%`,
-                              backgroundColor: confColor,
-                            }}
-                          />
-                        </div>
-                        <span className="pat-conf-val">{row.confidence}%</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <img src={predWeatherImg} alt={predLabel} style={{ width: '20px', height: '20px' }} />
+                        <span>{predLabel}</span>
                       </div>
+                    </td>
+                    <td>
+                      {hasActual && actualWeatherImg ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <img src={actualWeatherImg} alt={actualLabel || ''} style={{ width: '20px', height: '20px' }} />
+                          <span>{actualLabel}</span>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Sin datos</span>
+                      )}
+                    </td>
+                    <td>
+                      {row.correct === null ? (
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>No confirmado</span>
+                      ) : (
+                        <span className={`pat-result ${row.correct ? 'hit' : 'miss'}`}>
+                          {row.correct ? '✓ Acierto' : '✕ Fallo'}
+                        </span>
+                      )}
                     </td>
                     <td>
                       {hasLookback && (
                         <button
-                          className={`pat-btn-lookback ${row.correct ? 'success' : ''}`}
+                          className={`pat-btn-lookback ${row.correct === true ? 'success' : ''}`}
                           onClick={() => toggleLookback(globalIdx)}
                         >
                           LOOKBACK
@@ -565,30 +594,33 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
 
                   {/* Lookback row (expandible) */}
                   {isOpen && hasLookback && (
-                    <tr className={`pat-lookback-row ${row.correct ? 'success' : ''}`} key={`lookback-${globalIdx}`}>
-                      <td colSpan={7}>
+                    <tr className={`pat-lookback-row ${row.correct === true ? 'success' : ''}`} key={`lookback-${globalIdx}`}>
+                      <td colSpan={6}>
                         <div className="pat-lookback-panel">
-                          <div className={`pat-lookback-title ${row.correct ? 'success' : 'error'}`}>
-                            🔍 Lookback 12h —{' '}
-                            {row.lookback12h.filter(x => x.wouldBeCorrect).length} predicción(es)
-                            habría(n) acertado · Real:{' '}
-                            <span className={`pat-badge ${typeKeyActual}`} style={{ fontSize: '10px' }}>
-                              {TYPE_ICONS[row.actual] || '?'} {row.actual}
-                            </span>
+                          <div className={`pat-lookback-title ${row.correct === true ? 'success' : 'error'}`}>
+                            🔍 Lookback 12h — {row.lookback12h.filter(x => x.wouldBeCorrect).length}/{row.lookback12h.length} acertarían
                           </div>
                           <div className="pat-lookback-grid">
-                            {row.lookback12h.map((item, i) => (
-                              <div
-                                key={`${globalIdx}-lb-${i}`}
-                                className={`pat-lookback-item ${item.wouldBeCorrect ? 'hit' : ''}`}
-                              >
-                                <div className="pat-lookback-hours">-{item.hoursAgo}h</div>
-                                <div className="pat-lookback-type">
-                                  {TYPE_ICONS[item.pokemonType] || '?'} {item.pokemonType}
+                            {row.lookback12h.map((item, i) => {
+                              const itemCondition = (item.condition || 'Unknown').toLowerCase() as WeatherCondition;
+                              const itemWeatherImg = WEATHER_IMAGES[itemCondition] || '/weather/cloudy.png';
+                              const itemLabel = CONDITION_LABEL[itemCondition] || item.condition;
+
+                              return (
+                                <div
+                                  key={`${globalIdx}-lb-${i}`}
+                                  className={`pat-lookback-item ${item.wouldBeCorrect ? 'hit' : ''}`}
+                                >
+                                  <div className="pat-lookback-hours">{item.timestamp}</div>
+                                  <div className="pat-lookback-ago">-{item.hoursAgo}h</div>
+                                  <div className="pat-lookback-condition">
+                                    <img src={itemWeatherImg} alt={itemLabel} style={{ width: '16px', height: '16px' }} />
+                                    <span>{itemLabel}</span>
+                                  </div>
+                                  {item.wouldBeCorrect && <div className="pat-lookback-check">✓</div>}
                                 </div>
-                                <div>{item.wouldBeCorrect ? '✓' : '·'}</div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       </td>

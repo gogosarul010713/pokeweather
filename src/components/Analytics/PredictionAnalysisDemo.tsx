@@ -10,7 +10,8 @@ import { fetchPredictions } from '../../services/predictions/predictionAnalytics
 
 function generateMockData(): PredictionRow[] {
   const cities = ['sydney', 'tokyo', 'london'];
-  const types = ['Water', 'Fire', 'Electric', 'Grass', 'Ground', 'Normal'];
+  const conditions: Array<'sunny' | 'partly' | 'cloudy' | 'fog' | 'rain' | 'snow' | 'windy'> =
+    ['sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy'];
   const cityNames: Record<string, string> = {
     sydney: 'Sydney',
     tokyo: 'Tokyo',
@@ -22,35 +23,33 @@ function generateMockData(): PredictionRow[] {
   // Generar 48 predicciones (24 horas x 3 ciudades)
   for (let h = 0; h < 24; h++) {
     cities.forEach(cityId => {
-      const prediction = types[Math.floor(Math.random() * types.length)];
-      const confidence = Math.round(60 + Math.random() * 35);
-      const isCorrect = Math.random() > 0.15; // 85% de acierto en promedio
+      const prediction = conditions[Math.floor(Math.random() * conditions.length)];
+      const hasReport = Math.random() > 0.3; // 70% tienen reporte de confirmación
+      const isCorrect = hasReport && Math.random() > 0.15; // 85% de acierto si hay reporte
 
-      let actual = prediction;
-      if (!isCorrect) {
-        // Si no es correcto, elige un tipo diferente
-        const alternatives = types.filter(t => t !== prediction);
-        actual = alternatives[Math.floor(Math.random() * alternatives.length)];
+      let actual: string | null = null;
+      if (hasReport) {
+        actual = isCorrect ? prediction : conditions[Math.floor(Math.random() * conditions.length)];
       }
 
-      // Generar lookback 12h si falló
-      const lookback12h = !isCorrect
-        ? Array.from({ length: 12 }, (_, i) => ({
-            hoursAgo: 12 - i,
-            pokemonType: types[Math.floor(Math.random() * types.length)],
-            wouldBeCorrect: i === 2 || i === 7, // Simular 2 que habrían acertado
+      // Generar lookback 12h con condiciones climáticas
+      const lookback12h = hasReport && isCorrect === false
+        ? Array.from({ length: 6 }, (_, i) => ({
+            hoursAgo: 6 - i,
+            condition: conditions[Math.floor(Math.random() * conditions.length)],
+            wouldBeCorrect: i === 1 || i === 4, // Simular 2 que habrían acertado
+            timestamp: `${String((h - 6 + i) % 24).padStart(2, '0')}:00`,
           }))
         : [];
 
       rows.push({
-        queryTime: `2026-04-17T${String(h).padStart(2, '0')}:00:00Z`,
+        queryTime: `2026-04-18T${String(h).padStart(2, '0')}:30:00Z`,
         hour: h,
         cityId,
         cityName: cityNames[cityId],
         prediction,
-        confidence,
         actual,
-        correct: isCorrect,
+        correct: hasReport ? isCorrect : null,
         lookback12h,
       });
     });

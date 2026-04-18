@@ -211,4 +211,90 @@
 
 ---
 
+### 2026-04-18 D-012 — PredictionAnalysisTable: Restructure con condiciones climáticas (US-1007 Revisión)
+
+**Contexto:** Revisión de observaciones de tabla. Clarificación crítica: `prediction` y `actual` son **condiciones climáticas**, no tipos Pokémon.
+
+**Decisiones tomadas:**
+
+1. **Campos son condiciones climáticas:** `prediction` y `actual` = "sunny", "rain", "cloudy", etc. (no tipos Pokémon)
+   - Mapeo: condición → icono + label desde `WEATHER_IMAGES`, `CONDITION_LABEL`, `CONDITION_COLORS`
+   - Impacto: Cambio en `PredictionRow` interface (strings climáticos)
+
+2. **Confianza removida de tabla (por ahora):**
+   - Razón: Confianza significativa es por acumulación (88/100 en Auckland), no por row individual
+   - Confianza acumulada: future dashboard
+   - Actual: Quitar columna "Confianza" de tabla
+   - Documentación: Agregar nota en US-1007 para future work
+
+3. **Lookback 3-filas con solo verde en aciertos:**
+   - Fila 1: Hora (HH:MM UTC)
+   - Fila 2: Cuánto hace (-Xh)
+   - Fila 3: Icono clima + label + ✓ (solo si wouldBeCorrect=true)
+   - Color: Verde solo si acierto, gris/sin cambio si fallo
+
+4. **Ordenamiento por página (20 filas cliente-side):**
+   - Alcance: Sort de la página actual (20 filas), no tabla completa
+   - Evento: Click en header columna → alterna asc ↔ desc
+   - Performance: O(20 log 20) ≈ 86 ops, negligible
+   - Columnas ordenables: Hora, Ciudad, Predicción, Real, Resultado
+   - No ordenable: Lookback (siempre igual)
+
+5. **Validación Firestore (gcloud):**
+   - R1: Usar `bq query` para verificar estructura real en BigQuery
+   - Si estructura ≠ esperada: Proponer cambio de esquema
+   - Punto crítico: ¿`classified_condition` es confiable como "condición climática"?
+
+**Motivo:**
+- Condiciones climáticas son la fuente real de datos (AccuWeather)
+- Tipos Pokémon son derivados (mapping posterior)
+- Tabla es para debugging/análisis de predicción de clima, no de tipos
+
+**Consecuencias:**
+- Interface `PredictionRow`: `prediction: string` (condición) + `actual: string | null` (condición o "Sin datos")
+- `LookbackItem`: `condition: string` (condición climática), no `pokemonType`
+- Columna "Confianza" desaparece (será reintroducida en dashboard agregado)
+- Renderizado: Requiere helpers `WEATHER_IMAGES[condition]`, `CONDITION_LABEL[condition]`, `CONDITION_COLORS[condition]`
+
+**US relacionada:** US-1007
+
+---
+
+### 2026-04-18 D-011 — PredictionAnalysisTable: Debugging vs. BI Tools (US-1007)
+
+**Contexto:** Sprint 10. Dashboard Looker Studio MVP en progreso. Necesidad paralela: análisis táctico de predicciones fallidas con "lookback 12h".
+
+**Opción A:** Agregar a Looker Studio (mismo BI tool)
+- Ventaja: Consistencia visual
+- Desventaja: Lookback complejo en Looker, UX mejor en React
+
+**Opción B:** Componente React custom (elegida ← **ELEGIDA**)
+- Ventaja: Lookup expandible, UX óptima, sin nuevas librerías
+- Desventaja: Separate from BI dashboards, pero cumple propósito diferente
+
+**Decisión:** Opción B — Componente React
+
+**Motivo:**
+1. Propósito diferente: Looker = estratégico (métricas), React = táctico (debugging)
+2. UX lookback inline mejor que Looker
+3. Sin nuevas deps (solo React built-in)
+4. Datos ya en BigQuery (snapshots_flat)
+5. Mock HTML referencia facilita implementación rápida
+
+**Implementación:**
+- `src/components/Analytics/PredictionAnalysisTable.tsx` (360 líneas, self-contained)
+- Tipos Pokémon: uso de vars CSS existentes (--type-X)
+- Paginación nativa (20/page)
+- Export CSV + Copy JSON
+- Filas expandibles con lookback panel
+
+**Consecuencias:**
+- Dos dashboards en App: Looker (BI) + React (debugging)
+- Lookback es feature única, no competidor a Looker
+- Próximo: Integración en TestingTools o ruta `/analytics`
+
+**US relacionada:** US-1007
+
+---
+
 <!-- Agrega nuevas decisiones aquí, más recientes primero -->
