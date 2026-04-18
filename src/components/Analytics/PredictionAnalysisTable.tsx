@@ -1,25 +1,33 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  createColumnHelper,
+  flexRender,
+  type SortingState,
+  type ColumnFiltersState,
+} from '@tanstack/react-table';
 import { WEATHER_IMAGES, CONDITION_LABEL } from '../../config/weatherImages';
 import type { WeatherCondition } from '../../config/weatherImages';
 
-/**
- * Tipos de datos
- */
 export interface LookbackItem {
   hoursAgo: number;
-  condition: string; // Condición climática: "sunny", "rain", "cloudy", etc.
+  condition: string;
   wouldBeCorrect: boolean;
-  timestamp?: string; // "HH:MM" para mostrar en lookback
+  timestamp?: string;
 }
 
 export interface PredictionRow {
-  queryTime: string | Date; // ISO string o Date object
+  queryTime: string | Date;
   hour: number;
   cityId: string;
   cityName: string;
-  prediction: string; // Condición climática: "sunny", "rain", "cloudy", etc.
-  actual: string | null; // Condición climática o null si "Sin datos"
-  correct: boolean | null; // null si aún no hay reporte de confirmación
+  prediction: string;
+  actual: string | null;
+  correct: boolean | null;
   lookback12h: LookbackItem[];
 }
 
@@ -28,146 +36,189 @@ interface Props {
   title?: string;
 }
 
-
-/**
- * Formatea queryTime a "DD/MM HH:MM UTC"
- */
 function formatQueryTime(queryTime: string | Date): string {
   const date = typeof queryTime === 'string' ? new Date(queryTime) : queryTime;
-  if (isNaN(date.getTime())) {
-    return 'N/A';
-  }
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  return `${day}/${month} ${hours}:${minutes}`;
+  if (isNaN(date.getTime())) return 'N/A';
+  const day    = String(date.getUTCDate()).padStart(2, '0');
+  const month  = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const hours  = String(date.getUTCHours()).padStart(2, '0');
+  const mins   = String(date.getUTCMinutes()).padStart(2, '0');
+  return `${day}/${month} ${hours}:${mins}`;
 }
 
-/**
- * PredictionAnalysisTable: Tabla detallada de predicciones con lookback 12h
- */
-type SortColumn = 'hora' | 'ciudad' | 'prediccion' | 'real' | 'resultado' | null;
-type SortDirection = 'asc' | 'desc';
+function WeatherBadge({ condition }: { condition: string }) {
+  const cond = condition.toLowerCase() as WeatherCondition;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <img
+        src={WEATHER_IMAGES[cond] || '/weather/cloudy.png'}
+        alt={condition}
+        style={{ width: '20px', height: '20px' }}
+      />
+      <span>{CONDITION_LABEL[cond] || condition}</span>
+    </div>
+  );
+}
+
+function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
+  if (!sorted) return <span className="pat-sort-icon">⇅</span>;
+  return <span className="pat-sort-icon active">{sorted === 'asc' ? '↑' : '↓'}</span>;
+}
+
+const PAGE_SIZES = [10, 20, 50, 100];
 
 export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas' }: Props) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [openLookbacks, setOpenLookbacks] = useState<Set<number>>(new Set());
-  const [sortColumn, setSortColumn] = useState<SortColumn>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const PAGE_SIZE = 20;
+  const [sorting, setSorting]             = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter]   = useState('');
+  const [openLookbacks, setOpenLookbacks] = useState<Set<string>>(new Set());
 
-  // Ordenamiento (solo página actual, 20 filas)
-  const sortedPageRows = useMemo(() => {
-    if (!sortColumn) return rows;
-
-    const sorted = [...rows].sort((a, b) => {
-      let aVal: any, bVal: any;
-
-      switch (sortColumn) {
-        case 'hora':
-          aVal = new Date(a.queryTime).getTime();
-          bVal = new Date(b.queryTime).getTime();
-          break;
-        case 'ciudad':
-          aVal = a.cityName.toLowerCase();
-          bVal = b.cityName.toLowerCase();
-          break;
-        case 'prediccion':
-          aVal = a.prediction.toLowerCase();
-          bVal = b.prediction.toLowerCase();
-          break;
-        case 'real':
-          aVal = (a.actual ?? 'zzz').toLowerCase();
-          bVal = (b.actual ?? 'zzz').toLowerCase();
-          break;
-        case 'resultado':
-          // null < false < true
-          aVal = a.correct === null ? -1 : a.correct ? 1 : 0;
-          bVal = b.correct === null ? -1 : b.correct ? 1 : 0;
-          break;
-        default:
-          return 0;
-      }
-
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
+  const toggleLookback = (key: string) => {
+    setOpenLookbacks(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
     });
-
-    return sorted;
-  }, [rows, sortColumn, sortDirection]);
-
-  // Paginación (sobre filas ya ordenadas)
-  const totalPages = Math.max(1, Math.ceil(sortedPageRows.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const startIdx = (safePage - 1) * PAGE_SIZE;
-  const pageRows = sortedPageRows.slice(startIdx, startIdx + PAGE_SIZE);
-
-  const toggleLookback = (globalIdx: number) => {
-    const newSet = new Set(openLookbacks);
-    if (newSet.has(globalIdx)) {
-      newSet.delete(globalIdx);
-    } else {
-      newSet.add(globalIdx);
-    }
-    setOpenLookbacks(newSet);
   };
 
-  const handleSort = (column: SortColumn) => {
-    if (sortColumn === column) {
-      // Alternar dirección si es la misma columna
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      // Nueva columna, empezar con asc
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-    // Resetear a página 1
-    setCurrentPage(1);
-  };
+  const columnHelper = createColumnHelper<PredictionRow>();
 
-  const renderSortIcon = (column: SortColumn) => {
-    if (sortColumn !== column) return ' ⇅';
-    return sortDirection === 'asc' ? ' ↑' : ' ↓';
-  };
+  const columns = useMemo(() => [
+    columnHelper.accessor('queryTime', {
+      id: 'hora',
+      header: 'Hora UTC',
+      cell: info => (
+        <span className="pat-time">{formatQueryTime(info.getValue())}</span>
+      ),
+      sortingFn: (a, b) =>
+        new Date(a.original.queryTime).getTime() - new Date(b.original.queryTime).getTime(),
+      filterFn: (row, _id, value) =>
+        formatQueryTime(row.original.queryTime).toLowerCase().includes(value.toLowerCase()),
+    }),
+    columnHelper.accessor('cityName', {
+      id: 'ciudad',
+      header: 'Ciudad',
+      cell: info => (
+        <span className={`pat-city ${info.row.original.cityId}`}>
+          {info.getValue()}
+        </span>
+      ),
+      filterFn: 'includesString',
+    }),
+    columnHelper.accessor('prediction', {
+      id: 'prediccion',
+      header: 'Predicción',
+      cell: info => <WeatherBadge condition={info.getValue()} />,
+      filterFn: (row, _id, value) =>
+        (CONDITION_LABEL[row.original.prediction.toLowerCase() as WeatherCondition] || row.original.prediction)
+          .toLowerCase().includes(value.toLowerCase()),
+    }),
+    columnHelper.accessor('actual', {
+      id: 'real',
+      header: 'Real',
+      cell: info => {
+        const val = info.getValue();
+        return val
+          ? <WeatherBadge condition={val} />
+          : <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Sin datos</span>;
+      },
+      filterFn: (row, _id, value) => {
+        const val = row.original.actual;
+        const label = val
+          ? (CONDITION_LABEL[val.toLowerCase() as WeatherCondition] || val)
+          : 'sin datos';
+        return label.toLowerCase().includes(value.toLowerCase());
+      },
+    }),
+    columnHelper.accessor('correct', {
+      id: 'resultado',
+      header: 'Resultado',
+      cell: info => {
+        const c = info.getValue();
+        if (c === null)
+          return <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>No confirmado</span>;
+        return (
+          <span className={`pat-result ${c ? 'hit' : 'miss'}`}>
+            {c ? '✓ Acierto' : '✕ Fallo'}
+          </span>
+        );
+      },
+      sortingFn: (a, b) => {
+        const toN = (v: boolean | null) => (v === null ? -1 : v ? 1 : 0);
+        return toN(a.original.correct) - toN(b.original.correct);
+      },
+      filterFn: (row, _id, value) => {
+        const c = row.original.correct;
+        const label = c === null ? 'no confirmado' : c ? 'acierto' : 'fallo';
+        return label.includes(value.toLowerCase());
+      },
+    }),
+    columnHelper.display({
+      id: 'lookback',
+      header: 'Lookback',
+      cell: info => {
+        const row = info.row.original;
+        if (!row.lookback12h.length) return null;
+        const key    = info.row.id;
+        const isOpen = openLookbacks.has(key);
+        return (
+          <button
+            className={`pat-btn-lookback ${row.correct === true ? 'success' : ''}`}
+            onClick={() => toggleLookback(key)}
+          >
+            {isOpen ? 'CERRAR' : 'LOOKBACK'}
+          </button>
+        );
+      },
+      enableSorting: false,
+      enableColumnFilter: false,
+    }),
+  ], [openLookbacks]);
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    state: { sorting, columnFilters, globalFilter },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 20 } },
+  });
+
+  const { pageIndex, pageSize } = table.getState().pagination;
+  const totalFiltered = table.getFilteredRowModel().rows.length;
 
   const handleExportCSV = () => {
     const headers = ['Hora UTC', 'Ciudad', 'Predicción', 'Real', 'Resultado'];
     const lines = [headers.join(',')];
-
-    sortedPageRows.forEach(row => {
-      const time = formatQueryTime(row.queryTime) + ' UTC';
-      const real = row.actual ?? 'Sin datos';
-      const resultado = row.correct === null ? 'No confirmado' : row.correct ? 'Acierto' : 'Fallo';
-      lines.push(
-        `"${time}","${row.cityName}","${row.prediction}","${real}","${resultado}"`
-      );
+    table.getFilteredRowModel().rows.forEach(({ original: r }) => {
+      const real      = r.actual ?? 'Sin datos';
+      const resultado = r.correct === null ? 'No confirmado' : r.correct ? 'Acierto' : 'Fallo';
+      lines.push(`"${formatQueryTime(r.queryTime)} UTC","${r.cityName}","${r.prediction}","${real}","${resultado}"`);
     });
-
-    const csv = lines.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'predictions.csv';
-    link.click();
-
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'predictions.csv';
+    a.click();
     showToast('✓ CSV exportado');
   };
 
   const handleCopyJSON = () => {
-    navigator.clipboard.writeText(JSON.stringify(rows, null, 2)).then(() => {
-      showToast('✓ JSON copiado');
-    });
+    const data = table.getFilteredRowModel().rows.map(r => r.original);
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => showToast('✓ JSON copiado'));
   };
 
   const showToast = (msg: string) => {
     const el = document.getElementById('prediction-toast');
-    if (el) {
-      el.textContent = msg;
-      el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), 2000);
-    }
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
   };
 
   return (
@@ -179,14 +230,15 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           gap: 0;
         }
 
+        /* ── Header ─────────────────────────────────────── */
         .pat-header {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 14px 16px;
+          padding: 12px 16px;
           border-bottom: 1px solid var(--border-default);
+          flex-wrap: wrap;
         }
-
         .pat-header h3 {
           margin: 0;
           font-family: 'Rajdhani', sans-serif;
@@ -195,20 +247,16 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           letter-spacing: 0.5px;
           color: var(--text-primary);
         }
-
         .pat-count {
-          margin-left: auto;
           font-family: 'Rajdhani', monospace;
           font-size: 12px;
           color: var(--text-secondary);
         }
-
         .pat-actions {
           display: flex;
           gap: 6px;
-          margin-left: 12px;
+          margin-left: auto;
         }
-
         .pat-btn {
           padding: 4px 10px;
           border-radius: 4px;
@@ -221,47 +269,153 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           cursor: pointer;
           transition: all 0.2s;
         }
-
         .pat-btn:hover {
           background: rgba(88, 166, 255, 0.1);
           color: var(--ui-accent);
           border-color: var(--ui-accent);
         }
 
-        .pat-table-wrap {
-          overflow-x: auto;
-          border-top: 1px solid var(--border-default);
+        /* ── Toolbar: búsqueda global ────────────────────── */
+        .pat-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 16px;
+          border-bottom: 1px solid var(--border-subtle);
+          background: rgba(0,0,0,0.06);
+        }
+        .pat-search-wrap {
+          position: relative;
+          flex: 1;
+          max-width: 320px;
+        }
+        .pat-search-icon {
+          position: absolute;
+          left: 8px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 12px;
+          color: var(--text-secondary);
+          pointer-events: none;
+        }
+        .pat-search {
+          width: 100%;
+          padding: 5px 8px 5px 28px;
+          border-radius: 4px;
+          border: 1px solid var(--border-default);
+          background: var(--bg-tertiary);
+          color: var(--text-primary);
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 12px;
+          box-sizing: border-box;
+        }
+        .pat-search:focus {
+          outline: none;
+          border-color: var(--ui-accent);
+        }
+        .pat-search::placeholder {
+          color: var(--text-secondary);
+          opacity: 0.6;
+        }
+        .pat-filter-count {
+          font-family: 'Rajdhani', monospace;
+          font-size: 11px;
+          color: var(--text-secondary);
+          margin-left: auto;
+        }
+        .pat-clear-btn {
+          padding: 4px 8px;
+          border-radius: 4px;
+          border: 1px solid var(--border-default);
+          background: transparent;
+          color: var(--text-secondary);
+          font-size: 11px;
+          cursor: pointer;
+        }
+        .pat-clear-btn:hover {
+          color: var(--ui-error);
+          border-color: var(--ui-error);
         }
 
+        /* ── Table ──────────────────────────────────────── */
+        .pat-table-wrap {
+          overflow-x: auto;
+        }
         .pat-table {
           width: 100%;
           border-collapse: collapse;
           font-size: 12px;
         }
 
+        /* ── Column headers ─────────────────────────────── */
         .pat-table thead th {
-          padding: 9px 12px;
+          padding: 0;
           text-align: left;
+          background: rgba(0, 0, 0, 0.15);
+          border-bottom: 1px solid var(--border-default);
+          white-space: nowrap;
+        }
+        .pat-th-inner {
+          display: flex;
+          flex-direction: column;
+        }
+        .pat-th-label {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 12px 4px;
           font-family: 'Rajdhani', monospace;
           font-size: 10px;
           font-weight: 700;
           letter-spacing: 0.5px;
           text-transform: uppercase;
           color: var(--text-secondary);
-          border-bottom: 1px solid var(--border-default);
-          background: rgba(0, 0, 0, 0.15);
+          cursor: pointer;
+          user-select: none;
           white-space: nowrap;
         }
+        .pat-th-label:hover {
+          color: var(--text-primary);
+        }
+        .pat-sort-icon {
+          font-size: 10px;
+          opacity: 0.4;
+        }
+        .pat-sort-icon.active {
+          opacity: 1;
+          color: var(--ui-accent);
+        }
+        .pat-th-filter {
+          padding: 0 8px 6px;
+        }
+        .pat-col-filter {
+          width: 100%;
+          padding: 3px 6px;
+          border-radius: 3px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 10px;
+          box-sizing: border-box;
+        }
+        .pat-col-filter:focus {
+          outline: none;
+          border-color: var(--ui-accent);
+        }
+        .pat-col-filter::placeholder {
+          color: var(--text-secondary);
+          opacity: 0.5;
+        }
 
+        /* ── Rows ───────────────────────────────────────── */
         .pat-table tbody tr {
           border-bottom: 1px solid var(--border-subtle);
           transition: background 0.15s;
         }
-
         .pat-table tbody tr:hover {
           background: rgba(88, 166, 255, 0.05);
         }
-
         .pat-table td {
           padding: 10px 12px;
           vertical-align: middle;
@@ -272,7 +426,6 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           font-size: 11px;
           color: var(--text-secondary);
         }
-
         .pat-city {
           display: inline-flex;
           align-items: center;
@@ -280,32 +433,14 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           font-weight: 600;
           font-size: 12px;
         }
-
-        .pat-city.sydney::before { content: '●'; color: var(--ui-accent); }
-        .pat-city.tokyo::before  { content: '●'; color: #f472b6; }
-        .pat-city.london::before { content: '●'; color: var(--ui-accent); }
-
-        .pat-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 3px 8px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.3px;
-          border: 1px solid currentColor;
-          white-space: nowrap;
-        }
-
         .pat-result {
           font-weight: 700;
           font-size: 12px;
         }
-
         .pat-result.hit  { color: var(--ui-success); }
         .pat-result.miss { color: var(--ui-error); }
 
+        /* ── Lookback ───────────────────────────────────── */
         .pat-btn-lookback {
           padding: 2px 8px;
           border-radius: 4px;
@@ -319,41 +454,28 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           cursor: pointer;
           transition: all 0.15s;
         }
-
-        .pat-btn-lookback:hover {
-          background: rgba(248, 81, 73, 0.15);
-        }
-
+        .pat-btn-lookback:hover { background: rgba(248, 81, 73, 0.15); }
         .pat-btn-lookback.success {
           border-color: var(--ui-success);
           background: rgba(63, 185, 80, 0.08);
           color: var(--ui-success);
         }
-
-        .pat-btn-lookback.success:hover {
-          background: rgba(63, 185, 80, 0.15);
-        }
+        .pat-btn-lookback.success:hover { background: rgba(63, 185, 80, 0.15); }
 
         .pat-lookback-row td {
           padding: 0;
           background: rgba(248, 81, 73, 0.02);
         }
-
-        .pat-lookback-row.success td {
-          background: rgba(63, 185, 80, 0.02);
-        }
-
+        .pat-lookback-row.success td { background: rgba(63, 185, 80, 0.02); }
         .pat-lookback-panel {
           padding: 12px 16px;
           border-top: 1px solid rgba(248, 81, 73, 0.15);
           border-bottom: 1px solid rgba(248, 81, 73, 0.15);
         }
-
         .pat-lookback-title {
           font-family: 'Rajdhani', monospace;
           font-size: 11px;
           font-weight: 700;
-          color: var(--ui-error);
           letter-spacing: 0.5px;
           margin-bottom: 10px;
           display: flex;
@@ -362,23 +484,15 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           flex-wrap: wrap;
           text-transform: uppercase;
         }
-
-        .pat-lookback-title.success {
-          color: var(--ui-success);
-        }
-
-        .pat-lookback-title.error {
-          color: var(--ui-error);
-        }
-
+        .pat-lookback-title.success { color: var(--ui-success); }
+        .pat-lookback-title.error   { color: var(--ui-error); }
         .pat-lookback-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
           gap: 8px;
         }
-
         .pat-lookback-item {
-          padding: 6px 6px;
+          padding: 6px;
           border-radius: 6px;
           border: 1px solid var(--border-subtle);
           font-family: 'Rajdhani', monospace;
@@ -391,59 +505,67 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           text-align: center;
           background: var(--bg-tertiary);
         }
-
         .pat-lookback-item.hit {
           border-color: var(--ui-success);
           background: rgba(63, 185, 80, 0.12);
           color: var(--ui-success);
         }
-
-        .pat-lookback-hours {
-          font-size: 9px;
-          opacity: 0.8;
-          font-weight: 600;
-        }
-
-        .pat-lookback-ago {
-          font-size: 8px;
-          opacity: 0.6;
-        }
-
+        .pat-lookback-hours   { font-size: 9px; opacity: 0.8; font-weight: 600; }
+        .pat-lookback-ago     { font-size: 8px; opacity: 0.6; }
         .pat-lookback-condition {
-          display: flex;
-          align-items: center;
-          gap: 2px;
-          font-size: 10px;
-          font-weight: 600;
-          margin-top: 2px;
+          display: flex; align-items: center; gap: 2px;
+          font-size: 10px; font-weight: 600; margin-top: 2px;
+        }
+        .pat-lookback-check { font-size: 12px; font-weight: 700; color: var(--ui-success); }
+
+        /* ── Empty state ────────────────────────────────── */
+        .pat-empty {
+          padding: 40px 16px;
+          text-align: center;
+          color: var(--text-secondary);
+          font-size: 13px;
         }
 
-        .pat-lookback-check {
-          font-size: 12px;
-          font-weight: 700;
-          color: var(--ui-success);
-        }
-
+        /* ── Pagination ─────────────────────────────────── */
         .pat-pagination {
           display: flex;
           align-items: center;
           gap: 6px;
           padding: 10px 16px;
           border-top: 1px solid var(--border-default);
-          justify-content: flex-end;
           flex-wrap: wrap;
         }
-
         .pat-page-info {
           font-family: 'Rajdhani', monospace;
           font-size: 11px;
           color: var(--text-secondary);
-          margin-right: 6px;
         }
-
+        .pat-page-size-label {
+          font-family: 'Rajdhani', monospace;
+          font-size: 11px;
+          color: var(--text-secondary);
+          margin-left: 12px;
+        }
+        .pat-page-size-select {
+          padding: 3px 6px;
+          border-radius: 4px;
+          border: 1px solid var(--border-default);
+          background: var(--bg-tertiary);
+          color: var(--text-primary);
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 11px;
+          cursor: pointer;
+        }
+        .pat-page-btns {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          margin-left: auto;
+        }
         .pat-page-btn {
-          width: 28px;
+          min-width: 28px;
           height: 28px;
+          padding: 0 6px;
           border-radius: 4px;
           border: 1px solid var(--border-default);
           background: transparent;
@@ -453,20 +575,26 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           font-weight: 600;
           cursor: pointer;
           transition: all 0.15s;
+          white-space: nowrap;
         }
-
-        .pat-page-btn:hover:not(:disabled),
-        .pat-page-btn.active {
+        .pat-page-btn:hover:not(:disabled) {
           background: rgba(88, 166, 255, 0.1);
           border-color: var(--ui-accent);
           color: var(--ui-accent);
         }
-
-        .pat-page-btn:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
+        .pat-page-btn.active {
+          background: rgba(88, 166, 255, 0.15);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
+        }
+        .pat-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pat-page-sep {
+          color: var(--text-secondary);
+          font-size: 12px;
+          padding: 0 2px;
         }
 
+        /* ── Toast ─────────────────────────────────────── */
         .pat-toast {
           position: fixed;
           bottom: 20px;
@@ -483,190 +611,225 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           opacity: 0;
           transition: all 0.3s;
         }
-
-        .pat-toast.show {
-          transform: translateY(0);
-          opacity: 1;
-        }
+        .pat-toast.show { transform: translateY(0); opacity: 1; }
       `}</style>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="pat-header">
         <h3>{title}</h3>
         <span className="pat-count">{rows.length} predicciones</span>
         <div className="pat-actions">
-          <button className="pat-btn" onClick={handleExportCSV}>
-            📥 CSV
-          </button>
-          <button className="pat-btn" onClick={handleCopyJSON}>
-            📋 JSON
-          </button>
+          <button className="pat-btn" onClick={handleExportCSV}>📥 CSV</button>
+          <button className="pat-btn" onClick={handleCopyJSON}>📋 JSON</button>
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Toolbar búsqueda global ── */}
+      <div className="pat-toolbar">
+        <div className="pat-search-wrap">
+          <span className="pat-search-icon">🔍</span>
+          <input
+            className="pat-search"
+            type="text"
+            placeholder="Buscar en toda la tabla..."
+            value={globalFilter}
+            onChange={e => setGlobalFilter(e.target.value)}
+          />
+        </div>
+        {(globalFilter || columnFilters.length > 0) && (
+          <button
+            className="pat-clear-btn"
+            onClick={() => { setGlobalFilter(''); setColumnFilters([]); }}
+          >
+            ✕ Limpiar filtros
+          </button>
+        )}
+        <span className="pat-filter-count">
+          {totalFiltered !== rows.length
+            ? `${totalFiltered} de ${rows.length} resultados`
+            : `${rows.length} resultados`}
+        </span>
+      </div>
+
+      {/* ── Table ── */}
       <div className="pat-table-wrap">
         <table className="pat-table">
           <thead>
-            <tr>
-              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('hora')}>
-                Hora UTC{renderSortIcon('hora')}
-              </th>
-              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('ciudad')}>
-                Ciudad{renderSortIcon('ciudad')}
-              </th>
-              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('prediccion')}>
-                Predicción{renderSortIcon('prediccion')}
-              </th>
-              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('real')}>
-                Real{renderSortIcon('real')}
-              </th>
-              <th style={{ cursor: 'pointer' }} onClick={() => handleSort('resultado')}>
-                Resultado{renderSortIcon('resultado')}
-              </th>
-              <th>Lookback</th>
-            </tr>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => {
+                  const canSort   = header.column.getCanSort();
+                  const canFilter = header.column.getCanFilter();
+                  return (
+                    <th key={header.id}>
+                      <div className="pat-th-inner">
+                        <div
+                          className="pat-th-label"
+                          onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                          style={{ cursor: canSort ? 'pointer' : 'default' }}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {canSort && <SortIcon sorted={header.column.getIsSorted()} />}
+                        </div>
+                        {canFilter && (
+                          <div className="pat-th-filter">
+                            <input
+                              className="pat-col-filter"
+                              type="text"
+                              placeholder="Filtrar..."
+                              value={(header.column.getFilterValue() as string) ?? ''}
+                              onChange={e => header.column.setFilterValue(e.target.value)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {pageRows.map((row, idx) => {
-              const globalIdx = startIdx + idx;
-              const isOpen = openLookbacks.has(globalIdx);
-              const time = formatQueryTime(row.queryTime);
-
-              // Condiciones climáticas (no tipos Pokémon)
-              const predCondition = (row.prediction || 'Unknown').toLowerCase() as WeatherCondition;
-              const actualCondition = (row.actual || 'Unknown').toLowerCase() as WeatherCondition;
-              const hasLookback = row.lookback12h.length > 0;
-              const hasActual = row.actual !== null;
-
-              // Información de predicción (siempre disponible)
-              const predWeatherImg = WEATHER_IMAGES[predCondition] || '/weather/cloudy.png';
-              const predLabel = CONDITION_LABEL[predCondition] || row.prediction;
-
-              // Información de real (puede ser null)
-              const actualWeatherImg = hasActual ? (WEATHER_IMAGES[actualCondition] || '/weather/cloudy.png') : '';
-              const actualLabel = hasActual ? (CONDITION_LABEL[actualCondition] || row.actual) : '';
-
-              return (
-                <React.Fragment key={`row-${globalIdx}`}>
-                  {/* Main row */}
-                  <tr>
-                    <td className="pat-time">{time}</td>
-                    <td>
-                      <span className={`pat-city ${row.cityId}`}>{row.cityName}</span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <img src={predWeatherImg} alt={predLabel} style={{ width: '20px', height: '20px' }} />
-                        <span>{predLabel}</span>
-                      </div>
-                    </td>
-                    <td>
-                      {hasActual && actualWeatherImg ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <img src={actualWeatherImg} alt={actualLabel || ''} style={{ width: '20px', height: '20px' }} />
-                          <span>{actualLabel}</span>
-                        </div>
-                      ) : (
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Sin datos</span>
-                      )}
-                    </td>
-                    <td>
-                      {row.correct === null ? (
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>No confirmado</span>
-                      ) : (
-                        <span className={`pat-result ${row.correct ? 'hit' : 'miss'}`}>
-                          {row.correct ? '✓ Acierto' : '✕ Fallo'}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      {hasLookback && (
-                        <button
-                          className={`pat-btn-lookback ${row.correct === true ? 'success' : ''}`}
-                          onClick={() => toggleLookback(globalIdx)}
-                        >
-                          LOOKBACK
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-
-                  {/* Lookback row (expandible) */}
-                  {isOpen && hasLookback && (
-                    <tr className={`pat-lookback-row ${row.correct === true ? 'success' : ''}`} key={`lookback-${globalIdx}`}>
-                      <td colSpan={6}>
-                        <div className="pat-lookback-panel">
-                          <div className={`pat-lookback-title ${row.correct === true ? 'success' : 'error'}`}>
-                            🔍 Lookback 12h — {row.lookback12h.filter(x => x.wouldBeCorrect).length}/{row.lookback12h.length} acertarían
-                          </div>
-                          <div className="pat-lookback-grid">
-                            {row.lookback12h.map((item, i) => {
-                              const itemCondition = (item.condition || 'Unknown').toLowerCase() as WeatherCondition;
-                              const itemWeatherImg = WEATHER_IMAGES[itemCondition] || '/weather/cloudy.png';
-                              const itemLabel = CONDITION_LABEL[itemCondition] || item.condition;
-
-                              return (
-                                <div
-                                  key={`${globalIdx}-lb-${i}`}
-                                  className={`pat-lookback-item ${item.wouldBeCorrect ? 'hit' : ''}`}
-                                >
-                                  <div className="pat-lookback-hours">{item.timestamp}</div>
-                                  <div className="pat-lookback-ago">-{item.hoursAgo}h</div>
-                                  <div className="pat-lookback-condition">
-                                    <img src={itemWeatherImg} alt={itemLabel} style={{ width: '16px', height: '16px' }} />
-                                    <span>{itemLabel}</span>
-                                  </div>
-                                  {item.wouldBeCorrect && <div className="pat-lookback-check">✓</div>}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </td>
+            {table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length}>
+                  <div className="pat-empty">Sin resultados para los filtros aplicados.</div>
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map(row => {
+                const original = row.original;
+                const isOpen   = openLookbacks.has(row.id);
+                const hasLb    = original.lookback12h.length > 0;
+                return (
+                  <>
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
                     </tr>
-                  )}
-                </React.Fragment>
-              );
-            })}
+
+                    {isOpen && hasLb && (
+                      <tr
+                        key={`lb-${row.id}`}
+                        className={`pat-lookback-row ${original.correct === true ? 'success' : ''}`}
+                      >
+                        <td colSpan={columns.length}>
+                          <div className="pat-lookback-panel">
+                            <div className={`pat-lookback-title ${original.correct === true ? 'success' : 'error'}`}>
+                              🔍 Lookback 12h — {original.lookback12h.filter(x => x.wouldBeCorrect).length}/{original.lookback12h.length} acertarían
+                            </div>
+                            <div className="pat-lookback-grid">
+                              {original.lookback12h.map((item, i) => {
+                                const cond  = item.condition.toLowerCase() as WeatherCondition;
+                                return (
+                                  <div
+                                    key={`${row.id}-lb-${i}`}
+                                    className={`pat-lookback-item ${item.wouldBeCorrect ? 'hit' : ''}`}
+                                  >
+                                    <div className="pat-lookback-hours">{item.timestamp}</div>
+                                    <div className="pat-lookback-ago">-{item.hoursAgo}h</div>
+                                    <div className="pat-lookback-condition">
+                                      <img
+                                        src={WEATHER_IMAGES[cond] || '/weather/cloudy.png'}
+                                        alt={item.condition}
+                                        style={{ width: '16px', height: '16px' }}
+                                      />
+                                      <span>{CONDITION_LABEL[cond] || item.condition}</span>
+                                    </div>
+                                    {item.wouldBeCorrect && <div className="pat-lookback-check">✓</div>}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* ── Pagination ── */}
       <div className="pat-pagination">
         <span className="pat-page-info">
-          Página {safePage} de {totalPages}
+          Página {pageIndex + 1} de {table.getPageCount()}
         </span>
-        <button
-          className="pat-page-btn"
-          onClick={() => setCurrentPage(safePage - 1)}
-          disabled={safePage === 1}
+
+        <span className="pat-page-size-label">Filas:</span>
+        <select
+          className="pat-page-size-select"
+          value={pageSize}
+          onChange={e => table.setPageSize(Number(e.target.value))}
         >
-          ← Ant
-        </button>
-        {Array.from(
-          { length: Math.min(5, totalPages) },
-          (_, i) => Math.max(1, Math.min(safePage - 2, totalPages - 4)) + i
-        ).map(page => (
+          {PAGE_SIZES.map(size => (
+            <option key={size} value={size}>{size}</option>
+          ))}
+        </select>
+
+        <div className="pat-page-btns">
+          {/* Primera página */}
           <button
-            key={page}
-            className={`pat-page-btn ${page === safePage ? 'active' : ''}`}
-            onClick={() => setCurrentPage(page)}
+            className="pat-page-btn"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+            title="Primera página"
           >
-            {page}
+            ««
           </button>
-        ))}
-        <button
-          className="pat-page-btn"
-          onClick={() => setCurrentPage(safePage + 1)}
-          disabled={safePage === totalPages}
-        >
-          Sig →
-        </button>
+
+          {/* Anterior */}
+          <button
+            className="pat-page-btn"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            title="Página anterior"
+          >
+            ‹ Ant
+          </button>
+
+          {/* Números de página (ventana de 5) */}
+          {Array.from(
+            { length: Math.min(5, table.getPageCount()) },
+            (_, i) => Math.max(0, Math.min(pageIndex - 2, table.getPageCount() - 5)) + i
+          ).map(p => (
+            <button
+              key={p}
+              className={`pat-page-btn ${p === pageIndex ? 'active' : ''}`}
+              onClick={() => table.setPageIndex(p)}
+            >
+              {p + 1}
+            </button>
+          ))}
+
+          {/* Siguiente */}
+          <button
+            className="pat-page-btn"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            title="Página siguiente"
+          >
+            Sig ›
+          </button>
+
+          {/* Última página */}
+          <button
+            className="pat-page-btn"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+            title="Última página"
+          >
+            »»
+          </button>
+        </div>
       </div>
 
-      {/* Toast */}
       <div id="prediction-toast" className="pat-toast" />
     </div>
   );
