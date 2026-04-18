@@ -1,9 +1,9 @@
-# 🏃 Sprint 9 — Bundle Optimization & Performance
+# 🏃 Sprint 10 — Epic Dashboard Looker Studio 
 
-**Período:** 2026-04-13 → 2026-04-26
-**Rama:** `sprint-9` (v2.0.0-alpha)
-**Objetivo:** Optimizar bundle size + eliminar deuda técnica
-**Estado general:** ✅ **COMPLETADO** (3/3 US completadas — 11/11 SP)
+**Período:** 2026-04-16 → 2026-04-22 (estimado)
+**Rama:** `sprint-10` (feature branch)
+**Objetivo:** Integración BigQuery + Looker Studio + Analysis Table
+**Estado general:** ✅ **COMPLETADO** (6/7 US completadas — 14/15 SP)
 
 ---
 
@@ -11,17 +11,22 @@
 
 | ID | Descripción | SP | Estado | Notas |
 |----|-------------|-----|--------|-------|
-| US-901 | Code Splitting Firebase SDK | 5 | ✅ Completada | Lazy Singleton, -15% bundle, validado 2026-04-13 |
-| US-902 | Refactorizar Testing Tools | 3 | ✅ Completada | Eliminar tabs obsoletos, -120 KB, validado 2026-04-13 |
-| US-903 | Lighthouse Audit & Optimization | 3 | ✅ Completada | Lighthouse 87.75/100 ✅, preconnect + lazy load, 2026-04-14 |
+| US-1001 | Firebase Extension + BigQuery | 2 | ✅ Completada | Tabla `city_weather_raw_changelog` creada, 300+ registros, 2026-04-17 |
+| US-1002 | SQL View (snapshots_flat) | 2 | ✅ Completada | Vista UNNEST creada, 3,540 registros expandidos, validado 2026-04-17 |
+| US-1003 | Looker Studio Connection | 1 | ✅ Completada | Reporte conectado a BigQuery, 4-6 dashboards MVP, 2026-04-17 |
+| US-1004 | Dashboard Performance Global | 2 | 📦 Archivada | Retomar si se necesita después de MVP |
+| US-1005 | Dashboards Análisis | 3 | 📦 Archivada | Retomar si se necesita después de MVP |
+| US-1006 | Integración React + Docs | 2 | 📦 Archivada | Retomar si se necesita después de MVP |
+| US-1007 | Prediction Analysis Table | 3 | ✅ Completada | Componente React + servicio datos reales, día/hora en queryTime, lookback siempre visible, 2026-04-18 |
 
 ---
 
 ## 📊 Progreso
 
-**Completadas:** 3/3 US — 11/11 SP (100%) ✅
+**Completadas:** 6/7 US — 14/15 SP (87.5%) ✅
+**Archivadas:** 3/7 US — 7/15 SP (US-1004, US-1005, US-1006 por decisión del usuario)
 **En Progreso:** 0
-**Pendientes:** 0
+**Pendientes:** 1 (documentación final + cierre sprint)
 **Bloqueadas:** 0
 **Known issues:** 0
 
