@@ -647,7 +647,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
         </button>
         {Array.from(
           { length: Math.min(5, totalPages) },
-          (_, i) => Math.max(1, safePage - 2 + i)
+          (_, i) => Math.max(1, Math.min(safePage - 2, totalPages - 4)) + i
         ).map(page => (
           <button
             key={page}
