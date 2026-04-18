@@ -1,10 +1,10 @@
-# 🎯 Sprint 10 — Epic Dashboard Looker Studio 🔄 EN PROGRESO
+# 🎯 Sprint 10 — Epic Dashboard Looker Studio ✅ COMPLETADO
 
-**Período:** 2026-04-16 → 2026-04-22 (estimado)
-**Estado:** 🔄 **EN PROGRESO** — 5/7 US completadas, 11/15 SP
-**Sprint Points:** 12 SP (6 US) + 3 SP (US-1007 new)
-**Rama:** `sprint-10`
-**Progreso:** 5/7 US completadas (Archivadas: US-1004, US-1005, US-1006 Looker Studio)
+**Período:** 2026-04-16 → 2026-04-18 (completado)
+**Estado:** ✅ **COMPLETADO** — 6/7 US completadas, 14/15 SP (US-1004-1006 archivadas)
+**Sprint Points:** 12 SP (6 US) + 3 SP (US-1007 restructurada)
+**Rama:** `sprint-10` [commit 62256a1]
+**Progreso:** 6/7 US completadas ✅ | Archivadas: US-1004, US-1005, US-1006 (Looker dashboards)
 
 ---
 
@@ -46,48 +46,48 @@
 
 ---
 
-## ✅ US-1007 — Prediction Analysis Table (COMPLETADA + MEJORADA)
+## ✅ US-1007 — Prediction Analysis Table (COMPLETADA + RESTRUCTURADA)
 
-**Resultado:** ✅ Componente React con datos reales desde Firestore
+**Resultado:** ✅ Componente React restructurado con condiciones climáticas + ordenamiento
 
-**Logros (Primera fase):**
-- ✅ PredictionAnalysisTable.tsx (360 líneas, self-contained)
-- ✅ Tabla 7 columnas: hora, ciudad, predicción, real, resultado, confianza, lookback
-- ✅ Filas expandibles inline con panel lookback 12h
-- ✅ Paginación nativa (20 filas/página)
-- ✅ Export CSV + Copy JSON
-- ✅ Integrado en TestingTools (tab "📊 Predicciones")
+**RESTRUCTURACIÓN COMPLETADA (commit 62256a1):**
 
-**Ajustes realizados (2026-04-18):**
-- ✅ **Hora con día y hora:** Campo `queryTime` ahora muestra `"DD/MM HH:MM UTC"` (no solo hora)
-  - Función helper `formatQueryTime()` soporta `string | Date`
-  - Actualizado en tabla, CSV export y tooltip
-  
-- ✅ **Lookback siempre disponible:** Botón LOOKBACK visible incluso en aciertos
-  - Antes: solo si `correct === false && lookback.length > 0`
-  - Ahora: si `lookback.length > 0` (aciertos o fallos)
-  - Estilos visuales: rojo para fallos, verde para aciertos
-  
-- ✅ **Servicio de datos reales:** `src/services/predictions/predictionAnalyticsService.ts`
-  - `fetchPredictions()`: carga automática de Firestore últimas 24h
-  - Transforma `ForecastDoc` → `PredictionRow[]`
-  - Genera lookback automáticamente comparando snapshots previos
-  - Fallback a mock data si error o sin datos
+1. **Condiciones climáticas (no tipos Pokémon)**
+   - `prediction` y `actual` = "sunny", "rain", "cloudy", "fog", "snow", "windy"
+   - Iconos: `/weather/{condition}.png`
+   - Labels: `CONDITION_LABEL[condition]` centralizado
+   - `actual = null` → "Sin datos" (sin reporte)
 
-- ✅ **Integración en PredictionAnalysisDemo:**
-  - Componente funcional con `useEffect` y estado de carga
-  - Carga automática de datos reales
-  - Muestra estado: "⏳ Cargando..." / "⚠️ Error" / "✅ Real data"
-  - Fallback a mock data si no hay datos en Firestore
+2. **Servicio integrado con ClassificationReport**
+   - `fetchPredictions()` carga reportes de confirmación
+   - `actual = report?.should_be` (condición real confirmada)
+   - `correct = null` si no hay reporte (muestra "No confirmado")
+   - Join por city_id | date_hour en O(1)
 
-**Integración completa:**
-- TestingTools.tsx: tab "📊 Predicciones" → PredictionAnalysisDemo (con datos reales)
-- AnalyticsPage.tsx: componente reutilizable (modal + page mode)
-- src/components/Analytics/index.ts: exports centralizados
+3. **Confianza removida**
+   - Columna eliminada (no es significativa por row)
+   - Future: Dashboard de confianza acumulada
+   - Documentado en decisión D-012
+
+4. **Ordenamiento por página (20 filas)**
+   - Columnas: Hora, Ciudad, Predicción, Real, Resultado
+   - Performance: O(20 log 20) negligible
+   - Headers clickeables con indicadores ↑ ↓ ⇅
+
+5. **Lookback restructurado (3 filas por card)**
+   - Fila 1: Hora (HH:MM) | Fila 2: Cuánto hace (-Xh) | Fila 3: Icono + label + ✓
+   - Verde solo si wouldBeCorrect=true
+   - Grid 70px cards, layout compacto
+
+**Integración:**
+- TestingTools.tsx: tab "📊 Predicciones" con mock data (Firestore real cuando esté disponible)
+- CSV export actualizado: Hora, Ciudad, Predicción, Real, Resultado (sin confianza)
+- Build: ✅ Compila sin errores (tsc + vite)
 
 **Documentación:**
-- `src/docs/sprints/sprint-10/us/US-1007-PredictionAnalysisTable.md` — Completado con cambios
-- Build: ✅ Compila sin errores
+- `US-1007-PredictionAnalysisTable.md` — Actualizado con decisiones finales
+- `decisions.md` — D-012 documentado (condiciones climáticas vs tipos)
+- Commit message: 383 insertions/modificaciones en 9 archivos
 
 ---
 
