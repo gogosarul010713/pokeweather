@@ -49,9 +49,11 @@ function formatQueryTime(queryTime: string | Date): string {
 
 function getLocalMachineTime(): string {
   const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
   const hours = String(now.getHours()).padStart(2, '0');
   const mins = String(now.getMinutes()).padStart(2, '0');
-  return `${hours}:${mins}`;
+  return `${day}/${month} ${hours}:${mins}`;
 }
 
 function getCityLocalTime(queryTime: string | Date, timezone: number): string {
@@ -60,9 +62,11 @@ function getCityLocalTime(queryTime: string | Date, timezone: number): string {
 
   const utcTime = date.getTime() + date.getTimezoneOffset() * 60 * 1000;
   const cityDate = new Date(utcTime + timezone * 60 * 60 * 1000);
+  const day = String(cityDate.getDate()).padStart(2, '0');
+  const month = String(cityDate.getMonth() + 1).padStart(2, '0');
   const hours = String(cityDate.getHours()).padStart(2, '0');
   const mins = String(cityDate.getMinutes()).padStart(2, '0');
-  return `${hours}:${mins}`;
+  return `${day}/${month} ${hours}:${mins}`;
 }
 
 function WeatherBadge({ condition }: { condition: string }) {
@@ -103,25 +107,21 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const columnHelper = createColumnHelper<PredictionRow>();
 
   const columns = useMemo(() => [
-    columnHelper.accessor('queryTime', {
-      id: 'hora',
-      header: 'Hora UTC',
-      cell: info => (
-        <span className="pat-time">{formatQueryTime(info.getValue())}</span>
-      ),
-      sortingFn: (a, b) =>
-        new Date(a.original.queryTime).getTime() - new Date(b.original.queryTime).getTime(),
-      filterFn: (row, _id, value) =>
-        formatQueryTime(row.original.queryTime).toLowerCase().includes(value.toLowerCase()),
-    }),
     columnHelper.display({
       id: 'horaLocal',
       header: 'Tu Hora Local',
       cell: () => (
         <span className="pat-time">{getLocalMachineTime()}</span>
       ),
-      enableSorting: false,
-      enableColumnFilter: false,
+      enableSorting: true,
+      enableColumnFilter: true,
+      filterFn: (row, _id, value) =>
+        getLocalMachineTime().toLowerCase().includes(value.toLowerCase()),
+      sortingFn: (a, b) => {
+        const timeA = getLocalMachineTime();
+        const timeB = getLocalMachineTime();
+        return timeA.localeCompare(timeB);
+      },
     }),
     columnHelper.accessor((row) => getCityLocalTime(row.queryTime, row.timezone), {
       id: 'horaCiudad',
@@ -238,14 +238,14 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const totalFiltered = table.getFilteredRowModel().rows.length;
 
   const handleExportCSV = () => {
-    const headers = ['Hora UTC', 'Tu Hora Local', 'Hora Local (Ciudad)', 'Ciudad', 'Condición Predicha', 'Real', 'Resultado'];
+    const headers = ['Tu Hora Local', 'Hora Local (Ciudad)', 'Ciudad', 'Condición Predicha', 'Real', 'Resultado'];
     const lines = [headers.join(',')];
     table.getFilteredRowModel().rows.forEach(({ original: r }) => {
       const real      = r.actual ?? 'Sin datos';
       const resultado = r.correct === null ? 'No confirmado' : r.correct ? 'Acierto' : 'Fallo';
       const horaLocal = getLocalMachineTime();
       const horaCiudad = getCityLocalTime(r.queryTime, r.timezone);
-      lines.push(`"${formatQueryTime(r.queryTime)} UTC","${horaLocal}","${horaCiudad}","${r.cityName}","${r.prediction}","${real}","${resultado}"`);
+      lines.push(`"${horaLocal}","${horaCiudad}","${r.cityName}","${r.prediction}","${real}","${resultado}"`);
     });
     const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
