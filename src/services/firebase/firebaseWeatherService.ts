@@ -37,8 +37,26 @@ export interface ForecastDoc {
   // ✅ NEW: Timezone de la ciudad (offset en horas, ej: -5, +1, +9)
   // Se usa para calcular hora local de la ciudad en análisis de predicciones
   timezone: number
+  // ✅ NEW: Hora local del usuario (DD/MM HH:MM) cuando se obtuvo el dato
+  // Persiste en Firebase para análisis histórico
+  local_time_user: string
   ttl: Timestamp
   created_at: Timestamp
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Obtener hora local del usuario (máquina local)
+ * Formato: DD/MM HH:MM
+ */
+function getLocalTimeUser(): string {
+  const now = new Date()
+  const day = String(now.getDate()).padStart(2, '0')
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const mins = String(now.getMinutes()).padStart(2, '0')
+  return `${day}/${month} ${hours}:${mins}`
 }
 
 // ─── Functions ────────────────────────────────────────────────────────────────
@@ -110,6 +128,7 @@ export async function saveCityForecast(
       snapshots,
       calculated_condition: calculatedCondition,
       timezone: city.timezone,
+      local_time_user: getLocalTimeUser(),
       ttl: Timestamp.fromDate(ttl),
       created_at: Timestamp.now(),
     }
@@ -211,6 +230,7 @@ export async function getRecentForecasts(
       snapshots: data.snapshots || [],
       calculated_condition: data.calculated_condition || 'Unknown',
       timezone: data.timezone ?? 0,
+      local_time_user: data.local_time_user || '',
       ttl: data.ttl,
       created_at: data.created_at,
     }))

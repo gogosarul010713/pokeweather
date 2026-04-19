@@ -62,6 +62,7 @@ export async function fetchPredictions(): Promise<PredictionRow[]> {
         cityId: forecast.city_id,
         cityName: forecast.city_name,
         timezone: forecast.timezone || 0, // ✅ Para calcular hora local de la ciudad
+        localTimeUser: forecast.local_time_user || '', // ✅ Hora local del usuario cuando se obtuvo
         prediction: forecast.calculated_condition || 'Unknown', // ✅ Lo que el algoritmo mostró
         actual: report?.should_be ?? null, // null = "Sin datos" (no confirmado aún)
         correct: report ? forecast.calculated_condition === report.should_be : null,
