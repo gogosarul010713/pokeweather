@@ -1,15 +1,29 @@
 #!/usr/bin/env node
 /**
  * scripts/clean-firestore.ts
- * Elimina TODOS los documentos de colecciones operacionales.
+ * Limpia colecciones operacionales de Firestore.
  * Preserva: weather_catalog (datos estáticos de configuración)
  *
- * Colecciones eliminadas:
+ * Colecciones que puede eliminar:
  *   - city_weather/{city_id}/forecasts/* (pronósticos horarios)
  *   - classification_reports/*           (reportes de clasificación manual)
  *
  * Uso:
- *   npx tsx scripts/clean-firestore.ts
+ *   npx tsx scripts/clean-firestore.ts [OPTIONS]
+ *
+ * Opciones:
+ *   --all              Limpia city_weather + classification_reports (default)
+ *   --only-city        Solo limpia city_weather/{city_id}/forecasts/
+ *   --only-reports     Solo limpia classification_reports/
+ *   --dry-run          Simula la limpieza sin hacer cambios reales
+ *   --skip-verify      Salta la verificación post-limpieza (más rápido)
+ *   --help             Muestra esta ayuda
+ *
+ * Ejemplos:
+ *   npx tsx scripts/clean-firestore.ts                  # limpia TODO (default)
+ *   npx tsx scripts/clean-firestore.ts --only-city      # solo city_weather
+ *   npx tsx scripts/clean-firestore.ts --only-reports   # solo reportes
+ *   npx tsx scripts/clean-firestore.ts --dry-run        # simula sin cambios
  *
  * Requiere:
  *   .env.serviceAccountKey.json en la raíz del proyecto
@@ -21,6 +35,61 @@ import fs from 'fs'
 import path from 'path'
 
 const BATCH_SIZE = 400 // Firestore max es 500, usamos 400 con margen
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLI ARGUMENT PARSING
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface CleanOptions {
+  cleanCityWeather: boolean
+  cleanClassificationReports: boolean
+  dryRun: boolean
+  skipVerify: boolean
+}
+
+function parseArgs(): CleanOptions {
+  const args = process.argv.slice(2)
+
+  if (args.includes('--help')) {
+    console.log(`
+╔═══════════════════════════════════════════════════════════╗
+║  Firestore Clean — Pokémon Weather Explorer              ║
+╚═══════════════════════════════════════════════════════════╝
+
+OPCIONES:
+  --all              Limpia city_weather + classification_reports (default)
+  --only-city        Solo limpia city_weather/{city_id}/forecasts/
+  --only-reports     Solo limpia classification_reports/
+  --dry-run          Simula la limpieza sin hacer cambios reales
+  --skip-verify      Salta la verificación post-limpieza (más rápido)
+  --help             Muestra esta ayuda
+
+EJEMPLOS:
+  npx tsx scripts/clean-firestore.ts                  # limpia TODO
+  npx tsx scripts/clean-firestore.ts --only-city      # solo city_weather
+  npx tsx scripts/clean-firestore.ts --only-reports   # solo reportes
+  npx tsx scripts/clean-firestore.ts --dry-run        # simula sin cambios
+
+NOTA:
+  weather_catalog (datos estáticos) NUNCA se toca.
+    `)
+    process.exit(0)
+  }
+
+  const dryRun = args.includes('--dry-run')
+  const skipVerify = args.includes('--skip-verify')
+
+  let cleanCityWeather = true
+  let cleanClassificationReports = true
+
+  if (args.includes('--only-city')) {
+    cleanClassificationReports = false
+  } else if (args.includes('--only-reports')) {
+    cleanCityWeather = false
+  }
+
+  return { cleanCityWeather, cleanClassificationReports, dryRun, skipVerify }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INIT
@@ -50,11 +119,14 @@ async function initFirebase(): Promise<admin.firestore.Firestore> {
 /**
  * Elimina todos los documentos de una query en batches.
  * Retorna el total de documentos eliminados.
+ *
+ * @param dryRun - Si true, solo cuenta sin eliminar
  */
 async function deleteQueryInBatches(
   db: admin.firestore.Firestore,
   query: admin.firestore.Query,
-  label: string
+  label: string,
+  dryRun: boolean = false
 ): Promise<number> {
   let totalDeleted = 0
 
@@ -62,12 +134,15 @@ async function deleteQueryInBatches(
     const snap = await query.limit(BATCH_SIZE).get()
     if (snap.empty) break
 
-    const batch = db.batch()
-    snap.docs.forEach(doc => batch.delete(doc.ref))
-    await batch.commit()
+    if (!dryRun) {
+      const batch = db.batch()
+      snap.docs.forEach(doc => batch.delete(doc.ref))
+      await batch.commit()
+    }
 
     totalDeleted += snap.size
-    process.stdout.write(`\r   ${label}: ${totalDeleted} documentos eliminados...`)
+    const action = dryRun ? 'documentos encontrados' : 'documentos eliminados'
+    process.stdout.write(`\r   ${label}: ${totalDeleted} ${action}...`)
   }
 
   process.stdout.write('\n')
@@ -78,44 +153,54 @@ async function deleteQueryInBatches(
 // LIMPIAR city_weather (subcolecciones forecasts)
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function cleanCityWeather(db: admin.firestore.Firestore): Promise<void> {
-  console.log('\n🗑️  Limpiando city_weather → forecasts...')
+async function cleanCityWeather(db: admin.firestore.Firestore, dryRun: boolean = false): Promise<void> {
+  const action = dryRun ? 'Simulando limpieza de' : 'Limpiando'
+  console.log(`\n🗑️  ${action} city_weather → forecasts...`)
 
   // 1. Obtener todos los documentos de forecast via collectionGroup
   const forecastQuery = db.collectionGroup('forecasts')
-  const deleted = await deleteQueryInBatches(db, forecastQuery, 'forecasts')
+  const deleted = await deleteQueryInBatches(db, forecastQuery, 'forecasts', dryRun)
 
   // 2. Eliminar documentos raíz de city_weather (los padres {city_id})
   const citySnap = await db.collection('city_weather').get()
   if (!citySnap.empty) {
-    const batch = db.batch()
-    citySnap.docs.forEach(doc => batch.delete(doc.ref))
-    await batch.commit()
-    console.log(`   city_weather (raíz): ${citySnap.size} documentos eliminados`)
+    if (!dryRun) {
+      const batch = db.batch()
+      citySnap.docs.forEach(doc => batch.delete(doc.ref))
+      await batch.commit()
+    }
+    const msg = dryRun ? 'encontrados' : 'eliminados'
+    console.log(`   city_weather (raíz): ${citySnap.size} documentos ${msg}`)
   }
 
-  console.log(`✅ city_weather limpiado — ${deleted} forecasts + ${citySnap.size} docs raíz`)
+  const msg = dryRun ? 'SIMULADA' : 'completada'
+  console.log(`✅ city_weather ${msg} — ${deleted} forecasts + ${citySnap.size} docs raíz`)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LIMPIAR classification_reports
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function cleanClassificationReports(db: admin.firestore.Firestore): Promise<void> {
-  console.log('\n🗑️  Limpiando classification_reports...')
+async function cleanClassificationReports(db: admin.firestore.Firestore, dryRun: boolean = false): Promise<void> {
+  const action = dryRun ? 'Simulando limpieza de' : 'Limpiando'
+  console.log(`\n🗑️  ${action} classification_reports...`)
 
   const query = db.collection('classification_reports')
-  const deleted = await deleteQueryInBatches(db, query, 'classification_reports')
+  const deleted = await deleteQueryInBatches(db, query, 'classification_reports', dryRun)
 
-  console.log(`✅ classification_reports limpiado — ${deleted} documentos`)
+  const msg = dryRun ? 'SIMULADA' : 'completada'
+  console.log(`✅ classification_reports ${msg} — ${deleted} documentos`)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VERIFICACIÓN POST-LIMPIEZA
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function verifyClean(db: admin.firestore.Firestore): Promise<void> {
-  console.log('\n🔍 Verificación post-limpieza...')
+async function verifyClean(
+  db: admin.firestore.Firestore,
+  opts: CleanOptions
+): Promise<void> {
+  console.log('\n🔍 Verificación post-operación...')
 
   const [forecastsSnap, reportsSnap, catalogSnap] = await Promise.all([
     db.collectionGroup('forecasts').limit(1).get(),
@@ -127,14 +212,20 @@ async function verifyClean(db: admin.firestore.Firestore): Promise<void> {
   const reportsOk  = reportsSnap.empty
   const catalogOk  = !catalogSnap.empty
 
-  console.log(`   forecasts:              ${forecastOk ? '✅ vacío' : '⚠️  aún tiene documentos'}`)
-  console.log(`   classification_reports: ${reportsOk  ? '✅ vacío' : '⚠️  aún tiene documentos'}`)
+  if (opts.cleanCityWeather) {
+    console.log(`   forecasts:              ${forecastOk ? '✅ vacío' : '⚠️  aún tiene documentos'}`)
+  }
+  if (opts.cleanClassificationReports) {
+    console.log(`   classification_reports: ${reportsOk  ? '✅ vacío' : '⚠️  aún tiene documentos'}`)
+  }
   console.log(`   weather_catalog:        ${catalogOk  ? '✅ preservado (no tocado)' : '⚠️  parece vacío'}`)
 
-  if (!forecastOk || !reportsOk) {
-    console.log('\n⚠️  Algunos documentos pueden quedar por TTL o demora de índices. Vuelve a ejecutar si es necesario.')
-  } else {
+  if (opts.dryRun) {
+    console.log('\nℹ️  DRY-RUN: Ningún cambio fue aplicado.')
+  } else if (forecastOk && reportsOk) {
     console.log('\n🎉 Firestore limpiado correctamente.')
+  } else if (!forecastOk || !reportsOk) {
+    console.log('\n⚠️  Algunos documentos pueden quedar por TTL o demora de índices. Vuelve a ejecutar si es necesario.')
   }
 }
 
@@ -143,17 +234,43 @@ async function verifyClean(db: admin.firestore.Firestore): Promise<void> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log('╔══════════════════════════════════════════════╗')
-  console.log('║  Firestore Clean — Pokémon Weather Explorer  ║')
-  console.log('║  Preserva: weather_catalog                   ║')
-  console.log('║  Elimina:  city_weather, classification_reports ║')
-  console.log('╚══════════════════════════════════════════════╝')
+  const opts = parseArgs()
+
+  console.log('╔══════════════════════════════════════════════════════╗')
+  console.log('║  Firestore Clean — Pokémon Weather Explorer         ║')
+  console.log('║  Preserva: weather_catalog (datos estáticos)        ║')
+  if (opts.dryRun) {
+    console.log('║  Modo: DRY-RUN (sin cambios reales)                 ║')
+  }
+  console.log('╚══════════════════════════════════════════════════════╝')
+
+  // Mostrar qué se va a limpiar
+  console.log('\n📋 Plan:')
+  if (opts.cleanCityWeather) {
+    console.log('   • city_weather/{city_id}/forecasts/')
+  }
+  if (opts.cleanClassificationReports) {
+    console.log('   • classification_reports/')
+  }
+  if (!opts.cleanCityWeather && !opts.cleanClassificationReports) {
+    console.log('   • (nada seleccionado)')
+  }
+  console.log()
 
   const db = await initFirebase()
 
-  await cleanCityWeather(db)
-  await cleanClassificationReports(db)
-  await verifyClean(db)
+  if (opts.cleanCityWeather) {
+    await cleanCityWeather(db, opts.dryRun)
+  }
+  if (opts.cleanClassificationReports) {
+    await cleanClassificationReports(db, opts.dryRun)
+  }
+
+  if (!opts.skipVerify) {
+    await verifyClean(db, opts)
+  } else if (opts.dryRun) {
+    console.log('\nℹ️  DRY-RUN: Ningún cambio fue aplicado.')
+  }
 
   process.exit(0)
 }

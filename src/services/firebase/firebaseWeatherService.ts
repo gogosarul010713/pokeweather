@@ -31,6 +31,9 @@ export interface ForecastDoc {
   lon: number
   date_hour: string
   snapshots: ForecastSnapshot[]
+  // ✅ NEW: Clima calculado por el algoritmo (snapshots[0] procesado)
+  // Se usa para comparar: calculated vs actual (en reportes manuales)
+  calculated_condition: string
   ttl: Timestamp
   created_at: Timestamp
 }
@@ -88,6 +91,11 @@ export async function saveCityForecast(
 
     const ttl = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // now + 7 días
 
+    // ✅ Calcular condición: tomar snapshots[0] (la predicción "ahora")
+    const calculatedCondition = snapshots.length > 0
+      ? (snapshots[0].classified || 'Unknown')
+      : 'Unknown'
+
     const forecastDoc: ForecastDoc = {
       city_id: city.id,
       city_name: city.name,
@@ -97,6 +105,7 @@ export async function saveCityForecast(
       lon: city.lon,
       date_hour: dateHour,
       snapshots,
+      calculated_condition: calculatedCondition,
       ttl: Timestamp.fromDate(ttl),
       created_at: Timestamp.now(),
     }
@@ -196,6 +205,7 @@ export async function getRecentForecasts(
       lon: data.lon,
       date_hour: data.date_hour,
       snapshots: data.snapshots || [],
+      calculated_condition: data.calculated_condition || 'Unknown',
       ttl: data.ttl,
       created_at: data.created_at,
     }))

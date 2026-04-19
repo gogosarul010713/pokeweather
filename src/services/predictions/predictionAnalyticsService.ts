@@ -38,38 +38,46 @@ export async function fetchPredictions(): Promise<PredictionRow[]> {
     const rows: PredictionRow[] = []
 
     forecasts.forEach(forecast => {
-      forecast.snapshots.forEach(snapshot => {
-        const queryTime = timestampToDate(forecast.created_at)
+      // ✅ CORRECCIÓN: Tomar SOLO snapshots[0] (la predicción "actual")
+      // Los otros snapshots [1-11] se usan para LOOKBACK solamente
+      if (forecast.snapshots.length === 0) {
+        console.warn(`[PredictionAnalytics] Forecast for ${forecast.city_id} has no snapshots`)
+        return
+      }
 
-        // Buscar reporte de confirmación para esta city+hour
-        const reportKey = `${forecast.city_id}|${forecast.date_hour}`
-        const report = reportIndex.get(reportKey)
+      const snapshot = forecast.snapshots[0]
+      const queryTime = timestampToDate(forecast.created_at)
 
-        // Crear row con campos básicos
-        // Nota: prediction y actual son CONDICIONES CLIMÁTICAS, no tipos Pokémon
-        const row: PredictionRow = {
-          queryTime,
-          hour: snapshot.hour,
-          cityId: forecast.city_id,
-          cityName: forecast.city_name,
-          prediction: snapshot.classified || 'Unknown',
-          actual: report?.should_be ?? null, // null = "Sin datos"
-          correct: report ? snapshot.classified === report.should_be : null,
-          lookback12h: [], // Se calcula abajo
-        }
+      // Buscar reporte de confirmación para esta city+date_hour
+      // El reporte se crea en classification_reports con la fecha_hora del pronóstico
+      const reportKey = `${forecast.city_id}|${forecast.date_hour}`
+      const report = reportIndex.get(reportKey)
 
-        // 5. Generar lookback: buscar en forecasts previos de ESTA CIUDAD
-        // Lookback es: "¿en las últimas 12h, qué condición habría sido correcta?"
-        row.lookback12h = generateLookback(
-          forecast.city_id,
-          snapshot.hour,
-          queryTime,
-          forecasts,
-          reportIndex
-        )
+      // Crear row con campos básicos
+      // Nota: prediction = calculated_condition (lo que el algoritmo determinó)
+      //       actual = should_be (lo que realmente fue, según reportes manuales)
+      const row: PredictionRow = {
+        queryTime,
+        hour: snapshot.hour, // Hora para la cual se predice (ej: 9 si consulta a las 8 AM)
+        cityId: forecast.city_id,
+        cityName: forecast.city_name,
+        prediction: forecast.calculated_condition || 'Unknown', // ✅ Lo que el algoritmo mostró
+        actual: report?.should_be ?? null, // null = "Sin datos" (no confirmado aún)
+        correct: report ? forecast.calculated_condition === report.should_be : null,
+        lookback12h: [], // Se calcula abajo
+      }
 
-        rows.push(row)
-      })
+      // 5. Generar lookback: buscar en forecasts previos de ESTA CIUDAD
+      // Lookback es: "¿en las últimas 12h, qué condición habría sido correcta para esta hora?"
+      row.lookback12h = generateLookback(
+        forecast.city_id,
+        snapshot.hour, // Buscamos predicciones para ESTA HORA en forecasts anteriores
+        queryTime,
+        forecasts,
+        reportIndex
+      )
+
+      rows.push(row)
     })
 
     console.log(`[PredictionAnalytics] ✅ Generated ${rows.length} prediction rows (${reports.length} reports loaded)`)

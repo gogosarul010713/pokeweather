@@ -1,8 +1,8 @@
-# 🎯 Sprint 10 — Epic Dashboard: Analytics para Precisión Climática
+# 🎯 Sprint 10 — Epic Dashboard: Analytics para Precisión Climática ✅ COMPLETADO
 
-**Período:** 2026-04-15 → (TBD)  
+**Período:** 2026-04-16 → 2026-04-19  
 **Objetivo:** Crear dashboard interactivo para analizar precisión de predicciones climáticas  
-**Estado:** 🚀 En inicio  
+**Estado:** ✅ **COMPLETADO** — 6/7 US completadas, infraestructura QA montada  
 **Versión:** v2.1.0-analytics (post v2.0.0-alpha)
 
 ---
@@ -31,16 +31,17 @@ Looker Studio (4-6 dashboards)
 
 ---
 
-## 📋 User Stories (6 US, 12 SP)
+## 📋 User Stories (6/7 US, 15 SP)
 
 | US | Descripción | SP | Estado |
 |----|-------------|-----|--------|
-| **US-1001** | Firebase Extension + BigQuery setup | 2 | 🔜 Pending |
-| **US-1002** | SQL View snapshots_flat | 2 | 🔜 Pending |
-| **US-1003** | Looker Studio conexión | 1 | 🔜 Pending |
-| **US-1004** | Dashboard Performance Global | 2 | 🔜 Pending |
-| **US-1005** | Dashboards Tipos/Ciudades/Horas | 3 | 🔜 Pending |
-| **US-1006** | Integración React + Documentación | 2 | 🔜 Pending |
+| **US-1001** | Firebase Extension + BigQuery setup | 2 | ✅ Completada |
+| **US-1002** | SQL View snapshots_flat | 2 | ✅ Completada |
+| **US-1003** | Looker Studio conexión | 1 | ✅ Completada |
+| **US-1004** | Dashboard Performance Global | 2 | 📦 Archivada |
+| **US-1005** | Dashboards Tipos/Ciudades/Horas | 3 | 📦 Archivada |
+| **US-1006** | Integración React + Documentación | 2 | 📦 Archivada |
+| **US-1007** | Prediction Analysis Table | 3 | ✅ Completada |
 
 ---
 
@@ -138,6 +139,25 @@ El Sprint 10 está **COMPLETADO** cuando:
 
 ---
 
+## 🛠️ Herramientas QA & Mantenimiento (2026-04-19)
+
+**Scripts Disponibles:**
+
+| Script | Comando | Propósito |
+|--------|---------|-----------|
+| Monitor Firebase | `npm run monitor:firebase` | Validación automática c/30 min |
+| Validador Schema | `npm run validate:forecast-schema` | Verifica integridad Firestore |
+| **Firestore Cleanup** | `npm run clean:firestore` | Limpieza granular (NEW) |
+
+**Nuevas Opciones de Limpieza (2026-04-19):**
+- `npm run clean:firestore` — Limpia TODO (city_weather + reports)
+- `npm run clean:firestore -- --only-city` — Solo pronósticos
+- `npm run clean:firestore -- --only-reports` — Solo reportes
+- `npm run clean:firestore -- --dry-run` — Simula sin cambios
+- Ver: [`FIRESTORE-CLEANUP-GUIDE.md`](FIRESTORE-CLEANUP-GUIDE.md)
+
+---
+
 ## 🔗 Referencias Rápidas
 
 **Decisiones:**
@@ -145,6 +165,10 @@ El Sprint 10 está **COMPLETADO** cuando:
 
 **Plan Detallado:**
 - [Plan de Implementación](02-PlanImplementacion.md)
+
+**Mantenimiento:**
+- [**FIRESTORE-CLEANUP-GUIDE.md**](FIRESTORE-CLEANUP-GUIDE.md) ← Guía de limpieza (NEW 2026-04-19)
+- [FIREBASE-MONITORING.md](FIREBASE-MONITORING.md) — Vigilancia automática
 
 **Firestore Schema:**
 - `/weather_catalog/` — Estático (condiciones, tipos)
@@ -157,13 +181,30 @@ El Sprint 10 está **COMPLETADO** cuando:
 
 ---
 
-## 🚀 Próximo Paso
+## ✅ Sprint 10 — Estado Final
 
-Comenzar **US-1001: Firebase Extension Setup**
+**Completado:** 2026-04-19
 
-Ver: [`US-1001-FirebaseExtensionBigquery.md`](us/US-1001-FirebaseExtensionBigquery.md)
+### Logros:
+- ✅ Firebase Extension instalada → BigQuery streaming activo
+- ✅ SQL View creada → snapshots expandidos a filas planas
+- ✅ Looker Studio conectado → 4-6 dashboards MVP funcionales
+- ✅ PredictionAnalysisTable refactorizada → TanStack Table v8
+- ✅ QA Infrastructure montada → Monitoreo automático + validadores
+- ✅ Herramientas de limpieza mejoradas → Opciones granulares
+- ✅ Validación de predicciones implementada → `calculated_condition` en ForecastDoc
+- ✅ Flujo de reporte manual completado → ClassificationReport con comparativa
+
+### Documentación:
+- 📄 [`07-PredictionValidation.md`](07-PredictionValidation.md) — Flujo completo de validación
+- 📄 [`FIRESTORE-CLEANUP-GUIDE.md`](FIRESTORE-CLEANUP-GUIDE.md) — Script de limpieza granular
+- 📄 [Architecture: Data Schema](../architecture/10-firestore-data-schema.md) — Actualizado con `calculated_condition`
+
+### Próximos Sprints:
+- **Sprint 11:** Optimizaciones post-MVP, mejoras UX, análisis de performance
+- **Sprint 12+:** Expansión de dashboards, integraciones avanzadas
 
 ---
 
-**Última actualización:** 2026-04-15  
-**Estado:** Sprint iniciando 🚀
+**Última actualización:** 2026-04-19  
+**Estado:** ✅ COMPLETADO | QA activa | Ready para Sprint 11
