@@ -13,7 +13,8 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "validate:firebase": "npx tsx scripts/validate-firestore.ts"
+    "validate:firebase": "npx tsx scripts/validate-firestore.ts",
+    "clean:firestore": "npx tsx scripts/clean-firestore.ts"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",
