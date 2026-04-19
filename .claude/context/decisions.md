@@ -211,6 +211,57 @@
 
 ---
 
+### 2026-04-18 D-013 — PredictionAnalysisTable: Adopción TanStack Table v8 (US-1007 v3)
+
+**Contexto:** La tabla custom de US-1007 tenía bug de paginación (botones [1,1,1,2,3]) y carecía de features críticas: filtrado por columna, búsqueda global, page size configurable, navegación primera/última página.
+
+**Problema con tabla custom:**
+- Bug paginación: `Math.max(1, safePage - 2 + i)` → generaba páginas duplicadas en inicio
+- Ordenamiento solo dentro de la página actual (no del dataset completo)
+- Sin filtros por columna ni búsqueda global
+- Paginación fija en 20 filas sin opción de cambio
+- Sin botones primera / última página
+
+**Opciones evaluadas:**
+
+| Librería | Bundle | Headless | React 19 | Features | Veredicto |
+|----------|--------|----------|----------|----------|-----------|
+| TanStack Table v8 | ~15KB | ✅ | ✅ | Todas | ✅ ELEGIDA |
+| AG Grid Community | ~300KB | ❌ | Parcial | Todas | ❌ Bundle regresión |
+| Material React Table | +300KB | ❌ | ❌ | Todas | ❌ Trae MUI |
+| react-data-grid | ~37KB | Parcial | ✅ | Sin paginación | ❌ Incompleta |
+
+**Decisión:** TanStack Table v8 (`@tanstack/react-table@8.21.3`)
+
+**Motivo:**
+1. **Headless:** cero estilos propios → 100% compatible con el design system del proyecto (CSS vars, prefijo `.pat-`)
+2. **Bundle minimal:** ~15KB vs Sprint 9 que ya optimizó el bundle (-15%). No regresar.
+3. **React 19 compatible:** verificado con Vite 8 build sin warnings
+4. **Features completas con una sola librería:** `getFilteredRowModel` (global + columna), `getSortedRowModel`, `getPaginationRowModel`
+5. **TypeScript first:** tipos perfectos, sin casteos
+
+**Implementación:**
+- `src/components/Analytics/PredictionAnalysisTable.tsx` — reescrito con `useReactTable`
+- Columnas definidas con `createColumnHelper<PredictionRow>()`
+- `filterFn` custom en columnas con condiciones climáticas (busca por label legible, no por clave interna)
+- `sortingFn` custom en columna `correct` (null < false < true)
+- Lookback expandible preservado intacto via `columnHelper.display`
+- CSS mantenido en `<style>` tag (regla del proyecto)
+
+**Resultado:**
+- Build: ✅ 979ms, sin errores TS
+- Features: búsqueda global, filtros por columna, sort completo, pageSize 10/20/50/100, `««` primera y `»»` última
+- Export CSV/JSON ahora exporta filas **filtradas** (mejora UX)
+
+**Consecuencias:**
+- `@tanstack/react-table` en `dependencies` (runtime, no devDep)
+- Tabla custom eliminada (~380 líneas) → nueva implementación (~350 líneas)
+- Mismo API público: `<PredictionAnalysisTable rows={...} title="..." />`
+
+**US relacionada:** US-1007 v3
+
+---
+
 ### 2026-04-18 D-012 — PredictionAnalysisTable: Restructure con condiciones climáticas (US-1007 Revisión)
 
 **Contexto:** Revisión de observaciones de tabla. Clarificación crítica: `prediction` y `actual` son **condiciones climáticas**, no tipos Pokémon.

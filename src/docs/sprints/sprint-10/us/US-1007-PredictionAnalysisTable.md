@@ -18,213 +18,154 @@ Componente React que renderiza tabla detallada de predicciones individuales con 
 - Qué predicción pasada habría acertado
 - Patrones de error por ciudad, tipo, horario
 
-## ✅ Completitud (2026-04-18)
+---
 
-### Cambios Realizados:
-1. **Formato hora mejorado:** Campo `queryTime` ahora muestra `"DD/MM HH:MM UTC"` para evitar pérdida de contexto
-   - Antes: `"16:00 UTC"` (sin día)
-   - Después: `"18/04 16:00 UTC"` (día + hora)
-   - Función helper: `formatQueryTime(queryTime: string | Date): string`
+## ✅ Historial de cambios
 
-2. **Lookback siempre disponible:** Botón "LOOKBACK" se muestra para TODAS las filas con datos lookback
-   - Antes: solo en filas donde `correct === false` y había lookback
-   - Después: disponible en aciertos y fallos
-   - Estilo visual: rojo para fallos, verde para aciertos
-   - Panel expandible con color fondo diferente
+### v1 — Implementación inicial (2026-04-18)
+1. **Formato hora:** `"DD/MM HH:MM UTC"` con helper `formatQueryTime()`
+2. **Lookback:** siempre disponible (aciertos + fallos), botón rojo/verde según resultado
+3. **Servicio datos reales:** `src/services/predictions/predictionAnalyticsService.ts`
+4. **Integración PredictionAnalysisDemo:** carga automática + fallback a mock
 
-3. **Servicio de datos reales creado:** `src/services/predictions/predictionAnalyticsService.ts`
-   - Función `fetchPredictions()`: carga de Firestore y transforma a `PredictionRow[]`
-   - Lee de `city_weather` collection usando `getRecentForecasts('24h')`
-   - Genera lookback automáticamente comparando snapshots previos
-   - Fallback a mock data si error o sin datos
-   - Incluye placeholder para `estimateConfidence()` (mejoras futuras)
+### v2 — Restructuración condiciones climáticas (2026-04-18, commit 62256a1)
+1. **`prediction`/`actual` = condiciones climáticas:** "sunny", "rain", "cloudy", "fog", "snow", "windy"
+2. **Iconos via `WEATHER_IMAGES[condition]`** y labels via `CONDITION_LABEL[condition]`
+3. **Columna "Confianza" eliminada** (ver D-012 — no significativa por fila)
+4. **Ordenamiento por columna:** headers clickeables ↑ ↓ ⇅ (cliente-side, 20 filas)
+5. **Lookback 3-filas:** hora, cuánto hace, icono+label+✓
 
-4. **Integración en PredictionAnalysisDemo:**
-   - Componente funcional con `useEffect` y estado de carga
-   - Carga automática de datos reales
-   - Muestra estado: "⏳ Cargando..." / "⚠️ Error" / "✅ Real data"
-   - Fallback a mock data si no hay datos en Firestore
+### v3 — TanStack Table v8 (2026-04-18, commit 70e062d) ← **VERSIÓN ACTUAL**
+Migración de implementación custom a `@tanstack/react-table@8.21.3`.
+Ver decisión D-013.
+
+**Features añadidas:**
+- Búsqueda global con input en toolbar (filtra todas las columnas simultáneamente)
+- Filtro por columna: inputs inline debajo de cada header
+- Paginación configurable: selector 10 / 20 / 50 / 100 filas
+- Botones primera página `««` y última página `»»`
+- CSV y JSON exportan las filas **filtradas** (no el total)
+- Estado vacío cuando filtros no devuelven resultados
+- Botón "✕ Limpiar filtros" visible cuando hay filtros activos
 
 ---
 
-## ✅ Criterios de Aceptación
+## ✅ Criterios de Aceptación (estado final v3)
 
-- [x] Componente `PredictionAnalysisTable.tsx` creado en `src/components/Analytics/` (360 líneas)
-- [x] Tabla con 7 columnas: hora, ciudad, predicción, real, resultado, confianza, lookback
+- [x] Tabla con 6 columnas: Hora UTC, Ciudad, Predicción, Real, Resultado, Lookback
+- [x] Condiciones climáticas en Predicción y Real (no tipos Pokémon) con icono + label
 - [x] Filas expandibles inline con panel lookback 12h
-- [x] Paginación: 20 filas/página con prev/next y números
-- [x] Header con botones: Export CSV, Copy JSON
-- [x] Contador dinámico: "X predicciones"
-- [x] Estilos coherentes: uso de CSS vars del proyecto (tipos Pokémon, colores)
+- [x] **Paginación configurable:** selector 10/20/50/100 filas por página
+- [x] **Botones de navegación:** `««` primera, `‹ Ant`, números, `Sig ›`, `»»` última
+- [x] **Búsqueda global:** input toolbar que filtra todas las columnas
+- [x] **Filtros por columna:** input en cada header (excepto Lookback)
+- [x] **Ordenamiento:** click en header alterna asc ↔ desc con iconos ⇅ ↑ ↓
+- [x] Botón "✕ Limpiar filtros" cuando hay filtros activos
+- [x] Contador dinámico: "X de Y resultados" cuando hay filtros activos
+- [x] Header con botones: Export CSV (filas filtradas), Copy JSON (filas filtradas)
+- [x] Estilos coherentes: CSS vars del proyecto, prefijo `.pat-`, sin conflictos
+- [x] Estado vacío con mensaje cuando filtros no devuelven resultados
 - [x] Integrado en TestingTools → tab "📊 Predicciones"
-- [x] Validado con datos mock (estructura comprobada)
-- [x] **NEW: Formato hora con día/hora (DD/MM HH:MM)**
-- [x] **NEW: Lookback siempre disponible (sin condición `correct === false`)**
-- [x] **NEW: Servicio `predictionAnalyticsService.ts` para datos reales**
-- [x] **NEW: Integración automática en PredictionAnalysisDemo**
-- [x] Build compila sin errores ✅
+- [x] Build compila sin errores ✅ (tsc + vite, 979ms)
 
 ---
 
-## 📋 Estructura de Datos (Prop `rows`)
+## 📋 Estructura de Datos (Prop `rows`) — versión actual
 
 ```typescript
 interface PredictionRow {
-  queryTime: string;           // ISO: "2026-04-17T16:00:00Z"
+  queryTime: string | Date;    // ISO string o Date — se formatea a "DD/MM HH:MM"
   hour: number;                // 0-23
   cityId: string;              // "sydney", "tokyo", "london"
   cityName: string;            // Display name
-  prediction: string;          // Pokémon type: "Water", "Fire", etc.
-  confidence: number;          // 0-100
-  actual: string;              // Pokémon type
-  correct: boolean;            // true si prediction === actual
-  lookback12h: LookbackItem[]; // Array vacío si correct === true
+  prediction: string;          // Condición climática: "sunny" | "rain" | "cloudy" | "fog" | "snow" | "windy"
+  actual: string | null;       // Condición climática confirmada o null si "Sin datos"
+  correct: boolean | null;     // null = aún sin reporte de confirmación
+  lookback12h: LookbackItem[];
 }
 
 interface LookbackItem {
   hoursAgo: number;            // 1-12
-  pokemonType: string;         // Pokémon type
-  wouldBeCorrect: boolean;     // true si pokemonType === actual
+  condition: string;           // Condición climática (igual que PredictionRow.prediction)
+  wouldBeCorrect: boolean;     // true si esta condición habría acertado
+  timestamp?: string;          // "HH:MM" para mostrar en el chip del lookback
 }
 ```
 
----
-
-## 🎨 Estructura del Componente
-
-### 1. Header (simple)
-- Título: "Predicciones Detalladas"
-- Botones: "Export CSV", "Copy JSON"
-- Contador: "X predicciones"
-
-### 2. Tabla (7 columnas)
-| Columna | Contenido | Estilo |
-|---------|-----------|--------|
-| Hora UTC | `HH:MM UTC` | monospace |
-| Ciudad | Nombre + indicador color | color por ciudad |
-| Predicción | Badge tipo Pokémon | color --type-X |
-| Real | Badge tipo Pokémon | color --type-X |
-| Resultado | ✅ Acierto / ❌ Fallo | verde/rojo |
-| Confianza | Bar + porcentaje | barra dinámica |
-| Lookback | Botón (solo si falló) | estilo error |
-
-### 3. Fila Expandible (inline)
-- Se abre bajo la fila principal
-- Panel con grid de chips (12 máximo)
-- Cada chip: `-Xh`, tipo Pokémon, ✅ si habría acertado
-- Header: "Lookback 12h — X predicción(es) habrían acertado · Real: [badge actual]"
-
-### 4. Paginación
-- 20 filas/página
-- Botones prev/next, números página, info "Página X de Y"
-
-### 5. Filtros (opcional para MVP, puede ser expandible después)
-- Por ahora: sin filtros
-- Prepared para: ciudad, tipo, horario, resultado
+> **Nota:** `confidence` fue eliminado en v2 (D-012). Confianza acumulada queda para dashboard agregado futuro.
 
 ---
 
-## 🚀 Pasos de Implementación
+## 🎨 Estructura del Componente (v3 — TanStack Table)
 
-### Paso 1: Crear estructura del componente
-- Archivo: `src/components/Analytics/PredictionAnalysisTable.tsx`
-- Folder: crear `/Analytics/` si no existe
-- Interfaz TypeScript para datos
-- Estado: filas, página actual, lookbacks abiertos
+### 1. Header
+- Título + contador total "X predicciones"
+- Botones: Export CSV, Copy JSON (ambos exportan las filas filtradas)
 
-### Paso 2: Renderizar tabla base
-- Header con título y botones
-- Tabla vacía (thead solo)
-- Paginación estructura
+### 2. Toolbar (búsqueda global)
+- Input "Buscar en toda la tabla..." — filtra todas las columnas simultáneamente
+- Contador dinámico "X de Y resultados" cuando hay filtros activos
+- Botón "✕ Limpiar filtros" visible cuando globalFilter o columnFilters activos
 
-### Paso 3: Poblar tabla con datos
-- Mapear `rows` a filas de tabla
-- Renderizar cada columna según especificación
-- Aplica colores de tipos Pokémon
+### 3. Tabla (6 columnas)
+| Columna | Contenido | Ordenable | Filtrable |
+|---------|-----------|-----------|-----------|
+| Hora UTC | `DD/MM HH:MM` monospace | ✅ | ✅ |
+| Ciudad | Nombre + dot-color por city | ✅ | ✅ |
+| Predicción | Icono clima + label | ✅ | ✅ |
+| Real | Icono clima + label / "Sin datos" | ✅ | ✅ |
+| Resultado | ✓ Acierto / ✕ Fallo / "No confirmado" | ✅ | ✅ |
+| Lookback | Botón LOOKBACK / CERRAR | ❌ | ❌ |
 
-### Paso 4: Implementar lookback expandible
-- Estado para trackear qué rows tienen lookback abierto
-- Renderizar fila extra cuando abierto
-- Estilos: panel expandible, chips con colores
+Cada header filtrable tiene un input de texto inline debajo del label.
 
-### Paso 5: Export & Copy
-- CSV: columnas separadas por coma
-- JSON: stringify de filas filtradas
+### 4. Fila Expandible (inline lookback)
+- Panel con grid de chips de 70px mínimo
+- Cada chip: hora (HH:MM), cuánto hace (-Xh), icono+label condición, ✓ si habría acertado
+- Color: verde si `wouldBeCorrect`, gris por defecto
 
-### Paso 6: Integración en app
-- Exportar componente
-- Integrar en TestingTools o nueva ruta
-- Pasar datos mock para testing
-
-### Paso 7: Refinar estilos
-- Asegurar coherencia con design system
-- Responsive (mobile-friendly paginación)
+### 5. Paginación
+- Selector de filas: 10 / 20 / 50 / 100
+- Botones: `««` primera, `‹ Ant`, ventana de 5 números, `Sig ›`, `»»` última
+- Info: "Página X de Y"
 
 ---
 
-## 📊 Datos Mock (para testing)
+## 🔧 Implementación técnica
 
-El componente recibirá datos de:
-- Prop `rows` (mock para dev)
-- Query BigQuery (producción)
+**Librería:** `@tanstack/react-table@8.21.3` (ver D-013)
 
+**Hooks usados:**
 ```typescript
-const MOCK_ROWS: PredictionRow[] = [
-  {
-    queryTime: "2026-04-17T16:00:00Z",
-    hour: 16,
-    cityId: "sydney",
-    cityName: "Sydney",
-    prediction: "Water",
-    confidence: 92,
-    actual: "Water",
-    correct: true,
-    lookback12h: []
-  },
-  {
-    queryTime: "2026-04-17T16:00:00Z",
-    hour: 16,
-    cityId: "tokyo",
-    cityName: "Tokyo",
-    prediction: "Fire",
-    confidence: 78,
-    actual: "Electric",
-    correct: false,
-    lookback12h: [
-      { hoursAgo: 12, pokemonType: "Water", wouldBeCorrect: false },
-      { hoursAgo: 11, pokemonType: "Electric", wouldBeCorrect: true },
-      // ... más
-    ]
-  }
-];
+useReactTable({
+  data: rows,
+  columns,
+  state: { sorting, columnFilters, globalFilter },
+  getCoreRowModel:       getCoreRowModel(),
+  getFilteredRowModel:   getFilteredRowModel(),   // búsqueda global + filtros columna
+  getSortedRowModel:     getSortedRowModel(),      // ordenamiento
+  getPaginationRowModel: getPaginationRowModel(),  // paginación
+  initialState: { pagination: { pageSize: 20 } },
+})
 ```
+
+**Archivos modificados:**
+- `src/components/Analytics/PredictionAnalysisTable.tsx` — reescrito completo (~350 líneas)
+- `package.json` — nueva dependencia `@tanstack/react-table`
 
 ---
 
 ## 🔗 Referencias
 
-- Documento especificación: `prompt-dashboard-claude-ai.md`
-- HTML referencia: `pokemon-weather-dashboard (1).html`
+- Decisión de arquitectura: D-013 (adopción TanStack Table)
+- Decisión de restructura: D-012 (condiciones climáticas vs tipos Pokémon)
+- Decisión de origen: D-011 (componente React vs Looker Studio)
 - Estilos proyecto: `src/index.css` (CSS vars)
-- Componente base: `src/components/UI/FilterChip.tsx`
+- Servicio datos: `src/services/predictions/predictionAnalyticsService.ts`
 
 ---
-
-## 📝 Notas
-
-- Sin librerías nuevas (chart library, react-table, etc.)
-- Reutilizar componentes: FilterChip, Toast para feedback
-- Estilos: CSS-in-JS con `<style>` tag en componente
-- Colores tipos: usar vars `--type-water`, `--type-fire`, etc.
-- Fuentes: Rajdhani (tabla), Exo 2 (body)
-
----
-
-**Próximos pasos:**
-1. ✅ Estructura creada — Pasar a Paso 1 (código)
-2. Integración en app
-3. Testing con datos BigQuery reales
 
 **Creado:** 2026-04-18  
-**Status:** 🔄 EN PROGRESO
+**Última actualización:** 2026-04-18 (v3 — TanStack Table, commit 70e062d)  
+**Status:** ✅ COMPLETADA
 
