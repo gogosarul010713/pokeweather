@@ -5,6 +5,78 @@
 
 ---
 
+### 2026-04-19 D-016 — Guardar local_time_user en ForecastDoc (US-1007)
+
+**Contexto:** US-1007. Tabla de predicciones necesitaba mostrar "¿A qué hora LOCAL del usuario se obtuvo el pronóstico?"
+
+**Problema:** 
+- getLocalMachineTime() calculaba en tiempo real → siempre mostraba hora actual
+- Necesitábamos saber la hora EXACTA cuando se obtuvieron los datos
+
+**Opciones consideradas:**
+- A: Calcular dinámicamente en tabla (mostrar hora actual siempre) ← RECHAZADO
+- B: Guardar hora local en Firestore cuando se obtienen datos ← **ELEGIDA**
+
+**Decisión:** Opción B — Persistir local_time_user en ForecastDoc
+
+**Motivo:**
+1. Auditoría: saber exactamente cuándo (hora local) se obtuvo cada pronóstico
+2. Análisis histórico: comparar patrones por hora del usuario
+3. Consistencia: valor no cambia con el tiempo
+
+**Implementación:**
+- `ForecastDoc.local_time_user: string` (formato DD/MM HH:MM)
+- `getLocalTimeUser()` calcula en cliente cuando se guarda
+- `PredictionRow.localTimeUser` usa valor persistente
+- Tabla muestra valor guardado + permite filtro/ordenamiento
+
+**Consecuencias:**
+- Documentos viejos necesitan cleanup (no tienen `local_time_user`)
+- Primer uso requiere: `npm run clean:firestore -- --only-city`
+- Nuevos documentos tendrán valor persistente
+
+**US relacionada:** US-1007
+
+---
+
+### 2026-04-19 D-015 — ForecastDoc: Guardar calculated_condition por separado
+
+**Contexto:** US-1007. PredictionAnalysisTable necesitaba comparar predicción vs realidad. Decisión: cómo guardar la predicción para facilitar validación manual.
+
+**Problema:** 
+- ForecastDoc.snapshots[] contiene 12 horas
+- snapshots[0] es la predicción "actual" (mostrada al usuario)
+- Necesitábamos acceso rápido a qué se predijo (sin buscar en array)
+
+**Opciones consideradas:**
+- A: Guardar solo snapshots[0] (perder histórico de 12h)
+- B: Guardar todos los snapshots + extraer snapshots[0] al leer (lento)
+- C: Guardar calculated_condition por separado + todos los snapshots ← **ELEGIDA**
+
+**Decisión:** Opción C — Campo `calculated_condition` redundante pero optimizado
+
+**Motivo:**
+1. Acceso O(1) a la predicción mostrada
+2. Mantiene 12 snapshots para lookback histórico
+3. Simplifica comparación: calculated_condition === report.should_be
+4. BigQuery puede indexar rápidamente por precisión
+
+**Implementación:**
+- ForecastDoc: `calculated_condition: string` (de snapshots[0].classified)
+- PredictionAnalysisTable: muestra 1 fila por ForecastDoc (no por snapshot)
+- Lookback: busca snapshots anteriores para misma hora
+
+**Consecuencias:**
+- +1 campo en ForecastDoc (negligible storage)
+- Tabla ahora muestra 2 filas/día en lugar de 24 (antes era 12 por snapshot)
+- Validación manual más clara (calculated vs actual)
+
+**US relacionada:** US-1007
+
+---
+
+---
+
 ### 2026-04-13 D-009 — Eliminación de tabs obsoletos en TestingTools (-120 KB bundle)
 
 **Contexto:** US-902. TestingTools tenía 3 tabs que se volvieron obsoletos con Firebase Report + Metabase.

@@ -1,94 +1,90 @@
-# 🏃 Sprint 10 — Epic Dashboard Looker Studio ✅
+# 🏃 Sprint 10 — Epic Dashboard Looker Studio + US-1007 ✅ CÓDIGO COMPLETADO
 
-**Período:** 2026-04-16 → 2026-04-19 (COMPLETADO)
-**Rama:** `sprint-10` (feature branch)
-**Objetivo:** Integración BigQuery + Looker Studio + Analysis Table + Quality Assurance
-**Estado general:** ✅ **COMPLETADO + QA SETUP** (6/7 US completadas + monitoreo activo)
-
----
-
-## 📋 User Stories
-
-| ID | Descripción | SP | Estado | Notas |
-|----|-------------|-----|--------|-------|
-| US-1001 | Firebase Extension + BigQuery | 2 | ✅ Completada | Tabla `city_weather_raw_changelog` creada, 300+ registros, 2026-04-17 |
-| US-1002 | SQL View (snapshots_flat) | 2 | ✅ Completada | Vista UNNEST creada, 3,540 registros expandidos, validado 2026-04-17 |
-| US-1003 | Looker Studio Connection | 1 | ✅ Completada | Reporte conectado a BigQuery, 4-6 dashboards MVP, 2026-04-17 |
-| US-1004 | Dashboard Performance Global | 2 | 📦 Archivada | Retomar si se necesita después de MVP |
-| US-1005 | Dashboards Análisis | 3 | 📦 Archivada | Retomar si se necesita después de MVP |
-| US-1006 | Integración React + Docs | 2 | 📦 Archivada | Retomar si se necesita después de MVP |
-| US-1007 | Prediction Analysis Table | 3 | ✅ Completada | Componente React + servicio datos reales, día/hora en queryTime, lookback siempre visible, 2026-04-18 |
+**Período:** 2026-04-16 → 2026-04-19  
+**Rama:** `sprint-10` (feature branch)  
+**Objetivo:** Integración BigQuery + Looker Studio + Tabla Predicciones (US-1007)  
+**Estado:** ✅ **CÓDIGO + DOCUMENTACIÓN COMPLETADO | ⏳ TESTING PENDIENTE**
 
 ---
 
-## 📊 Progreso
+## 📋 US Completadas (6/7)
 
-**Completadas:** 6/7 US — 14/15 SP ✅
-**Archivadas:** 3/7 US — 7/15 SP (US-1004, US-1005, US-1006 por decisión del usuario)
-**En Progreso:** 0
-**Pendientes:** 0 ✅
-**Bloqueadas:** 0
-**Known issues:** 0
-
-**SPRINT 10 COMPLETADO:** Looker Studio MVP + PredictionAnalysisTable con observaciones integradas
-
----
-
-## 🎯 Orden recomendado para pendientes
-
-1. **US-806** (1 SP) — TTL 7 días ← **PRÓXIMA (2026-04-11)** → rápido para cerrar sprint
-2. **Benchmark** — v1.0.0-stable vs v2.0.0-alpha → cierre de sprint
-
-**Completadas en sesiones recientes:**
-- ✅ US-803 (Firestore Dashboard) — commit `6802752` — Selectores + fallback en-memoria
-- ✅ US-805 (Reporte Incorrecto) — commit `7f33506` — Modal + TestingTools panel + validación ✅
-- ✅ US-806 (TTL Automático) — Blaze + TTL policy en Firestore Console
+| US | Descripción | SP | Status | Commit |
+|----|-------------|-----|--------|--------|
+| US-1001 | Firebase Extension + BigQuery | 2 | ✅ | 2026-04-17 |
+| US-1002 | SQL View (snapshots_flat) | 2 | ✅ | 2026-04-17 |
+| US-1003 | Looker Studio Connection | 1 | ✅ | 2026-04-17 |
+| US-1007 | Prediction Analysis Table | 3 | ✅ | 2026-04-19 (7e977f0) |
+| US-1004/1005/1006 | Dashboards avanzados | 7 | 📦 Archivadas | — |
 
 ---
 
-## 📝 Notas del Sprint
+## 🎯 Últimos Cambios (2026-04-19)
 
-- Build ✅ PASSED en rama `refactor/firebase-v2`
-- Firestore: 2,256 writes/día (11.3% quota) — dentro del límite
-- Firestore storage: 32 MB (3.2%) — OK
-- v1.0.0-stable locked en `main` (tag), no tocar
-- Stack Firebase activo: React 18 + Vite 5 + Leaflet + Zustand 4 + Firebase + AccuWeather
+### Commit `7e977f0` — Implementar validación de predicciones
+1. ✅ Agregar `calculated_condition` a ForecastDoc (predicción mostrada)
+2. ✅ Arreglar PredictionAnalysisTable (1 fila por consulta, no 12)
+3. ✅ Mejorar script clean-firestore (opciones granulares)
+4. ✅ Documentar flujo de validación (07-PredictionValidation.md)
+5. ✅ Actualizar Data Schema (Firestore)
+
+### Commit `cbcd25d` — Refinamientos tabla predicciones
+1. ✅ Renombrar columna: "Predicción" → "Condición Predicha"
+2. ✅ Botón Lookback siempre visible (disabled si sin datos)
+3. ✅ Estilos CSS para estado disabled
+4. ✅ Tooltips explicativos
+
+### Commit `2e5134a` — Timezone en Firebase + Columnas hora local
+1. ✅ Agregar `timezone: number` a ForecastDoc
+2. ✅ Guardar timezone de ciudad en Firebase
+3. ✅ Columna "Tu Hora Local" (máquina usuario)
+4. ✅ Columna "Hora Local (Ciudad)" (con cálculo desde timezone)
+5. ✅ Funciones helper: getLocalMachineTime() + getCityLocalTime()
+6. ✅ Export CSV actualizado con 2 columnas nuevas
+
+### Commit `7821985` — Pasar timezone a tabla + agregar filtros/ordenamiento
+1. ✅ Pasar timezone a PredictionRow
+2. ✅ Agregar filtro para 'Hora Local (Ciudad)'
+3. ✅ Agregar ordenamiento para 'Hora Local (Ciudad)'
+
+### Commit `23a8454` — Quitar UTC, agregar fecha, filtro/ordenamiento
+1. ✅ Quitar columna 'Hora UTC' (no necesaria)
+2. ✅ Agregar fecha (DD/MM) a 'Tu Hora Local'
+3. ✅ Agregar fecha (DD/MM) a 'Hora Local (Ciudad)'
+4. ✅ Agregar filtro para 'Tu Hora Local'
+5. ✅ Agregar ordenamiento para 'Tu Hora Local'
+6. ✅ Actualizar export CSV sin UTC
+
+### Commit `e1d11a8` — Guardar hora local del usuario en Firebase
+1. ✅ Agregar `local_time_user` a ForecastDoc
+2. ✅ Función getLocalTimeUser() para calcular hora local
+3. ✅ Guardar hora local en Firebase (DD/MM HH:MM)
+4. ✅ Usar valor persistente en tabla (no dinámico)
+5. ✅ Cambiar 'Tu Hora Local' a accessor con filtro/ordenamiento
+6. ✅ Mapear local_time_user en getRecentForecasts()
+
+### Estado Firestore:
+- ✅ city_weather limpiado (10 docs)
+- ✅ weather_catalog preservado
+- ✅ classification_reports intacto
 
 ---
 
-## 📌 Próximo Trabajo: Epic Dashboard Metabase
+## 📚 Documentación Creada
 
-**Status:** 🎯 En Planning (rama: `sprint-9`, sin merge aún)
-
-Epic será dividida en:
-- **US-910:** Metabase Infrastructure + Firestore Connector
-- **US-911:** Data Layer (SQL queries)
-- **US-912:** Dashboard Visualizations
-- **US-913:** Integration + Testing
-
-**Documentación:** Por crear en `src/docs/sprints/sprint-9/EPIC-DASHBOARD.md`
+- `src/docs/sprints/sprint-10/07-PredictionValidation.md` — Flujo completo
+- `src/docs/sprints/sprint-10/FIRESTORE-CLEANUP-GUIDE.md` — Script y casos de uso
+- `src/docs/architecture/10-firestore-data-schema.md` — Actualizado
 
 ---
 
----
+## 🚀 Próximos Pasos
 
-## 🔧 Quality Assurance Setup (2026-04-19)
-
-**Herramientas automáticas montadas:**
-
-| Herramienta | Comando | Estado | Descripción |
-|-------------|---------|--------|-------------|
-| Monitor Firebase | `npm run monitor:firebase` | ✅ Activo (background) | Valida cada 30 min |
-| Validador Schema | `npm run validate:forecast-schema` | ✅ Disponible | Bajo demanda |
-| Clean Firestore | `npm run clean:firestore` | ✅ Disponible | Limpieza de datos |
-
-**Infraestructura:**
-- Dev server activo: http://localhost:5178
-- Firestore limpio (post-reset)
-- Monitoreo: cada 30 minutos
-- Log: `firebase-monitor.log`
+1. Levantar dev server y validar flujo de predicción
+2. Probar reporte manual (ClassificationReport)
+3. Validar tabla muestra 1 fila por consulta + lookback
+4. Merge a `develop` cuando esté validado
 
 ---
 
-**Última actualización:** 2026-04-19 (Sprint 10 completado + QA setup)  
-**Estado:** ✅ Sprint 10 completado | Dev + Monitor activos | Ready para datos
+**Sprint 10 Status:** ✅ Código + Docs + Git commit | Ready para testing
