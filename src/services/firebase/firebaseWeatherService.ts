@@ -34,6 +34,9 @@ export interface ForecastDoc {
   // ✅ NEW: Clima calculado por el algoritmo (snapshots[0] procesado)
   // Se usa para comparar: calculated vs actual (en reportes manuales)
   calculated_condition: string
+  // ✅ NEW: Timezone de la ciudad (offset en horas, ej: -5, +1, +9)
+  // Se usa para calcular hora local de la ciudad en análisis de predicciones
+  timezone: number
   ttl: Timestamp
   created_at: Timestamp
 }
@@ -106,6 +109,7 @@ export async function saveCityForecast(
       date_hour: dateHour,
       snapshots,
       calculated_condition: calculatedCondition,
+      timezone: city.timezone,
       ttl: Timestamp.fromDate(ttl),
       created_at: Timestamp.now(),
     }
@@ -206,6 +210,7 @@ export async function getRecentForecasts(
       date_hour: data.date_hour,
       snapshots: data.snapshots || [],
       calculated_condition: data.calculated_condition || 'Unknown',
+      timezone: data.timezone ?? 0,
       ttl: data.ttl,
       created_at: data.created_at,
     }))
