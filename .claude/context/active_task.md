@@ -1,10 +1,10 @@
-# 🎯 Sprint 10 — Epic Dashboard Looker Studio ✅ COMPLETADO
+# 🎯 Sprint 10 — Epic Dashboard Looker Studio + Quality Assurance ✅ COMPLETADO
 
-**Período:** 2026-04-16 → 2026-04-18 (completado)
-**Estado:** ✅ **COMPLETADO** — 6/7 US completadas, 14/15 SP (US-1004-1006 archivadas)
-**Sprint Points:** 12 SP (6 US) + 3 SP (US-1007 restructurada)
-**Rama:** `sprint-10` [commit 62256a1]
-**Progreso:** 6/7 US completadas ✅ | Archivadas: US-1004, US-1005, US-1006 (Looker dashboards)
+**Período:** 2026-04-16 → 2026-04-19 (completado con QA)
+**Estado:** ✅ **COMPLETADO** — 6/7 US completadas, infraestructura QA montada
+**Sprint Points:** 12 SP (6 US) + 3 SP (US-1007 refactorizada)
+**Rama:** `sprint-10` [último commit: baf532b]
+**Progreso:** 6/7 US completadas ✅ | Monitoreo activo | Firestore limpio
 
 ---
 
@@ -113,19 +113,53 @@
 
 ---
 
+## ✅ QA Setup — Automatizado (2026-04-19)
+
+**Infraestructura de validación montada:**
+
+1. **Monitoreo continuo de Firestore**
+   - Script: `npm run monitor:firebase` (activo en background)
+   - Intervalo: cada 30 minutos
+   - Validaciones:
+     - Schema de documentos (1 doc/ciudad/hora)
+     - Snapshots completos (exactamente 12)
+     - Deduplicación (sin duplicados de hora)
+     - Integridad de datos (campos requeridos)
+   - Log: `firebase-monitor.log`
+
+2. **Validador manual bajo demanda**
+   - Script: `npm run validate:forecast-schema`
+   - Reporte detallado con estadísticas y recomendaciones
+   - Detecta problemas de schema
+
+3. **Herramientas de limpieza**
+   - Script: `npm run clean:firestore`
+   - Limpia: city_weather, classification_reports
+   - Preserva: weather_catalog
+
+4. **Documentación operacional**
+   - `FIREBASE-MONITORING.md` — guía de interpretación de resultados
+
+**Estado actual:**
+- ✅ Dev server activo (port 5178)
+- ✅ Monitor activo (validará en 30 min)
+- ✅ Firestore limpio (post-reset)
+- ⏳ Esperando primer ciclo de datos de AccuWeather (~1 hora)
+
+---
+
 ## 🔗 Referencias Rápidas
 
-- **Rama actual:** `sprint-10` (feature branch)
-- **Estado:** Sprint 10 en progreso (5/7 US completadas)
-- **BigQuery:** Dataset `weather_analytics` ✅, tabla `city_weather_raw_changelog` ✅, vista `snapshots_flat` ✅
-- **Looker Studio:** Reporte creado (https://datastudio.google.com/reporting/c4e1ef49-1a2f-4c8d-99ae-05a2b070b403) — US-1003 ✅
-- **Dashboards Looker:** US-1004/1005/1006 archivadas (no se implementarán en Sprint 10)
-- **React:** PredictionAnalysisTable integrado en TestingTools ✅, funcionando ✅
-- **CORS Issue:** Resuelto (Vite proxy + weatherService.ts actualizado) ✅
-- **Próximo:** Cerrar Sprint 10, documentación final
+- **Rama:** `sprint-10` (feature branch)
+- **Dev Server:** http://localhost:5178
+- **BigQuery:** Dataset `weather_analytics` ✅, vista `snapshots_flat` ✅
+- **Looker Studio:** https://datastudio.google.com/reporting/c4e1ef49-1a2f-4c8d-99ae-05a2b070b403
+- **React:** PredictionAnalysisTable con TanStack Table v8 ✅
+- **Firebase:** Monitoreo automático activo ✅
+- **Próximo:** Esperar datos, validar schema, resolver problemas si los hay
 
 ---
 
 **Creado:** 2026-04-16  
-**Última actualización:** 2026-04-18 (US-1007 ✅, CORS resuelto, US-1004-1006 archivadas)  
-**Status:** 🔄 Sprint 10 en progreso | US-1001-1003 ✅ | US-1007 ✅ | US-1004-1006 📦 ARCHIVADAS | Próximo: Documentación final + cierre Sprint 10
+**Última actualización:** 2026-04-19 (QA setup completado, monitoreo activo)  
+**Status:** ✅ COMPLETADO | Sprint 10 cerrado con infraestructura QA
