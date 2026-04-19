@@ -107,7 +107,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
     }),
     columnHelper.accessor('prediction', {
       id: 'prediccion',
-      header: 'Predicción',
+      header: 'Condición Predicha',
       cell: info => <WeatherBadge condition={info.getValue()} />,
       filterFn: (row, _id, value) =>
         (CONDITION_LABEL[row.original.prediction.toLowerCase() as WeatherCondition] || row.original.prediction)
@@ -158,15 +158,17 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       header: 'Lookback',
       cell: info => {
         const row = info.row.original;
-        if (!row.lookback12h.length) return null;
         const key    = info.row.id;
         const isOpen = openLookbacks.has(key);
+        const hasData = row.lookback12h.length > 0;
         return (
           <button
             className={`pat-btn-lookback ${row.correct === true ? 'success' : ''}`}
             onClick={() => toggleLookback(key)}
+            disabled={!hasData}
+            title={hasData ? 'Ver histórico de 12h' : 'Sin datos de histórico'}
           >
-            {isOpen ? 'CERRAR' : 'LOOKBACK'}
+            {!hasData ? 'SIN DATOS' : isOpen ? 'CERRAR' : 'LOOKBACK'}
           </button>
         );
       },
@@ -454,13 +456,23 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           cursor: pointer;
           transition: all 0.15s;
         }
-        .pat-btn-lookback:hover { background: rgba(248, 81, 73, 0.15); }
+        .pat-btn-lookback:hover:not(:disabled) { background: rgba(248, 81, 73, 0.15); }
+        .pat-btn-lookback:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          background: rgba(248, 81, 73, 0.04);
+        }
         .pat-btn-lookback.success {
           border-color: var(--ui-success);
           background: rgba(63, 185, 80, 0.08);
           color: var(--ui-success);
         }
-        .pat-btn-lookback.success:hover { background: rgba(63, 185, 80, 0.15); }
+        .pat-btn-lookback.success:hover:not(:disabled) { background: rgba(63, 185, 80, 0.15); }
+        .pat-btn-lookback.success:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          background: rgba(63, 185, 80, 0.04);
+        }
 
         .pat-lookback-row td {
           padding: 0;
