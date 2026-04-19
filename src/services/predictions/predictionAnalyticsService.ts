@@ -61,6 +61,7 @@ export async function fetchPredictions(): Promise<PredictionRow[]> {
         hour: snapshot.hour, // Hora para la cual se predice (ej: 9 si consulta a las 8 AM)
         cityId: forecast.city_id,
         cityName: forecast.city_name,
+        timezone: forecast.timezone || 0, // ✅ Para calcular hora local de la ciudad
         prediction: forecast.calculated_condition || 'Unknown', // ✅ Lo que el algoritmo mostró
         actual: report?.should_be ?? null, // null = "Sin datos" (no confirmado aún)
         correct: report ? forecast.calculated_condition === report.should_be : null,

@@ -123,17 +123,20 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       enableSorting: false,
       enableColumnFilter: false,
     }),
-    columnHelper.display({
+    columnHelper.accessor((row) => getCityLocalTime(row.queryTime, row.timezone), {
       id: 'horaCiudad',
       header: 'Hora Local (Ciudad)',
-      cell: info => {
-        const row = info.row.original;
-        return (
-          <span className="pat-time">{getCityLocalTime(row.queryTime, row.timezone)}</span>
-        );
+      cell: info => (
+        <span className="pat-time">{info.getValue()}</span>
+      ),
+      filterFn: (row, _id, value) =>
+        getCityLocalTime(row.original.queryTime, row.original.timezone)
+          .toLowerCase().includes(value.toLowerCase()),
+      sortingFn: (a, b) => {
+        const timeA = getCityLocalTime(a.original.queryTime, a.original.timezone);
+        const timeB = getCityLocalTime(b.original.queryTime, b.original.timezone);
+        return timeA.localeCompare(timeB);
       },
-      enableSorting: false,
-      enableColumnFilter: false,
     }),
     columnHelper.accessor('cityName', {
       id: 'ciudad',
