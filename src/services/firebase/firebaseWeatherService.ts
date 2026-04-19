@@ -78,7 +78,14 @@ export async function saveCityForecast(
 
   try {
     const now = new Date()
-    const dateHour = formatDateHour(now) // "2026-04-08-14"
+
+    // FIX US-1007: Redondear a la SIGUIENTE hora completa
+    // Razón: AccuWeather pronósticos son para "las siguientes 12 horas" desde esa hora
+    // Si consultamos a las 9:34 PM, guardamos como si fuera 10:00 PM para coherencia
+    const nextHour = new Date(now)
+    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0)
+    const dateHour = formatDateHour(nextHour) // "2026-04-08-22" (siguiente hora)
+
     const ttl = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // now + 7 días
 
     const forecastDoc: ForecastDoc = {
