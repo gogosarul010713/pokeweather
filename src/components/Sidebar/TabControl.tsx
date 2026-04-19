@@ -2,8 +2,8 @@ import { useStore } from '../../store/useStore'
 import climaSvg from '../../assets/icons/clima.svg'
 
 // SVG Icons
-const IconClima = ({ width = 60 } = {}) => (
-  <img src={climaSvg} alt="Clima" width={width} height="auto" style={{ display: 'block' }} />
+const IconClima = ({ width = 60, height = 40 } = {}) => (
+  <img src={climaSvg} alt="Clima" width={width} height={height} style={{ display: 'block', objectFit: 'contain' }} />
 )
 
 const IconNidos = ({ width = 60, height = 40 } = {}) => (
