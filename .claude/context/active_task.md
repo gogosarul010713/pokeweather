@@ -113,38 +113,33 @@
 
 ---
 
-## ✅ QA Setup — Automatizado (2026-04-19)
+## ✅ QA Setup + Validación de Datos (2026-04-19)
 
 **Infraestructura de validación montada:**
 
 1. **Monitoreo continuo de Firestore**
    - Script: `npm run monitor:firebase` (activo en background)
    - Intervalo: cada 30 minutos
-   - Validaciones:
-     - Schema de documentos (1 doc/ciudad/hora)
-     - Snapshots completos (exactamente 12)
-     - Deduplicación (sin duplicados de hora)
-     - Integridad de datos (campos requeridos)
+   - Validaciones: Schema, deduplicación, integridad
    - Log: `firebase-monitor.log`
 
-2. **Validador manual bajo demanda**
-   - Script: `npm run validate:forecast-schema`
-   - Reporte detallado con estadísticas y recomendaciones
-   - Detecta problemas de schema
+2. **Validador manual:** `npm run validate:forecast-schema`
+3. **Limpiador:** `npm run clean:firestore` (preserva weather_catalog)
+4. **Docs:** `FIREBASE-MONITORING.md` + `US-1007-OBSERVACIONES-VALIDACION.md`
 
-3. **Herramientas de limpieza**
-   - Script: `npm run clean:firestore`
-   - Limpia: city_weather, classification_reports
-   - Preserva: weather_catalog
+**Problemas Encontrados y Resueltos:**
 
-4. **Documentación operacional**
-   - `FIREBASE-MONITORING.md` — guía de interpretación de resultados
+| Problema | Causa | Fix | Commit |
+|----------|-------|-----|--------|
+| Timestamp guardado = siguiente hora | `formatDateHour(now)` sin redondeo | Redondear a siguiente hora completa antes de guardar | 93bf4b2 |
+| 12-15 filas por ciudad en tabla | ¿Deduplicación o docs parciales? | Esperar ciclo post-fix + validar con `validate:forecast-schema` | — |
 
 **Estado actual:**
 - ✅ Dev server activo (port 5178)
-- ✅ Monitor activo (validará en 30 min)
-- ✅ Firestore limpio (post-reset)
-- ⏳ Esperando primer ciclo de datos de AccuWeather (~1 hora)
+- ✅ Monitor activo (background)
+- ✅ Firestore limpio
+- ✅ Fix timestamp aplicado
+- ⏳ Esperando ciclo de datos con fix aplicado
 
 ---
 

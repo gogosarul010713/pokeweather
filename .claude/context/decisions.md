@@ -211,6 +211,34 @@
 
 ---
 
+### 2026-04-19 D-014 — Timestamp Forecast: Redondear a siguiente hora completa
+
+**Contexto:** US-1007 validación de datos. Usuario reportó que los timestamps guardados eran la "siguiente hora", no la hora de consulta.
+
+**Problema:** 
+- App consulta AccuWeather a las 9:34 PM → guardaba timestamp como "21:00"
+- Pero AccuWeather pronósticos son PARA la siguiente hora (10:00 PM, 11:00 PM, ..., 10:00 AM)
+- Mismatch: documento "21:00" contiene pronósticos que son para "22:00-09:00"
+
+**Decisión:** Redondear timestamp a siguiente hora completa ANTES de guardar
+
+**Motivo:** Los pronósticos de AccuWeather son inherentemente para "las próximas 12 horas" desde una hora puntual. Para coherencia:
+- Consulta 9:34 PM → guardar como 2026-04-19-22 (siguiente hora)
+- Snapshots: [22:00, 23:00, 00:00, ..., 09:00] ahora tienen sentido
+
+**Implementación:** `firebaseWeatherService.ts` línea 81-86
+```typescript
+const nextHour = new Date(now)
+nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0)
+const dateHour = formatDateHour(nextHour)
+```
+
+**Validación pendiente:** Después de 1 ciclo de datos con fix, ejecutar `npm run validate:forecast-schema` para confirmar estructura.
+
+**US relacionada:** US-1007, commit 93bf4b2
+
+---
+
 ### 2026-04-18 D-013 — PredictionAnalysisTable: Adopción TanStack Table v8 (US-1007 v3)
 
 **Contexto:** La tabla custom de US-1007 tenía bug de paginación (botones [1,1,1,2,3]) y carecía de features críticas: filtrado por columna, búsqueda global, page size configurable, navegación primera/última página.
