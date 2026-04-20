@@ -207,11 +207,11 @@ export async function getRecentForecasts(
       minDate = Timestamp.fromDate(new Date(Date.now() - hoursBack * 60 * 60 * 1000))
     }
 
-    // Query con filtro + índice (requiere Paso 0: crear índice en Firebase Console)
+    // Query con filtro (where) — orderBy en memoria para evitar índice COLLECTION_GROUP_DESC
+    // Nota: Firestore no permite COLLECTION_GROUP_DESC sin composite index explícito
     const q = query(
       collectionGroup(db, 'forecasts'),
-      where('created_at', '>=', minDate),
-      orderBy('created_at', 'desc')
+      where('created_at', '>=', minDate)
     )
     const allSnapshot = await getDocs(q)
 
@@ -233,6 +233,13 @@ export async function getRecentForecasts(
         ttl: data.ttl,
         created_at: data.created_at,
       }
+    })
+
+    // Ordenar por created_at DESC en memoria (Firestore no permite COLLECTION_GROUP_DESC sin composite index)
+    documents.sort((a, b) => {
+      const timeA = a.created_at?.toMillis?.() ?? 0
+      const timeB = b.created_at?.toMillis?.() ?? 0
+      return timeB - timeA // DESC order
     })
 
     const sinceLabel = since ? new Date(since).toLocaleString() : timeRange
