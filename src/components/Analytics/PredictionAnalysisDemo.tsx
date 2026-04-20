@@ -43,10 +43,12 @@ function generateMockData(): PredictionRow[] {
         : [];
 
       rows.push({
-        queryTime: `2026-04-18T${String(h).padStart(2, '0')}:30:00Z`,
+        queryTime: new Date(`2026-04-18T${String(h).padStart(2, '0')}:30:00Z`),
         hour: h,
         cityId,
         cityName: cityNames[cityId],
+        timezone: cityId === 'sydney' ? 10 : cityId === 'tokyo' ? 9 : 0,
+        localTimeUser: `18/04 ${String(h).padStart(2, '0')}:30`,
         prediction,
         actual,
         correct: hasReport ? isCorrect : null,
