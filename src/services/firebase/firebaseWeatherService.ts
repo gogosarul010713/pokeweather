@@ -164,10 +164,11 @@ export async function saveCityForecast(
  * @returns Promise<ForecastDoc[]> — array de documentos (vacío si offline o error)
  */
 export async function getRecentForecasts(
-  timeRange: '1h' | '6h' | '24h' | '7d' = '24h'
+  timeRange: '1h' | '6h' | '24h' | '7d' = '24h',
+  since?: number
 ): Promise<ForecastDoc[]> {
   // Dynamic import Firestore functions (lazy)
-  const { collectionGroup, getDocs } = await import('firebase/firestore')
+  const { collectionGroup, getDocs, query, where, orderBy, Timestamp } = await import('firebase/firestore')
 
   // Lazy initialize Firebase if needed
   const db = await getDb()
@@ -178,64 +179,64 @@ export async function getRecentForecasts(
   }
 
   try {
-    // Calcular timestamp mínimo según rango
-    const now = new Date()
-    let hoursBack: number
+    // Determinar minDate: `since` tiene precedencia, sino usar timeRange
+    let minDate: Timestamp
+    if (since !== undefined && since > 0) {
+      minDate = Timestamp.fromMillis(since)
+    } else {
+      const now = new Date()
+      let hoursBack: number
 
-    switch (timeRange) {
-      case '1h':
-        hoursBack = 1
-        break
-      case '6h':
-        hoursBack = 6
-        break
-      case '24h':
-        hoursBack = 24
-        break
-      case '7d':
-        hoursBack = 7 * 24
-        break
-      default:
-        hoursBack = 24
+      switch (timeRange) {
+        case '1h':
+          hoursBack = 1
+          break
+        case '6h':
+          hoursBack = 6
+          break
+        case '24h':
+          hoursBack = 24
+          break
+        case '7d':
+          hoursBack = 7 * 24
+          break
+        default:
+          hoursBack = 24
+      }
+
+      minDate = Timestamp.fromDate(new Date(Date.now() - hoursBack * 60 * 60 * 1000))
     }
 
-    const minDate = new Date(now.getTime() - hoursBack * 60 * 60 * 1000)
+    // Query con filtro + índice (requiere Paso 0: crear índice en Firebase Console)
+    const q = query(
+      collectionGroup(db, 'forecasts'),
+      where('created_at', '>=', minDate),
+      orderBy('created_at', 'desc')
+    )
+    const allSnapshot = await getDocs(q)
 
-    // ⚠️ NOTA: NO usamos where() ni orderBy() porque Firestore requiere un índice
-    // STRATEGY: Obtener todos, procesar en memoria (data es pequeña: ~45 docs)
-    const allSnapshot = await getDocs(collectionGroup(db, 'forecasts'))
+    // Mapear a ForecastDoc (no necesita filtro en memoria, ya viene filtrado)
+    const documents: ForecastDoc[] = allSnapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        city_id: data.city_id,
+        city_name: data.city_name,
+        country: data.country,
+        region: data.region,
+        lat: data.lat,
+        lon: data.lon,
+        date_hour: data.date_hour,
+        snapshots: data.snapshots || [],
+        calculated_condition: data.calculated_condition || 'Unknown',
+        timezone: data.timezone ?? 0,
+        local_time_user: data.local_time_user || '',
+        ttl: data.ttl,
+        created_at: data.created_at,
+      }
+    })
 
-    // Filtrar y ordenar en JavaScript
-    const filtered = allSnapshot.docs
-      .map(doc => {
-        const data = doc.data()
-        const createdAt = data.created_at?.toDate?.() || new Date(data.created_at)
-        return {
-          ...data,
-          _createdAtDate: createdAt,
-        } as any
-      })
-      .filter(doc => doc._createdAtDate >= minDate)
-      .sort((a, b) => b._createdAtDate.getTime() - a._createdAtDate.getTime())
-      .slice(0, 500) // limit
-
-    const documents: ForecastDoc[] = filtered.map(data => ({
-      city_id: data.city_id,
-      city_name: data.city_name,
-      country: data.country,
-      region: data.region,
-      lat: data.lat,
-      lon: data.lon,
-      date_hour: data.date_hour,
-      snapshots: data.snapshots || [],
-      calculated_condition: data.calculated_condition || 'Unknown',
-      timezone: data.timezone ?? 0,
-      local_time_user: data.local_time_user || '',
-      ttl: data.ttl,
-      created_at: data.created_at,
-    }))
-
-    console.log(`[Firebase] ✅ Loaded ${documents.length} forecasts from last ${timeRange} (processed in-memory)`)
+    const sinceLabel = since ? new Date(since).toLocaleString() : timeRange
+    console.log(`[Firebase] ✅ Query delta (since=${sinceLabel}) → ${documents.length} docs`)
     return documents
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)

@@ -7,17 +7,28 @@
 import type { PredictionRow, LookbackItem } from '../../components/Analytics/PredictionAnalysisTable'
 import { getRecentForecasts, type ForecastDoc } from '../firebase/firebaseWeatherService'
 import { getRecentClassificationReports, type ClassificationReport } from '../firebase/classificationReportService'
+import { getForecastCache } from '../cache/cacheService'
 
 /**
  * Obtener predicciones para análisis (últimas 24h)
- * Procesa snapshots de Firestore y genera lookback
+ * Primero intenta caché local (rápido), sino consulta Firestore
+ * US-1008: Caché Inteligente
  *
  * @returns Promise<PredictionRow[]> — filas listas para tabla
  */
 export async function fetchPredictions(): Promise<PredictionRow[]> {
   try {
-    // 1. Cargar forecasts recientes desde Firestore
-    const forecasts = await getRecentForecasts('24h')
+    // 1. Intentar caché local primero
+    let forecasts = await getForecastCache()
+    let source = 'cache'
+
+    // Si caché vacío, cargar de Firestore
+    if (forecasts.length === 0) {
+      forecasts = await getRecentForecasts('24h')
+      source = 'firestore'
+    }
+
+    console.log(`[PredictionAnalytics] Loaded ${forecasts.length} forecasts from ${source}`)
 
     if (!forecasts.length) {
       console.warn('[PredictionAnalytics] No forecasts found in last 24h')

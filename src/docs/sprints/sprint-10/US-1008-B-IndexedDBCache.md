@@ -1,112 +1,127 @@
-# US-1008-B: Crear cacheService expandido (IndexedDB + TTL)
+# US-1008-B: Cache Local de Pronósticos (idb-keyval + localStorage)
 
-**Story Points:** 2 SP  
-**Epic:** Optimización Firestore — Caché Inteligente  
-**Prioridad:** Alta  
+**Story Points:** 1 SP
+**Epic:** Optimización Firestore — Caché Inteligente
+**Prioridad:** Alta
 **Status:** Backlog Sprint 10
 
 ---
 
-## 📋 Descripción
+## Decisión de diseño
 
-Expandir `cacheService.ts` para guardar pronósticos en IndexedDB con:
-- Tabla `forecasts_index` para O(1) lookup por (city_id, date_hour)
-- TTL automático (7 días + 1h margin)
-- Funciones de sync: persistencia, cleanup, retrieval
+El diseño anterior proponía 3 IndexedDB stores nativos (`forecasts_data`, `forecasts_index`, `sync_metadata`).
+Eso es innecesario para el volumen actual y crea complejidad sin beneficio.
+
+**Enfoque simplificado:**
+- `idb-keyval` (ya instalado) → guardar el array completo `ForecastDoc[]` bajo una sola clave
+- `localStorage` → guardar `lastSyncTimestamp` (lectura síncrona, valor simple)
+- Una función `mergeForecastDocs()` para deduplicar sin índices
+
+Tamaño estimado: 240 docs × ~2KB = ~480KB → dentro del límite de idb-keyval.
 
 ---
 
 ## ✅ Acceptance Criteria
 
-1. ✅ IndexedDB storage <50MB (validar con DevTools)
-2. ✅ Lookup por (city_id, date_hour) en <10ms (IndexedDB inspection)
-3. ✅ TTL automático: docs > 7 días + 1h eliminados en `cleanExpiredForecasts()`
-4. ✅ Merge sin duplicados (by city_id + date_hour)
-5. ✅ Función `persistForecastToIndexedDB(doc)` guarda con `expiresAt`
-6. ✅ Función `upsertForecastIndex(city_id, date_hour)` crea entrada O(1)
-7. ✅ Función `cleanExpiredForecasts()` elimina docs expirados
-8. ✅ TypeScript types: crear `src/utils/cacheTypes.ts` con interfaces
-9. ✅ Logging: `[Cache] Stored ${docs.length} forecasts, cleaned ${expired.length} expired`
+1. `getForecastCache()` devuelve `ForecastDoc[]` desde IndexedDB (vacío si no existe)
+2. `setForecastCache(docs)` sobreescribe el cache completo en IndexedDB
+3. `mergeForecastDocs(cached, newDocs)` deduplica por `city_id + date_hour`
+4. `cleanExpiredForecastDocs(docs)` filtra docs con `created_at` > 7 días
+5. `getLastSyncTimestamp()` lee de localStorage (síncrono, retorna `number`, 0 si no existe)
+6. `setLastSyncTimestamp(ts)` escribe en localStorage
+7. Sin cambios en la lógica existente de WeatherData (no mezclar dominios)
 
 ---
 
-## 📝 Implementación
+## Implementación
 
-**Files:**
-- `src/services/cache/cacheService.ts` (expandir)
-- `src/utils/cacheTypes.ts` (nuevo)
-
-**Nuevas funciones:**
+**File:** `src/services/cache/cacheService.ts` (agregar al final — no tocar código existente)
 
 ```typescript
-// Obtener timestamp última sincronización
-export async function getLastSyncTimestamp(): Promise<number>
+// ─── Caché de ForecastDocs (Firestore → local) ────────────────────────────────
+// Propósito: evitar re-fetch a Firestore al abrir PredictionAnalysisTable
+// Estrategia: idb-keyval key única + merge deduplicado
 
-// Guardar timestamp última sincronización
-export async function setLastSyncTimestamp(timestamp: number): Promise<void>
+const KEY_FORECAST_CACHE = 'pwe-forecast-cache'
+const KEY_LAST_SYNC      = 'pwe-lastSync'
+const FORECAST_TTL_MS    = 7 * 24 * 60 * 60 * 1000 // 7 días
 
-// Persistir pronóstico en IndexedDB con expiresAt
-export async function persistForecastToIndexedDB(doc: ForecastDoc): Promise<void>
+export const getForecastCache = async (): Promise<ForecastDoc[]> => {
+  try {
+    return (await get<ForecastDoc[]>(KEY_FORECAST_CACHE)) ?? []
+  } catch {
+    return []
+  }
+}
 
-// Crear entrada en índice para O(1) lookup
-export async function upsertForecastIndex(
-  city_id: string,
-  date_hour: string,
-  doc_id: string
-): Promise<void>
+export const setForecastCache = async (docs: ForecastDoc[]): Promise<void> => {
+  try {
+    await set(KEY_FORECAST_CACHE, docs)
+  } catch { /* silencioso */ }
+}
 
-// Limpiar documentos expirados (TTL 7d + 1h)
-export async function cleanExpiredForecasts(): Promise<number>
+export const mergeForecastDocs = (
+  cached: ForecastDoc[],
+  incoming: ForecastDoc[]
+): ForecastDoc[] => {
+  const map = new Map<string, ForecastDoc>()
+  for (const doc of cached)  map.set(`${doc.city_id}-${doc.date_hour}`, doc)
+  for (const doc of incoming) map.set(`${doc.city_id}-${doc.date_hour}`, doc) // incoming tiene precedencia
+  return Array.from(map.values())
+}
 
-// Recuperar pronósticos por (city_id, date_hour)
-export async function getForecastFromCache(
-  city_id: string,
-  date_hour: string
-): Promise<ForecastDoc | null>
+export const cleanExpiredForecastDocs = (docs: ForecastDoc[]): ForecastDoc[] => {
+  const cutoff = Date.now() - FORECAST_TTL_MS
+  return docs.filter(doc => {
+    const createdAt = doc.created_at?.toMillis?.() ?? 0
+    return createdAt > cutoff
+  })
+}
+
+// ─── Last Sync Timestamp — localStorage (síncrono) ───────────────────────────
+
+export const getLastSyncTimestamp = (): number =>
+  parseInt(localStorage.getItem(KEY_LAST_SYNC) ?? '0', 10)
+
+export const setLastSyncTimestamp = (ts: number): void =>
+  localStorage.setItem(KEY_LAST_SYNC, String(ts))
 ```
 
-**IndexedDB Schema:**
+**Import necesario al inicio del archivo:**
 
 ```typescript
-// Store: forecasts_data
-// Key: "{city_id}-{date_hour}"
-// Value: ForecastDoc + { expiresAt: number }
-
-// Store: forecasts_index
-// Key: "{city_id}-{date_hour}"
-// Value: { city_id, date_hour, doc_id, expiresAt }
-
-// Store: sync_metadata
-// Key: "lastSync"
-// Value: { timestamp: number, lastClean: number }
+import type { ForecastDoc } from '../firebase/firebaseWeatherService'
 ```
 
 ---
 
-## 🧪 Testing
+## Por qué NO IndexedDB nativo con múltiples stores
 
-**Unit tests:**
-- `persistForecastToIndexedDB()` guarda con `expiresAt` correcto
-- `getForecastFromCache()` retrieves por (city_id, date_hour)
-- `cleanExpiredForecasts()` elimina solo docs expirados (>7d+1h)
-- Deduplicación: mismo (city_id, date_hour) actualiza, no duplica
-- `getLastSyncTimestamp()` persiste entre lecturas/escrituras
+| Criterio | 3 stores nativos (diseño anterior) | idb-keyval key única (este diseño) |
+|----------|--------------------------------------|-------------------------------------|
+| Líneas de código | ~80 líneas + schema | ~30 líneas |
+| Lookup por city_id | O(1) con índice | O(n) con Map en merge |
+| Volumen actual | ~45 docs | ~45 docs |
+| Volumen máx estimado | ~2,500 docs | ~2,500 docs |
+| Problema O(n) con Map | No aplica a <2,500 docs | Irrelevante |
+| Complejidad de tests | Alta (mock IDBDatabase) | Baja (mock idb-keyval) |
 
-**Integration:**
-- Storage <50MB después de persistir 100 ciudades × 100 docs
-- Lookup speed <10ms (medir con `performance.now()`)
-
----
-
-## 🔗 Dependencias
-
-- Depende de: US-1008-A (aunque puede desarrollarse en paralelo)
-- Requerido por: US-1008-C (syncFirestoreToCache necesita estas funciones)
+O(n) en merge solo importa con >10,000 docs. No es ese caso.
 
 ---
 
-## 📊 Notas
+## Testing
 
-- Usar IndexedDB nativo (idb-keyval es muy simple, no permite índices)
-- TTL margin 1h es seguro para eventual consistency
-- localStorage para lastSync (más rápido que IndexedDB para lectura síncrona)
+- `getForecastCache()` devuelve `[]` cuando no hay datos
+- `setForecastCache()` persiste entre llamadas
+- `mergeForecastDocs()`: doc existente se actualiza, no duplica
+- `mergeForecastDocs()`: doc nuevo se agrega
+- `cleanExpiredForecastDocs()`: doc con created_at > 7d eliminado, doc < 7d preservado
+- `getLastSyncTimestamp()` retorna 0 si no hay sync previo
+
+---
+
+## Dependencias
+
+- Depende de: nada (puede desarrollarse en paralelo con A)
+- Requerido por: US-1008-C (usa estas funciones en syncForecastsOnLoad)

@@ -1,147 +1,150 @@
-# US-1008-C: Integración syncFirestoreToCache() (Orquestación)
+# US-1008-C: Orquestación syncForecastsOnLoad()
 
-**Story Points:** 2 SP  
-**Epic:** Optimización Firestore — Caché Inteligente  
-**Prioridad:** Alta  
+**Story Points:** 1 SP
+**Epic:** Optimización Firestore — Caché Inteligente
+**Prioridad:** Alta
 **Status:** Backlog Sprint 10
 
 ---
 
-## 📋 Descripción
+## Flujo general
 
-Crear función `syncFirestoreToCache()` que orquesta el sync delta completo:
+```
+App monta
+  └─ syncForecastsOnLoad() [background, non-blocking]
+       1. Leer lastSyncTimestamp (localStorage)
+       2. getRecentForecasts('7d', since=lastSync) → nuevos docs
+       3. getForecastCache() → docs ya guardados localmente
+       4. mergeForecastDocs(cached, newDocs) → sin duplicados
+       5. cleanExpiredForecastDocs(merged) → remover > 7 días
+       6. setForecastCache(cleaned) → persistir en idb-keyval
+       7. setLastSyncTimestamp(Date.now())
 
-1. Leer `lastSyncTimestamp` de localStorage
-2. Query Firestore: `created_at > lastSync` (delta)
-3. Persistir nuevos docs en IndexedDB
-4. Limpiar expirados (TTL 7 días)
-5. Actualizar `lastSyncTimestamp`
-
-Integrar en app para ejecutar automáticamente al cargar.
+Usuario abre PredictionAnalysisTable
+  └─ getForecastCache() → ForecastDoc[] (sin llamar Firestore)
+       └─ Render tabla inmediato
+```
 
 ---
 
 ## ✅ Acceptance Criteria
 
-1. ✅ Función `syncFirestoreToCache()` ejecuta 5 pasos en orden
-2. ✅ Sync automático al montar app (integrado en `batchWeatherService`)
-3. ✅ No bloquea UI (async/await, no wait síncrono)
-4. ✅ Fallback graceful si Firestore falla (usa cache viejo, no error)
-5. ✅ Logging detallado:
-   - `[Sync] Started at HH:MM:SS`
-   - `[Sync] Query delta: ${newDocs.length} docs`
-   - `[Sync] Persisted ${persisted.length}, cleaned ${expired.length}`
-   - `[Sync] Completed in ${elapsed}ms`
-6. ✅ Performance: sync total <500ms (incluyendo Firestore query)
-7. ✅ Error handling: catch en try-catch, no rethrow (falla silenciosa)
-8. ✅ Integración en `batchWeatherService.ts` (llamar en useEffect setup)
+1. `syncForecastsOnLoad()` ejecuta los 7 pasos en orden
+2. Se llama en `App.tsx` → `useEffect([], [])` (solo al montar, una vez)
+3. **No bloquea UI** — async, fire-and-forget desde App.tsx
+4. Si Firestore falla: cache viejo disponible, sin error visible al usuario
+5. `PredictionAnalysisTable` lee de `getForecastCache()`, **no llama Firestore**
+6. Logs:
+   - `[Sync] Started — lastSync: ${date | 'never'}`
+   - `[Sync] Delta: ${newDocs.length} new, ${cached.length} cached → ${merged.length} merged`
+   - `[Sync] Cleaned ${removed} expired. Saved ${final.length} docs. (${elapsed}ms)`
+7. Segundo sync (mismo día): `newDocs.length = 0`, cache intacto, sin writes innecesarios
 
 ---
 
-## 📝 Implementación
+## Implementación
 
-**Files:**
-- `src/services/cache/cacheService.ts` (agregar `syncFirestoreToCache()`)
-- `src/services/weather/batchWeatherService.ts` (llamar en hook)
+### syncForecastsOnLoad() — nuevo archivo
 
-**Nueva función:**
+**File:** `src/services/firebase/forecastSyncService.ts` (nuevo, no contaminar cacheService ni batchWeatherService)
 
 ```typescript
-/**
- * Sincronizar pronósticos de Firestore a caché local (IndexedDB)
- * Detecta documentos nuevos por timestamp y persiste solo el delta
- * 
- * Flujo:
- * 1. Leer lastSyncTimestamp de localStorage
- * 2. Query Firestore: created_at > lastSync
- * 3. Persistir nuevos docs en IndexedDB
- * 4. Limpiar docs expirados (TTL)
- * 5. Actualizar lastSyncTimestamp
- */
-export async function syncFirestoreToCache(): Promise<void>
-```
+import { getRecentForecasts } from './firebaseWeatherService'
+import {
+  getLastSyncTimestamp,
+  setLastSyncTimestamp,
+  getForecastCache,
+  setForecastCache,
+  mergeForecastDocs,
+  cleanExpiredForecastDocs,
+} from '../cache/cacheService'
 
-**Pseudocódigo:**
+export async function syncForecastsOnLoad(): Promise<void> {
+  const start = performance.now()
 
-```typescript
-export async function syncFirestoreToCache(): Promise<void> {
-  const startTime = performance.now()
-  
   try {
-    console.log('[Sync] Started at', new Date().toLocaleTimeString())
-    
-    // 1. Leer lastSync
     const lastSync = getLastSyncTimestamp()
-    
-    // 2. Query delta a Firestore
-    const newDocs = await getRecentForecasts('24h', lastSync)
-    console.log(`[Sync] Query delta: ${newDocs.length} docs`)
-    
-    // 3. Persistir en IndexedDB
-    let persisted = 0
-    for (const doc of newDocs) {
-      await persistForecastToIndexedDB(doc)
-      await upsertForecastIndex(doc.city_id, doc.date_hour, doc.city_id)
-      persisted++
+    const sinceLabel = lastSync ? new Date(lastSync).toLocaleTimeString() : 'never'
+    console.log(`[Sync] Started — lastSync: ${sinceLabel}`)
+
+    // Delta: solo docs nuevos desde último sync
+    const newDocs = await getRecentForecasts('7d', lastSync || undefined)
+    const cached  = await getForecastCache()
+
+    // Merge + cleanup
+    const merged  = mergeForecastDocs(cached, newDocs)
+    const cleaned = cleanExpiredForecastDocs(merged)
+    const removed = merged.length - cleaned.length
+
+    // Persistir solo si hay cambios
+    if (newDocs.length > 0 || removed > 0) {
+      await setForecastCache(cleaned)
+      setLastSyncTimestamp(Date.now())
     }
-    
-    // 4. Limpiar expirados
-    const cleaned = await cleanExpiredForecasts()
-    
-    // 5. Actualizar timestamp
-    await setLastSyncTimestamp(Date.now())
-    
-    const elapsed = performance.now() - startTime
-    console.log(`[Sync] Persisted ${persisted}, cleaned ${cleaned} in ${elapsed.toFixed(0)}ms`)
-    
+
+    const elapsed = (performance.now() - start).toFixed(0)
+    console.log(
+      `[Sync] Delta: ${newDocs.length} new, ${cached.length} cached → ${merged.length} merged. ` +
+      `Cleaned ${removed} expired. Saved ${cleaned.length} docs. (${elapsed}ms)`
+    )
+
   } catch (error) {
-    // Falla silenciosa
-    console.warn('[Sync] Error:', error instanceof Error ? error.message : String(error))
-    // No rethrow — cache viejo sigue disponible
+    // Falla silenciosa — cache viejo sigue disponible
+    const msg = error instanceof Error ? error.message : String(error)
+    console.warn('[Sync] Error (non-blocking):', msg)
   }
 }
 ```
 
-**Integración en batchWeatherService:**
+### Integración en App.tsx
 
 ```typescript
-// En useWeather.ts o donde se llame al batch
+// src/App.tsx — agregar import y useEffect
+import { syncForecastsOnLoad } from './services/firebase/forecastSyncService'
+
+// Dentro del componente App:
 useEffect(() => {
-  // Sync caché al montar
-  syncFirestoreToCache().catch(err => 
-    console.warn('[App] Sync error (non-blocking):', err.message)
-  )
-}, []) // Ejecutar solo una vez al montar
+  syncForecastsOnLoad() // fire-and-forget — no await, no bloquea render
+}, [])
+```
+
+### PredictionAnalysisDemo — leer de cache
+
+El componente que monta la tabla debe leer de cache, no de Firestore:
+
+```typescript
+// src/components/Analytics/PredictionAnalysisDemo.tsx
+import { getForecastCache } from '../../services/cache/cacheService'
+
+// En el useEffect o al abrir el panel:
+const docs = await getForecastCache()
+// ... transformar ForecastDoc[] → PredictionRow[] como antes
 ```
 
 ---
 
-## 🧪 Testing
+## Por qué NO en batchWeatherService
 
-**Integration tests:**
-- Sync delta: Query trae 10 docs nuevos, no los 100 viejos (network intercept)
-- Segundo sync: Query trae 0 docs nuevos (cache hits, sin network call)
-- TTL cleanup: Docs > 7d+1h eliminados automáticamente
-- Fallback: Si Firestore falla, cache viejo sigue disponible (UI no se rompe)
-- Performance: Sync total <500ms (validar con console.time)
-
-**Manual testing:**
-- Abrir DevTools → Network tab
-- Sync 1: ver 1 query a Firestore (collection group query)
-- Sync 2 (3 min después): ver 0 queries (cache hit)
-- IndexedDB inspection: ver docs en `forecasts_data` + `forecasts_index`
+| Candidato | Propósito real | ¿Correcto para sync? |
+|-----------|---------------|----------------------|
+| `batchWeatherService.ts` | Escribe AccuWeather → Firestore | ❌ flujo opuesto |
+| `forecastSyncService.ts` (nuevo) | Lee Firestore → cache local | ✅ responsabilidad única |
+| `App.tsx` (solo el trigger) | Punto de entrada de la app | ✅ orquesta el arranque |
 
 ---
 
-## 🔗 Dependencias
+## Escenarios de sync
 
-- Depende de: US-1008-A + US-1008-B (necesita ambas funciones)
+| Escenario | Resultado esperado |
+|-----------|-------------------|
+| Primera vez (sin lastSync) | Trae todos los docs de '7d', persiste |
+| Reload el mismo día | `since=lastSync` → 0-5 docs nuevos, merge rápido |
+| Firestore offline | Cache viejo disponible, sin error visible |
+| Cache IndexedDB corrupto | `getForecastCache()` retorna `[]`, sync parte desde cero |
+
+---
+
+## Dependencias
+
+- Depende de: US-1008-A + US-1008-B (ambas implementadas)
 - Requerido por: US-1008-D (tests de integración)
-
----
-
-## 📊 Notas
-
-- Falla silenciosa es intencional (cache viejo es mejor que error)
-- Logging detallado para debugging (puedes desactivar en prod si lo prefieres)
-- Performance <500ms es realista: query ~200ms + IndexedDB ops ~100ms + overhead ~200ms

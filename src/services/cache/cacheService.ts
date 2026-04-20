@@ -124,3 +124,53 @@ export const shouldRefreshCities = (): boolean => {
 // ─── Utilidades ───────────────────────────────────────────────────────────────
 
 export const clearWeatherCache = (): Promise<void> => clear()
+
+// ─── Caché de ForecastDocs (Firestore → local) ────────────────────────────────
+// Propósito: evitar re-fetch a Firestore al abrir PredictionAnalysisTable
+// Estrategia: idb-keyval key única + merge deduplicado
+
+import type { ForecastDoc } from '../firebase/firebaseWeatherService'
+
+const KEY_FORECAST_CACHE = 'pwe-forecast-cache'
+const KEY_LAST_SYNC      = 'pwe-lastSync'
+const FORECAST_TTL_MS    = 7 * 24 * 60 * 60 * 1000 // 7 días
+
+export const getForecastCache = async (): Promise<ForecastDoc[]> => {
+  try {
+    return (await get<ForecastDoc[]>(KEY_FORECAST_CACHE)) ?? []
+  } catch {
+    return []
+  }
+}
+
+export const setForecastCache = async (docs: ForecastDoc[]): Promise<void> => {
+  try {
+    await set(KEY_FORECAST_CACHE, docs)
+  } catch { /* silencioso */ }
+}
+
+export const mergeForecastDocs = (
+  cached: ForecastDoc[],
+  incoming: ForecastDoc[]
+): ForecastDoc[] => {
+  const map = new Map<string, ForecastDoc>()
+  for (const doc of cached) map.set(`${doc.city_id}-${doc.date_hour}`, doc)
+  for (const doc of incoming) map.set(`${doc.city_id}-${doc.date_hour}`, doc)
+  return Array.from(map.values())
+}
+
+export const cleanExpiredForecastDocs = (docs: ForecastDoc[]): ForecastDoc[] => {
+  const cutoff = Date.now() - FORECAST_TTL_MS
+  return docs.filter(doc => {
+    const createdAt = doc.created_at?.toMillis?.() ?? 0
+    return createdAt > cutoff
+  })
+}
+
+// ─── Last Sync Timestamp — localStorage (síncrono) ───────────────────────────
+
+export const getLastSyncTimestamp = (): number =>
+  parseInt(localStorage.getItem(KEY_LAST_SYNC) ?? '0', 10)
+
+export const setLastSyncTimestamp = (ts: number): void =>
+  localStorage.setItem(KEY_LAST_SYNC, String(ts))

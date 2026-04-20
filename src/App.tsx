@@ -10,6 +10,7 @@ import { BottomSheetPortal } from './components/BottomSheet/BottomSheetPortal'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
 import { useIsMobile } from './hooks/useIsMobile'
+import { syncForecastsOnLoad } from './services/firebase/forecastSyncService'
 import type { City } from './store/useStore'
 
 export default function App() {
@@ -57,6 +58,11 @@ export default function App() {
   useEffect(() => {
     run(handleCitiesLoaded)
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Sincronizar pronósticos al montar la app (background, non-blocking)
+  useEffect(() => {
+    syncForecastsOnLoad()
   }, [])
 
   // En mobile: Visual feedback en mapa al seleccionar ciudad (sin scroll disruptivo)
