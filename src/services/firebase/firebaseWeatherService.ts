@@ -207,40 +207,43 @@ export async function getRecentForecasts(
       minDate = Timestamp.fromDate(new Date(Date.now() - hoursBack * 60 * 60 * 1000))
     }
 
-    // Query con filtro (where) — orderBy en memoria para evitar índice COLLECTION_GROUP_DESC
-    // Nota: Firestore no permite COLLECTION_GROUP_DESC sin composite index explícito
-    const q = query(
-      collectionGroup(db, 'forecasts'),
-      where('created_at', '>=', minDate)
-    )
-    const allSnapshot = await getDocs(q)
+    // ⚠️ NOTA: Firestore requiere índices COLLECTION_GROUP para where() en collectionGroup
+    // Estrategia: obtener todos los docs y filtrar en memoria (compatible con current volume ~45 docs)
+    // Futuro: cuando volumen crezca, crear índices COLLECTION_GROUP o usar batch queries
+    const allSnapshot = await getDocs(collectionGroup(db, 'forecasts'))
 
-    // Mapear a ForecastDoc (no necesita filtro en memoria, ya viene filtrado)
-    const documents: ForecastDoc[] = allSnapshot.docs.map(doc => {
-      const data = doc.data()
-      return {
-        city_id: data.city_id,
-        city_name: data.city_name,
-        country: data.country,
-        region: data.region,
-        lat: data.lat,
-        lon: data.lon,
-        date_hour: data.date_hour,
-        snapshots: data.snapshots || [],
-        calculated_condition: data.calculated_condition || 'Unknown',
-        timezone: data.timezone ?? 0,
-        local_time_user: data.local_time_user || '',
-        ttl: data.ttl,
-        created_at: data.created_at,
-      }
-    })
-
-    // Ordenar por created_at DESC en memoria (Firestore no permite COLLECTION_GROUP_DESC sin composite index)
-    documents.sort((a, b) => {
-      const timeA = a.created_at?.toMillis?.() ?? 0
-      const timeB = b.created_at?.toMillis?.() ?? 0
-      return timeB - timeA // DESC order
-    })
+    // Mapear + filtrar + ordenar en memoria
+    const documents: ForecastDoc[] = allSnapshot.docs
+      .map(doc => {
+        const data = doc.data()
+        return {
+          city_id: data.city_id,
+          city_name: data.city_name,
+          country: data.country,
+          region: data.region,
+          lat: data.lat,
+          lon: data.lon,
+          date_hour: data.date_hour,
+          snapshots: data.snapshots || [],
+          calculated_condition: data.calculated_condition || 'Unknown',
+          timezone: data.timezone ?? 0,
+          local_time_user: data.local_time_user || '',
+          ttl: data.ttl,
+          created_at: data.created_at,
+        }
+      })
+      .filter(doc => {
+        // Filtrar por minDate o since
+        const docTime = doc.created_at?.toMillis?.() ?? 0
+        const minTime = minDate.toMillis?.() ?? minDate.getTime?.() ?? 0
+        return docTime >= minTime
+      })
+      .sort((a, b) => {
+        const timeA = a.created_at?.toMillis?.() ?? 0
+        const timeB = b.created_at?.toMillis?.() ?? 0
+        return timeB - timeA // DESC order
+      })
+      .slice(0, 500) // limit
 
     const sinceLabel = since ? new Date(since).toLocaleString() : timeRange
     console.log(`[Firebase] ✅ Query delta (since=${sinceLabel}) → ${documents.length} docs`)
