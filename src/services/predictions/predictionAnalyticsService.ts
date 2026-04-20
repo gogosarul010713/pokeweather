@@ -180,7 +180,8 @@ function generateLookback(
  * Convertir Firestore Timestamp a Date
  */
 function timestampToDate(ts: any): Date {
-  if (!ts) return new Date()
+  // Validación explícita: rechaza null/undefined, acepta 0 válido
+  if (ts === null || ts === undefined) return new Date()
 
   // Si es Timestamp de Firebase
   if (typeof ts.toDate === 'function') {

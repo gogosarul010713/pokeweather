@@ -48,9 +48,26 @@ function formatQueryTime(queryTime: string | Date): string {
   return `${day}/${month} ${hours}:${mins}`;
 }
 
-function getCityLocalTime(queryTime: string | Date, timezone: number): string {
-  const date = typeof queryTime === 'string' ? new Date(queryTime) : queryTime;
-  if (isNaN(date.getTime())) return 'N/A';
+function getCityLocalTime(queryTime: string | Date | number, timezone: number): string {
+  // Manejar números (milisegundos desde caché)
+  let date: Date
+  if (typeof queryTime === 'number') {
+    date = new Date(queryTime)
+  } else if (typeof queryTime === 'string') {
+    date = new Date(queryTime)
+  } else {
+    date = queryTime
+  }
+
+  if (isNaN(date.getTime())) {
+    console.warn('[getCityLocalTime] Invalid date:', { queryTime, timezone, dateTime: date.getTime() })
+    return 'N/A'
+  }
+
+  if (typeof timezone !== 'number' || isNaN(timezone)) {
+    console.warn('[getCityLocalTime] Invalid timezone:', { timezone, typeof: typeof timezone })
+    return 'N/A'
+  }
 
   const utcTime = date.getTime() + date.getTimezoneOffset() * 60 * 1000;
   const cityDate = new Date(utcTime + timezone * 60 * 60 * 1000);
