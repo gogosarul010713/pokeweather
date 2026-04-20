@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -745,8 +745,8 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                 const isOpen   = openLookbacks.has(row.id);
                 const hasLb    = original.lookback12h.length > 0;
                 return (
-                  <>
-                    <tr key={row.id}>
+                  <Fragment key={row.id}>
+                    <tr>
                       {row.getVisibleCells().map(cell => (
                         <td key={cell.id}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -791,7 +791,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 );
               })
             )}
