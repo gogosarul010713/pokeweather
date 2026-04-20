@@ -7,14 +7,19 @@
 
 ---
 
-## 📋 US Completadas (6/7)
+## 📋 US Status Sprint 10
 
-| US | Descripción | SP | Status | Commit |
+| US | Descripción | SP | Status | Commit/Docs |
 |----|-------------|-----|--------|--------|
 | US-1001 | Firebase Extension + BigQuery | 2 | ✅ | 2026-04-17 |
 | US-1002 | SQL View (snapshots_flat) | 2 | ✅ | 2026-04-17 |
 | US-1003 | Looker Studio Connection | 1 | ✅ | 2026-04-17 |
-| US-1007 | Prediction Analysis Table | 3 | ✅ | 2026-04-19 (7e977f0) |
+| US-1007 | Prediction Analysis Table | 3 | ✅ | 2026-04-19 (979958d) |
+| **US-1008** | **Caché Inteligente Firestore (Delta Sync)** | **8** | **📋 Diseño** | **4 subtareas** |
+| US-1008-A | Query Delta (firebaseWeatherService) | 2 | 📋 | US-1008-A-QueryDelta.md |
+| US-1008-B | IndexedDB Cache + TTL | 2 | 📋 | US-1008-B-IndexedDBCache.md |
+| US-1008-C | Orchestration (syncFirestoreToCache) | 2 | 📋 | US-1008-C-Orchestration.md |
+| US-1008-D | Testing + Validation (QA) | 2 | 📋 | US-1008-D-Testing.md |
 | US-1004/1005/1006 | Dashboards avanzados | 7 | 📦 Archivadas | — |
 
 ---

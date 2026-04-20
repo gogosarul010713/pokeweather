@@ -5,6 +5,57 @@
 
 ---
 
+### 2026-04-20 D-017 — Arquitectura Delta Sync con IndexedDB (US-1008)
+
+**Contexto:** Sprint 10. Optimización Firestore. Problema: Query 1 trae 100 docs, Query 2 con 10 nuevos vuelve a traer los 100 viejos.
+
+**Problema:**
+- getRecentForecasts('24h') sin filtro → 100 reads cada vez
+- Pronósticos nuevos: ~100-200 docs/mes
+- Siguiente consulta: re-descarga todos (ineficiente)
+
+**Opciones consideradas:**
+- A: Traer todo + deduplicar en cliente
+  - Ventaja: Simple
+  - Desventaja: Network O(n) siempre, ineficiente
+- B: Delta sync inteligente ← **ELEGIDA**
+  - Query: `where created_at > lastSyncTimestamp` en Firestore
+  - IndexedDB con tabla `forecasts_index` (O(1) lookup)
+  - TTL automático (7d+1h margin)
+  - Ventaja: Network O(delta), O(1) deduplicación, sync incremental
+  - Desventaja: +1 tabla IndexedDB, lógica merge más compleja (justificada)
+
+**Decisión:** Opción B — Delta Sync
+
+**Motivo:**
+1. **Red eficiente:** Query delta reduce payload 90% (10 docs vs 100)
+2. **Storage local:** IndexedDB índice = O(1) deduplicación vs O(n)
+3. **TTL automático:** Similar a Firestore, eventual consistency OK
+4. **Zero breaking changes:** Servicios existentes no se tocan
+
+**Implementación (4 subtareas):**
+- A: Agregar `since` param a getRecentForecasts()
+- B: Expandir cacheService con forecasts_index
+- C: syncFirestoreToCache() orquesta flujo completo
+- D: Tests unitarios + integración + validación manual
+
+**Decisiones sub-arquitectónicas:**
+1. **Query field:** `created_at` (inmutable) vs `updated_at` → created_at
+2. **IndexedDB:** tabla separada (permite índices) vs idb-keyval → tabla separada
+3. **Timestamp lastSync:** localStorage vs IndexedDB → localStorage (lectura rápida)
+4. **Sync trigger:** Automático en app load vs manual → Automático
+5. **Conflictos:** TTL local respeta TTL Firestore + 1h margin → eventual consistency
+
+**Consecuencias:**
+- Firestore cost: reducido ~90% en consultas incrementales
+- Latencia: <500ms sync (query ~200ms + IndexedDB ops ~100ms)
+- Storage: <50MB IndexedDB (100 ciudades × 100 docs)
+- Complexity: +~400 líneas de código (cacheService expandido + tests)
+
+**US relacionada:** US-1008 (8 SP, 4 subtareas)
+
+---
+
 ### 2026-04-19 D-016 — Guardar local_time_user en ForecastDoc (US-1007)
 
 **Contexto:** US-1007. Tabla de predicciones necesitaba mostrar "¿A qué hora LOCAL del usuario se obtuvo el pronóstico?"
