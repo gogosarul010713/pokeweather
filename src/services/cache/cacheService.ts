@@ -145,7 +145,13 @@ export const getForecastCache = async (): Promise<ForecastDoc[]> => {
 
 export const setForecastCache = async (docs: ForecastDoc[]): Promise<void> => {
   try {
-    await set(KEY_FORECAST_CACHE, docs)
+    // Convertir Timestamps de Firebase a milisegundos (para serializar a IndexedDB)
+    const serialized = docs.map(doc => ({
+      ...doc,
+      created_at: doc.created_at?.toMillis?.() ?? Date.now(),
+      ttl: doc.ttl?.toMillis?.() ?? Date.now(),
+    }))
+    await set(KEY_FORECAST_CACHE, serialized)
   } catch { /* silencioso */ }
 }
 
