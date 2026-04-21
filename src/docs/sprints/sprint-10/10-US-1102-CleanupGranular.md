@@ -15,19 +15,26 @@ Agregar botón "Limpiar datos" en Testing Tools que permite eliminar selectivame
 
 1. **Documentos NULL en Firestore** — docs con `snapshots.length === 0` (refuerza D-018)
 2. **Documentos viejos** — docs con `created_at > 7 días` (manual TTL)
-3. **Caché local** — tabla IndexedDB `forecasts` + `forecasts_index` (limpieza cliente)
+3. **Todo IndexedDB** — eliminar TODAS las tablas de caché (reset completo)
+4. **Todo localStorage** — eliminar TODOS los datos de configuración local (reset completo)
 
 La limpieza es **granular** (usuario selecciona qué limpiar con checkboxes) y **bidireccional** (Firestore + IndexedDB).
+
+**Opciones 3+4 de reset total:** Permiten limpiar completamente todos los datos locales para:
+- ✅ Validar la app con datos frescos desde Firestore
+- ✅ Resetear estado corrupto o de testing
+- ✅ Forzar resincronización desde cero
 
 ---
 
 ## 🎯 Criterios de Aceptación
 
 - [ ] **Botón "Limpiar datos"** visible en Testing Tools (tab Configuración o Reportes)
-- [ ] **Modal de confirmación** muestra 3 opciones con checkboxes + preview:
+- [ ] **Modal de confirmación** muestra 4 opciones con checkboxes + preview:
   - [ ] Documentos sin snapshots (count preview)
   - [ ] Documentos > 7 días (count preview)
-  - [ ] Caché local IndexedDB (size preview)
+  - [ ] Todo IndexedDB (size preview — todas las tablas)
+  - [ ] Todo localStorage (simple reset — timestamps + config)
 - [ ] **Confirmación:** "¿Estás seguro? Se eliminarán X documentos y Y MB."
 - [ ] **Ejecución atomic:**
   - IndexedDB: `forecasts` + `forecasts_index` se limpian
@@ -91,9 +98,10 @@ La limpieza es **granular** (usuario selecciona qué limpiar con checkboxes) y *
 
 ```tsx
 interface CleanupOptions {
-  nullSnapshots: boolean
-  olderThan7d: boolean
-  localCache: boolean
+  nullSnapshots: boolean    // Docs sin snapshots (Firestore)
+  olderThan7d: boolean      // Docs > 7 días (Firestore)
+  allIndexedDb: boolean     // TODO IndexedDB (reset completo)
+  allLocalStorage: boolean  // TODO localStorage (reset completo)
 }
 
 // En TestingTools
@@ -101,7 +109,8 @@ const [showCleanupModal, setShowCleanupModal] = useState(false)
 const [cleanupOptions, setCleanupOptions] = useState<CleanupOptions>({
   nullSnapshots: false,
   olderThan7d: false,
-  localCache: false,
+  allIndexedDb: false,
+  allLocalStorage: false,
 })
 
 const handleCleanupClick = async () => {
@@ -188,13 +197,24 @@ export const CleanupModal: React.FC<CleanupModalProps> = ({
         Documentos > 7 días ({counts.oldDocs})
       </label>
       
-      <label>
+      <hr className="cleanup-separator" />
+      
+      <label className="cleanup-reset">
         <input
           type="checkbox"
-          checked={options.localCache}
-          onChange={(e) => onChange({ ...options, localCache: e.target.checked })}
+          checked={options.allIndexedDb}
+          onChange={(e) => onChange({ ...options, allIndexedDb: e.target.checked })}
         />
-        Caché local ({counts.cacheSize})
+        <strong>RESET: Todo IndexedDB</strong> ({counts.cacheSize})
+      </label>
+      
+      <label className="cleanup-reset">
+        <input
+          type="checkbox"
+          checked={options.allLocalStorage}
+          onChange={(e) => onChange({ ...options, allLocalStorage: e.target.checked })}
+        />
+        <strong>RESET: Todo localStorage</strong>
       </label>
       
       <p className="warning">
@@ -229,15 +249,13 @@ export const CleanupModal: React.FC<CleanupModalProps> = ({
 ```typescript
 export const cleanupLocalCache = async (): Promise<{ deletedRecords: number }> => {
   try {
-    // Limpiar tabla forecasts
+    // Opción selectiva: solo forecasts + forecasts_index
     const allForecasts = await idb.keys('forecasts')
     await Promise.all(allForecasts.map(key => idb.del('forecasts', key)))
     
-    // Limpiar tabla forecasts_index
     const allIndexes = await idb.keys('forecasts_index')
     await Promise.all(allIndexes.map(key => idb.del('forecasts_index', key)))
     
-    // Limpiar otros datos relacionados
     await idb.del('sync_state', 'lastSyncTimestamp')
     
     return { deletedRecords: allForecasts.length + allIndexes.length }
@@ -247,9 +265,42 @@ export const cleanupLocalCache = async (): Promise<{ deletedRecords: number }> =
   }
 }
 
+export const cleanupAllIndexedDb = async (): Promise<{ deletedRecords: number }> => {
+  // RESET COMPLETO: eliminar TODO IndexedDB
+  try {
+    const db = await openDB('pwe-cache')
+    const storeNames = Array.from(db.objectStoreNames)
+    let totalDeleted = 0
+    
+    for (const storeName of storeNames) {
+      const allKeys = await idb.keys(storeName)
+      await Promise.all(allKeys.map(key => idb.del(storeName, key)))
+      totalDeleted += allKeys.length
+    }
+    
+    return { deletedRecords: totalDeleted }
+  } catch (error) {
+    console.error('Full IndexedDB cleanup failed:', error)
+    throw new Error(`Full cleanup failed: ${error.message}`)
+  }
+}
+
 export const cleanupLocalStorage = (): void => {
+  // Limpieza selectiva: solo timestamps (forced resync)
   localStorage.removeItem('pwe-lastSyncTimestamp')
   localStorage.removeItem('pwe-lastSync')
+}
+
+export const cleanupAllLocalStorage = (): void => {
+  // RESET COMPLETO: eliminar TODO localStorage
+  const keysToKeep = [] // Ninguna clave debe sobrevivir
+  const allKeys = Object.keys(localStorage)
+  
+  for (const key of allKeys) {
+    if (key.startsWith('pwe-') || key.startsWith('pw-')) {
+      localStorage.removeItem(key)
+    }
+  }
 }
 ```
 
@@ -274,6 +325,7 @@ admin.initializeApp()
 interface CleanupRequest {
   nullSnapshots: boolean
   olderThan7d: boolean
+  // allIndexedDb y allLocalStorage NO se envían (client-side only)
 }
 
 export const cleanupFirestore = functions.https.onCall(
@@ -353,9 +405,10 @@ import * as cacheService from '../cache/cacheService'
 import { getDb } from '../firebase'
 
 interface CleanupOptions {
-  nullSnapshots: boolean
-  olderThan7d: boolean
-  localCache: boolean
+  nullSnapshots: boolean    // Docs sin snapshots (Firestore)
+  olderThan7d: boolean      // Docs > 7 días (Firestore)
+  allIndexedDb: boolean     // TODO IndexedDB (reset completo)
+  allLocalStorage: boolean  // TODO localStorage (reset completo)
 }
 
 export const executeCleanup = async (options: CleanupOptions) => {
@@ -367,16 +420,26 @@ export const executeCleanup = async (options: CleanupOptions) => {
 
   try {
     // 1. Limpieza IndexedDB (local, paralelo)
-    if (options.localCache) {
+    if (options.allIndexedDb) {
       try {
-        const { deletedRecords } = await cacheService.cleanupLocalCache()
+        const { deletedRecords } = await cacheService.cleanupAllIndexedDb()
         results.indexedDb.deleted = deletedRecords
       } catch (error) {
         results.indexedDb.error = (error as Error).message
       }
     }
 
-    // 2. Limpieza Firestore (cloud)
+    // 2. Limpieza localStorage (local, paralelo)
+    if (options.allLocalStorage) {
+      try {
+        cacheService.cleanupAllLocalStorage()
+        results.localStorage.cleared = true
+      } catch (error) {
+        results.localStorage.error = (error as Error).message
+      }
+    }
+
+    // 3. Limpieza Firestore (cloud)
     if (options.nullSnapshots || options.olderThan7d) {
       try {
         const functions = await getDb().functions
@@ -389,14 +452,6 @@ export const executeCleanup = async (options: CleanupOptions) => {
       } catch (error) {
         results.firestore.error = (error as Error).message
       }
-    }
-
-    // 3. Limpieza localStorage (siempre)
-    try {
-      cacheService.cleanupLocalStorage()
-      results.localStorage.cleared = true
-    } catch (error) {
-      results.localStorage.error = (error as Error).message
     }
 
     // Validar que al menos uno fue exitoso
@@ -454,14 +509,17 @@ Hoy:       80 docs NULL ya existen en Firestore
 
 - [ ] Subtarea A: UI Modal
   - [ ] CleanupModal component creado
-  - [ ] Checkboxes funcionales
-  - [ ] Preview counts correctos
+  - [ ] 4 Checkboxes funcionales (D-018, TTL, reset IndexedDB, reset localStorage)
+  - [ ] Preview counts correctos (3 categorías Firestore/IndexedDB/localStorage)
+  - [ ] Separador visual entre opciones granulares y RESET
   - [ ] Integración en TestingTools
   - [ ] Botón deshabilitado si hay carga
   
-- [ ] Subtarea B: IndexedDB Cleanup
-  - [ ] `cleanupLocalCache()` implementado
-  - [ ] `cleanupLocalStorage()` implementado
+- [ ] Subtarea B: IndexedDB + localStorage Cleanup
+  - [ ] `cleanupLocalCache()` — limpieza selectiva (forecasts + forecasts_index)
+  - [ ] `cleanupAllIndexedDb()` — RESET TOTAL (todas las tablas)
+  - [ ] `cleanupLocalStorage()` — limpieza selectiva (timestamps)
+  - [ ] `cleanupAllLocalStorage()` — RESET TOTAL (todos los datos pwe-*)
   - [ ] Retorna count de registros eliminados
   - [ ] Sin errores si tablas vacías
   
