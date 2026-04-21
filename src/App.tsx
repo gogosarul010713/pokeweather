@@ -10,6 +10,7 @@ import { BottomSheetPortal } from './components/BottomSheet/BottomSheetPortal'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
 import { useIsMobile } from './hooks/useIsMobile'
+import { useFirestoreSync } from './hooks/useFirestoreSync'
 import { syncForecastsOnLoad } from './services/firebase/forecastSyncService'
 import type { City } from './store/useStore'
 
@@ -64,6 +65,27 @@ export default function App() {
   useEffect(() => {
     syncForecastsOnLoad()
   }, [])
+
+  // US-1101: Escuchar cambios en Firestore (real-time sync from server HH:15)
+  // Cuando Firebase Scheduled Function actualiza Firestore, este listener lo detecta
+  // y actualiza el estado React automáticamente (~100ms latencia)
+  useFirestoreSync(
+    (firestoreCities) => {
+      // Merge Firestore data con ciudades locales
+      setCities((prevCities) => {
+        const merged = prevCities.map((city) => {
+          const firestoreData = firestoreCities.find((c) => c.id === city.id)
+          if (!firestoreData) return city
+          return { ...city, ...firestoreData }
+        })
+        console.log('[App] Merged Firestore sync:', merged.length, 'cities')
+        return merged
+      })
+    },
+    (error) => {
+      console.error('[App] Firestore sync error:', error)
+    }
+  )
 
   // En mobile: Visual feedback en mapa al seleccionar ciudad (sin scroll disruptivo)
   // El highlight visual ocurre en MapPin.tsx, aquí solo aseguramos que el mapa reciba focus

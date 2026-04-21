@@ -12,9 +12,66 @@ type TabType = 'reportes' | 'predicciones'
 export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('reportes')
   const [isMaximized, setIsMaximized] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleToggleMaximize = () => {
     setIsMaximized(!isMaximized)
+  }
+
+  // US-1101: Disparar sincronización manual de climas
+  const handleManualSync = async () => {
+    setIsSyncing(true)
+    setSyncMessage(null)
+
+    try {
+      // Obtener la URL de la Cloud Function
+      const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'weather-app-prod-ef50d'
+      const cronSecret = import.meta.env.VITE_CRON_SECRET || ''
+
+      if (!cronSecret) {
+        setSyncMessage({
+          type: 'error',
+          text: 'VITE_CRON_SECRET no configurado. Revisa .env.local',
+        })
+        setIsSyncing(false)
+        return
+      }
+
+      const url = `https://us-central1-${projectId}.cloudfunctions.net/syncWeatherManual`
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'x-cron-secret': cronSecret,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setSyncMessage({
+          type: 'success',
+          text: `✅ Sincronización completada: ${data.citiesUpdated} ciudades actualizadas`,
+        })
+      } else {
+        setSyncMessage({
+          type: 'error',
+          text: `❌ Error: ${data.error || 'Fallo desconocido'}`,
+        })
+      }
+    } catch (error) {
+      setSyncMessage({
+        type: 'error',
+        text: `❌ Error de conexión: ${error instanceof Error ? error.message : 'Fallo desconocido'}`,
+      })
+      console.error('[TestingTools] Manual sync error:', error)
+    } finally {
+      setIsSyncing(false)
+      // Limpiar mensaje después de 4 segundos
+      setTimeout(() => setSyncMessage(null), 4000)
+    }
   }
 
   return (
@@ -300,6 +357,31 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
 
           {/* Content */}
           <div className="tt-content">
+            {/* US-1101: Manual Sync Section */}
+            <div className="tt-section">
+              <h3 className="tt-section-title">⚡ Sincronización Manual</h3>
+              <p className="tt-section-desc">
+                Disparar sincronización de climas manualmente (sin esperar HH:15)
+              </p>
+              <button className="tt-button tt-button-primary" onClick={handleManualSync} disabled={isSyncing}>
+                {isSyncing ? '🔄 Sincronizando...' : '🔄 Sincronizar ahora'}
+              </button>
+              {syncMessage && (
+                <div
+                  className="tt-info"
+                  style={{
+                    backgroundColor: syncMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    borderColor: syncMessage.type === 'success' ? '#22c55e' : '#ef4444',
+                    color: syncMessage.type === 'success' ? '#22c55e' : '#ef4444',
+                  }}
+                >
+                  {syncMessage.text}
+                </div>
+              )}
+            </div>
+
+            <hr style={{ margin: '16px 0', borderColor: 'var(--border-default)' }} />
+
             {/* Tab: Reportes */}
             {activeTab === 'reportes' && <ReportsPanel />}
             {/* Tab: Predicciones */}
