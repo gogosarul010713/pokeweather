@@ -1,9 +1,9 @@
-# 🎯 Tarea Activa — Sprint 10 AMPLIADO: US-1102 Limpieza Firebase ✅
+# 🎯 Sprint 10 — AMPLIADO: FASE 2 COMPLETADA ✅
 
-**Fecha Actualización:** 2026-04-21 (Session 5)  
-**Sprint 10 Fase 1:** ✅ COMPLETADA (2026-04-16 → 2026-04-21)  
-**Sprint 10 Fase 2:** ⏳ PARCIALMENTE IMPLEMENTADA (US-1101 ✅ | US-1102 ✅ | US-1103 DEPRECATED)  
-**Sprint 10 Fase 3:** ✅ IMPLEMENTADA (US-1104/1105)
+**Fecha Actualización:** 2026-04-21 (Session 5 Final)  
+**Sprint 10 Fase 1:** ✅ COMPLETADA (2026-04-16 → 2026-04-21) — 5 US
+**Sprint 10 Fase 2:** ✅ COMPLETADA (2026-04-21) — US-1101 + US-1102 (US-1103 DEPRECATED)
+**Sprint 10 Fase 3:** ✅ IMPLEMENTADA (2026-04-21) — US-1104/1105
 
 ---
 
@@ -77,20 +77,27 @@ if (snapshots.length === 0) return  // ← AGREGAR (3 líneas)
 
 ---
 
-## ✅ US-1102 IMPLEMENTADA (2026-04-21 Session 5)
+## ✅ US-1102 COMPLETADA (2026-04-21 Session 5)
 
-**Story Points:** 3-4 SP (actualizado desde 2-3)  
-**Commit:** (pendiente merge)  
-**Completado:** 5/5 subtareas
+**Story Points:** 4 SP  
+**Commits:** `c4afecf` + `ea7b414` (refactor + observaciones)  
+**Status:** ✅ LISTO PARA MERGE
 
-### ¿Qué fue implementado?
+### Implementación Final
 
-**UI Modal (ConfirmClearDataModal.tsx):**
-- ✅ Componente modal standalone con 4 checkboxes
-- ✅ Preview counts en tiempo real (queries a Firestore/IndexedDB)
-- ✅ Separador visual entre opciones granulares y reset total
-- ✅ Botones Cancelar + Confirmar (disabled si no hay selección)
-- ✅ Error handling + warning message
+**CleanupPanel.tsx (Pestaña separada):**
+- ✅ 4 checkboxes con descripciones y preview counts
+- ✅ Preview counts: queries en tiempo real (Firestore + IndexedDB)
+- ✅ Separador visual entre opciones (granular vs reset)
+- ✅ Warning message + error handling
+- ✅ Botón confirmar en la misma pantalla
+- ✅ Toast feedback (éxito/error)
+- ✅ **SIN modal adicional** (observación aplicada)
+
+**TestingTools.tsx (Refactorizado):**
+- ✅ Nueva pestaña "🗑️ Limpiar" (entre Reportes y Predicciones)
+- ✅ `isMaximized: true` por defecto (observación aplicada)
+- ✅ 3 pestañas totales: Reportes | Limpiar | Predicciones
 
 **Funciones de Cleanup (cacheService.ts):**
 - ✅ `cleanupAllIndexedDb()` — limpia TODAS las tablas IDB
@@ -98,30 +105,26 @@ if (snapshots.length === 0) return  // ← AGREGAR (3 líneas)
 - ✅ `getIndexedDbSize()` — calcula tamaño estimado
 
 **Servicio de Orquestación (cleanupService.ts):**
-- ✅ `fetchCleanupCounts()` — queries preview (NULL docs, >7d docs, cache size)
-- ✅ `executeCleanup()` — orquesta limpieza por layers (IndexedDB → localStorage → Firestore)
+- ✅ `fetchCleanupCounts()` — preview counts (Firestore queries)
+- ✅ `executeCleanup()` — orquesta 3 layers (IDB → localStorage → Firestore)
 
 **Cloud Function (functions/src/index.ts):**
-- ✅ `clearFirestoreData` callable function (autenticada)
-- ✅ Query: WHERE snapshots == [] (NULL docs)
-- ✅ Query: WHERE created_at < 7 days ago (viejos)
-- ✅ Batch delete (eficiente)
-
-**Integración (TestingTools.tsx):**
-- ✅ Botón "Limpiar datos" en sección Testing Tools
-- ✅ Handler + modal rendering
-- ✅ Toast feedback (éxito/error)
+- ✅ `clearFirestoreData` callable (autenticada vía context.auth)
+- ✅ Query WHERE snapshots == [] (D-018)
+- ✅ Query WHERE created_at < 7 days (TTL)
+- ✅ Batch delete eficiente
 
 ### Opciones de Limpieza (4)
-1. Documentos sin snapshots (Firestore, D-018)
-2. Documentos > 7 días (Firestore, TTL)
-3. TODO IndexedDB (reset completo)
-4. TODO localStorage (reset completo)
+1. **Documentos sin snapshots** — Firestore (D-018)
+2. **Documentos > 7 días** — Firestore (TTL manual)
+3. **TODO IndexedDB** — Reset local completo
+4. **TODO localStorage** — Reset config completo
 
-### Build Status
-- ✅ `npm run build`: SIN ERRORES (130 modules)
-- ✅ Bundle: 850 KB (negligible increase)
+### Build & QA
+- ✅ `npm run build`: SIN ERRORES (130 modules, 844 KB)
 - ✅ TypeScript: SIN ERRORES
+- ✅ Dev server: Funcionando (localhost:5176)
+- ✅ Observaciones aplicadas: Pestaña separada + maximizado default
 
 ---
 
