@@ -1,13 +1,15 @@
-# 🏃 Sprint 10 — Epic Dashboard Looker Studio + US-1007/1008 ✅ VALIDADO
+# 🏃 Sprint 10 AMPLIADO — Dashboard + Sync Control + Cleanup
 
-**Período:** 2026-04-16 → 2026-04-21  
+**Período:** 2026-04-16 → 2026-04-21+ (ampliado 3 fases)  
 **Rama:** `sprint-10` (feature branch)  
-**Objetivo:** Integración BigQuery + Looker Studio + Tabla Predicciones + Caché Inteligente (US-1007, US-1008)  
-**Estado:** ✅ **CÓDIGO + VALIDACIÓN + DOCUMENTACIÓN COMPLETADO | ⚠️ 1 FIX PENDIENTE | READY for merge**
+**Objetivo:** Fase 1 ✅ Complete (Analytics) | Fase 2 ⏳ Documentada (Sync Control) | Fase 3 ✅ Documentada (Firebase as Cache)  
+**Estado:** ✅ **FASE 1 COMPLETADA | FASE 2 DOCUMENTADA | FASE 3 DOCUMENTADA — TODO LISTO PARA IMPLEMENTACIÓN**
 
 ---
 
 ## 📋 US Status Sprint 10
+
+### ✅ FASE 1: COMPLETADA (2026-04-21)
 
 | US | Descripción | SP | Status | Commit/Docs |
 |----|-------------|-----|--------|--------|
@@ -21,6 +23,32 @@
 | US-1008-C | Orchestration (syncFirestoreToCache) | 2 | ✅ | b16721f |
 | US-1008-D | Testing + Validation (QA) | 2 | ✅ | Validación BigQuery completada |
 | US-1004/1005/1006 | Dashboards avanzados | 7 | 📦 Archivadas | — |
+
+### ⏳ FASE 2: DOCUMENTADA (Ampliación 2026-04-21)
+
+| US | Descripción | SP | Status | Docs |
+|----|-------------|-----|--------|------|
+| **US-1103** | **Fix D-018: No guardar docs sin snapshots** | **1-2** | **📝 Documentada** | `11-US-1103-FixNoSaveEmpty.md` |
+| **US-1101** | **Modo manual de sincronización climática** | **3-4** | **📝 Documentada** | `09-US-1101-SyncManual.md` |
+| **US-1102** | **Limpieza Firebase granular bajo demanda** | **3-4** | **📝 Documentada** | `10-US-1102-CleanupGranular.md` |
+
+**Fase 2 Status:**
+- Análisis completado ✅
+- Documentación completa (3 US docs + plan implementación) ✅
+- Ready para implementación ⏳
+
+### ⏳ FASE 3: DOCUMENTADA (Nueva 2026-04-21)
+
+| US | Descripción | SP | Status | Docs |
+|----|-------------|-----|--------|------|
+| **US-1104** | **Firebase as Cache — Climas (TTL simple)** | **3-4** | **✅ Documentada** | `US-1104-FirebaseAsCache-Climas.md` |
+| **US-1105** | **Firebase as Cache — Tabla Predictiva (Delta Sync)** | **3-4** | **✅ Documentada** | `US-1105-FirebaseAsCache-Tabla.md` |
+
+**Fase 3 Status:**
+- Análisis completado (usuario clarificó estructura Firestore) ✅
+- Documentación completa (pseudocódigos, diagramas, impacto) ✅
+- Arquitectura: Firestore source of truth, IndexedDB caché dual-layer ✅
+- Ready para implementación ⏳
 
 ---
 
@@ -117,13 +145,25 @@
 
 ---
 
-## 🚀 Próximos Pasos (Sprint 10 Session 3)
+## 🚀 Próximos Pasos (Sprint 10 Session 3+)
 
-1. [ ] **Fix urgente:** NO guardar documentos sin snapshots (firebaseWeatherService.ts)
-2. [ ] Inspeccionar tabla UI para identificar errores de visualización
-3. [ ] Verificar formato de horas (cálculo timezone correcto?)
-4. [ ] Merge a `develop` cuando todo esté validado
+### Inmediato (Session 3)
+1. [ ] **Confirmación de plan:** Usuario acepta plan de implementación Fase 2
+2. [ ] **Iniciar FASE 0:** Implementar US-1103 (Fix D-018, 30-45 min)
+3. [ ] **Continuar FASE 1:** Implementar US-1101 (2-3 h)
+4. [ ] **Continuar FASE 2:** Implementar US-1102 (2-3 h)
+
+### Validación
+- [ ] Tests >85% coverage para Fase 2
+- [ ] Build sin warnings
+- [ ] Manual testing: UI + Firebase + IndexedDB
+- [ ] Firestore metrics: reducción ~50% writes (US-1103)
+
+### Finalización
+- [ ] Actualizar sprint.md con estado final
+- [ ] Actualizar active_task.md
+- [ ] Merge `sprint-10` → `develop` (cuando todo aprobado)
 
 ---
 
-**Sprint 10 Status:** ✅ Validación completa | ⚠️ 1 fix identificado | 🔧 Ready para siguiente sesión
+**Sprint 10 Status:** ✅ Fase 1 Completa | ⏳ Fase 2 Documentada | 🚀 Ready para Implementación
