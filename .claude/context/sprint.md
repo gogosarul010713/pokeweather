@@ -55,6 +55,7 @@
 - US-1104: `getWeatherFromFirestore()` + refactor `loadCitiesFromCache()` (2 capas)
 - US-1105: Metadata helpers + refactor `PredictionAnalysisDemo` (delta sync background)
 - Arquitectura: Firestore source of truth → IndexedDB caché (40ms hit, <600ms miss)
+- **Build status:** ✅ Sin errores (solo 2 warnings pre-existentes ignorables)
 
 ---
 

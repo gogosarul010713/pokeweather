@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import ReportsPanel from './ReportsPanel'
 import { PredictionAnalysisDemo } from '../Analytics/PredictionAnalysisDemo'
+import { ConfirmClearDataModal, type CleanupOptions } from '../UI/ConfirmClearDataModal'
+import { executeCleanup } from '../../services/cleanup/cleanupService'
 
 interface TestingToolsProps {
   isOpen: boolean
@@ -14,9 +16,34 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [showClearModal, setShowClearModal] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
 
   const handleToggleMaximize = () => {
     setIsMaximized(!isMaximized)
+  }
+
+  // US-1102: Limpiar datos (Firestore + IndexedDB + localStorage)
+  const handleClearData = async (options: CleanupOptions) => {
+    setIsClearing(true)
+    setSyncMessage(null)
+
+    try {
+      await executeCleanup(options)
+      setSyncMessage({
+        type: 'success',
+        text: '✅ Limpieza completada. Los datos han sido eliminados.',
+      })
+      setShowClearModal(false)
+    } catch (error) {
+      setSyncMessage({
+        type: 'error',
+        text: `❌ Error durante la limpieza: ${error instanceof Error ? error.message : 'Fallo desconocido'}`,
+      })
+    } finally {
+      setIsClearing(false)
+      setTimeout(() => setSyncMessage(null), 5000)
+    }
   }
 
   // US-1101: Disparar sincronización manual de climas
@@ -382,6 +409,23 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
 
             <hr style={{ margin: '16px 0', borderColor: 'var(--border-default)' }} />
 
+            {/* US-1102: Cleanup Data Section */}
+            <div className="tt-section">
+              <h3 className="tt-section-title">🗑️ Limpieza de datos</h3>
+              <p className="tt-section-desc">
+                Limpiar datos obsoletos, caché corrupto o resetear completamente
+              </p>
+              <button
+                className="tt-button tt-button-primary"
+                onClick={() => setShowClearModal(true)}
+                disabled={isSyncing || isClearing}
+              >
+                🗑️ Limpiar datos
+              </button>
+            </div>
+
+            <hr style={{ margin: '16px 0', borderColor: 'var(--border-default)' }} />
+
             {/* Tab: Reportes */}
             {activeTab === 'reportes' && <ReportsPanel />}
             {/* Tab: Predicciones */}
@@ -389,6 +433,13 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
           </div>
         </div>
       )}
+
+      {/* Modal: Confirm Clear Data */}
+      <ConfirmClearDataModal
+        isOpen={showClearModal}
+        onClose={() => setShowClearModal(false)}
+        onConfirm={handleClearData}
+      />
     </>
   )
 }

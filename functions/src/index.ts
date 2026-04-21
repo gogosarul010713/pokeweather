@@ -5,6 +5,8 @@ import { syncWeatherLogic } from './syncWeatherLogic.js'
 // Initialize Firebase Admin
 admin.initializeApp()
 
+const db = admin.firestore()
+
 // ────────────────────────────────────────────────────────────────────
 // SCHEDULED TRIGGER: Executes automatically at HH:15 UTC every day
 // ────────────────────────────────────────────────────────────────────
@@ -55,6 +57,76 @@ export const syncWeatherManual = functions.https.onRequest(
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       })
+    }
+  }
+)
+
+// ────────────────────────────────────────────────────────────────────
+// CALLABLE FUNCTION: Cleanup Firestore data (requires authentication)
+// ────────────────────────────────────────────────────────────────────
+interface ClearFirestoreRequest {
+  nullSnapshots: boolean
+  olderThan7d: boolean
+}
+
+export const clearFirestoreData = functions.https.onCall(
+  async (data: ClearFirestoreRequest, context) => {
+    // Verify authentication
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'User must be authenticated'
+      )
+    }
+
+    let totalDeleted = 0
+
+    try {
+      // 1. Delete docs with empty snapshots (D-018)
+      if (data.nullSnapshots) {
+        const nullSnapshot = await db
+          .collectionGroup('forecasts')
+          .where('snapshots', '==', [])
+          .get()
+
+        const batch = db.batch()
+        nullSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref)
+        })
+        await batch.commit()
+        totalDeleted += nullSnapshot.size
+      }
+
+      // 2. Delete docs older than 7 days
+      if (data.olderThan7d) {
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        const timestamp = admin.firestore.Timestamp.fromDate(sevenDaysAgo)
+
+        const oldSnapshot = await db
+          .collectionGroup('forecasts')
+          .where('created_at', '<', timestamp)
+          .get()
+
+        const batch = db.batch()
+        oldSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref)
+        })
+        await batch.commit()
+        totalDeleted += oldSnapshot.size
+      }
+
+      return {
+        success: true,
+        deletedCount: totalDeleted,
+        message: `Successfully deleted ${totalDeleted} documents`,
+      }
+    } catch (error) {
+      console.error('Firestore cleanup error:', error)
+      throw new functions.https.HttpsError(
+        'internal',
+        `Cleanup failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
   }
 )

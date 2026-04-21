@@ -647,4 +647,38 @@ const dateHour = formatDateHour(nextHour)
 
 ---
 
+### 2026-04-21 D-022 — Opciones RESET Total en Modal Limpieza (US-1102)
+
+**Contexto:** US-1102 implementación. Modal cleanup necesita permitir reset radical de datos locales para validación.
+
+**Decisión:** Agregar 2 opciones nuevas de RESET TOTAL (además de las 2 granulares de D-018 + TTL)
+
+**Opciones Modal (4 total):**
+1. Documentos sin snapshots (D-018)
+2. Documentos > 7 días (TTL)
+3. **TODO IndexedDB** — reset completo (nueva)
+4. **TODO localStorage** — reset completo (nueva)
+
+**Motivo:**
+1. **Validación:** Cuando se cambien datos/algoritmos, necesitas baseline limpio
+2. **Debugging:** Estado corrupto → opción nuclear de reset total
+3. **Testing:** Validar el flujo de sincronización desde cero sin caché stale
+4. **Separación clara:** Opciones 3+4 marcadas como "RESET" (visual distinct)
+
+**Implementación:**
+- UI: 4 checkboxes, separador visual entre granulares y RESET
+- IndexedDB: `cleanupAllIndexedDb()` elimina TODAS las tablas (not just forecasts)
+- localStorage: `cleanupAllLocalStorage()` elimina todos los keys pwe-*
+- Firestore: No afectado (solo dropea Firestore reads)
+
+**Consecuencias:**
+- Usuario puede nuclear completamente el caché local
+- Próxima carga: Firestore es source of truth (sin fallback IndexedDB)
+- Performance: Primera carga toma ~500-1000ms (sin caché)
+- Seguridad: No hay risk (todo se puede resinc desde Firestore)
+
+**US relacionada:** US-1102
+
+---
+
 <!-- Agrega nuevas decisiones aquí, más recientes primero -->

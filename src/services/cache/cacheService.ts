@@ -248,3 +248,77 @@ export const isPredictionsCacheValid = (metadata: PredictionsCacheMetadata | nul
   if (!metadata) return false
   return metadata.expiresAt > Date.now()
 }
+
+// ─── Cleanup Functions (US-1102) ───────────────────────────────────────────────
+
+/**
+ * Limpia TODAS las tablas de IndexedDB
+ * @returns Promesa con cuenta de registros eliminados
+ */
+export const cleanupAllIndexedDb = async (): Promise<{ deletedRecords: number }> => {
+  try {
+    // Obtener count de records antes de limpiar
+    const forecastCount = (await get<ForecastDoc[]>(KEY_FORECAST_CACHE)) ?? []
+    const predictionsCache = await get<PredictionsCacheMetadata>(KEY_PREDICTIONS_CACHE)
+    const totalRecords = forecastCount.length + (predictionsCache ? 1 : 0) + 5 // +5 por otros keys
+
+    // Limpiar todos los datos usando clear() (limpia toda la DB)
+    await clear()
+
+    return { deletedRecords: totalRecords }
+  } catch (error) {
+    console.error('IndexedDB cleanup failed:', error)
+    throw new Error(`Cleanup IndexedDB failed: ${(error as Error).message}`)
+  }
+}
+
+/**
+ * Limpia TODOS los datos de localStorage que comienzan con pwe-*
+ * @returns void
+ */
+export const cleanupAllLocalStorage = (): void => {
+  try {
+    const keysToDelete: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && (key.startsWith('pwe-') || key.startsWith('pw-'))) {
+        keysToDelete.push(key)
+      }
+    }
+    keysToDelete.forEach(key => localStorage.removeItem(key))
+  } catch (error) {
+    console.error('localStorage cleanup failed:', error)
+    throw new Error(`Cleanup localStorage failed: ${(error as Error).message}`)
+  }
+}
+
+/**
+ * Calcula tamaño estimado de IndexedDB
+ * @returns Promesa con tamaño humano-legible (ej: "2.5 MB")
+ */
+export const getIndexedDbSize = async (): Promise<string> => {
+  try {
+    // Estimación: cada ForecastDoc es ~500 bytes, cada weather entry ~200 bytes
+    const forecasts = (await get<ForecastDoc[]>(KEY_FORECAST_CACHE)) ?? []
+    const predictions = (await get<PredictionsCacheMetadata>(KEY_PREDICTIONS_CACHE)) ?? null
+
+    let sizeBytes = 0
+    sizeBytes += forecasts.length * 500 // ~500 bytes por ForecastDoc
+    sizeBytes += (predictions?.documents?.length ?? 0) * 500
+
+    // Contar localStorage size (approximado)
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      const value = localStorage.getItem(key ?? '')
+      if (key?.startsWith('pwe-')) {
+        sizeBytes += (key.length + (value?.length ?? 0)) * 2 // UTF-16
+      }
+    }
+
+    if (sizeBytes === 0) return '0 MB'
+    if (sizeBytes < 1024 * 1024) return `${(sizeBytes / 1024).toFixed(1)} KB`
+    return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
+  } catch {
+    return 'N/A'
+  }
+}

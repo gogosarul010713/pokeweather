@@ -1,8 +1,8 @@
-# 🎯 Tarea Activa — Sprint 10 AMPLIADO: Validación Fase 3
+# 🎯 Tarea Activa — Sprint 10 AMPLIADO: US-1102 Limpieza Firebase ✅
 
-**Fecha Actualización:** 2026-04-21 (Session 3)  
+**Fecha Actualización:** 2026-04-21 (Session 5)  
 **Sprint 10 Fase 1:** ✅ COMPLETADA (2026-04-16 → 2026-04-21)  
-**Sprint 10 Fase 2:** 📝 DOCUMENTADA (US-1101/1102/1103)  
+**Sprint 10 Fase 2:** ⏳ PARCIALMENTE IMPLEMENTADA (US-1101 ✅ | US-1102 ✅ | US-1103 DEPRECATED)  
 **Sprint 10 Fase 3:** ✅ IMPLEMENTADA (US-1104/1105)
 
 ---
@@ -74,6 +74,54 @@ if (snapshots.length === 0) return  // ← AGREGAR (3 líneas)
 - [ ] Tests verdes (mock empty snapshots)
 - [ ] Compilación sin errores
 - [ ] Documentación data schema actualizada
+
+---
+
+## ✅ US-1102 IMPLEMENTADA (2026-04-21 Session 5)
+
+**Story Points:** 3-4 SP (actualizado desde 2-3)  
+**Commit:** (pendiente merge)  
+**Completado:** 5/5 subtareas
+
+### ¿Qué fue implementado?
+
+**UI Modal (ConfirmClearDataModal.tsx):**
+- ✅ Componente modal standalone con 4 checkboxes
+- ✅ Preview counts en tiempo real (queries a Firestore/IndexedDB)
+- ✅ Separador visual entre opciones granulares y reset total
+- ✅ Botones Cancelar + Confirmar (disabled si no hay selección)
+- ✅ Error handling + warning message
+
+**Funciones de Cleanup (cacheService.ts):**
+- ✅ `cleanupAllIndexedDb()` — limpia TODAS las tablas IDB
+- ✅ `cleanupAllLocalStorage()` — limpia todos los keys pwe-*
+- ✅ `getIndexedDbSize()` — calcula tamaño estimado
+
+**Servicio de Orquestación (cleanupService.ts):**
+- ✅ `fetchCleanupCounts()` — queries preview (NULL docs, >7d docs, cache size)
+- ✅ `executeCleanup()` — orquesta limpieza por layers (IndexedDB → localStorage → Firestore)
+
+**Cloud Function (functions/src/index.ts):**
+- ✅ `clearFirestoreData` callable function (autenticada)
+- ✅ Query: WHERE snapshots == [] (NULL docs)
+- ✅ Query: WHERE created_at < 7 days ago (viejos)
+- ✅ Batch delete (eficiente)
+
+**Integración (TestingTools.tsx):**
+- ✅ Botón "Limpiar datos" en sección Testing Tools
+- ✅ Handler + modal rendering
+- ✅ Toast feedback (éxito/error)
+
+### Opciones de Limpieza (4)
+1. Documentos sin snapshots (Firestore, D-018)
+2. Documentos > 7 días (Firestore, TTL)
+3. TODO IndexedDB (reset completo)
+4. TODO localStorage (reset completo)
+
+### Build Status
+- ✅ `npm run build`: SIN ERRORES (130 modules)
+- ✅ Bundle: 850 KB (negligible increase)
+- ✅ TypeScript: SIN ERRORES
 
 ---
 
@@ -150,10 +198,13 @@ if (snapshots.length === 0) return  // ← AGREGAR
 ### ¿Qué es?
 Botón "Limpiar datos" en Testing Tools que permite eliminar selectivamente:
 1. Documentos sin snapshots (D-018)
-2. Documentos > 7 días
-3. Caché local (IndexedDB)
+2. Documentos > 7 días (TTL manual)
+3. **Todo IndexedDB** (reset caché completo)
+4. **Todo localStorage** (reset configuración local)
 
 **Usuario elige** qué limpiar via checkboxes en modal.
+
+**Propósito 3+4:** Reset total de datos locales para validación con datos nuevos o cleanup radical.
 
 ### Cambios Principales
 
