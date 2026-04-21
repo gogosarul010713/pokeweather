@@ -11,7 +11,8 @@
       "Bash(timeout 60 node /c/Workspace/React/pokeweather/final-verification.mjs)",
       "Bash(pkill -f \"npm run dev\")",
       "Bash(taskkill /F /IM node.exe)",
-      "Bash(grep -r \"mock\\\\|Mock\\\\|MOCK\" src --include=*.md --include=*.txt)"
+      "Bash(grep -r \"mock\\\\|Mock\\\\|MOCK\" src --include=*.md --include=*.txt)",
+      "Bash(xargs cat *)"
     ],
     "additionalDirectories": [
       "C:\\Workspace\\React\\pokeweather"

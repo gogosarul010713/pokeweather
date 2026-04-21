@@ -5,6 +5,227 @@
 
 ---
 
+### 2026-04-21 D-019 — Lectura Optimizada de Climas: IndexedDB Primero (US-1104)
+
+**Contexto:** US-1104 implementada. Refactorizar flujo de lectura de climas para mejorar latencia.
+
+**Decisión:** Implementar lectura en 2 capas sin sync background si caché está fresco
+- **CAPA 1:** IndexedDB lookup por `accuLocationKey` (40ms)
+- **CAPA 2:** Firestore fallback si caché expirado (300-500ms)
+- **Diferencia vs antes:** Sin sincronización background cuando caché está fresco
+
+**Motivo:**
+1. Latencia crítica: 40ms vs 370ms promedio (antes)
+2. Offline-first: funciona con caché stale
+3. Simplifica lógica: cache fresco = mostrar y FIN
+
+**Implementación:**
+- Nueva función `getWeatherFromFirestore(cityId)` en firebaseWeatherService.ts
+- Refactor `loadCitiesFromCache()` en useWeather.ts con lógica 2 capas
+- Usa `accuLocationKey` como clave (no city.id ni s2Key)
+
+**Consecuencias:**
+- -100ms latencia promedio si caché fresco
+- Zero sync background si datos frescos
+- Fallback a Firestore si expirado
+
+**US relacionada:** US-1104
+
+---
+
+### 2026-04-21 D-020 — Delta Sync Incremental para Tabla Predictiva (US-1105)
+
+**Contexto:** US-1105 implementada. Optimizar lectura de tabla de predicciones.
+
+**Decisión:** Implementar delta sync en background, solo si hay nuevos docs
+
+**Lógica:**
+- **Mostrar:** caché local inmediato (40ms)
+- **Verificar:** query delta `WHERE created_at > lastSyncTime`
+- **Sincronizar:** solo si `newDocs.length > 0` (evitar queries innecesarias)
+- **Mergear:** dedup por `city_id + date_hour`
+
+**Motivo:**
+1. Ahorro Firestore: -99% reads si sin cambios (~15,700 reads evitados)
+2. Latencia: 500-800ms → 40ms (92% mejora)
+3. No bloqueante: delta sync en background
+
+**Implementación:**
+- Metadata helpers en cacheService.ts: `getPredictionsCacheMetadata()`, `setPredictionsCacheMetadata()`, `isPredictionsCacheValid()`
+- Refactor PredictionAnalysisDemo.tsx con 2 capas + delta sync async
+- Reusa `getRecentForecasts(timeRange, since)` con param `since` para delta
+
+**Consecuencias:**
+- Cache hit: 40ms
+- Cache miss: <1s (primera carga)
+- Delta sync: <300ms (silencioso)
+- Storage IndexedDB: ~60min TTL para tabla
+
+**US relacionada:** US-1105
+
+---
+
+### 2026-04-21 D-018 — Herramientas Autónomas para Consultar Datos (No guardar docs sin snapshots)
+
+**Contexto:** US-1008 validación. Se detectó que 80 documentos (53%) se guardan con todos los campos NULL.
+
+**Problema:**
+- `firebaseWeatherService.ts` línea 99-101: guarda incluso cuando `snapshots.length === 0`
+- Estos son "cache-hit geoespacial" — cuando múltiples ciudades comparten locationKey
+- Ocupan 53% del espacio en Firestore sin valor útil
+- Contaminan BigQuery y fuerzan a filtrar en cada query
+
+**Opciones consideradas:**
+- A: Guardar con flag `is_cache_hit: true` y filtrar en queries
+- B: NO guardar si `snapshots.length === 0` ← **ELEGIDA**
+- C: Guardar pero marcar como "transient" (TTL 1h en lugar de 7d)
+
+**Decisión:** Opción B — NO guardar documentos sin snapshots
+
+**Motivo:**
+1. Si no hay snapshots, no hay predicción válida — datos sin valor
+2. Simplifica queries (sin necesidad de filtrar)
+3. Reduce Firestore writes (~50% menos)
+4. Reduce BigQuery storage
+5. Mantiene coherencia: documentos = predicciones válidas
+
+**Implementación (próximo):**
+- Modificar `firebaseWeatherService.ts` línea 77-99
+- Agregar early return: `if (snapshots.length === 0) return`
+- Limpiar documentos viejos con: `npm run clean:firestore -- --only-null`
+
+**Consecuencias:**
+- No hay datos "fantasma" en Firestore
+- Tablas y reportes solo muestran predicciones válidas
+- Queries a BigQuery más rápidas (sin NULL filtering)
+
+**US relacionada:** US-1008 (validación)
+
+---
+
+### 2026-04-20 D-017 — Arquitectura Delta Sync con IndexedDB (US-1008)
+
+**Contexto:** Sprint 10. Optimización Firestore. Problema: Query 1 trae 100 docs, Query 2 con 10 nuevos vuelve a traer los 100 viejos.
+
+**Problema:**
+- getRecentForecasts('24h') sin filtro → 100 reads cada vez
+- Pronósticos nuevos: ~100-200 docs/mes
+- Siguiente consulta: re-descarga todos (ineficiente)
+
+**Opciones consideradas:**
+- A: Traer todo + deduplicar en cliente
+  - Ventaja: Simple
+  - Desventaja: Network O(n) siempre, ineficiente
+- B: Delta sync inteligente ← **ELEGIDA**
+  - Query: `where created_at > lastSyncTimestamp` en Firestore
+  - IndexedDB con tabla `forecasts_index` (O(1) lookup)
+  - TTL automático (7d+1h margin)
+  - Ventaja: Network O(delta), O(1) deduplicación, sync incremental
+  - Desventaja: +1 tabla IndexedDB, lógica merge más compleja (justificada)
+
+**Decisión:** Opción B — Delta Sync
+
+**Motivo:**
+1. **Red eficiente:** Query delta reduce payload 90% (10 docs vs 100)
+2. **Storage local:** IndexedDB índice = O(1) deduplicación vs O(n)
+3. **TTL automático:** Similar a Firestore, eventual consistency OK
+4. **Zero breaking changes:** Servicios existentes no se tocan
+
+**Implementación (4 subtareas):**
+- A: Agregar `since` param a getRecentForecasts()
+- B: Expandir cacheService con forecasts_index
+- C: syncFirestoreToCache() orquesta flujo completo
+- D: Tests unitarios + integración + validación manual
+
+**Decisiones sub-arquitectónicas:**
+1. **Query field:** `created_at` (inmutable) vs `updated_at` → created_at
+2. **IndexedDB:** tabla separada (permite índices) vs idb-keyval → tabla separada
+3. **Timestamp lastSync:** localStorage vs IndexedDB → localStorage (lectura rápida)
+4. **Sync trigger:** Automático en app load vs manual → Automático
+5. **Conflictos:** TTL local respeta TTL Firestore + 1h margin → eventual consistency
+
+**Consecuencias:**
+- Firestore cost: reducido ~90% en consultas incrementales
+- Latencia: <500ms sync (query ~200ms + IndexedDB ops ~100ms)
+- Storage: <50MB IndexedDB (100 ciudades × 100 docs)
+- Complexity: +~400 líneas de código (cacheService expandido + tests)
+
+**US relacionada:** US-1008 (8 SP, 4 subtareas)
+
+---
+
+### 2026-04-19 D-016 — Guardar local_time_user en ForecastDoc (US-1007)
+
+**Contexto:** US-1007. Tabla de predicciones necesitaba mostrar "¿A qué hora LOCAL del usuario se obtuvo el pronóstico?"
+
+**Problema:** 
+- getLocalMachineTime() calculaba en tiempo real → siempre mostraba hora actual
+- Necesitábamos saber la hora EXACTA cuando se obtuvieron los datos
+
+**Opciones consideradas:**
+- A: Calcular dinámicamente en tabla (mostrar hora actual siempre) ← RECHAZADO
+- B: Guardar hora local en Firestore cuando se obtienen datos ← **ELEGIDA**
+
+**Decisión:** Opción B — Persistir local_time_user en ForecastDoc
+
+**Motivo:**
+1. Auditoría: saber exactamente cuándo (hora local) se obtuvo cada pronóstico
+2. Análisis histórico: comparar patrones por hora del usuario
+3. Consistencia: valor no cambia con el tiempo
+
+**Implementación:**
+- `ForecastDoc.local_time_user: string` (formato DD/MM HH:MM)
+- `getLocalTimeUser()` calcula en cliente cuando se guarda
+- `PredictionRow.localTimeUser` usa valor persistente
+- Tabla muestra valor guardado + permite filtro/ordenamiento
+
+**Consecuencias:**
+- Documentos viejos necesitan cleanup (no tienen `local_time_user`)
+- Primer uso requiere: `npm run clean:firestore -- --only-city`
+- Nuevos documentos tendrán valor persistente
+
+**US relacionada:** US-1007
+
+---
+
+### 2026-04-19 D-015 — ForecastDoc: Guardar calculated_condition por separado
+
+**Contexto:** US-1007. PredictionAnalysisTable necesitaba comparar predicción vs realidad. Decisión: cómo guardar la predicción para facilitar validación manual.
+
+**Problema:** 
+- ForecastDoc.snapshots[] contiene 12 horas
+- snapshots[0] es la predicción "actual" (mostrada al usuario)
+- Necesitábamos acceso rápido a qué se predijo (sin buscar en array)
+
+**Opciones consideradas:**
+- A: Guardar solo snapshots[0] (perder histórico de 12h)
+- B: Guardar todos los snapshots + extraer snapshots[0] al leer (lento)
+- C: Guardar calculated_condition por separado + todos los snapshots ← **ELEGIDA**
+
+**Decisión:** Opción C — Campo `calculated_condition` redundante pero optimizado
+
+**Motivo:**
+1. Acceso O(1) a la predicción mostrada
+2. Mantiene 12 snapshots para lookback histórico
+3. Simplifica comparación: calculated_condition === report.should_be
+4. BigQuery puede indexar rápidamente por precisión
+
+**Implementación:**
+- ForecastDoc: `calculated_condition: string` (de snapshots[0].classified)
+- PredictionAnalysisTable: muestra 1 fila por ForecastDoc (no por snapshot)
+- Lookback: busca snapshots anteriores para misma hora
+
+**Consecuencias:**
+- +1 campo en ForecastDoc (negligible storage)
+- Tabla ahora muestra 2 filas/día en lugar de 24 (antes era 12 por snapshot)
+- Validación manual más clara (calculated vs actual)
+
+**US relacionada:** US-1007
+
+---
+
+---
+
 ### 2026-04-13 D-009 — Eliminación de tabs obsoletos en TestingTools (-120 KB bundle)
 
 **Contexto:** US-902. TestingTools tenía 3 tabs que se volvieron obsoletos con Firebase Report + Metabase.
@@ -208,6 +429,255 @@
 **Consecuencias:** Funciones Firebase ahora son async. Callers deben `await`. No afecta a `batchWeatherService` (ya era async-friendly).
 
 **US relacionada:** US-901
+
+---
+
+### 2026-04-19 D-014 — Timestamp Forecast: Redondear a siguiente hora completa
+
+**Contexto:** US-1007 validación de datos. Usuario reportó que los timestamps guardados eran la "siguiente hora", no la hora de consulta.
+
+**Problema:** 
+- App consulta AccuWeather a las 9:34 PM → guardaba timestamp como "21:00"
+- Pero AccuWeather pronósticos son PARA la siguiente hora (10:00 PM, 11:00 PM, ..., 10:00 AM)
+- Mismatch: documento "21:00" contiene pronósticos que son para "22:00-09:00"
+
+**Decisión:** Redondear timestamp a siguiente hora completa ANTES de guardar
+
+**Motivo:** Los pronósticos de AccuWeather son inherentemente para "las próximas 12 horas" desde una hora puntual. Para coherencia:
+- Consulta 9:34 PM → guardar como 2026-04-19-22 (siguiente hora)
+- Snapshots: [22:00, 23:00, 00:00, ..., 09:00] ahora tienen sentido
+
+**Implementación:** `firebaseWeatherService.ts` línea 81-86
+```typescript
+const nextHour = new Date(now)
+nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0)
+const dateHour = formatDateHour(nextHour)
+```
+
+**Validación pendiente:** Después de 1 ciclo de datos con fix, ejecutar `npm run validate:forecast-schema` para confirmar estructura.
+
+**US relacionada:** US-1007, commit 93bf4b2
+
+---
+
+### 2026-04-18 D-013 — PredictionAnalysisTable: Adopción TanStack Table v8 (US-1007 v3)
+
+**Contexto:** La tabla custom de US-1007 tenía bug de paginación (botones [1,1,1,2,3]) y carecía de features críticas: filtrado por columna, búsqueda global, page size configurable, navegación primera/última página.
+
+**Problema con tabla custom:**
+- Bug paginación: `Math.max(1, safePage - 2 + i)` → generaba páginas duplicadas en inicio
+- Ordenamiento solo dentro de la página actual (no del dataset completo)
+- Sin filtros por columna ni búsqueda global
+- Paginación fija en 20 filas sin opción de cambio
+- Sin botones primera / última página
+
+**Opciones evaluadas:**
+
+| Librería | Bundle | Headless | React 19 | Features | Veredicto |
+|----------|--------|----------|----------|----------|-----------|
+| TanStack Table v8 | ~15KB | ✅ | ✅ | Todas | ✅ ELEGIDA |
+| AG Grid Community | ~300KB | ❌ | Parcial | Todas | ❌ Bundle regresión |
+| Material React Table | +300KB | ❌ | ❌ | Todas | ❌ Trae MUI |
+| react-data-grid | ~37KB | Parcial | ✅ | Sin paginación | ❌ Incompleta |
+
+**Decisión:** TanStack Table v8 (`@tanstack/react-table@8.21.3`)
+
+**Motivo:**
+1. **Headless:** cero estilos propios → 100% compatible con el design system del proyecto (CSS vars, prefijo `.pat-`)
+2. **Bundle minimal:** ~15KB vs Sprint 9 que ya optimizó el bundle (-15%). No regresar.
+3. **React 19 compatible:** verificado con Vite 8 build sin warnings
+4. **Features completas con una sola librería:** `getFilteredRowModel` (global + columna), `getSortedRowModel`, `getPaginationRowModel`
+5. **TypeScript first:** tipos perfectos, sin casteos
+
+**Implementación:**
+- `src/components/Analytics/PredictionAnalysisTable.tsx` — reescrito con `useReactTable`
+- Columnas definidas con `createColumnHelper<PredictionRow>()`
+- `filterFn` custom en columnas con condiciones climáticas (busca por label legible, no por clave interna)
+- `sortingFn` custom en columna `correct` (null < false < true)
+- Lookback expandible preservado intacto via `columnHelper.display`
+- CSS mantenido en `<style>` tag (regla del proyecto)
+
+**Resultado:**
+- Build: ✅ 979ms, sin errores TS
+- Features: búsqueda global, filtros por columna, sort completo, pageSize 10/20/50/100, `««` primera y `»»` última
+- Export CSV/JSON ahora exporta filas **filtradas** (mejora UX)
+
+**Consecuencias:**
+- `@tanstack/react-table` en `dependencies` (runtime, no devDep)
+- Tabla custom eliminada (~380 líneas) → nueva implementación (~350 líneas)
+- Mismo API público: `<PredictionAnalysisTable rows={...} title="..." />`
+
+**US relacionada:** US-1007 v3
+
+---
+
+### 2026-04-18 D-012 — PredictionAnalysisTable: Restructure con condiciones climáticas (US-1007 Revisión)
+
+**Contexto:** Revisión de observaciones de tabla. Clarificación crítica: `prediction` y `actual` son **condiciones climáticas**, no tipos Pokémon.
+
+**Decisiones tomadas:**
+
+1. **Campos son condiciones climáticas:** `prediction` y `actual` = "sunny", "rain", "cloudy", etc. (no tipos Pokémon)
+   - Mapeo: condición → icono + label desde `WEATHER_IMAGES`, `CONDITION_LABEL`, `CONDITION_COLORS`
+   - Impacto: Cambio en `PredictionRow` interface (strings climáticos)
+
+2. **Confianza removida de tabla (por ahora):**
+   - Razón: Confianza significativa es por acumulación (88/100 en Auckland), no por row individual
+   - Confianza acumulada: future dashboard
+   - Actual: Quitar columna "Confianza" de tabla
+   - Documentación: Agregar nota en US-1007 para future work
+
+3. **Lookback 3-filas con solo verde en aciertos:**
+   - Fila 1: Hora (HH:MM UTC)
+   - Fila 2: Cuánto hace (-Xh)
+   - Fila 3: Icono clima + label + ✓ (solo si wouldBeCorrect=true)
+   - Color: Verde solo si acierto, gris/sin cambio si fallo
+
+4. **Ordenamiento por página (20 filas cliente-side):**
+   - Alcance: Sort de la página actual (20 filas), no tabla completa
+   - Evento: Click en header columna → alterna asc ↔ desc
+   - Performance: O(20 log 20) ≈ 86 ops, negligible
+   - Columnas ordenables: Hora, Ciudad, Predicción, Real, Resultado
+   - No ordenable: Lookback (siempre igual)
+
+5. **Validación Firestore (gcloud):**
+   - R1: Usar `bq query` para verificar estructura real en BigQuery
+   - Si estructura ≠ esperada: Proponer cambio de esquema
+   - Punto crítico: ¿`classified_condition` es confiable como "condición climática"?
+
+**Motivo:**
+- Condiciones climáticas son la fuente real de datos (AccuWeather)
+- Tipos Pokémon son derivados (mapping posterior)
+- Tabla es para debugging/análisis de predicción de clima, no de tipos
+
+**Consecuencias:**
+- Interface `PredictionRow`: `prediction: string` (condición) + `actual: string | null` (condición o "Sin datos")
+- `LookbackItem`: `condition: string` (condición climática), no `pokemonType`
+- Columna "Confianza" desaparece (será reintroducida en dashboard agregado)
+- Renderizado: Requiere helpers `WEATHER_IMAGES[condition]`, `CONDITION_LABEL[condition]`, `CONDITION_COLORS[condition]`
+
+**US relacionada:** US-1007
+
+---
+
+### 2026-04-18 D-011 — PredictionAnalysisTable: Debugging vs. BI Tools (US-1007)
+
+**Contexto:** Sprint 10. Dashboard Looker Studio MVP en progreso. Necesidad paralela: análisis táctico de predicciones fallidas con "lookback 12h".
+
+**Opción A:** Agregar a Looker Studio (mismo BI tool)
+- Ventaja: Consistencia visual
+- Desventaja: Lookback complejo en Looker, UX mejor en React
+
+**Opción B:** Componente React custom (elegida ← **ELEGIDA**)
+- Ventaja: Lookup expandible, UX óptima, sin nuevas librerías
+- Desventaja: Separate from BI dashboards, pero cumple propósito diferente
+
+**Decisión:** Opción B — Componente React
+
+**Motivo:**
+1. Propósito diferente: Looker = estratégico (métricas), React = táctico (debugging)
+2. UX lookback inline mejor que Looker
+3. Sin nuevas deps (solo React built-in)
+4. Datos ya en BigQuery (snapshots_flat)
+5. Mock HTML referencia facilita implementación rápida
+
+**Implementación:**
+- `src/components/Analytics/PredictionAnalysisTable.tsx` (360 líneas, self-contained)
+- Tipos Pokémon: uso de vars CSS existentes (--type-X)
+- Paginación nativa (20/page)
+- Export CSV + Copy JSON
+- Filas expandibles con lookback panel
+
+**Consecuencias:**
+- Dos dashboards en App: Looker (BI) + React (debugging)
+- Lookback es feature única, no competidor a Looker
+- Próximo: Integración en TestingTools o ruta `/analytics`
+
+**US relacionada:** US-1007
+
+---
+
+### 2026-04-21 D-021 — Sincronización Servidor-side a HH:15 con Firestore Real-time (US-1101)
+
+**Contexto:** US-1101. App necesita sincronizar clima 24 veces/día. Hoy: cliente ejecuta timer (~N×24 API calls). Nuevo: servidor ejecuta una sola vez.
+
+**Decisión:** Firebase Scheduled Function a HH:15 UTC + Firestore `onSnapshot` listener en cliente
+
+**Lógica:**
+1. **Servidor (HH:15):** Firebase Scheduled Function dispara automáticamente
+   - Carga 5 ciudades en paralelo (~500ms)
+   - Llamadas a AccuWeather API (key en servidor, nunca cliente)
+   - Guarda en Firestore vía `saveCityForecast()`
+
+2. **Cliente:** `useFirestoreSync` hook con `onSnapshot` listener
+   - Escucha cambios en colección `/city_weather`
+   - Cuando servidor escribe, cliente recibe push automáticamente (~100ms)
+   - React state se actualiza → UI re-renderiza
+
+3. **Doble trigger:** Scheduled (automático) + HTTP (manual testing)
+   - Scheduled: `15 * * * *` (HH:15 UTC diario)
+   - HTTP: endpoint para TestingTools y testing manual
+
+**Motivo:**
+1. **Escalabilidad O(1):** 24 calls FIJOS, sin importar N usuarios (antes O(N))
+2. **Confiabilidad:** 24/7 independiente (no depende de cliente abierto)
+3. **Latencia mejorada:** onSnapshot ~100ms vs timer 5-10s
+4. **Costo:** Quota AccuWeather: 120/día vs 15,000/mes (24% uso)
+5. **Seguridad:** API key en servidor, nunca en cliente
+
+**Implementación:**
+- `functions/src/syncWeatherLogic.ts` — lógica compartida
+- `functions/src/index.ts` — 2 triggers (scheduled + HTTP)
+- `src/hooks/useFirestoreSync.ts` — listener real-time
+- Remover: `scheduleNextRefresh()`, `doRefresh()` del cliente
+- Remover: `VITE_ACCUWEATHER_KEY` del cliente
+
+**Consecuencias:**
+- Firebase Functions: 720 invocaciones/mes (0.036% free tier)
+- Firestore: +1 conexión WebSocket por usuario (real-time)
+- Testing: Botón en TestingTools dispara sync manual
+- Delta Sync (D-017): No se ve afectado, sigue funcionando
+
+**Alternativas rechazadas:**
+- Vercel Cron: Timeout 5s en Hobby (frágil con 5+ ciudades)
+- Cloud Scheduler manual: Redundante con Firebase Scheduled
+- Timer client-side: Escalabilidad O(N), no 24/7
+
+**US relacionada:** US-1101 (6-7 SP)
+
+---
+
+### 2026-04-21 D-022 — Opciones RESET Total en Modal Limpieza (US-1102)
+
+**Contexto:** US-1102 implementación. Modal cleanup necesita permitir reset radical de datos locales para validación.
+
+**Decisión:** Agregar 2 opciones nuevas de RESET TOTAL (además de las 2 granulares de D-018 + TTL)
+
+**Opciones Modal (4 total):**
+1. Documentos sin snapshots (D-018)
+2. Documentos > 7 días (TTL)
+3. **TODO IndexedDB** — reset completo (nueva)
+4. **TODO localStorage** — reset completo (nueva)
+
+**Motivo:**
+1. **Validación:** Cuando se cambien datos/algoritmos, necesitas baseline limpio
+2. **Debugging:** Estado corrupto → opción nuclear de reset total
+3. **Testing:** Validar el flujo de sincronización desde cero sin caché stale
+4. **Separación clara:** Opciones 3+4 marcadas como "RESET" (visual distinct)
+
+**Implementación:**
+- UI: 4 checkboxes, separador visual entre granulares y RESET
+- IndexedDB: `cleanupAllIndexedDb()` elimina TODAS las tablas (not just forecasts)
+- localStorage: `cleanupAllLocalStorage()` elimina todos los keys pwe-*
+- Firestore: No afectado (solo dropea Firestore reads)
+
+**Consecuencias:**
+- Usuario puede nuclear completamente el caché local
+- Próxima carga: Firestore es source of truth (sin fallback IndexedDB)
+- Performance: Primera carga toma ~500-1000ms (sin caché)
+- Seguridad: No hay risk (todo se puede resinc desde Firestore)
+
+**US relacionada:** US-1102
 
 ---
 

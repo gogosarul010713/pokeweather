@@ -1,46 +1,88 @@
-# 🎯 Sprint 10 — Epic Dashboard: Analytics para Precisión Climática
+# 🎯 Sprint 10 — Epic Dashboard + Sync Control + Cleanup ⏳ AMPLIADO
 
-**Período:** 2026-04-15 → (TBD)  
-**Objetivo:** Crear dashboard interactivo para analizar precisión de predicciones climáticas  
-**Estado:** 🚀 En inicio  
-**Versión:** v2.1.0-analytics (post v2.0.0-alpha)
+**Período:** 2026-04-16 → 2026-04-21+ (ampliado)  
+**Objetivo:** Dashboard Looker Studio + Control Manual de Sync + Limpieza Firebase Granular  
+**Estado:** ⏳ **AMPLIADO** — Fase 1 completada (US-1001 to 1008), Fase 2 en progreso (US-1101-1103)  
+**Versión:** v2.2.0-sync-control (post v2.1.0-analytics)
 
 ---
 
 ## 📊 Overview
 
-### Problema
+### Problema (Fase 1)
 La app Pokémon Weather Explorer predice tipos Pokémon basándose en clima real, pero no tenemos visibilidad de:
 - ¿Qué tan precisa es nuestra predicción? (87.3% baseline)
 - ¿Cuáles tipos son más predecibles? (Water 90%, Electric 73%)
 - ¿Dónde fallamos? (Moscow 70%, Sydney 92%)
 - ¿Hay patrones temporales? (mejor 6-14h, peor 20-23h)
 
-### Solución
-Dashboard interactivo en **Looker Studio** que responde estas preguntas.
+**Solución Fase 1:** Dashboard interactivo en **Looker Studio** + Caché inteligente con Delta Sync
 
-### Arquitectura
+### Problema (Fase 2)
+Sincronización escalable y limpieza de datos:
+- Hoy: Timer cliente-side → N × 24 API calls (ineficiente con N usuarios)
+- 80 documentos "fantasma" en Firestore ocupan espacio sin valor (D-018)
+- No existe forma de limpiar datos bajo demanda desde UI
+
+**Solución Fase 2:** 
+- **US-1101:** Sincronización servidor-side a HH:15 (Firebase Scheduled Function) → 1 × 24 API calls siempre
+- Reactivity automática vía Firestore `onSnapshot` listener
+- **US-1102/1103:** Limpieza granular + fix D-018
+
+### Arquitectura Completa
 ```
-Firestore (snapshots array)
-  ↓ [Firebase Extension]
-BigQuery (tabla raw_changelog)
-  ↓ [SQL view aplanar]
-Looker Studio (4-6 dashboards)
-  ↓ [Link/iframe en React]
+┌─ Fase 1: Analytics ──────────────────────┐
+│ Firestore (snapshots array)              │
+│   ↓ [Firebase Extension]                 │
+│ BigQuery (tabla raw_changelog)           │
+│   ↓ [SQL view aplanar]                   │
+│ Looker Studio (dashboards)               │
+│   ↓ [Link/iframe en React]               │
+└──────────────────────────────────────────┘
+
+┌─ Fase 2: Auto-Sync Servidor ────────────┐
+│ Firebase Scheduled Function [HH:15]      │
+│   ↓ (5 ciudades, paralelo)               │
+│ Firestore (source of truth)              │
+│   ↓ (onSnapshot push real-time)          │
+│ Cliente React (useFirestoreSync)         │
+│   ↓ (IndexedDB caché local)              │
+│ UI actualiza automáticamente (~100ms)    │
+│ + Cleanup Firestore + Fix D-018          │
+└──────────────────────────────────────────┘
 ```
 
 ---
 
-## 📋 User Stories (6 US, 12 SP)
+## 📋 User Stories (10 US, 28 SP)
+
+### Fase 1: Analytics Looker Studio ✅ (7 US, 15 SP)
 
 | US | Descripción | SP | Estado |
 |----|-------------|-----|--------|
-| **US-1001** | Firebase Extension + BigQuery setup | 2 | 🔜 Pending |
-| **US-1002** | SQL View snapshots_flat | 2 | 🔜 Pending |
-| **US-1003** | Looker Studio conexión | 1 | 🔜 Pending |
-| **US-1004** | Dashboard Performance Global | 2 | 🔜 Pending |
-| **US-1005** | Dashboards Tipos/Ciudades/Horas | 3 | 🔜 Pending |
-| **US-1006** | Integración React + Documentación | 2 | 🔜 Pending |
+| **US-1001** | Firebase Extension + BigQuery setup | 2 | ✅ Completada |
+| **US-1002** | SQL View snapshots_flat | 2 | ✅ Completada |
+| **US-1003** | Looker Studio conexión | 1 | ✅ Completada |
+| **US-1004** | Dashboard Performance Global | 2 | 📦 Archivada |
+| **US-1005** | Dashboards Tipos/Ciudades/Horas | 3 | 📦 Archivada |
+| **US-1006** | Integración React + Documentación | 2 | 📦 Archivada |
+| **US-1007** | Prediction Analysis Table | 3 | ✅ Completada |
+| **US-1008** | Caché Inteligente Firestore (Delta Sync) | 8 | ✅ Validada |
+
+### Fase 2: Auto-Sync Servidor + Cleanup ⏳ (3 US, 12-13 SP)
+
+| US | Descripción | SP | Estado | Docs |
+|----|-------------|-----|--------|------|
+| **US-1101** | Sincronización Automática (Servidor HH:15) | 6-7 | 📝 Documentada | [US-1101](09-US-1101-SyncAutomatic.md) + [Arch](AUTO-SYNC-ARCHITECTURE.md) |
+| **US-1103** | Fix D-018: No guardar docs sin snapshots | 1-2 | 📝 Ready | |
+| **US-1102** | Limpieza Firebase granular bajo demanda | 3-4 | 📝 Ready | |
+
+### Fase 3: Firebase como Caché Único ⏳ (2 US, 6-7 SP)
+
+| US | Descripción | SP | Estado |
+|----|-------------|-----|--------|
+| **US-1104** | Firebase as Cache — Climas (TTL simple) | 3-4 | ⏳ Documentada |
+| **US-1105** | Firebase as Cache — Tabla Predictiva (Delta Sync) | 3-4 | ⏳ Pendiente |
 
 ---
 
@@ -73,52 +115,92 @@ Peor Hora:               23:00 (64% precisión)
 
 ## 📚 Documentos por US
 
-1. **[US-1001: Firebase Extension + BigQuery](us/US-1001-FirebaseExtensionBigquery.md)**
+### Fase 1: Analytics & Caché
+
+1. **[US-1001: Firebase Extension + BigQuery](01-DecisionLookerVsMetabase.md)**
    - Instalar extensión
    - Configurar path
    - Backfill de datos históricos
-   - Validación: tabla existe, datos presentes
 
-2. **[US-1002: SQL View snapshots_flat](us/US-1002-SqlViewSnapshotsFlat.md)**
+2. **[US-1002: SQL View snapshots_flat](02-PlanImplementacion.md)**
    - Crear view que expande array
    - Template SQL dado
-   - Validación: 25,200+ filas planas
 
-3. **[US-1003: Looker Studio Conexión](us/US-1003-LookerStudioConexion.md)**
+3. **[US-1003: Looker Studio Conexión](FIRESTORE-CLEANUP-GUIDE.md)**
    - Crear reporte
    - Conectar a BigQuery
-   - Test table: datos reales visibles
 
-4. **[US-1004: Dashboard Performance Global](us/US-1004-DashboardPerformanceGlobal.md)**
-   - Scorecard: 87.3% precisión
-   - Line chart: tendencia 30 días
-   - Pie chart: desglose correcto/incorrecto
-   - Filtros funcionales
+4. **[US-1007: Prediction Analysis Table](07-PredictionValidation.md)**
+   - Tabla TanStack v8
+   - Filtros, búsqueda, paginación
 
-5. **[US-1005: Dashboards Análisis](us/US-1005-DashboardsAnalisis.md)**
-   - Dashboard Tipos (Water 90% en top)
-   - Dashboard Ciudades (Sydney 92%, Moscow 70%)
-   - Dashboard Horarios (pico 13:00, valle 23:00)
+5. **[US-1008: Caché Inteligente Delta Sync](US-1008-A-QueryDelta.md)**
+   - Query delta: only new docs since lastSync
+   - IndexedDB caching + dedup
+   - Orchestration: syncForecastsOnLoad()
 
-6. **[US-1006: Integración React + Docs](us/US-1006-IntegracionReactDocs.md)**
-   - Link/iframe en TestingTools
-   - Documentación archivada
-   - Decision log actualizado
-   - Plan B documentado
+### Fase 2: Sync Control + Cleanup ⏳
+
+6. **[US-1103: Fix D-018 — No guardar docs sin snapshots](11-US-1103-FixNoSaveEmpty.md)**
+   - Implementar early return si `snapshots.length === 0`
+   - Reducir writes ~50%
+   - Validación con tests
+
+7. **[US-1101: Modo Manual de Sincronización](09-US-1101-SyncManual.md)**
+   - Toggle automático/manual en TestingTools
+   - Flag `syncAutomatic` en Zustand + localStorage
+   - Botón "Sincronizar ahora" (manual mode)
+   - Cambio dinámico sin reload
+
+8. **[US-1102: Limpieza Firebase Granular](10-US-1102-CleanupGranular.md)**
+   - Modal con 3 checkboxes (NULL-snapshots, >7d, caché)
+   - IndexedDB cleanup (client-side)
+   - Cloud Function para Firestore (server-side)
+   - Toast feedback
+
+**Plan de Implementación Fase 2:**
+- **[12-PlanImplementacionSyncCleanup.md](12-PlanImplementacionSyncCleanup.md)**
+  - Desglose fase por fase
+  - Subtareas detalladas
+  - Timeline y DoD
+
+### Fase 3: Firebase como Caché Único ⏳
+
+9. **[US-1104: Firebase as Cache — Climas](US-1104-FirebaseAsCache-Climas.md)**
+   - Arquitectura: Firestore source of truth → IndexedDB caché
+   - Lectura optimizada: cache fresco (40ms) vs expirado (300-500ms)
+   - Diagrama flujo climas
+   - Pseudocódigos completos
+
+10. **[US-1105: Firebase as Cache — Tabla Predictiva](US-1105-FirebaseAsCache-Tabla.md)**
+   - Delta Sync incremental: query `WHERE created_at > lastSyncTime`
+   - Mergear cache + nuevos, deduplicación por city_id + date_hour
+   - Timestamp de última sincronización (metadata)
+   - Pseudocódigos completos (3 algoritmos)
+   - Impacto esperado: 99% menos reads en modo caché activo
 
 ---
 
 ## ⏱️ Timeline
 
-| Fase | Duración | Acumulado |
-|------|----------|-----------|
+### Fase 1: Analytics (Completada 2026-04-21)
+| Componente | Duración | Acumulado |
+|------------|----------|-----------|
 | Firebase Extension (US-1001) | 30-45 min | 30-45 min |
 | SQL View (US-1002) | 45-60 min | 1 h 15 min |
 | Looker Setup (US-1003) | 15-30 min | 1 h 45 min |
-| Dashboard Performance (US-1004) | 30-40 min | 2 h 25 min |
-| Dashboards Análisis (US-1005) | 2-2.5 h | 4 h 25 min |
-| Integración React (US-1006) | 1.5-2 h | 5 h 55 min |
-| **TOTAL** | | **5-6 horas** |
+| Caché Delta Sync (US-1008) | 4-5 h | 6 h |
+| Prediction Analysis Table (US-1007) | 2-3 h | 8-9 h |
+
+### Fase 2: Sync Control + Cleanup (En Progreso)
+| Componente | Duración | Acumulado |
+|------------|----------|-----------|
+| Fix D-018 (US-1103) | 30-45 min | 30-45 min |
+| Manual Sync Control (US-1101) | 2-3 h | 2.5-3.5 h |
+| Cleanup Granular (US-1102) | 2-3 h | 4.5-6.5 h |
+| **TOTAL Fase 2** | | **5-7 horas** |
+
+**TOTAL SPRINT 10:** 13-16 horas
 
 ---
 
@@ -126,15 +208,58 @@ Peor Hora:               23:00 (64% precisión)
 
 El Sprint 10 está **COMPLETADO** cuando:
 
-- [ ] Looker Studio reporte abierto muestra datos reales
-- [ ] Dashboard Performance Global: 87.3% ± 5% visible
-- [ ] Tabla tipos muestra Water 90% en top 3
-- [ ] Tabla ciudades muestra Sydney >90%, Moscow <75%
-- [ ] Gráfico horarios muestra tendencia (mejor día, peor noche)
-- [ ] Link/iframe funciona en React
+### Fase 1 ✅ (Completada 2026-04-21)
+- [x] Looker Studio reporte abierto muestra datos reales
+- [x] Dashboard Performance Global: 87.3% ± 5% visible
+- [x] Tabla tipos muestra Water 90% en top 3
+- [x] Tabla ciudades muestra Sydney >90%, Moscow <75%
+- [x] Gráfico horarios muestra tendencia
+- [x] Link/iframe funciona en React
+- [x] Prediction Analysis Table con TanStack v8
+- [x] Caché Delta Sync validada (65 docs)
+
+### Fase 2 (En Progreso)
+- [ ] **US-1103:** No guardar docs sin snapshots (D-018)
+  - [ ] Early return en firebaseWeatherService.ts
+  - [ ] Tests verdes
+  - [ ] Reducción ~50% writes validada
+  
+- [ ] **US-1101:** Modo manual de sincronización
+  - [ ] Toggle automático/manual en TestingTools
+  - [ ] Flag persiste en localStorage
+  - [ ] Botón "Sincronizar ahora" funcional (si manual)
+  - [ ] Cambio dinámico sin reload
+  
+- [ ] **US-1102:** Limpieza granular
+  - [ ] Modal con 3 checkboxes (NULL-snapshots, >7d, caché)
+  - [ ] Limpieza IndexedDB funciona
+  - [ ] Cloud Function para Firestore funciona
+  - [ ] Toast feedback (éxito/error)
+  
+### Final
 - [ ] Toda documentación archivada en `src/docs/sprints/sprint-10/`
-- [ ] Decision log D-010 completo (Looker vs Metabase, Plan B)
-- [ ] Plan B documentado (si Looker falla, evaluar Metabase)
+- [ ] Build sin warnings, tests >85% coverage
+- [ ] Bundle < 2 MB
+- [ ] Branch `sprint-10` ready para merge a `develop`
+
+---
+
+## 🛠️ Herramientas QA & Mantenimiento (2026-04-19)
+
+**Scripts Disponibles:**
+
+| Script | Comando | Propósito |
+|--------|---------|-----------|
+| Monitor Firebase | `npm run monitor:firebase` | Validación automática c/30 min |
+| Validador Schema | `npm run validate:forecast-schema` | Verifica integridad Firestore |
+| **Firestore Cleanup** | `npm run clean:firestore` | Limpieza granular (NEW) |
+
+**Nuevas Opciones de Limpieza (2026-04-19):**
+- `npm run clean:firestore` — Limpia TODO (city_weather + reports)
+- `npm run clean:firestore -- --only-city` — Solo pronósticos
+- `npm run clean:firestore -- --only-reports` — Solo reportes
+- `npm run clean:firestore -- --dry-run` — Simula sin cambios
+- Ver: [`FIRESTORE-CLEANUP-GUIDE.md`](FIRESTORE-CLEANUP-GUIDE.md)
 
 ---
 
@@ -145,6 +270,10 @@ El Sprint 10 está **COMPLETADO** cuando:
 
 **Plan Detallado:**
 - [Plan de Implementación](02-PlanImplementacion.md)
+
+**Mantenimiento:**
+- [**FIRESTORE-CLEANUP-GUIDE.md**](FIRESTORE-CLEANUP-GUIDE.md) ← Guía de limpieza (NEW 2026-04-19)
+- [FIREBASE-MONITORING.md](FIREBASE-MONITORING.md) — Vigilancia automática
 
 **Firestore Schema:**
 - `/weather_catalog/` — Estático (condiciones, tipos)
@@ -157,13 +286,30 @@ El Sprint 10 está **COMPLETADO** cuando:
 
 ---
 
-## 🚀 Próximo Paso
+## ✅ Sprint 10 — Estado Final
 
-Comenzar **US-1001: Firebase Extension Setup**
+**Completado:** 2026-04-19
 
-Ver: [`US-1001-FirebaseExtensionBigquery.md`](us/US-1001-FirebaseExtensionBigquery.md)
+### Logros:
+- ✅ Firebase Extension instalada → BigQuery streaming activo
+- ✅ SQL View creada → snapshots expandidos a filas planas
+- ✅ Looker Studio conectado → 4-6 dashboards MVP funcionales
+- ✅ PredictionAnalysisTable refactorizada → TanStack Table v8
+- ✅ QA Infrastructure montada → Monitoreo automático + validadores
+- ✅ Herramientas de limpieza mejoradas → Opciones granulares
+- ✅ Validación de predicciones implementada → `calculated_condition` en ForecastDoc
+- ✅ Flujo de reporte manual completado → ClassificationReport con comparativa
+
+### Documentación:
+- 📄 [`07-PredictionValidation.md`](07-PredictionValidation.md) — Flujo completo de validación
+- 📄 [`FIRESTORE-CLEANUP-GUIDE.md`](FIRESTORE-CLEANUP-GUIDE.md) — Script de limpieza granular
+- 📄 [Architecture: Data Schema](../architecture/10-firestore-data-schema.md) — Actualizado con `calculated_condition`
+
+### Próximos Sprints:
+- **Sprint 11:** Optimizaciones post-MVP, mejoras UX, análisis de performance
+- **Sprint 12+:** Expansión de dashboards, integraciones avanzadas
 
 ---
 
-**Última actualización:** 2026-04-15  
-**Estado:** Sprint iniciando 🚀
+**Última actualización:** 2026-04-19  
+**Estado:** ✅ COMPLETADO | QA activa | Ready para Sprint 11

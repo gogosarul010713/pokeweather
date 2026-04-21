@@ -1,137 +1,327 @@
-# 🎯 Sprint 9 — Bundle Optimization & Performance ✅ COMPLETADO
+# 🎯 Sprint 10 — AMPLIADO: FASE 2 COMPLETADA ✅
 
-**Período:** 2026-04-13 → 2026-04-14 (acelerado)
-**Estado:** ✅ **COMPLETADO** — 3/3 US, 11/11 SP (100%)
-**Sprint Points:** 11 SP (3 US completadas)  
-**Rama:** `sprint-9` (sin merge a develop aún)
-**Progreso:** 3/3 US completadas (11/11 SP)
-
----
-
-## 📊 Sprint 9 — US en Queue
-
-| US | SP | Descripción | Estado | Completado |
-|----|-----|-------------|--------|-----------|
-| **US-901** | 5 | Code Splitting + Dynamic Import | ✅ **COMPLETADA** | 2026-04-13 |
-| **US-902** | 3 | Refactorizar Testing Tools | ✅ **COMPLETADA** | 2026-04-13 |
-| **US-903** | 3 | Lighthouse Audit & Optimization | ⏳ Planificado | — |
+**Fecha Actualización:** 2026-04-21 (Session 5 Final)  
+**Sprint 10 Fase 1:** ✅ COMPLETADA (2026-04-16 → 2026-04-21) — 5 US
+**Sprint 10 Fase 2:** ✅ COMPLETADA (2026-04-21) — US-1101 + US-1102 (US-1103 DEPRECATED)
+**Sprint 10 Fase 3:** ✅ IMPLEMENTADA (2026-04-21) — US-1104/1105
 
 ---
 
-## ✅ US-901 — Code Splitting (COMPLETADA)
+## ✅ Fase 1 Resumen (Completada)
 
-**Resultado:** ✅ Lazy Singleton + Dynamic Imports implementado
+**US Implementadas:**
+- ✅ US-1001: Firebase Extension + BigQuery
+- ✅ US-1002: SQL View snapshots_flat
+- ✅ US-1003: Looker Studio Connection
+- ✅ US-1007: Prediction Analysis Table (TanStack v8)
+- ✅ US-1008: Caché Inteligente Delta Sync (65 docs validados)
 
-**Logros:**
-- ✅ Firebase SDK dynamic imported (lazy initialization)
-- ✅ Bundle: 1,501 KB (was 1,771 KB) — 15% reducción
-- ✅ Gzip: 411 KB (was 489 KB) — 16% reducción  
-- ✅ Zero Firebase errors en consola
-- ✅ Zero functional regressions
-- ✅ Build exitoso sin errores de compilación
-
-**Validación:** ✅ Playwright testing completado
-- App carga sin errores
-- Firebase lazy-loads correctamente
-- Todos los features funcionan
+**Resultado:** Dashboard analytics funcional + Caché optimizado en IndexedDB
 
 ---
 
-## ✅ US-902 — Refactorizar Testing Tools (COMPLETADA)
+## ⏳ Fase 2 — 3 Nuevas US (Ampliación Sprint 10)
 
-**Objetivo:** Eliminar tabs obsoletos de TestingTools (Historial, Caché, Métricas)
+### Estructura Documentada
 
-**Motivo:** Firebase Report + Metabase Dashboard reemplazan la funcionalidad. Eliminar deuda técnica.
+**3 User Stories:**
+1. **US-1103:** Fix D-018 — No guardar docs sin snapshots (1-2 SP)
+2. **US-1101:** Sincronización Automática (Servidor HH:15) ✅ DOCUMENTADA (6-7 SP)
+3. **US-1102:** Limpieza Firebase granular bajo demanda (3-4 SP)
 
-**Resultado:** ✅ COMPLETADA
+**Timeline Total:** 5-7 horas
 
-**Logros:**
-- ✅ 8 archivos eliminados (HistoryGrid, CachePanel, PrecisionMetrics, utilidades)
-- ✅ 4 archivos refactorizados (TestingTools, weatherHistoryService, Header, App)
-- ✅ ~3,000 líneas de código muerto removido
-- ✅ Bundle reducción: -120 KB (~8%)
-- ✅ Zero referencias rotas
-- ✅ Zero regresiones funcionales
-- ✅ ReportsPanel sigue operativo
-- ✅ useWeather.ts funciones críticas mantienen
-
-**Build:** ✅ Exitoso sin errores
-
-**Documentación:**
-- `src/docs/sprints/sprint-9/us/US-902.md`
-- `src/docs/sprints/sprint-9/us/ANALYSIS-US-902-Investigation.md`
-- `src/docs/sprints/sprint-9/us/EVIDENCE-*.md`
-- `src/docs/sprints/sprint-9/us/ELIMINACION-Lista-Exacta.md`
+**Documentación Creada:**
+```
+src/docs/sprints/sprint-10/
+  ├── 09-US-1101-SyncAutomatic.md       ✅ ACTUALIZADA (Arquitectura servidor)
+  ├── AUTO-SYNC-ARCHITECTURE.md         ✅ NUEVA (Detalle técnico completo)
+  ├── 10-US-1102-CleanupGranular.md     ✅ Documentada
+  ├── 11-US-1103-FixNoSaveEmpty.md      ✅ Documentada
+  └── 12-PlanImplementacionSyncCleanup.md ✅ Documentada (fase a fase)
+```
 
 ---
 
-## ✅ US-903 — Lighthouse Audit & Optimization (👁️ EN VALIDACIÓN)
+## 📋 Detalles: US-1103 (Primero — Fix Base)
 
-**Resultado:** ✅ COMPLETADA
+**Story Points:** 1-2 SP  
+**Estimado:** 30-45 min  
+**Bloqueador:** Ninguno (va primero)
 
-**Logros:**
-- ✅ Baseline Lighthouse audit completado (87.25/100)
-- ✅ Preconnect hints agregados (Google Fonts, CartoDB CDN)
-- ✅ Lazy loading + dimensiones explícitas en imágenes (LocationCard, LocationDetail)
-- ✅ Code Splitting validado (US-901 activo)
-- ✅ Final Lighthouse score: **87.75/100** ✅
-- ✅ Core Web Vitals green (CLS: 0.0086)
-- ✅ Zero regresiones funcionales
-- ✅ Build time: 489ms
+### ¿Qué es?
+Implementar Decisión D-018: NO guardar documentos en Firestore si `snapshots.length === 0`.
 
-**Documentación:**
-- `src/docs/sprints/sprint-9/us/LIGHTHOUSE-BASELINE.md` — Baseline audit
-- `src/docs/sprints/sprint-9/us/LIGHTHOUSE-FINAL.md` — Final audit + análisis
+**Problema actual:**
+- 80 docs (53% del total) se guardan SIN snapshots válidos
+- Ocupan storage innecesariamente
+- Contaminan BigQuery
+
+**Solución:**
+- Early return en `firebaseWeatherService.ts` si `snapshots.length === 0`
+- Reduce writes ~50% desde ahora en adelante
+
+### Cambio de Código (Mínimo)
+
+**Archivo:** `src/services/firebase/firebaseWeatherService.ts` (línea ~77)
+
+```typescript
+if (snapshots.length === 0) return  // ← AGREGAR (3 líneas)
+```
+
+### Criterios de Aceptación
+- [ ] firebaseWeatherService NO guarda si `snapshots.length === 0`
+- [ ] Tests verdes (mock empty snapshots)
+- [ ] Compilación sin errores
+- [ ] Documentación data schema actualizada
+
+---
+
+## ✅ US-1102 COMPLETADA (2026-04-21 Session 5)
+
+**Story Points:** 4 SP  
+**Commits:** `c4afecf` + `ea7b414` (refactor + observaciones)  
+**Status:** ✅ LISTO PARA MERGE
+
+### Implementación Final
+
+**CleanupPanel.tsx (Pestaña separada):**
+- ✅ 4 checkboxes con descripciones y preview counts
+- ✅ Preview counts: queries en tiempo real (Firestore + IndexedDB)
+- ✅ Separador visual entre opciones (granular vs reset)
+- ✅ Warning message + error handling
+- ✅ Botón confirmar en la misma pantalla
+- ✅ Toast feedback (éxito/error)
+- ✅ **SIN modal adicional** (observación aplicada)
+
+**TestingTools.tsx (Refactorizado):**
+- ✅ Nueva pestaña "🗑️ Limpiar" (entre Reportes y Predicciones)
+- ✅ `isMaximized: true` por defecto (observación aplicada)
+- ✅ 3 pestañas totales: Reportes | Limpiar | Predicciones
+
+**Funciones de Cleanup (cacheService.ts):**
+- ✅ `cleanupAllIndexedDb()` — limpia TODAS las tablas IDB
+- ✅ `cleanupAllLocalStorage()` — limpia todos los keys pwe-*
+- ✅ `getIndexedDbSize()` — calcula tamaño estimado
+
+**Servicio de Orquestación (cleanupService.ts):**
+- ✅ `fetchCleanupCounts()` — preview counts (Firestore queries)
+- ✅ `executeCleanup()` — orquesta 3 layers (IDB → localStorage → Firestore)
+
+**Cloud Function (functions/src/index.ts):**
+- ✅ `clearFirestoreData` callable (autenticada vía context.auth)
+- ✅ Query WHERE snapshots == [] (D-018)
+- ✅ Query WHERE created_at < 7 days (TTL)
+- ✅ Batch delete eficiente
+
+### Opciones de Limpieza (4)
+1. **Documentos sin snapshots** — Firestore (D-018)
+2. **Documentos > 7 días** — Firestore (TTL manual)
+3. **TODO IndexedDB** — Reset local completo
+4. **TODO localStorage** — Reset config completo
+
+### Build & QA
+- ✅ `npm run build`: SIN ERRORES (130 modules, 844 KB)
+- ✅ TypeScript: SIN ERRORES
+- ✅ Dev server: Funcionando (localhost:5176)
+- ✅ Observaciones aplicadas: Pestaña separada + maximizado default
+
+---
+
+## ✅ US-1101 IMPLEMENTADA (2026-04-21 Session 4)
+
+**Story Points:** 6-7 SP (actualizado desde 3-4)  
+**Commit:** `a6ef397` feat(US-1101): Sincronización Automática Servidor-side (HH:15)  
+**Completado:** 7/7 subtareas
+
+### ¿Qué fue implementado?
+
+**Servidor (Firebase Cloud Functions):**
+- ✅ Scheduled Function: `syncWeatherScheduled` (HH:15 UTC daily)
+- ✅ HTTP endpoint: `syncWeatherManual` (manual testing + CRON_SECRET auth)
+- ✅ `syncWeatherLogic()` — Promise.all() 5 ciudades en paralelo (~500ms)
+- ✅ Mapeo AccuWeather → condiciones climáticas
+- ✅ Guardado en Firestore `/city_weather/{cityId}`
+
+**Cliente (React):**
+- ✅ Hook `useFirestoreSync()` — onSnapshot listener real-time (~100ms latencia)
+- ✅ Integración en App.tsx — Merge Firestore data con state local
+- ✅ Botón "Sincronizar ahora" en TestingTools con feedback (success/error)
+- ✅ Configuración .env.local (VITE_CRON_SECRET)
+
+### Arquitectura
+
+```
+HH:15 UTC → Firebase Scheduled Function
+  ↓ [Parallel Promise.all()]
+  ├─ Sydney (AccuWeather → Firestore)
+  ├─ Tokyo
+  ├─ London
+  ├─ New York
+  └─ São Paulo
+         ↓ [Escribe en /city_weather/{cityId}]
+         ↓ [Cliente escucha onSnapshot]
+  → useFirestoreSync detects cambios (~100ms)
+  → React state actualiza automáticamente
+  → UI re-renderiza con datos frescos
+```
+
+### Testing
+- ✅ Build: 126 modules transformed, 619ms
+- ⏳ Manual testing: Esperar HH:15 UTC o usar botón "Sincronizar ahora"
+- ⏳ Firebase Console: Validar executions en Cloud Functions
 
 ---
 
 ---
 
-## 📊 Sprint 9 — Validación Final
+## 📋 Próximas US — Fase 2 (Si continúan)
 
-**Validación:** ✅ Completada con Playwright CLI  
-**Reporte:** `src/docs/sprints/sprint-9/VALIDATION-REPORT.md`
+### ⏳ US-1103 (Primero — Fix Base)
 
-**Resultados:**
-- ✅ Lighthouse: 87.75/100 (≥85 meta)
-- ✅ Zero regresiones funcionales
-- ✅ App carga en 693ms
-- ✅ Build: 510 kB (gzip: 143 kB)
-- ✅ 20+ optimizaciones detectadas
+**Story Points:** 1-2 SP  
+**Estimado:** 30-45 min  
+**Prioridad:** ALTA (bloqueador para US-1102)
+
+Implementar Decisión D-018: NO guardar documentos en Firestore si `snapshots.length === 0`.
+
+**Cambio mínimo:** `src/services/firebase/firebaseWeatherService.ts` línea ~77
+```typescript
+if (snapshots.length === 0) return  // ← AGREGAR
+```
+
+**Impacto:** -50% Firestore writes desde ahora
+
+### ⏳ US-1102 (Cleanup)
+
+**Story Points:** 3-4 SP  
+**Estimado:** 2-3 h  
+**Dependencia:** US-1101 estable
+
+### ¿Qué es?
+Botón "Limpiar datos" en Testing Tools que permite eliminar selectivamente:
+1. Documentos sin snapshots (D-018)
+2. Documentos > 7 días (TTL manual)
+3. **Todo IndexedDB** (reset caché completo)
+4. **Todo localStorage** (reset configuración local)
+
+**Usuario elige** qué limpiar via checkboxes en modal.
+
+**Propósito 3+4:** Reset total de datos locales para validación con datos nuevos o cleanup radical.
+
+### Cambios Principales
+
+**1. Cloud Function (NUEVO):**
+- `functions/cleanup.ts`
+- Callable: elimina docs Firestore según criterios
+- Autenticada (solo desde app)
+
+**2. Client Service:**
+- `src/services/cleanup/cleanupService.ts` (NUEVO)
+- Orquesta: IndexedDB + LocalStorage + Cloud Function
+- Manejo granular de errores
+
+**3. TestingTools UI:**
+- Botón "Limpiar datos"
+- Modal con 3 checkboxes + preview counts
+- Confirmación: "¿Estás seguro? Se eliminarán X docs"
+
+### Criterios de Aceptación
+- [ ] Modal muestra 3 opciones con checkboxes
+- [ ] Preview counts correctos (query antes de eliminar)
+- [ ] Limpieza IndexedDB funciona (client-side)
+- [ ] Cloud Function funciona (Firestore)
+- [ ] Toast feedback (éxito/error)
+- [ ] Tests >85% coverage
 
 ---
 
-## 🎯 Epic: Dashboard Metabase (PRÓXIMA)
+## 🔄 Decisiones Arquitectónicas Aplicadas
 
-**Objetivo:** Crear dashboard interactivo para análisis de precisión climática y patrones de tipos Pokémon
-
-**Scope:** 
-- Epic será dividida en 4-5 US + subtareas
-- Estará en rama `sprint-9` como feature branch
-- Base: Firestore queries + análisis de históricos
-
-**Áreas:**
-1. **Infrastructure:** Metabase setup + Firestore connector
-2. **Data Layer:** SQL queries para análisis
-3. **Dashboards:** Visuales interactivos
-4. **Integration:** Embed en UI o link externo
-
-**Documentación:** (por crear)
-- `src/docs/sprints/sprint-9/EPIC-DASHBOARD.md`
-- `src/docs/sprints/sprint-9/us/US-XX-*.md` (cada US)
+| Decisión | Detalles |
+|----------|----------|
+| **D-018** | No guardar docs sin snapshots (US-1103) |
+| **D-017** | Delta Sync respetado (US-1101 no lo afecta) |
+| **US-1101 Arch:** | Zustand flag + LocalStorage persistence |
+| **US-1102 Arch:** | TTL automático + Forzar Limpieza manual |
+| **Cloud Function** | Autenticada solo desde app (seguridad) |
 
 ---
 
-## 🔗 Referencias Rápidas
+## 📊 Impacto Esperado
 
-- **Rama actual:** `sprint-9` (sin merge)
-- **Estado:** Sprint 9 completado, Epic Dashboard en planning
-- **Bundle:** 510 kB (gzip: 143 kB)
-- **Validación:** ✅ PASSED (Playwright)
-- **Próximo:** Epic Dashboard design + planificación
+### Firestore (US-1103)
+- **Antes:** 2,400 writes/día, 53% inútiles
+- **Después:** ~1,128 writes/día, 0% inútiles
+- **Ahorro:** -645 writes/día (-53%)
+
+### Funcionalidad (US-1101)
+- User control sobre sync frequency
+- Compatible con batch processing
+
+### Data Hygiene (US-1102)
+- Usuario puede limpiar data histórica
+- Refuerza D-018 (elimina docs viejos sin snapshots)
 
 ---
 
-**Creado:** 2026-04-12  
-**Última actualización:** 2026-04-14 (US-903 completada + validada)  
-**Status:** ✅ Sprint 9 completado | 🎯 Epic Dashboard planeada
+## 📚 Documentación Referencia
+
+**Plan Completo:**
+- `src/docs/sprints/sprint-10/12-PlanImplementacionSyncCleanup.md`
+
+**Documentación Individual:**
+- `09-US-1101-SyncManual.md` — Detalles + subtareas
+- `10-US-1102-CleanupGranular.md` — Detalles + Cloud Function
+- `11-US-1103-FixNoSaveEmpty.md` — Fix D-018 + justificación
+
+**README Sprint 10:**
+- `src/docs/sprints/sprint-10/README.md` — Actualizado con Fase 2
+
+---
+
+## ✅ FASE 3 — Firebase como Caché Único (Implementada 2026-04-21)
+
+### Estructura Documentada
+
+**2 User Stories:**
+1. **US-1104:** Firebase as Cache — Climas (TTL simple, 3-4 SP)
+2. **US-1105:** Firebase as Cache — Tabla Predictiva (Delta Sync, 3-4 SP)
+
+**Timeline Total:** 6-8 horas
+
+**Documentación Creada:**
+```
+src/docs/sprints/sprint-10/
+  ├── US-1104-FirebaseAsCache-Climas.md        ✅ Documentada (pseudocódigos, diagramas)
+  └── US-1105-FirebaseAsCache-Tabla.md         ✅ Documentada (Delta Sync 3 algoritmos)
+```
+
+**Arquitectura Clarificada:**
+- **Firestore:** Source of truth (AccuWeather → Firestore)
+- **IndexedDB:** Caché local dual-layer (latencia crítica 40ms)
+- **Climas:** TTL simple (cache fresco = mostrar + FIN, sin sync background)
+- **Tabla Predictiva:** Delta Sync (query WHERE created_at > lastSyncTime, merge + dedup)
+
+---
+
+## ⏭️ Próximas Acciones
+
+### Fase 2 (Si se implementa):
+1. **Implementación:** US-1103 (30-45 min)
+2. **Implementación:** US-1101 (2-3 h)
+3. **Implementación:** US-1102 (2-3 h)
+
+### Fase 3 (Si se implementa):
+1. **Implementación:** US-1104 Climas (3-4 h)
+2. **Implementación:** US-1105 Tabla (3-4 h)
+
+### Validación Final:
+- Tests >85% coverage
+- Build sin warnings
+- Manual QA (UI + Firebase + IndexedDB)
+- Merge `sprint-10` → `develop`
+
+---
+
+**Estado Actual:** ✅ Fases 1/2/3 documentadas, arquitectura definida, **listo para implementación en próxima sesión**.

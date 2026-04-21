@@ -6,9 +6,10 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { loadCitiesInBatch } from '../services/weather/batchWeatherService'
 import { getS2Key } from '../services/geo/s2Service'
-import { shouldRefreshCities, setLastUpdateHour, getCachedWeather } from '../services/cache/cacheService'
+import { shouldRefreshCities, setLastUpdateHour, getCachedWeather, setCachedWeather } from '../services/cache/cacheService'
 import { msUntilNextHour } from '../utils/timeUtils'
 import { saveSnapshots, clearOldSnapshots } from '../services/history/weatherHistoryService'
+import { getWeatherFromFirestore } from '../services/firebase/firebaseWeatherService'
 import type { City } from '../store/useStore'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -22,15 +23,22 @@ const calculateLocalTime = (timezone: number): string => {
   return `${hours}:${minutes}`
 }
 
+/**
+ * US-1104: Lectura optimizada de climas con fallback Firestore
+ * Flujo: IndexedDB (caché local, <60 min) → Firestore (source of truth) → city vacío
+ * CAPA 1: IndexedDB by accuLocationKey (rápido, 40ms)
+ * CAPA 2: Firestore by city.id (fallback, 300-500ms)
+ */
 const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
   const result: City[] = []
 
   for (const city of cities) {
-    // ✅ FIX #2: Buscar caché por locationKey (sincronizado con batchWeatherService)
-    // Nota: US-605 guarda datos por locationKey, no por city.id
-    const cached = await getCachedWeather(city.s2Key)  // Usar s2Key como proxy de locationKey
+    // CAPA 1: IndexedDB caché (por accuLocationKey de AccuWeather)
+    const locationKey = city.accuLocationKey
+    const cached = await getCachedWeather(locationKey)
+
     if (cached) {
-      // Preservar id/name/lat/lon del city original — nunca del caché
+      // Cache hit — retornar inmediato sin sincronización adicional
       const merged = {
         ...(cached as Partial<City>),
         id: city.id,
@@ -41,10 +49,40 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
         localTime: calculateLocalTime((cached as any).timezone ?? 0),
       } as City
       result.push(merged)
-    } else {
-      const withTime = { ...city, localTime: calculateLocalTime(city.timezone) }
-      result.push(withTime)
+      continue
     }
+
+    // CAPA 2: Firestore (si caché vacío o expirado)
+    const firestoreWeather = await getWeatherFromFirestore(city.id)
+
+    if (firestoreWeather) {
+      // Guardar en caché para próxima lectura (WeatherData format)
+      const { weatherImage, ...cacheableData } = firestoreWeather
+      await setCachedWeather(locationKey, cacheableData)
+
+      const merged = {
+        ...city,
+        condition: firestoreWeather.condition as any,
+        boostedTypes: firestoreWeather.boostedTypes,
+        tempC: firestoreWeather.tempC,
+        feelsLike: firestoreWeather.feelsLike,
+        humidity: firestoreWeather.humidity,
+        windKmh: firestoreWeather.windKmh,
+        gustKmh: firestoreWeather.gustKmh,
+        weatherIcon: firestoreWeather.weatherIcon,
+        isExtreme: firestoreWeather.isExtreme,
+        timezone: firestoreWeather.timezone,
+        updatedAt: firestoreWeather.updatedAt,
+        localTime: calculateLocalTime(firestoreWeather.timezone),
+        weatherImage: firestoreWeather.weatherImage,
+      } as City
+      result.push(merged)
+      continue
+    }
+
+    // FALLBACK: Sin datos (sin caché, sin Firestore)
+    const withTime = { ...city, localTime: calculateLocalTime(city.timezone) }
+    result.push(withTime)
   }
 
   return result

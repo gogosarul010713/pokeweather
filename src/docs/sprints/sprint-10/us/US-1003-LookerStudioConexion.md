@@ -3,8 +3,10 @@
 **ID:** US-1003  
 **Título:** Crear reporte Looker Studio y conectar a BigQuery  
 **Estimación:** 1 SP (15-30 minutos)  
-**Estado:** 🔜 Pending  
+**Estado:** ✅ COMPLETADA (2026-04-17)  
 **Dependencias:** US-1002 ✅
+
+**Reporte URL:** https://datastudio.google.com/reporting/c4e1ef49-1a2f-4c8d-99ae-05a2b070b403
 
 ---
 
@@ -16,11 +18,11 @@ Crear un reporte nuevo en Looker Studio y conectarlo a la vista `snapshots_flat`
 
 ## ✅ Criterios de Aceptación
 
-- [ ] Reporte Looker Studio creado con nombre "Pokémon Weather Analytics"
-- [ ] Fuente de datos: `snapshots_flat` view en BigQuery
-- [ ] Al menos 1 tabla de prueba muestra datos reales (no vacía)
-- [ ] Reporte es compartible (URL pública o con permisos)
-- [ ] Filtros básicos funcionan (date range, city)
+- [x] Reporte Looker Studio creado con nombre "Pokémon Weather Analytics"
+- [x] Fuente de datos: `snapshots_flat` view en BigQuery
+- [x] Al menos 1 tabla de prueba muestra datos reales (no vacía)
+- [x] Reporte es compartible (URL pública o con permisos)
+- [x] Filtros básicos funcionan (date range, city)
 
 ---
 
