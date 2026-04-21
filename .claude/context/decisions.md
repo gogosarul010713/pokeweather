@@ -5,6 +5,44 @@
 
 ---
 
+### 2026-04-21 D-018 — Herramientas Autónomas para Consultar Datos (No guardar docs sin snapshots)
+
+**Contexto:** US-1008 validación. Se detectó que 80 documentos (53%) se guardan con todos los campos NULL.
+
+**Problema:**
+- `firebaseWeatherService.ts` línea 99-101: guarda incluso cuando `snapshots.length === 0`
+- Estos son "cache-hit geoespacial" — cuando múltiples ciudades comparten locationKey
+- Ocupan 53% del espacio en Firestore sin valor útil
+- Contaminan BigQuery y fuerzan a filtrar en cada query
+
+**Opciones consideradas:**
+- A: Guardar con flag `is_cache_hit: true` y filtrar en queries
+- B: NO guardar si `snapshots.length === 0` ← **ELEGIDA**
+- C: Guardar pero marcar como "transient" (TTL 1h en lugar de 7d)
+
+**Decisión:** Opción B — NO guardar documentos sin snapshots
+
+**Motivo:**
+1. Si no hay snapshots, no hay predicción válida — datos sin valor
+2. Simplifica queries (sin necesidad de filtrar)
+3. Reduce Firestore writes (~50% menos)
+4. Reduce BigQuery storage
+5. Mantiene coherencia: documentos = predicciones válidas
+
+**Implementación (próximo):**
+- Modificar `firebaseWeatherService.ts` línea 77-99
+- Agregar early return: `if (snapshots.length === 0) return`
+- Limpiar documentos viejos con: `npm run clean:firestore -- --only-null`
+
+**Consecuencias:**
+- No hay datos "fantasma" en Firestore
+- Tablas y reportes solo muestran predicciones válidas
+- Queries a BigQuery más rápidas (sin NULL filtering)
+
+**US relacionada:** US-1008 (validación)
+
+---
+
 ### 2026-04-20 D-017 — Arquitectura Delta Sync con IndexedDB (US-1008)
 
 **Contexto:** Sprint 10. Optimización Firestore. Problema: Query 1 trae 100 docs, Query 2 con 10 nuevos vuelve a traer los 100 viejos.

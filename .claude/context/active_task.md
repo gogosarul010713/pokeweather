@@ -83,5 +83,33 @@
 - ✅ `.claude/context/gcloud-bigquery-access.md` — documentación acceso
 - ✅ `.claude/context/playwright-testing.md` — guía testing
 
-**Próximo paso:** Hacer merge a `develop`
-(Confirmación requerida según CLAUDE.md)
+---
+
+## 🐛 ERRORES IDENTIFICADOS (Próxima sesión)
+
+**Problema 1: Documentos "cache-hit" inútiles**
+- 80 docs (53% del total) guardados con TODOS los campos NULL
+- Causa: `firebaseWeatherService.ts` línea 99-101 guarda incluso cuando `snapshots.length === 0`
+- Impacto: Contamina Firestore, incrementa writes inútilmente
+- Fix propuesto: NO guardar si `snapshots.length === 0`
+
+**Problema 2: Datos mostrados en tabla (por verificar)**
+- Usuario reporta "errores en la información mostrada"
+- Requiere inspección visual de la UI
+- Posibles causas: Formato horas, cálculo timezone, orden de filas
+
+---
+
+## ⏭️ Próxima Sesión
+
+**To Do:**
+1. [ ] Inspeccionar tabla UI para identificar errores exactos
+2. [ ] Fix: NO guardar documentos sin snapshots (firebaseWeatherService.ts)
+3. [ ] Validar formato de horas (timezone offset correctamente aplicado?)
+4. [ ] Hacer merge a develop (cuando esté listo)
+5. [ ] Iniciar Sprint 11
+
+**Estado Git:**
+- Rama: `sprint-10`
+- Sin cambios uncommitted
+- Ready para continuar
