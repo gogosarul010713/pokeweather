@@ -180,3 +180,71 @@ export const getLastSyncTimestamp = (): number =>
 
 export const setLastSyncTimestamp = (ts: number): void =>
   localStorage.setItem(KEY_LAST_SYNC, String(ts))
+
+// ─── Metadata para Delta Sync (US-1105) ────────────────────────────────────────
+// Estructura: documents + lastSyncTime para queries delta
+
+export interface PredictionsCacheMetadata {
+  documents: ForecastDoc[]
+  lastSyncTime: number
+  cachedAt: number
+  expiresAt: number
+}
+
+const KEY_PREDICTIONS_CACHE = 'pwe-predictions-cache'
+const PREDICTIONS_CACHE_TTL_MS = 60 * 60 * 1000 // 60 minutos
+
+/**
+ * Obtener metadata de caché de predicciones (documents + lastSyncTime)
+ * @returns {documents, lastSyncTime, ...} o null si no existe
+ */
+export const getPredictionsCacheMetadata = async (): Promise<PredictionsCacheMetadata | null> => {
+  try {
+    const cached = await get<PredictionsCacheMetadata>(KEY_PREDICTIONS_CACHE)
+    return cached ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Guardar metadata de caché de predicciones (documents + lastSyncTime)
+ * TTL: 60 minutos por defecto
+ * @param docs Array de ForecastDoc
+ * @param options {ttl?: number} TTL en ms
+ */
+export const setPredictionsCacheMetadata = async (
+  docs: ForecastDoc[],
+  options?: { ttl?: number }
+): Promise<void> => {
+  try {
+    const ttl = options?.ttl ?? PREDICTIONS_CACHE_TTL_MS
+    const now = Date.now()
+
+    // Serializar Timestamps (timestamps se convierten a números para IndexedDB)
+    const serialized = docs.map(doc => ({
+      ...doc,
+      created_at: doc.created_at?.toMillis?.() ?? now,
+      ttl: doc.ttl?.toMillis?.() ?? now,
+    })) as any as ForecastDoc[] // Type assertion necesaria para IndexedDB
+
+    const metadata: PredictionsCacheMetadata = {
+      documents: serialized,
+      lastSyncTime: now,
+      cachedAt: now,
+      expiresAt: now + ttl,
+    }
+
+    await set(KEY_PREDICTIONS_CACHE, metadata)
+  } catch { /* silencioso */ }
+}
+
+/**
+ * Validar si caché de predicciones es válido (no expirado)
+ * @param metadata Metadata del caché
+ * @returns true si es válido
+ */
+export const isPredictionsCacheValid = (metadata: PredictionsCacheMetadata | null): boolean => {
+  if (!metadata) return false
+  return metadata.expiresAt > Date.now()
+}

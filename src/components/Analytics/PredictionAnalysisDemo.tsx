@@ -7,6 +7,13 @@
 import { useEffect, useState } from 'react';
 import { PredictionAnalysisTable, type PredictionRow } from './PredictionAnalysisTable';
 import { fetchPredictions } from '../../services/predictions/predictionAnalyticsService';
+import {
+  getPredictionsCacheMetadata,
+  setPredictionsCacheMetadata,
+  mergeForecastDocs,
+  isPredictionsCacheValid,
+} from '../../services/cache/cacheService';
+import { getRecentForecasts } from '../../services/firebase/firebaseWeatherService';
 
 function generateMockData(): PredictionRow[] {
   const cities = ['sydney', 'tokyo', 'london'];
@@ -71,17 +78,58 @@ export function PredictionAnalysisDemo() {
         setLoading(true);
         setError(null);
 
-        // Intentar cargar datos reales
-        const realData = await fetchPredictions();
+        // US-1105: CAPA 1 — Cargar caché local (40ms, inmediato)
+        const cachedMetadata = await getPredictionsCacheMetadata();
 
-        if (realData.length > 0) {
-          // Éxito: usar datos reales
-          setRows(realData);
-          console.log(`[PredictionDemo] ✅ Loaded ${realData.length} real predictions from Firestore`);
+        if (cachedMetadata && isPredictionsCacheValid(cachedMetadata)) {
+          // Caché válido: mostrar inmediato
+          try {
+            const realData = await fetchPredictions();
+            setRows(realData);
+            console.log(`[PredictionDemo] ✅ Cache hit (${cachedMetadata.documents.length} docs)`);
+          } catch (err) {
+            console.warn('[PredictionDemo] Cache fetch error, showing mock data');
+            setRows(generateMockData());
+          }
+
+          // CAPA 2 — Delta sync en background (no bloquea)
+          (async () => {
+            try {
+              const lastSync = cachedMetadata.lastSyncTime ?? 0;
+              const newDocs = await getRecentForecasts('24h', lastSync);
+
+              if (newDocs.length > 0) {
+                // Hay nuevos documentos: mergear + actualizar caché
+                const merged = mergeForecastDocs(cachedMetadata.documents as any, newDocs);
+                await setPredictionsCacheMetadata(merged as any);
+                console.log(`[PredictionDemo] ✅ Delta sync completado: ${newDocs.length} nuevos docs`);
+              } else {
+                console.log('[PredictionDemo] Delta sync: sin cambios');
+              }
+            } catch (err) {
+              console.warn('[PredictionDemo] Delta sync error (no crítico):', err);
+              // Error no bloqueante, tabla ya visible con caché anterior
+            }
+          })();
         } else {
-          // No hay datos, usar mock
-          console.warn('[PredictionDemo] ⚠️ No predictions in Firestore, using mock data');
-          setRows(generateMockData());
+          // FALLBACK — Caché inválido o no existe: cargar TODO desde Firestore
+          console.log('[PredictionDemo] Cache miss or expired, loading from Firestore...');
+          const realData = await fetchPredictions();
+
+          if (realData.length > 0) {
+            // Éxito: usar datos reales y guardar en caché
+            setRows(realData);
+            // Guardar docs en caché para próximas lecturas
+            const allDocs = await getRecentForecasts('24h');
+            if (allDocs.length > 0) {
+              await setPredictionsCacheMetadata(allDocs as any);
+            }
+            console.log(`[PredictionDemo] ✅ Loaded ${realData.length} real predictions`);
+          } else {
+            // No hay datos, usar mock
+            console.warn('[PredictionDemo] ⚠️ No predictions in Firestore, using mock data');
+            setRows(generateMockData());
+          }
         }
       } catch (err) {
         // Error al cargar: usar mock
