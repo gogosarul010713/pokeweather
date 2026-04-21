@@ -4,6 +4,7 @@
  */
 
 import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { Timestamp } from 'firebase/firestore'
 import {
   getForecastCache,
   setForecastCache,
@@ -40,13 +41,13 @@ const mockForecastDoc = (
   calculated_condition,
   timezone: 0,
   local_time_user: '01/01 12:00',
-  ttl: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  created_at: new Date(),
+  ttl: Timestamp.fromMillis(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  created_at: Timestamp.now(),
 })
 
 const mockForecastDocWithAge = (ageMs: number): ForecastDoc => ({
   ...mockForecastDoc('city-1', '2026-04-20-10'),
-  created_at: new Date(Date.now() - ageMs),
+  created_at: Timestamp.fromMillis(Date.now() - ageMs),
 })
 
 describe('cacheService — ForecastDoc', () => {

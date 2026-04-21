@@ -29,7 +29,7 @@
 | US | Descripción | SP | Status | Docs |
 |----|-------------|-----|--------|------|
 | **US-1103** | **Fix D-018: No guardar docs sin snapshots** | **1-2** | **📝 Documentada** | `11-US-1103-FixNoSaveEmpty.md` |
-| **US-1101** | **Modo manual de sincronización climática** | **3-4** | **📝 Documentada** | `09-US-1101-SyncManual.md` |
+| **US-1101** | **Sincronización Automática (Servidor HH:15)** | **6-7** | **📝 Documentada** | `09-US-1101-SyncAutomatic.md` + `AUTO-SYNC-ARCHITECTURE.md` |
 | **US-1102** | **Limpieza Firebase granular bajo demanda** | **3-4** | **📝 Documentada** | `10-US-1102-CleanupGranular.md` |
 
 **Fase 2 Status:**

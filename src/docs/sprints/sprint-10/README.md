@@ -19,12 +19,15 @@ La app Pokémon Weather Explorer predice tipos Pokémon basándose en clima real
 **Solución Fase 1:** Dashboard interactivo en **Looker Studio** + Caché inteligente con Delta Sync
 
 ### Problema (Fase 2)
-Control y limpieza de datos:
-- Sincronización automática cada hora es inflexible (usuario quiere control)
+Sincronización escalable y limpieza de datos:
+- Hoy: Timer cliente-side → N × 24 API calls (ineficiente con N usuarios)
 - 80 documentos "fantasma" en Firestore ocupan espacio sin valor (D-018)
 - No existe forma de limpiar datos bajo demanda desde UI
 
-**Solución Fase 2:** Control manual/automático + limpieza granular
+**Solución Fase 2:** 
+- **US-1101:** Sincronización servidor-side a HH:15 (Firebase Scheduled Function) → 1 × 24 API calls siempre
+- Reactivity automática vía Firestore `onSnapshot` listener
+- **US-1102/1103:** Limpieza granular + fix D-018
 
 ### Arquitectura Completa
 ```
@@ -37,11 +40,15 @@ Control y limpieza de datos:
 │   ↓ [Link/iframe en React]               │
 └──────────────────────────────────────────┘
 
-┌─ Fase 2: Sync Control + Cleanup ────────┐
-│ Manual/Automatic Sync (US-1101)          │
-│ Firestore Cleanup (US-1102)              │
-│ Delta Sync Cache (US-1008)               │
-│ No Save Empty (US-1103 - D-018)          │
+┌─ Fase 2: Auto-Sync Servidor ────────────┐
+│ Firebase Scheduled Function [HH:15]      │
+│   ↓ (5 ciudades, paralelo)               │
+│ Firestore (source of truth)              │
+│   ↓ (onSnapshot push real-time)          │
+│ Cliente React (useFirestoreSync)         │
+│   ↓ (IndexedDB caché local)              │
+│ UI actualiza automáticamente (~100ms)    │
+│ + Cleanup Firestore + Fix D-018          │
 └──────────────────────────────────────────┘
 ```
 
@@ -62,13 +69,13 @@ Control y limpieza de datos:
 | **US-1007** | Prediction Analysis Table | 3 | ✅ Completada |
 | **US-1008** | Caché Inteligente Firestore (Delta Sync) | 8 | ✅ Validada |
 
-### Fase 2: Sync Control + Cleanup ⏳ (3 US, 8-9 SP)
+### Fase 2: Auto-Sync Servidor + Cleanup ⏳ (3 US, 12-13 SP)
 
-| US | Descripción | SP | Estado |
-|----|-------------|-----|--------|
-| **US-1103** | Fix D-018: No guardar docs sin snapshots | 1-2 | ⏳ Ready |
-| **US-1101** | Modo manual de sincronización climática | 3-4 | ⏳ Ready |
-| **US-1102** | Limpieza Firebase granular bajo demanda | 3-4 | ⏳ Ready |
+| US | Descripción | SP | Estado | Docs |
+|----|-------------|-----|--------|------|
+| **US-1101** | Sincronización Automática (Servidor HH:15) | 6-7 | 📝 Documentada | [US-1101](09-US-1101-SyncAutomatic.md) + [Arch](AUTO-SYNC-ARCHITECTURE.md) |
+| **US-1103** | Fix D-018: No guardar docs sin snapshots | 1-2 | 📝 Ready | |
+| **US-1102** | Limpieza Firebase granular bajo demanda | 3-4 | 📝 Ready | |
 
 ### Fase 3: Firebase como Caché Único ⏳ (2 US, 6-7 SP)
 

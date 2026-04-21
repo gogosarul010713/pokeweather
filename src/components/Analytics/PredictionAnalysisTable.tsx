@@ -38,15 +38,6 @@ interface Props {
   title?: string;
 }
 
-function formatQueryTime(queryTime: string | Date): string {
-  const date = typeof queryTime === 'string' ? new Date(queryTime) : queryTime;
-  if (isNaN(date.getTime())) return 'N/A';
-  const day    = String(date.getUTCDate()).padStart(2, '0');
-  const month  = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const hours  = String(date.getUTCHours()).padStart(2, '0');
-  const mins   = String(date.getUTCMinutes()).padStart(2, '0');
-  return `${day}/${month} ${hours}:${mins}`;
-}
 
 function getCityLocalTime(queryTime: string | Date | number, timezone: number): string {
   // Manejar números (milisegundos desde caché)

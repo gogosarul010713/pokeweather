@@ -26,7 +26,7 @@
 
 **3 User Stories:**
 1. **US-1103:** Fix D-018 — No guardar docs sin snapshots (1-2 SP)
-2. **US-1101:** Modo manual de sincronización climática (3-4 SP)
+2. **US-1101:** Sincronización Automática (Servidor HH:15) ✅ DOCUMENTADA (6-7 SP)
 3. **US-1102:** Limpieza Firebase granular bajo demanda (3-4 SP)
 
 **Timeline Total:** 5-7 horas
@@ -34,7 +34,8 @@
 **Documentación Creada:**
 ```
 src/docs/sprints/sprint-10/
-  ├── 09-US-1101-SyncManual.md          ✅ Documentada
+  ├── 09-US-1101-SyncAutomatic.md       ✅ ACTUALIZADA (Arquitectura servidor)
+  ├── AUTO-SYNC-ARCHITECTURE.md         ✅ NUEVA (Detalle técnico completo)
   ├── 10-US-1102-CleanupGranular.md     ✅ Documentada
   ├── 11-US-1103-FixNoSaveEmpty.md      ✅ Documentada
   └── 12-PlanImplementacionSyncCleanup.md ✅ Documentada (fase a fase)

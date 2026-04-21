@@ -597,4 +597,54 @@ const dateHour = formatDateHour(nextHour)
 
 ---
 
+### 2026-04-21 D-021 — Sincronización Servidor-side a HH:15 con Firestore Real-time (US-1101)
+
+**Contexto:** US-1101. App necesita sincronizar clima 24 veces/día. Hoy: cliente ejecuta timer (~N×24 API calls). Nuevo: servidor ejecuta una sola vez.
+
+**Decisión:** Firebase Scheduled Function a HH:15 UTC + Firestore `onSnapshot` listener en cliente
+
+**Lógica:**
+1. **Servidor (HH:15):** Firebase Scheduled Function dispara automáticamente
+   - Carga 5 ciudades en paralelo (~500ms)
+   - Llamadas a AccuWeather API (key en servidor, nunca cliente)
+   - Guarda en Firestore vía `saveCityForecast()`
+
+2. **Cliente:** `useFirestoreSync` hook con `onSnapshot` listener
+   - Escucha cambios en colección `/city_weather`
+   - Cuando servidor escribe, cliente recibe push automáticamente (~100ms)
+   - React state se actualiza → UI re-renderiza
+
+3. **Doble trigger:** Scheduled (automático) + HTTP (manual testing)
+   - Scheduled: `15 * * * *` (HH:15 UTC diario)
+   - HTTP: endpoint para TestingTools y testing manual
+
+**Motivo:**
+1. **Escalabilidad O(1):** 24 calls FIJOS, sin importar N usuarios (antes O(N))
+2. **Confiabilidad:** 24/7 independiente (no depende de cliente abierto)
+3. **Latencia mejorada:** onSnapshot ~100ms vs timer 5-10s
+4. **Costo:** Quota AccuWeather: 120/día vs 15,000/mes (24% uso)
+5. **Seguridad:** API key en servidor, nunca en cliente
+
+**Implementación:**
+- `functions/src/syncWeatherLogic.ts` — lógica compartida
+- `functions/src/index.ts` — 2 triggers (scheduled + HTTP)
+- `src/hooks/useFirestoreSync.ts` — listener real-time
+- Remover: `scheduleNextRefresh()`, `doRefresh()` del cliente
+- Remover: `VITE_ACCUWEATHER_KEY` del cliente
+
+**Consecuencias:**
+- Firebase Functions: 720 invocaciones/mes (0.036% free tier)
+- Firestore: +1 conexión WebSocket por usuario (real-time)
+- Testing: Botón en TestingTools dispara sync manual
+- Delta Sync (D-017): No se ve afectado, sigue funcionando
+
+**Alternativas rechazadas:**
+- Vercel Cron: Timeout 5s en Hobby (frágil con 5+ ciudades)
+- Cloud Scheduler manual: Redundante con Firebase Scheduled
+- Timer client-side: Escalabilidad O(N), no 24/7
+
+**US relacionada:** US-1101 (6-7 SP)
+
+---
+
 <!-- Agrega nuevas decisiones aquí, más recientes primero -->
