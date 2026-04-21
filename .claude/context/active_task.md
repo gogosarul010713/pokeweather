@@ -77,45 +77,71 @@ if (snapshots.length === 0) return  // ← AGREGAR (3 líneas)
 
 ---
 
-## 📋 Detalles: US-1101 (Control Sync)
+## ✅ US-1101 IMPLEMENTADA (2026-04-21 Session 4)
 
-**Story Points:** 3-4 SP  
-**Estimado:** 2-3 h  
-**Dependencia:** US-1103 completa
+**Story Points:** 6-7 SP (actualizado desde 3-4)  
+**Commit:** `a6ef397` feat(US-1101): Sincronización Automática Servidor-side (HH:15)  
+**Completado:** 7/7 subtareas
 
-### ¿Qué es?
-Agregar control manual/automático de sincronización del clima.
+### ¿Qué fue implementado?
 
-**Hoy:** Sync automático cada hora (scheduleNextRefresh)  
-**Nueva:** Toggle en Testing Tools para activar/desactivar
+**Servidor (Firebase Cloud Functions):**
+- ✅ Scheduled Function: `syncWeatherScheduled` (HH:15 UTC daily)
+- ✅ HTTP endpoint: `syncWeatherManual` (manual testing + CRON_SECRET auth)
+- ✅ `syncWeatherLogic()` — Promise.all() 5 ciudades en paralelo (~500ms)
+- ✅ Mapeo AccuWeather → condiciones climáticas
+- ✅ Guardado en Firestore `/city_weather/{cityId}`
 
-### Cambios Principales
+**Cliente (React):**
+- ✅ Hook `useFirestoreSync()` — onSnapshot listener real-time (~100ms latencia)
+- ✅ Integración en App.tsx — Merge Firestore data con state local
+- ✅ Botón "Sincronizar ahora" en TestingTools con feedback (success/error)
+- ✅ Configuración .env.local (VITE_CRON_SECRET)
 
-**1. Zustand Store (`src/data/useStore.ts`):**
-```typescript
-syncAutomatic: boolean = true  // Flag
-setSyncAutomatic: (enabled) => void
-triggerManualSync: async () => void  // Callback
+### Arquitectura
+
+```
+HH:15 UTC → Firebase Scheduled Function
+  ↓ [Parallel Promise.all()]
+  ├─ Sydney (AccuWeather → Firestore)
+  ├─ Tokyo
+  ├─ London
+  ├─ New York
+  └─ São Paulo
+         ↓ [Escribe en /city_weather/{cityId}]
+         ↓ [Cliente escucha onSnapshot]
+  → useFirestoreSync detects cambios (~100ms)
+  → React state actualiza automáticamente
+  → UI re-renderiza con datos frescos
 ```
 
-**2. TestingTools UI:**
-- Toggle: "Sincronización automática: ON/OFF"
-- Botón: "Sincronizar ahora" (visible si OFF)
-
-**3. Integración:**
-- `scheduleNextRefresh()` → early return si `syncAutomatic === false`
-- Botón ejecuta `triggerManualSync()` manualmente
-
-### Criterios de Aceptación
-- [ ] Toggle en TestingTools funciona
-- [ ] Flag persiste en localStorage
-- [ ] Cambio dinámico (sin reload)
-- [ ] Botón "Sincronizar" disponible si manual
-- [ ] Tests >85% coverage
+### Testing
+- ✅ Build: 126 modules transformed, 619ms
+- ⏳ Manual testing: Esperar HH:15 UTC o usar botón "Sincronizar ahora"
+- ⏳ Firebase Console: Validar executions en Cloud Functions
 
 ---
 
-## 📋 Detalles: US-1102 (Cleanup)
+---
+
+## 📋 Próximas US — Fase 2 (Si continúan)
+
+### ⏳ US-1103 (Primero — Fix Base)
+
+**Story Points:** 1-2 SP  
+**Estimado:** 30-45 min  
+**Prioridad:** ALTA (bloqueador para US-1102)
+
+Implementar Decisión D-018: NO guardar documentos en Firestore si `snapshots.length === 0`.
+
+**Cambio mínimo:** `src/services/firebase/firebaseWeatherService.ts` línea ~77
+```typescript
+if (snapshots.length === 0) return  // ← AGREGAR
+```
+
+**Impacto:** -50% Firestore writes desde ahora
+
+### ⏳ US-1102 (Cleanup)
 
 **Story Points:** 3-4 SP  
 **Estimado:** 2-3 h  

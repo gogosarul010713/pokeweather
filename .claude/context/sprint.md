@@ -24,18 +24,18 @@
 | US-1008-D | Testing + Validation (QA) | 2 | ✅ | Validación BigQuery completada |
 | US-1004/1005/1006 | Dashboards avanzados | 7 | 📦 Archivadas | — |
 
-### ⏳ FASE 2: DOCUMENTADA (Ampliación 2026-04-21)
+### ⏳ FASE 2: PARCIALMENTE IMPLEMENTADA (Ampliación 2026-04-21)
 
-| US | Descripción | SP | Status | Docs |
+| US | Descripción | SP | Status | Docs/Commit |
 |----|-------------|-----|--------|------|
+| **US-1101** | **Sincronización Automática (Servidor HH:15)** | **6-7** | **✅ IMPLEMENTADA** | `a6ef397` + `09-US-1101-SyncAutomatic.md` + `AUTO-SYNC-ARCHITECTURE.md` |
 | **US-1103** | **Fix D-018: No guardar docs sin snapshots** | **1-2** | **📝 Documentada** | `11-US-1103-FixNoSaveEmpty.md` |
-| **US-1101** | **Sincronización Automática (Servidor HH:15)** | **6-7** | **📝 Documentada** | `09-US-1101-SyncAutomatic.md` + `AUTO-SYNC-ARCHITECTURE.md` |
 | **US-1102** | **Limpieza Firebase granular bajo demanda** | **3-4** | **📝 Documentada** | `10-US-1102-CleanupGranular.md` |
 
-**Fase 2 Status:**
-- Análisis completado ✅
-- Documentación completa (3 US docs + plan implementación) ✅
-- Ready para implementación ⏳
+**Fase 2 Status (2026-04-21 Session 4):**
+- ✅ US-1101 Implementada (7 subtareas: Cloud Functions + hooks + UI + env vars)
+- ⏳ US-1103 Ready para implementación (bloqueador bajo)
+- ⏳ US-1102 Ready para implementación (dependencia: US-1101 ✅)
 
 ### ✅ FASE 3: IMPLEMENTADA (2026-04-21)
 
