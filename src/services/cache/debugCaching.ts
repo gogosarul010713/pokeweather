@@ -250,6 +250,114 @@ export async function cacheSummary(): Promise<void> {
   `)
 }
 
+/**
+ * Inspecciona la caché de predicciones (ForecastDocs de Firestore)
+ * US-1008: Caché Inteligente Firestore
+ */
+export async function showForecastCache(): Promise<void> {
+  const KEY_FORECAST_CACHE = 'pwe-forecast-cache'
+  const KEY_LAST_SYNC = 'pwe-lastSync'
+
+  try {
+    const forecastDocs = await get<any[]>(KEY_FORECAST_CACHE)
+    const lastSync = localStorage.getItem(KEY_LAST_SYNC)
+
+    console.clear()
+    console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║        📊 FORECAST CACHE — Caché de Predicciones (US-1008)    ║
+╚════════════════════════════════════════════════════════════════╝
+    `)
+
+    if (!forecastDocs || forecastDocs.length === 0) {
+      console.log('⚠️  Sin datos de predicciones en caché')
+      console.log('\n💡 Acciones:')
+      console.log('  1. Abre http://localhost:5180/analytics')
+      console.log('  2. Espera a que cargue la tabla de predicciones')
+      console.log('  3. Vuelve aquí y ejecuta: await pweCache.showForecastCache()')
+      return
+    }
+
+    console.log(`📦 Total de documentos en caché: ${forecastDocs.length}\n`)
+
+    // Agrupar por ciudad
+    const byCityMap = new Map<string, any[]>()
+    forecastDocs.forEach((doc) => {
+      const city = doc.city_id || 'unknown'
+      if (!byCityMap.has(city)) {
+        byCityMap.set(city, [])
+      }
+      byCityMap.get(city)!.push(doc)
+    })
+
+    // Mostrar resumen por ciudad
+    console.log('📍 Documentos por ciudad:')
+    Array.from(byCityMap.entries()).forEach(([city, docs]) => {
+      console.log(`   ${city}: ${docs.length} docs`)
+    })
+
+    // Mostrar últimos 3 documentos con detalle
+    console.log(`\n📋 Últimos 3 documentos cargados:\n`)
+    forecastDocs.slice(-3).forEach((doc, i) => {
+      const createdAt = doc.created_at?.toDate?.() ?? new Date(doc.created_at)
+      const dateStr = typeof createdAt === 'number'
+        ? new Date(createdAt).toLocaleString('es-ES')
+        : createdAt.toLocaleString('es-ES')
+
+      console.log(`[${i + 1}] ${doc.city_name} (${doc.city_id})`)
+      console.log(`    date_hour: ${doc.date_hour}`)
+      console.log(`    created_at: ${dateStr}`)
+      console.log(`    snapshots: ${doc.snapshots?.length || 0} horas`)
+      console.log(`    calculated_condition: ${doc.calculated_condition || 'N/A'}`)
+      console.log(`    timezone: ${doc.timezone}`)
+      console.log(`    local_time_user: ${doc.local_time_user || 'N/A'}`)
+      console.log('')
+    })
+
+    // Información de sincronización
+    if (lastSync) {
+      const lastSyncTime = parseInt(lastSync, 10)
+      const lastSyncDate = new Date(lastSyncTime)
+      const minutesAgo = Math.round((Date.now() - lastSyncTime) / 1000 / 60)
+      console.log(`⏱️  Última sincronización: ${lastSyncDate.toLocaleString('es-ES')} (hace ${minutesAgo}m)`)
+    }
+
+    // Estadísticas
+    console.log(`\n📈 Estadísticas:`)
+    const conditionCounts = new Map<string, number>()
+    forecastDocs.forEach((doc) => {
+      const cond = doc.calculated_condition || 'unknown'
+      conditionCounts.set(cond, (conditionCounts.get(cond) || 0) + 1)
+    })
+    Array.from(conditionCounts.entries()).forEach(([cond, count]) => {
+      console.log(`   ${cond}: ${count}`)
+    })
+
+    // Comando para exportar JSON completo
+    console.log(`\n💾 Datos completos disponibles en:`)
+    console.log(`   await pweCache.exportForecastCacheJSON()`)
+  } catch (error) {
+    console.error('Error inspeccionar caché de predicciones:', error)
+  }
+}
+
+/**
+ * Exporta la caché completa de predicciones como JSON
+ */
+export async function exportForecastCacheJSON(): Promise<void> {
+  const KEY_FORECAST_CACHE = 'pwe-forecast-cache'
+  try {
+    const forecastDocs = await get<any[]>(KEY_FORECAST_CACHE)
+    if (!forecastDocs || forecastDocs.length === 0) {
+      console.log('⚠️  Sin datos de predicciones en caché')
+      return
+    }
+    console.log(JSON.stringify(forecastDocs, null, 2))
+  } catch (error) {
+    console.error('Error exportar caché:', error)
+  }
+}
+
 // Auto-export de funciones para fácil acceso en console
 if (typeof window !== 'undefined') {
   ;(window as any).pweCache = {
@@ -259,6 +367,8 @@ if (typeof window !== 'undefined') {
     exportCacheAsJSON,
     clearAllCache,
     cacheSummary,
+    showForecastCache,
+    exportForecastCacheJSON,
   }
   console.log('✅ Debug cache tools disponibles. Usa: pweCache.cacheSummary()')
 }
