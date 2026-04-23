@@ -5,6 +5,199 @@
 
 ---
 
+### 2026-04-23 D-028 — Documentar bugfixes en carpeta dedicada (Session 7)
+
+**Contexto:** US-1102 tuvo 5 bugs encadenados durante el debug. Se decidió crear un sistema de documentación de bugs para referencia futura.
+
+**Decisión:** Carpeta `src/docs/sprints/sprint-10/bugfixes/` con un archivo por bug.
+
+**Formato:** bug_id, fecha, US, causa raíz, solución, regla general, "si vuelve a aparecer".
+
+**Razón:** Bugs de infraestructura (CORS, deploy, env vars) tienden a repetirse en nuevas sesiones o cuando se agregan nuevas Cloud Functions. Tener el diagnóstico documentado acelera el debug futuro.
+
+---
+
+### 2026-04-23 D-027 — Cascade Delete en Firestore requiere eliminar subcolecciones explícitamente (US-1102)
+
+**Contexto:** El cascade delete eliminaba documentos raíz de `city_weather` pero las subcolecciones `forecasts` quedaban huérfanas y visibles en Firebase Console.
+
+**Decisión:** Siempre eliminar subcolecciones ANTES del documento padre usando `collectionGroup()`:
+1. `db.collectionGroup('forecasts').get()` → delete todos
+2. `db.collection('city_weather').get()` → delete raíces
+
+**Razón:** Firestore no hace cascade delete automático. Este es un comportamiento permanente de Firestore, no un bug puntual.
+
+**US relacionada:** US-1102 (BUG-005)
+
+---
+
+### 2026-04-23 D-026 — Cloud Function auth: onRequest() + x-api-key en lugar de onCall() + Firebase Auth (US-1102)
+
+**Contexto:** `clearFirestoreData` era `onCall()` que requería Firebase Anonymous Auth. Múltiples bugs impidieron que el token llegara correctamente.
+
+**Decisión:** Cambiar a `onRequest()` HTTP endpoint con header `x-api-key: CLEANUP_SECRET`.
+
+**Razón:**
+1. onCall() requiere Firebase Auth funcional en cliente — frágil para herramientas de testing
+2. onRequest() con secret compartido es suficientemente seguro para tool de dev interno
+3. Elimina dependencia de signInAnonymously() que fallaba silenciosamente
+4. Permite testear con curl directamente sin setup de Firebase client
+
+**Variables:**
+- Servidor: `process.env.CLEANUP_SECRET` (en `functions/.env`)
+- Cliente: `import.meta.env.VITE_CRON_SECRET` (mismo valor en `.env.local`)
+
+**Regla:** Nunca usar `VITE_*` en Cloud Functions — ese prefijo es exclusivo de Vite/frontend.
+
+**US relacionada:** US-1102 (BUG-001, BUG-003)
+
+---
+
+### 2026-04-23 D-025 — BLOQUEADOR: 401 UNAUTHENTICATED en clearFirestoreData (US-1102 Debug Session 6)
+
+**Contexto:** Cloud Function `clearFirestoreData` desplegada exitosamente, pero httpsCallable() retorna 401 UNAUTHENTICATED.
+
+**Síntoma:**
+```
+Network Error: {"error":{"message":"User must be authenticated","status":"UNAUTHENTICATED"}}
+```
+
+**Raíz:**
+1. Cloud Function requiere `context.auth` (línea `if (!context.auth)` en index.ts)
+2. Agregué Anonymous Auth a `firebaseConfig.ts` (signInAnonymously en ensureInitialized)
+3. **PERO:** El token anónimo no se está pasando a httpsCallable()
+
+**Investigación Requerida:**
+1. ¿Anonymous Auth está habilitada en Firebase Console? (Authentication → Sign-in method)
+2. ¿signInAnonymously() está siendo ejecutado? (agregar console.log en firebaseConfig)
+3. ¿getAuth().currentUser existe cuando se llama httpsCallable()? (debugear en cleanupService)
+4. ¿ensureInitialized() se ejecuta ANTES de la primera llamada a clearFirestoreData?
+
+**Opciones de Solución:**
+- A: Debug Anonymous Auth + verificar Firebase Console settings
+- B: Cambiar Cloud Function para aceptar VITE_FIREBASE_API_KEY en headers (menos seguro)
+- C: Usar Custom Claims + Admin SDK en cliente (más complejo)
+
+**Status:** ⏳ Espera investigación en próxima sesión
+
+---
+
+### 2026-04-23 D-024 — Toast Detallado con Counts en Cleanup (US-1102)
+
+**Contexto:** US-1102 ampliada con cascade delete. Toast feedback debe informar exactamente qué se limpió.
+
+**Decisión:** Toast muestra counts por layer en lugar de mensaje genérico
+- **Antes:** "✅ Limpieza completada. Los datos han sido eliminados."
+- **Ahora:** "✅ Eliminados: 42 docs (Firestore) + 156 items (IDB) + 18 keys (localStorage)"
+
+**Razón:** El usuario necesita confirmar visualmente qué se limpió exactamente.
+
+**Implementación:** 
+- `executeCleanup()` retorna `CleanupResults` con counts por layer
+- `handleConfirm()` en CleanupPanel construye toast dinámico a partir de los results
+
+---
+
+### 2026-04-23 D-023 — Retry Logic Hybrid (2 Automáticos + Manual) (US-1102)
+
+**Contexto:** Cleanup puede fallar por transient network errors (timeouts, rate limits).
+
+**Decisión:** Implementar retry hybrid (Opción D3)
+- **Automático:** 2 intentos con backoff exponencial (1s, 2s)
+- **Manual:** Si fallan los 2 automáticos, mostrar error + botón "Reintentar"
+- **Sin infinito:** Prevenir UX blocking por retry loops infinitos
+
+**Razón:**
+1. Transient failures (network glitches) se resuelven en 1-2 intentos
+2. Persistent failures (auth, invalid data) necesitan intervención manual
+3. Exponential backoff reduce carga en servidor durante ataques/picos
+
+**Implementación:**
+```typescript
+const executeWithRetry = async (maxRetries = 2) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await executeCleanup(options)
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error
+      await sleep(1000 * (attempt + 1))  // 1s, 2s backoff
+    }
+  }
+}
+```
+
+---
+
+### 2026-04-23 D-022 — Cascade Delete desde city_weather (NO collectionGroup) (US-1102)
+
+**Contexto:** Implementación de cascade delete para US-1102. ¿Query desde dónde?
+
+**Decisión:** Eliminar desde `collection('city_weather')` (documento raíz), NO desde `collectionGroup('forecasts')`
+- Firestore cascadea automáticamente a subcollections cuando se elimina el documento padre
+- Más eficiente: 1 query a city_weather en lugar de enumerar todos los forecasts
+- Más simple: no requiere batch chunking especial para subcollections
+
+**Razón:** User feedback: "query está bien, quiero eliminar desde city_weather"
+
+**Implementación:** Cloud Function usa `db.collection('city_weather').get()` para cascade delete
+
+---
+
+### 2026-04-23 D-021 — Mutual Exclusion Selectiva: Sección 1 ↔ Sección 3 (US-1102)
+
+**Contexto:** US-1102 ampliada tiene 5 opciones en 3 secciones. ¿Cuáles son mutuamente excluyentes?
+
+**Decisión:** Opción B — mutual exclusion selectiva
+- **Sección 1 (Granular Firestore):** nullSnapshots + olderThan7d
+- **Sección 2 (Reset Local):** allIndexedDb + allLocalStorage — SIEMPRE libre
+- **Sección 3 (Cascade Firestore):** cascadeDeleteAll — excluyente con Sección 1
+
+**Lógica:** Si selecciona algo de Sección 1 → deshabilita Sección 3 (y vice versa). Sección 2 es independiente.
+
+**Razón:** El conflicto real es "¿limpio específicos O limpio TODO?" en Firestore. Reset local es independent.
+
+**Implementación:**
+```typescript
+if (isSection1 && value) {
+  setOptions({ ...options, [key]: true, cascadeDeleteAll: false })
+} else if (isSection3 && value) {
+  setOptions({ ...options, [key]: true, nullSnapshots: false, olderThan7d: false })
+}
+```
+
+---
+
+### 2026-04-23 D-020 — Batch Chunking 500 ops en Cloud Functions (US-1102)
+
+**Contexto:** Firestore batch.delete() max = 500 operaciones. Código anterior fallaba si >500 docs.
+
+**Decisión:** Implementar automatic chunking en Cloud Function
+- Cada batch commita máximo 500 operaciones
+- Si hay >500 docs, genera múltiples batches secuenciales
+- Mantiene transaccionalidad: todo o nada por lote, pero múltiples lotes si necesario
+
+**Razón:** Evitar `INVALID_ARGUMENT` de Firestore cuando cleanup afecta >500 docs.
+
+**Implementación:**
+```typescript
+const executeBatchDelete = async (docs: any[]) => {
+  let batch = db.batch()
+  let count = 0
+  for (const doc of docs) {
+    batch.delete(doc.ref)
+    if (++count >= 500) {
+      await batch.commit()
+      batch = db.batch()
+      count = 0
+    }
+  }
+  if (count > 0) await batch.commit()
+  return docs.length
+}
+```
+
+---
+
 ### 2026-04-21 D-019 — Lectura Optimizada de Climas: IndexedDB Primero (US-1104)
 
 **Contexto:** US-1104 implementada. Refactorizar flujo de lectura de climas para mejorar latencia.

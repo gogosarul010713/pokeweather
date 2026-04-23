@@ -16,7 +16,8 @@
     "validate:firebase": "npx tsx scripts/validate-firestore.ts",
     "validate:forecast-schema": "npx tsx scripts/validate-forecast-schema.ts",
     "clean:firestore": "npx tsx scripts/clean-firestore.ts",
-    "monitor:firebase": "npx tsx scripts/monitor-firebase.ts"
+    "monitor:firebase": "npx tsx scripts/monitor-firebase.ts",
+    "deploy:functions": "cd functions && npm run build && cd .. && firebase deploy --only functions"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@google-cloud/functions-framework": "^5.0.2",
     "@playwright/test": "^1.59.1",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^24.12.0",

@@ -1,8 +1,8 @@
-# 🎯 Sprint 10 — AMPLIADO: FASE 2 COMPLETADA ✅
+# 🎯 Sprint 10 — AMPLIADO: US-1102 AMPLIACIÓN EN IMPLEMENTACIÓN ⚙️
 
-**Fecha Actualización:** 2026-04-21 (Session 5 Final)  
+**Fecha Actualización:** 2026-04-23 (Session 6)  
 **Sprint 10 Fase 1:** ✅ COMPLETADA (2026-04-16 → 2026-04-21) — 5 US
-**Sprint 10 Fase 2:** ✅ COMPLETADA (2026-04-21) — US-1101 + US-1102 (US-1103 DEPRECATED)
+**Sprint 10 Fase 2:** ⚙️ EN IMPLEMENTACIÓN (2026-04-23) — US-1102 AMPLIADA (6-7 SP con Cascade Delete)
 **Sprint 10 Fase 3:** ✅ IMPLEMENTADA (2026-04-21) — US-1104/1105
 
 ---
@@ -77,52 +77,37 @@ if (snapshots.length === 0) return  // ← AGREGAR (3 líneas)
 
 ---
 
-## ✅ US-1102 COMPLETADA (2026-04-21 Session 5)
+## ✅ US-1102 — VALIDADA Y FUNCIONAL (2026-04-23 Session 7)
 
 **Story Points:** 4 SP  
-**Commits:** `c4afecf` + `ea7b414` (refactor + observaciones)  
-**Status:** ✅ LISTO PARA MERGE
+**Commits:** `c4afecf` + `ea7b414` + fixes de Session 7  
+**Status:** ✅ FUNCIONAL — Cloud Function operativa, 85 docs eliminados en prueba
 
-### Implementación Final
+### ✅ Implementación Completa
+- ✅ CleanupPanel.tsx — 4 checkboxes con descripciones y preview counts
+- ✅ TestingTools.tsx refactorizado — pestaña "🗑️ Limpiar"
+- ✅ cleanupService.ts — usa fetch() directo con x-api-key header
+- ✅ Cloud Function `clearFirestoreData` — onRequest() + CORS + CLEANUP_SECRET
+- ✅ Cascade delete elimina forecasts (subcolección) + city_weather (raíz)
+- ✅ Bugfixes documentados en `src/docs/sprints/sprint-10/bugfixes/` (BUG-001 a BUG-005)
 
-**CleanupPanel.tsx (Pestaña separada):**
-- ✅ 4 checkboxes con descripciones y preview counts
-- ✅ Preview counts: queries en tiempo real (Firestore + IndexedDB)
-- ✅ Separador visual entre opciones (granular vs reset)
-- ✅ Warning message + error handling
-- ✅ Botón confirmar en la misma pantalla
-- ✅ Toast feedback (éxito/error)
-- ✅ **SIN modal adicional** (observación aplicada)
+### Bugs Resueltos en Session 7 (todos documentados)
+- ✅ BUG-001: 401 UNAUTHENTICATED — onCall() reemplazado por onRequest() + x-api-key
+- ✅ BUG-002: Deploy sin compilar lib/ — script `npm run deploy:functions` creado
+- ✅ BUG-003: VITE_* no existe en servidor — functions/.env con CLEANUP_SECRET
+- ✅ BUG-004: CORS preflight bloqueado — OPTIONS manejado antes de auth check
+- ✅ BUG-005: Cascade delete incompleto — collectionGroup('forecasts') eliminado primero
 
-**TestingTools.tsx (Refactorizado):**
-- ✅ Nueva pestaña "🗑️ Limpiar" (entre Reportes y Predicciones)
-- ✅ `isMaximized: true` por defecto (observación aplicada)
-- ✅ 3 pestañas totales: Reportes | Limpiar | Predicciones
+### Arquitectura Final Cloud Function
+- Endpoint: `POST https://us-central1-weather-app-prod-ef50d.cloudfunctions.net/clearFirestoreData`
+- Auth: header `x-api-key: CLEANUP_SECRET` (valor = VITE_CRON_SECRET del cliente)
+- CORS: Access-Control-Allow-Origin: * para localhost y producción
+- Cascade: elimina forecasts (collectionGroup) → luego city_weather raíz
 
-**Funciones de Cleanup (cacheService.ts):**
-- ✅ `cleanupAllIndexedDb()` — limpia TODAS las tablas IDB
-- ✅ `cleanupAllLocalStorage()` — limpia todos los keys pwe-*
-- ✅ `getIndexedDbSize()` — calcula tamaño estimado
-
-**Servicio de Orquestación (cleanupService.ts):**
-- ✅ `fetchCleanupCounts()` — preview counts (Firestore queries)
-- ✅ `executeCleanup()` — orquesta 3 layers (IDB → localStorage → Firestore)
-
-**Cloud Function (functions/src/index.ts):**
-- ✅ `clearFirestoreData` callable (autenticada vía context.auth)
-- ✅ Query WHERE snapshots == [] (D-018)
-- ✅ Query WHERE created_at < 7 days (TTL)
-- ✅ Batch delete eficiente
-
-### Opciones de Limpieza (4)
-1. **Documentos sin snapshots** — Firestore (D-018)
-2. **Documentos > 7 días** — Firestore (TTL manual)
-3. **TODO IndexedDB** — Reset local completo
-4. **TODO localStorage** — Reset config completo
-
-### Build & QA
-- ✅ `npm run build`: SIN ERRORES (130 modules, 844 KB)
-- ✅ TypeScript: SIN ERRORES
+### Pendiente
+- ⬜ Validación manual completa desde UI (TestingTools → Limpiar → todas las opciones)
+- ⬜ Commit final de sesión
+- ⬜ Merge US-1102 → develop
 - ✅ Dev server: Funcionando (localhost:5176)
 - ✅ Observaciones aplicadas: Pestaña separada + maximizado default
 

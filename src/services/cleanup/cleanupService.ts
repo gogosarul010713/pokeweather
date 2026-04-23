@@ -1,4 +1,3 @@
-import { httpsCallable, getFunctions } from 'firebase/functions'
 import * as cacheService from '../cache/cacheService'
 import { getDb } from '../firebase/firebaseConfig'
 
@@ -7,12 +6,14 @@ export interface CleanupOptions {
   olderThan7d: boolean
   allIndexedDb: boolean
   allLocalStorage: boolean
+  cascadeDeleteAll: boolean
 }
 
 export interface CleanupCounts {
   nullDocs: number
   oldDocs: number
   cacheSize: string
+  cascadeDocs: number
 }
 
 export interface CleanupResults {
@@ -23,19 +24,18 @@ export interface CleanupResults {
 
 /**
  * Obtiene conteos de datos a limpiar (para preview en modal)
- * @returns Promesa con counts de docs NULL, viejos, y tamaño caché
+ * @returns Promesa con counts de docs NULL, viejos, cascade, y tamaño caché
  */
 export const fetchCleanupCounts = async (): Promise<CleanupCounts> => {
   try {
-    // Contar docs sin snapshots en Firestore
     const db = await getDb()
-    const { collection, query, where, getDocs } = await import('firebase/firestore')
+    const { collection, query, where, getDocs, collectionGroup } = await import('firebase/firestore')
 
     // Query 1: Docs sin snapshots (snapshots array vacío)
     let nullDocsCount = 0
     try {
       const nullQuery = query(
-        collection(db, 'city_weather'),
+        collectionGroup(db, 'forecasts'),
         where('snapshots', '==', [])
       )
       const nullDocs = await getDocs(nullQuery)
@@ -53,13 +53,22 @@ export const fetchCleanupCounts = async (): Promise<CleanupCounts> => {
       const timestamp = Timestamp.fromDate(sevenDaysAgo)
 
       const oldQuery = query(
-        collection(db, 'city_weather'),
+        collectionGroup(db, 'forecasts'),
         where('created_at', '<', timestamp)
       )
       const oldDocs = await getDocs(oldQuery)
       oldDocsCount = oldDocs.size
     } catch {
       oldDocsCount = 0
+    }
+
+    // Query 3: Cascade delete total (NUEVA - count de city_weather)
+    let cascadeDocsCount = 0
+    try {
+      const cascadeQuery = await getDocs(collection(db, 'city_weather'))
+      cascadeDocsCount = cascadeQuery.size
+    } catch {
+      cascadeDocsCount = 0
     }
 
     // Tamaño de caché local
@@ -69,6 +78,7 @@ export const fetchCleanupCounts = async (): Promise<CleanupCounts> => {
       nullDocs: nullDocsCount,
       oldDocs: oldDocsCount,
       cacheSize,
+      cascadeDocs: cascadeDocsCount,
     }
   } catch (error) {
     console.error('Failed to fetch cleanup counts:', error)
@@ -76,6 +86,7 @@ export const fetchCleanupCounts = async (): Promise<CleanupCounts> => {
       nullDocs: 0,
       oldDocs: 0,
       cacheSize: '0 MB',
+      cascadeDocs: 0,
     }
   }
 }
@@ -114,19 +125,63 @@ export const executeCleanup = async (options: CleanupOptions): Promise<CleanupRe
     }
 
     // 3. Limpieza Firestore (cloud)
-    if (options.nullSnapshots || options.olderThan7d) {
+    if (options.nullSnapshots || options.olderThan7d || options.cascadeDeleteAll) {
       try {
         await getDb() // Ensure Firebase is initialized
-        const functions = getFunctions()
-        const clearFirestore = httpsCallable(functions, 'clearFirestoreData')
+        const apiKey = import.meta.env.VITE_CRON_SECRET
 
-        const response = await clearFirestore({
+        if (!apiKey) {
+          throw new Error('VITE_CRON_SECRET not configured. Check .env.local')
+        }
+
+        // Call HTTP endpoint directly with API Key header
+        const cloudFunctionUrl = 'https://us-central1-weather-app-prod-ef50d.cloudfunctions.net/clearFirestoreData'
+
+        const payload = {
           nullSnapshots: options.nullSnapshots,
           olderThan7d: options.olderThan7d,
+          cascadeDeleteAll: options.cascadeDeleteAll,
+        }
+
+        console.log('🔍 Calling Cloud Function via HTTP endpoint')
+        console.log('   URL:', cloudFunctionUrl)
+        console.log('   Payload:', payload)
+        console.log('   API Key:', apiKey.substring(0, 10) + '...')
+
+        const response = await fetch(cloudFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+          },
+          body: JSON.stringify(payload),
         })
 
-        results.firestore.deleted = (response.data as any).deletedCount ?? 0
+        if (!response.ok) {
+          let errorData: any
+          try {
+            errorData = await response.json()
+          } catch {
+            errorData = { message: await response.text() }
+          }
+
+          console.error('❌ Cloud Function error response:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: errorData,
+          })
+
+          throw new Error(
+            `HTTP ${response.status}: ${errorData.message || errorData.error || 'Unknown error'}`
+          )
+        }
+
+        const data = await response.json()
+        console.log('✅ Cloud Function response:', data)
+        console.log('   Deleted:', data.deletedCount, 'documents')
+        results.firestore.deleted = data.deletedCount ?? 0
       } catch (error) {
+        console.error('❌ Cloud Function error:', error)
         results.firestore.error = (error as Error).message
       }
     }

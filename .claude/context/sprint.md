@@ -24,18 +24,24 @@
 | US-1008-D | Testing + Validation (QA) | 2 | ✅ | Validación BigQuery completada |
 | US-1004/1005/1006 | Dashboards avanzados | 7 | 📦 Archivadas | — |
 
-### ✅ FASE 2: COMPLETADA (2026-04-21 Session 5)
+### ✅ FASE 2: COMPLETADA (2026-04-23 Session 7)
 
 | US | Descripción | SP | Status | Commits |
 |----|-------------|-----|--------|--------|
 | **US-1101** | **Sincronización Automática (Servidor HH:15)** | **6-7** | **✅ IMPLEMENTADA** | `a6ef397` |
-| **US-1102** | **Limpieza Firebase granular bajo demanda** | **3-4** | **✅ IMPLEMENTADA** | `c4afecf` + `ea7b414` |
+| **US-1102 AMPLIADA** | **Limpieza Granular + Cascade Delete /city_weather** | **6-7** | **✅ VALIDADA** | Session 7 fixes |
 | **US-1103** | **Fix D-018: No guardar docs sin snapshots** | **1-2** | **🚫 DEPRECATED** | No necesaria |
 
-**Fase 2 Status (2026-04-21 Session 5):**
+**Fase 2 Status:**
 - ✅ US-1101 Implementada (Sync automático servidor HH:15)
-- ✅ US-1102 Implementada (Limpieza: pestaña separada en TestingTools)
-- 🚫 US-1103 Deprecada (D-018 es limpieza histórica, no bloqueador activo)
+- ✅ US-1102 VALIDADA — 5 bugs resueltos en Session 7, Cloud Function operativa
+  - onCall() → onRequest() + x-api-key (BUG-001)
+  - deploy:functions script (BUG-002)
+  - functions/.env con CLEANUP_SECRET (BUG-003)
+  - CORS preflight fix (BUG-004)
+  - Cascade delete subcolecciones (BUG-005)
+- 🚫 US-1103 Deprecada
+- 📁 Bugfixes documentados: `src/docs/sprints/sprint-10/bugfixes/` (BUG-001 a BUG-005)
 
 ### ✅ FASE 3: IMPLEMENTADA (2026-04-21)
 

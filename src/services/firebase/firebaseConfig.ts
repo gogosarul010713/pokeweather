@@ -38,7 +38,9 @@ if (missingVars.length > 0) {
 
 let app: any = null
 let db: any = null
+let auth: any = null
 let initialized = false
+let authReady = false
 let initPromise: Promise<void> | null = null
 
 // ─── Lazy Initialization ─────────────────────────────────────────────────
@@ -69,13 +71,27 @@ async function ensureInitialized(): Promise<void> {
       // Dynamic import Firebase modules
       const { initializeApp: initApp } = await import('firebase/app')
       const { getFirestore: getFs } = await import('firebase/firestore')
+      const { getAuth, signInAnonymously } = await import('firebase/auth')
 
       // Initialize
       app = initApp(firebaseConfig)
       db = getFs(app)
+      auth = getAuth(app)
+
+      // Enable Anonymous auth for cleanup functions
+      try {
+        const result = await signInAnonymously(auth)
+        authReady = true
+        console.log('✅ Anonymous auth signed in:', result.user?.uid)
+      } catch (e) {
+        authReady = false
+        console.error('❌ Anonymous auth failed:', (e as Error).message, e)
+      }
+
       initialized = true
 
       console.log('✅ Firebase initialized (lazy):', firebaseConfig.projectId)
+      console.log('   Auth ready:', authReady, '| User:', auth.currentUser?.uid)
     } catch (error) {
       console.error('❌ Firebase initialization failed (lazy):', error)
       initialized = true
@@ -104,6 +120,24 @@ export async function getDb(): Promise<any> {
 export async function getApp(): Promise<any> {
   await ensureInitialized()
   return app
+}
+
+/**
+ * Get Auth instance (triggers lazy initialization if needed)
+ * @returns Auth instance or null if initialization failed
+ */
+export async function getAuth_Instance(): Promise<any> {
+  await ensureInitialized()
+  return auth
+}
+
+/**
+ * Check if Anonymous auth is ready
+ * @returns true if signInAnonymously() succeeded
+ */
+export async function isAuthReady(): Promise<boolean> {
+  await ensureInitialized()
+  return authReady
 }
 
 // ─── Backward Compatibility (Deprecated) ─────────────────────────────────
