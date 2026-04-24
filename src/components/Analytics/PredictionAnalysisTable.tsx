@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-table';
 import { WEATHER_IMAGES, CONDITION_LABEL } from '../../config/weatherImages';
 import type { WeatherCondition } from '../../config/weatherImages';
+import WeatherReportModal from './WeatherReportModal';
 
 export interface LookbackItem {
   hoursAgo: number;
@@ -31,6 +32,8 @@ export interface PredictionRow {
   actual: string | null;
   correct: boolean | null;
   lookback12h: LookbackItem[];
+  lat: number;
+  lon: number;
 }
 
 interface Props {
@@ -95,6 +98,8 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter]   = useState('');
   const [openLookbacks, setOpenLookbacks] = useState<Set<string>>(new Set());
+  const [reportingRow, setReportingRow]   = useState<PredictionRow | null>(null);
+  const [copiedCoords, setCopiedCoords]   = useState<string | null>(null);
 
   const toggleLookback = (key: string) => {
     setOpenLookbacks(prev => {
@@ -102,6 +107,16 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
+  };
+
+  const handleCopyCoords = (row: PredictionRow) => {
+    navigator.clipboard.writeText(`${row.lat.toFixed(4)}, ${row.lon.toFixed(4)}`);
+    setCopiedCoords(row.cityId);
+    setTimeout(() => setCopiedCoords(null), 2000);
+  };
+
+  const handleReportSuccess = () => {
+    showToast('✓ Reporte enviado correctamente');
   };
 
   const columnHelper = createColumnHelper<PredictionRow>();
@@ -213,7 +228,43 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       enableSorting: false,
       enableColumnFilter: false,
     }),
-  ], [openLookbacks]);
+    columnHelper.display({
+      id: 'reportar',
+      header: '⚠️',
+      cell: info => (
+        <button
+          className="pat-btn-report"
+          onClick={() => setReportingRow(info.row.original)}
+          title="Reportar clima real"
+          type="button"
+        >
+          ⚠️
+        </button>
+      ),
+      enableSorting: false,
+      enableColumnFilter: false,
+    }),
+    columnHelper.display({
+      id: 'copiarCoords',
+      header: '📋',
+      cell: info => {
+        const row = info.row.original;
+        const isCopied = copiedCoords === row.cityId;
+        return (
+          <button
+            className={`pat-btn-coords ${isCopied ? 'copied' : ''}`}
+            onClick={() => handleCopyCoords(row)}
+            title={isCopied ? 'Copiado' : 'Copiar coordenadas'}
+            type="button"
+          >
+            {isCopied ? '✓' : '📋'}
+          </button>
+        );
+      },
+      enableSorting: false,
+      enableColumnFilter: false,
+    }),
+  ], [openLookbacks, reportingRow, copiedCoords]);
 
   const table = useReactTable({
     data: rows,
@@ -645,6 +696,30 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           padding: 0 2px;
         }
 
+        /* ── Action buttons (Reportar + Copiar coords) ── */
+        .pat-btn-report, .pat-btn-coords {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: none;
+          color: var(--text-secondary);
+          cursor: pointer;
+          padding: 4px;
+          font-size: 14px;
+          transition: all 150ms ease;
+          line-height: 1;
+        }
+
+        .pat-btn-report:hover, .pat-btn-coords:hover {
+          color: var(--text-primary);
+          transform: scale(1.1);
+        }
+
+        .pat-btn-coords.copied {
+          color: var(--ui-success);
+        }
+
         /* ── Toast ─────────────────────────────────────── */
         .pat-toast {
           position: fixed;
@@ -882,6 +957,18 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       </div>
 
       <div id="prediction-toast" className="pat-toast" />
+
+      {/* Weather Report Modal */}
+      {reportingRow && (
+        <WeatherReportModal
+          cityId={reportingRow.cityId}
+          cityName={reportingRow.cityName}
+          prediction={reportingRow.prediction}
+          queryTime={reportingRow.queryTime}
+          onClose={() => setReportingRow(null)}
+          onSuccess={handleReportSuccess}
+        />
+      )}
     </div>
   );
 }

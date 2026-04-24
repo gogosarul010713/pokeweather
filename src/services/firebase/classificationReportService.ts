@@ -206,9 +206,71 @@ export async function isDuplicateReport(
   }
 }
 
+/**
+ * Guardar reporte de clima real observado en tabla predictiva
+ * Similar a saveClassificationReport pero con propósito diferente
+ */
+export async function saveWeatherReport(
+  cityId: string,
+  cityName: string,
+  predictedCondition: string,
+  reportedCondition: string,
+  queryTime: string | Date,
+  source: 'prediction-table' | 'location-detail' = 'prediction-table'
+): Promise<string> {
+  // Dynamic import Firestore functions (lazy)
+  const { collection, addDoc, Timestamp } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
+  try {
+    if (!db) {
+      throw new Error('Firebase no inicializado')
+    }
+
+    const now = Timestamp.now()
+    const ttlDate = new Date(now.toDate().getTime() + 30 * 24 * 60 * 60 * 1000)
+
+    // Convertir queryTime a timestamp
+    let queryTimeDate: Date
+    if (typeof queryTime === 'string') {
+      queryTimeDate = new Date(queryTime)
+    } else if (queryTime instanceof Date) {
+      queryTimeDate = queryTime
+    } else {
+      queryTimeDate = new Date()
+    }
+
+    const report = {
+      city_id: cityId,
+      city_name: cityName,
+      timestamp: now,
+      date_hour: queryTimeDate.toISOString().slice(0, 13).replace('T', '-'),
+
+      // Clima predicho vs reportado
+      predicted_condition: predictedCondition,
+      reported_condition: reportedCondition,
+
+      // Metadata
+      source: source,
+      reporter: 'user',
+      ttl: new Timestamp(Math.floor(ttlDate.getTime() / 1000), 0),
+    }
+
+    const docRef = await addDoc(collection(db!, 'weather_reports'), report)
+    console.log(`[Firebase] ✅ Reporte de clima guardado: ${docRef.id}`)
+    return docRef.id
+  } catch (err) {
+    console.error('[Firebase] ⚠️ Error al guardar reporte de clima:', err)
+    throw err
+  }
+}
+
 export default {
   saveClassificationReport,
   getRecentClassificationReports,
   getCityClassificationReports,
   isDuplicateReport,
+  saveWeatherReport,
 }

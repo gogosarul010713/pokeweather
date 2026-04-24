@@ -24,6 +24,11 @@ function generateMockData(): PredictionRow[] {
     tokyo: 'Tokyo',
     london: 'London',
   };
+  const cityCoords: Record<string, { lat: number; lon: number }> = {
+    sydney: { lat: -33.8688, lon: 151.2093 },
+    tokyo: { lat: 35.6762, lon: 139.6503 },
+    london: { lat: 51.5074, lon: -0.1278 },
+  };
 
   const rows: PredictionRow[] = [];
 
@@ -49,6 +54,7 @@ function generateMockData(): PredictionRow[] {
           }))
         : [];
 
+      const coords = cityCoords[cityId] || { lat: 0, lon: 0 };
       rows.push({
         queryTime: new Date(`2026-04-18T${String(h).padStart(2, '0')}:30:00Z`),
         hour: h,
@@ -60,6 +66,8 @@ function generateMockData(): PredictionRow[] {
         actual,
         correct: hasReport ? isCorrect : null,
         lookback12h,
+        lat: coords.lat,
+        lon: coords.lon,
       });
     });
   }

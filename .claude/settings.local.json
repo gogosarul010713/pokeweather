@@ -40,7 +40,10 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5176)",
       "Bash(curl -sv -X GET \"https://us-central1-weather-app-prod-ef50d.cloudfunctions.net/clearFirestoreData\")",
       "Bash(firebase functions:delete clearFirestoreData --region us-central1 --force)",
-      "Bash(curl -sv -X OPTIONS https://us-central1-weather-app-prod-ef50d.cloudfunctions.net/clearFirestoreData -H 'Origin: http://localhost:5176' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,x-api-key')"
+      "Bash(curl -sv -X OPTIONS https://us-central1-weather-app-prod-ef50d.cloudfunctions.net/clearFirestoreData -H 'Origin: http://localhost:5176' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,x-api-key')",
+      "Skill(us-analyze)",
+      "Skill(us-analyze:*)",
+      "Bash(grep -i \"\\\\.ts$\")"
     ],
     "additionalDirectories": [
       "C:\\Workspace\\React\\pokeweather"

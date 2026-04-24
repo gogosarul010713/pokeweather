@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useStore, type City } from '../../store/useStore'
 import { TYPE_ICON } from '../../config/typeIcons'
 import { CONDITION_LABEL } from '../../services/weather/weatherService'
-import ClassificationReportModal from './ClassificationReportModal'
 
 function formatTime(time: string): string {
   const [h, m] = time.split(':').map(Number)
@@ -43,18 +42,11 @@ export default function LocationDetail({ city }: LocationDetailProps) {
 
   const isFavorite = favorites.includes(city.id)
   const [copied, setCopied] = useState(false)
-  const [showReportModal, setShowReportModal] = useState(false)
-  const [showReportToast, setShowReportToast] = useState(false)
 
   const handleCopyCoords = () => {
     navigator.clipboard.writeText(`${city.lat.toFixed(4)}, ${city.lon.toFixed(4)}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleReportSuccess = () => {
-    setShowReportToast(true)
-    setTimeout(() => setShowReportToast(false), 3000)
   }
 
   useEffect(() => {
@@ -449,16 +441,6 @@ export default function LocationDetail({ city }: LocationDetailProps) {
             >
               {isFavorite ? '❤️' : '🤍'}
             </button>
-            {city.condition && (
-              <button
-                className="ld-btn report"
-                onClick={() => setShowReportModal(true)}
-                title="Reportar clasificación incorrecta"
-                type="button"
-              >
-                ⚠️
-              </button>
-            )}
             <button
               className="ld-btn"
               onClick={() => setSidebarMode('list')}
@@ -574,19 +556,6 @@ export default function LocationDetail({ city }: LocationDetailProps) {
         </div>
       </div>
 
-      {/* Report Modal */}
-      {showReportModal && (
-        <ClassificationReportModal
-          city={city}
-          onClose={() => setShowReportModal(false)}
-          onSuccess={handleReportSuccess}
-        />
-      )}
-
-      {/* Toast */}
-      {showReportToast && (
-        <div className="ld-toast">✓ Reporte enviado correctamente</div>
-      )}
     </>
   )
 }

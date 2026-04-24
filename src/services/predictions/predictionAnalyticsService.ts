@@ -78,6 +78,8 @@ export async function fetchPredictions(): Promise<PredictionRow[]> {
         actual: report?.should_be ?? null, // null = "Sin datos" (no confirmado aún)
         correct: report ? forecast.calculated_condition === report.should_be : null,
         lookback12h: [], // Se calcula abajo
+        lat: forecast.lat,
+        lon: forecast.lon,
       }
 
       // 5. Generar lookback: buscar en forecasts previos de ESTA CIUDAD
