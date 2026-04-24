@@ -7,11 +7,13 @@ export const CleanupPanel: React.FC = () => {
     olderThan7d: false,
     allIndexedDb: false,
     allLocalStorage: false,
+    cascadeDeleteAll: false,
   })
   const [counts, setCounts] = useState<CleanupCounts>({
     nullDocs: 0,
     oldDocs: 0,
     cacheSize: '0 MB',
+    cascadeDocs: 0,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -30,7 +32,36 @@ export const CleanupPanel: React.FC = () => {
   }, [])
 
   const handleOptionChange = (key: keyof CleanupOptions, value: boolean) => {
-    setCleanupOptions(prev => ({ ...prev, [key]: value }))
+    // Opción B: Mutual exclusion selectiva
+    // Sección 1 (granular Firestore) ↔ Sección 3 (cascade Firestore) son excluyentes
+    // Sección 2 (reset local) es siempre libre
+
+    const isSection1 = key === 'nullSnapshots' || key === 'olderThan7d'
+    const isSection3 = key === 'cascadeDeleteAll'
+
+    if (isSection1 && value) {
+      // Si activa Sección 1, desactiva Sección 3
+      setCleanupOptions(prev => ({ ...prev, [key]: value, cascadeDeleteAll: false }))
+    } else if (isSection3 && value) {
+      // Si activa Sección 3, desactiva Sección 1
+      setCleanupOptions(prev => ({ ...prev, [key]: value, nullSnapshots: false, olderThan7d: false }))
+    } else {
+      // Cambios normales (desactivar, cambiar en Sección 2)
+      setCleanupOptions(prev => ({ ...prev, [key]: value }))
+    }
+  }
+
+  // Opción D3: Retry logic (2 auto + manual fallback)
+  const executeWithRetry = async (maxRetries = 2): Promise<any> => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await executeCleanup(cleanupOptions)
+      } catch (error) {
+        if (attempt === maxRetries - 1) throw error
+        // Backoff exponencial: 1s, 2s
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+      }
+    }
   }
 
   const handleConfirm = async () => {
@@ -46,26 +77,47 @@ export const CleanupPanel: React.FC = () => {
     setMessage(null)
 
     try {
-      await executeCleanup(cleanupOptions)
+      // Ejecutar con retry logic (2 intentos automáticos)
+      const results = await executeWithRetry(2)
+
+      // Toast detallado (Mejora A)
+      const parts = []
+      if (results.firestore.deleted > 0) {
+        parts.push(`${results.firestore.deleted} docs (Firestore)`)
+      }
+      if (results.indexedDb.deleted > 0) {
+        parts.push(`${results.indexedDb.deleted} items (IDB)`)
+      }
+      if (results.localStorage.cleared) {
+        parts.push(`localStorage`)
+      }
+
+      const text = parts.length > 0
+        ? `✅ Eliminados: ${parts.join(' + ')}`
+        : `✅ Limpieza completada`
+
       setMessage({
         type: 'success',
-        text: '✅ Limpieza completada. Los datos han sido eliminados.',
+        text,
       })
+
       // Reset options después de éxito
       setCleanupOptions({
         nullSnapshots: false,
         olderThan7d: false,
         allIndexedDb: false,
         allLocalStorage: false,
+        cascadeDeleteAll: false,
       })
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Fallo desconocido'
       setMessage({
         type: 'error',
-        text: `❌ Error: ${error instanceof Error ? error.message : 'Fallo desconocido'}`,
+        text: `❌ Error: ${errorMsg}. Reintentar?`,
       })
     } finally {
       setIsLoading(false)
-      setTimeout(() => setMessage(null), 5000)
+      setTimeout(() => setMessage(null), 6000)
     }
   }
 
@@ -137,6 +189,33 @@ export const CleanupPanel: React.FC = () => {
           </span>
         </label>
         <p style={styles.description}>Elimina TODOS los datos de configuración local (fuerza resync)</p>
+      </div>
+
+      <hr style={styles.separator} />
+
+      {/* Opción 5: Cascade Delete /city_weather */}
+      <div
+        style={{
+          ...styles.optionBox,
+          ...styles.dangerBox,
+          opacity: (cleanupOptions.nullSnapshots || cleanupOptions.olderThan7d) ? 0.5 : 1,
+          pointerEvents: (cleanupOptions.nullSnapshots || cleanupOptions.olderThan7d) ? 'none' : 'auto',
+        }}
+      >
+        <label style={styles.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={cleanupOptions.cascadeDeleteAll}
+            onChange={e => handleOptionChange('cascadeDeleteAll', e.target.checked)}
+            disabled={isLoading || cleanupOptions.nullSnapshots || cleanupOptions.olderThan7d}
+          />
+          <span style={styles.labelText}>
+            <strong>🔥 CASCADE DELETE: Todo /city_weather</strong> <span style={styles.count}>({counts.cascadeDocs})</span>
+          </span>
+        </label>
+        <p style={styles.description}>
+          Elimina TODOS los documentos y subcollections de city_weather (nuclear reset). No se puede combinar con limpieza selectiva.
+        </p>
       </div>
 
       {/* Warning */}

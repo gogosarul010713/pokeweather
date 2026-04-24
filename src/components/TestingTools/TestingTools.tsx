@@ -1,20 +1,26 @@
 import { useState } from 'react'
+import { useStore } from '../../store/useStore'
 import ReportsPanel from './ReportsPanel'
 import { CleanupPanel } from './CleanupPanel'
 import { PredictionAnalysisDemo } from '../Analytics/PredictionAnalysisDemo'
+import { updateAutoSyncSetting } from '../../services/firebase/settingsService'
 
 interface TestingToolsProps {
   isOpen: boolean
   onClose: () => void
 }
 
-type TabType = 'reportes' | 'limpiar' | 'predicciones'
+type TabType = 'reportes' | 'limpiar' | 'predicciones' | 'sincronizacion'
 
 export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('reportes')
   const [isMaximized, setIsMaximized] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [isSyncSaving, setIsSyncSaving] = useState(false)
+
+  const autoSyncEnabled = useStore((s) => s.autoSyncEnabled)
+  const setAutoSyncEnabled = useStore((s) => s.setAutoSyncEnabled)
 
   const handleToggleMaximize = () => {
     setIsMaximized(!isMaximized)
@@ -72,6 +78,20 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
       setIsSyncing(false)
       // Limpiar mensaje después de 4 segundos
       setTimeout(() => setSyncMessage(null), 4000)
+    }
+  }
+
+  // US-1106: Toggle auto-sync setting
+  const handleToggleAutoSync = async () => {
+    setIsSyncSaving(true)
+    try {
+      const newState = !autoSyncEnabled
+      await updateAutoSyncSetting(newState)
+      setAutoSyncEnabled(newState)
+    } catch (error) {
+      console.error('[TestingTools] Error toggling auto-sync:', error)
+    } finally {
+      setIsSyncSaving(false)
     }
   }
 
@@ -360,41 +380,87 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
             >
               📊 Predicciones
             </button>
+            <button
+              className={`tt-tab ${activeTab === 'sincronizacion' ? 'active' : ''}`}
+              onClick={() => setActiveTab('sincronizacion')}
+            >
+              ⚙️ Sincronización
+            </button>
           </div>
 
           {/* Content */}
           <div className="tt-content">
-            {/* US-1101: Manual Sync Section */}
-            <div className="tt-section">
-              <h3 className="tt-section-title">⚡ Sincronización Manual</h3>
-              <p className="tt-section-desc">
-                Disparar sincronización de climas manualmente (sin esperar HH:15)
-              </p>
-              <button className="tt-button tt-button-primary" onClick={handleManualSync} disabled={isSyncing}>
-                {isSyncing ? '🔄 Sincronizando...' : '🔄 Sincronizar ahora'}
-              </button>
-              {syncMessage && (
-                <div
-                  className="tt-info"
-                  style={{
-                    backgroundColor: syncMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    borderColor: syncMessage.type === 'success' ? '#22c55e' : '#ef4444',
-                    color: syncMessage.type === 'success' ? '#22c55e' : '#ef4444',
-                  }}
-                >
-                  {syncMessage.text}
-                </div>
-              )}
-            </div>
-
-            <hr style={{ margin: '16px 0', borderColor: 'var(--border-default)' }} />
-
             {/* Tab: Reportes */}
             {activeTab === 'reportes' && <ReportsPanel />}
             {/* Tab: Limpiar */}
             {activeTab === 'limpiar' && <CleanupPanel />}
             {/* Tab: Predicciones */}
             {activeTab === 'predicciones' && <PredictionAnalysisDemo />}
+            {/* Tab: Sincronización */}
+            {activeTab === 'sincronizacion' && (
+              <>
+                {/* Auto-sync Toggle */}
+                <div className="tt-section">
+                  <h3 className="tt-section-title">⏰ Auto-sync</h3>
+                  <p className="tt-section-desc">
+                    Controlar si la sincronización ocurre automáticamente cada hora
+                  </p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px',
+                      background: 'var(--bg-tertiary)',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={autoSyncEnabled}
+                      onChange={handleToggleAutoSync}
+                      disabled={isSyncSaving}
+                      style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {autoSyncEnabled ? '🟢 Auto-sync ACTIVADO' : '🔴 Auto-sync DESACTIVADO'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                        {autoSyncEnabled
+                          ? 'Se sincroniza automáticamente cada HH:00 UTC'
+                          : 'Solo sincroniza cuando presionas el botón'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <hr style={{ margin: '16px 0', borderColor: 'var(--border-default)' }} />
+
+                {/* Manual Sync */}
+                <div className="tt-section">
+                  <h3 className="tt-section-title">⚡ Sincronización Manual</h3>
+                  <p className="tt-section-desc">
+                    Disparar sincronización de climas manualmente (sin esperar HH:00)
+                  </p>
+                  <button className="tt-button tt-button-primary" onClick={handleManualSync} disabled={isSyncing}>
+                    {isSyncing ? '🔄 Sincronizando...' : '🔄 Sincronizar ahora'}
+                  </button>
+                  {syncMessage && (
+                    <div
+                      className="tt-info"
+                      style={{
+                        backgroundColor: syncMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        borderColor: syncMessage.type === 'success' ? '#22c55e' : '#ef4444',
+                        color: syncMessage.type === 'success' ? '#22c55e' : '#ef4444',
+                      }}
+                    >
+                      {syncMessage.text}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

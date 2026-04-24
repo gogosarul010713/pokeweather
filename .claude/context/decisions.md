@@ -5,6 +5,61 @@
 
 ---
 
+### 2026-04-23 D-030 — Auto-sync configurable: Firestore flag + Zustand + Header toggle (US-1106)
+
+**Contexto:** Usuario necesita control total sobre cuándo se generan datos (para ciclos de X días + cleanup + repetir). Necesitaba pausar el cron Firebase sin parar completamente el servidor.
+
+**Decisión:** Implementar 3 capas de control:
+1. **Firestore flag:** `/settings/app-config.autoSyncEnabled` (Opción A: servidor se pausa)
+2. **Zustand state:** `autoSyncEnabled` en store
+3. **Header button:** Toggle visual (⏰ verde vs 🔴 amarillo) con feedback real-time
+
+**Lógica:**
+- Si `autoSyncEnabled = true`: Cloud Function ejecuta normalmente en HH:00
+- Si `autoSyncEnabled = false`: Cloud Function chequea flag, retorna `{ skipped: true }` sin hacer nada
+- Botón manual "Sincronizar ahora" siempre funciona, ignora toggle (user override)
+
+**Razón:**
+1. Opción A (servidor pausa) vs Opción B (solo cliente ignora): Usuario quería PAUSAR la colección, no solo ocultar datos
+2. Firestore flag vs localStorage: Firestore es source of truth (visible en Console, persiste, auditable)
+3. Header button vs Settings panel: Accesible rápidamente, user intenta cambiar antes de recargar
+
+**Implementación:**
+- Cron: `0 * * * *` (HH:00 UTC)
+- Cloud Function chequea: `if (!autoSyncEnabled) return { skipped: true }`
+- settingsService: initializeSettings (merge: true para backward compatibility)
+- App.tsx: load settings en useEffect al iniciar
+- Header: toggle button con estado visual
+
+**Mitigación de riesgos:**
+- **Risk #1 (doc not found):** initializeSettings usa merge: true (no sobrescribe existing)
+- **Risk #2 (race condition):** Tolerable window (<1s), user puede reintentar
+- **Risk #3 (backward compatibility):** Default true si doc no existe
+
+**Consecuencias:**
+- +1 Firestore doc (negligible storage)
+- +1 Cloud Function read per execution (quando ejecuta, chequea flag)
+- User tiene full control de ciclos de datos: auto 24h → limpiar → manual on-demand
+- Header UI más completa (4 buttons: theme, sync-status, sync-toggle, testing)
+
+**US relacionada:** US-1106 (2 SP, Session 8 completada)
+
+---
+
+### 2026-04-23 D-029 — Cron ejecuta cada HH:00 UTC (no HH:15) — US-1106
+
+**Contexto:** Original HH:15, user quería "cada hora en punto" (HH:00).
+
+**Decisión:** Cambiar cron de `15 * * * *` a `0 * * * *`
+
+**Motivo:** Más predecible para user ("sincronización a las H en punto"), evita conflicto con otros jobs potenciales
+
+**Consecuencia:** Firestore documents ahora tienen timestamp correcto en HH:00 (cambio menor, sin impacto)
+
+**US relacionada:** US-1106
+
+---
+
 ### 2026-04-23 D-028 — Documentar bugfixes en carpeta dedicada (Session 7)
 
 **Contexto:** US-1102 tuvo 5 bugs encadenados durante el debug. Se decidió crear un sistema de documentación de bugs para referencia futura.

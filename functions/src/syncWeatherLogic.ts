@@ -1,5 +1,5 @@
 import axios from 'axios'
-import * as admin from 'firebase-admin'
+import admin from 'firebase-admin'
 
 // Tipos
 interface CityData {

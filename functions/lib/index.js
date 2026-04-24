@@ -8,10 +8,18 @@ const db = admin.firestore();
 // SCHEDULED TRIGGER: Executes automatically at HH:15 UTC every day
 // ────────────────────────────────────────────────────────────────────
 export const syncWeatherScheduled = functions.pubsub
-    .schedule('15 * * * *')
+    .schedule('0 * * * *')
     .timeZone('UTC')
     .onRun(async (context) => {
     try {
+        // Check if auto-sync is enabled (D-029: configurable toggle)
+        const settingsRef = db.collection('settings').doc('app-config');
+        const settings = await settingsRef.get();
+        const autoSyncEnabled = settings.data()?.autoSyncEnabled ?? true;
+        if (!autoSyncEnabled) {
+            console.log(`[${new Date().toISOString()}] Scheduled sync skipped (autoSyncEnabled: false)`);
+            return { skipped: true, reason: 'autoSyncEnabled is false' };
+        }
         console.log(`[${new Date().toISOString()}] Scheduled sync triggered`);
         const result = await syncWeatherLogic();
         console.log(`[${new Date().toISOString()}] Scheduled sync completed:`, result);

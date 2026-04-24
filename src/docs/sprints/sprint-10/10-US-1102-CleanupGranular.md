@@ -1,107 +1,201 @@
-# US-1102: Limpieza de Firebase Granular bajo Demanda
+# US-1102: Limpieza de Firebase Granular + Cascade Delete
 
 **Sprint:** 10 (Ampliación)  
-**Story Points:** 3-4 SP  
+**Story Points:** 6-7 SP (ampliado desde 3-4)  
 **Prioridad:** Alta  
-**Estado:** ⏳ Ready to Implement  
+**Estado:** ✅ Análisis Completado — Ready to Implement  
 **Rama:** `sprint-10`  
-**Dependencia:** US-1101 (UI Testing Tools debe estar estable)
+**Dependencia:** US-1101 (UI Testing Tools debe estar estable)  
+**Análisis:** [13-US-1102-ANALISIS-AMPLIACION-CASCADE-DELETE.md](13-US-1102-ANALISIS-AMPLIACION-CASCADE-DELETE.md)
 
 ---
 
 ## 📋 Descripción
 
-Agregar botón "Limpiar datos" en Testing Tools que permite eliminar selectivamente:
+Agregar botón "Limpiar datos" en Testing Tools con **limpieza granular + cascade delete** en 3 secciones:
 
-1. **Documentos NULL en Firestore** — docs con `snapshots.length === 0` (refuerza D-018)
-2. **Documentos viejos** — docs con `created_at > 7 días` (manual TTL)
-3. **Todo IndexedDB** — eliminar TODAS las tablas de caché (reset completo)
-4. **Todo localStorage** — eliminar TODOS los datos de configuración local (reset completo)
+### SECCIÓN 1: Limpieza Granular (Firestore)
+1. **Documentos sin snapshots** — refuerza D-018 (null snapshot cleanup)
+2. **Documentos > 7 días** — TTL manual (limpieza antigua)
 
-La limpieza es **granular** (usuario selecciona qué limpiar con checkboxes) y **bidireccional** (Firestore + IndexedDB).
+### SEPARADOR VISUAL
 
-**Opciones 3+4 de reset total:** Permiten limpiar completamente todos los datos locales para:
-- ✅ Validar la app con datos frescos desde Firestore
-- ✅ Resetear estado corrupto o de testing
-- ✅ Forzar resincronización desde cero
+### SECCIÓN 2: Reset Total (Locales + Cascada)
+3. **TODO IndexedDB** — eliminar TODAS las tablas de caché (reset completo local)
+4. **TODO localStorage** — eliminar TODOS los datos pwe-* (reset configuración)
+5. **Cascade Delete /city_weather** — eliminar TODA la colección city_weather en Firestore (nuclear reset)
+
+**Propósito del Cascade Delete (Opción 5):**
+- ✅ Testing: Validación con datos frescos desde AccuWeather
+- ✅ Debugging: Reset completo para estado corrupto
+- ✅ Performance testing: Baseline limpio
+- ✅ Multi-user scenarios: Reset de sincronización compartida
 
 ---
 
 ## 🎯 Criterios de Aceptación
 
-- [ ] **Botón "Limpiar datos"** visible en Testing Tools (tab Configuración o Reportes)
-- [ ] **Modal de confirmación** muestra 4 opciones con checkboxes + preview:
-  - [ ] Documentos sin snapshots (count preview)
-  - [ ] Documentos > 7 días (count preview)
-  - [ ] Todo IndexedDB (size preview — todas las tablas)
-  - [ ] Todo localStorage (simple reset — timestamps + config)
-- [ ] **Confirmación:** "¿Estás seguro? Se eliminarán X documentos y Y MB."
-- [ ] **Ejecución atomic:**
-  - IndexedDB: `forecasts` + `forecasts_index` se limpian
-  - LocalStorage: `pwe-lastSyncTimestamp` se resetea (força resync)
-  - Firestore: Cloud Function elimina docs según criterios
-- [ ] **Botón deshabilitado** mientras hay carga climática en progreso
-- [ ] **Toast feedback:** Éxito ("Limpieza completada") o error con detalles
-- [ ] **Cloud Function protegida:** Solo autenticada desde app (token verificado)
-- [ ] **Tests:** Cobertura de cleanup logic (IndexedDB + mock Cloud Function)
+### Modal Structure (5 opciones en 3 secciones)
+- [ ] **Sección 1 (Granular):** 
+  - [ ] ☐ Documentos sin snapshots (D-018) — preview count
+  - [ ] ☐ Documentos > 7 días (TTL) — preview count
+- [ ] **Visual Separator:** línea horizontal (CSS)
+- [ ] **Sección 2 (Nuclear):**
+  - [ ] ☐ TODO IndexedDB — preview size (MB)
+  - [ ] ☐ TODO localStorage — simple indicator
+  - [ ] ☐ Cascade Delete /city_weather — preview count + warning
+
+### Mutual Exclusion (Opción B)
+- [ ] Si usuario selecciona algo de Sección 1 → Sección 2 se deshabilita (y vice versa)
+- [ ] Visual feedback: disabled state con opacity 0.5
+- [ ] Tooltip: "No se pueden combinar limpieza granular con reset total"
+
+### Preview Counts (Query Precisa — Opción A)
+- [ ] Docs sin snapshots: `collectionGroup('forecasts').where('snapshots', '==', []).count()`
+- [ ] Docs > 7 días: `collectionGroup('forecasts').where('created_at', '<', sevenDaysAgo).count()`
+- [ ] Cascade total: `collection('city_weather').count()` (previsualize)
+- [ ] IndexedDB size: sumar tamaño aproximado de todas las tablas
+- [ ] Latencia aceptable: <50ms para query preview
+
+### Confirmation Dialog (2-Step)
+- [ ] Primer paso: Modal con opciones + preview
+- [ ] Segundo paso: Confirmación "¿Estás seguro?"
+  ```
+  Se eliminarán permanentemente:
+  • X docs de Firestore
+  • Y MB de IndexedDB
+  • Z keys de localStorage
+  ```
+- [ ] Botones: [Cancelar] [CONFIRMAR]
+
+### Toast Feedback (Opción C2 — Detallado)
+- [ ] Éxito: `"✅ Eliminados: X docs (Firestore) + Y items (IndexedDB) + Z keys (localStorage)"`
+- [ ] Error: `"❌ Limpieza fallida: [error específico]. Reintentar?"`
+- [ ] Duración: 4-5 segundos
+- [ ] Advertencia eventual consistency: "Limpieza puede tomar hasta 24h en Firestore"
+
+### Cloud Function (Cascade Delete)
+- [ ] `cascadeDeleteWeatherData()` callable function
+- [ ] Autenticación: `context.auth` verificado
+- [ ] Query: `collectionGroup('forecasts').get()` (obtiene TODO)
+- [ ] Batch delete con chunking (500 ops per commit)
+- [ ] Retorna: `{ success, deleted, duration_ms, timestamp }`
+- [ ] Logging auditado: user, timestamp, counts, error if any
+
+### Retry Logic (Opción D3 — Hybrid)
+- [ ] Automático: 2 intentos con backoff exponencial (1s, 2s)
+- [ ] Manual: Error modal con botón "Reintentar"
+- [ ] No hay retry infinito (prevent UX blocking)
+
+### Botón Principal
+- [ ] "Limpiar datos" visible en Testing Tools tab (separado o integrado)
+- [ ] Deshabilitado mientras hay carga climática en progreso (`isLoading === true`)
+- [ ] Visible estado: tooltip "Cargando datos..." si deshabilitado
+
+### Tests
+- [ ] Mock Cloud Function: `cascadeDeleteWeatherData()`
+- [ ] Test IndexedDB cleanup: `cleanupAllIndexedDb()` vacía todas las tablas
+- [ ] Test localStorage cleanup: todos los keys pwe-* eliminados
+- [ ] Test mutual exclusion: checkboxes Sección 1 deshabilitan Sección 2
+- [ ] Test error handling: toast muestra error específico
+- [ ] Test preview accuracy: counts coinciden con datos reales
+- [ ] **Coverage:** >85% de cleanup logic
 
 ---
 
 ## 🏗️ Arquitectura
 
-### Opción Elegida: TTL Auto (Firestore) + Forzar Limpieza (Manual)
+### Decisiones Confirmadas (Análisis Arquitecto)
 
-**Contexto:**
-- D-007: TTL Policy Firestore automática elimina docs > 7d (eventual, hasta 24h)
-- US-1102 agrega: Limpieza manual bajo demanda (inmediata + selectiva)
+| Decisión | Opción | Justificación |
+|----------|--------|---------------|
+| **A: Dryrun** | **A1 Query Precisa** | Preview +20ms, 100% accuracy (vs A2 dryrun 500ms slow) |
+| **B: Coexistencia** | **B2 Mutual Exclusion** | Previene accidental double-delete (Sección 1 ↔ Sección 2 disabled) |
+| **C: Toast** | **C2 Detallado** | User necesita saber qué se limpió (X docs + Y items + Z keys) |
+| **D: Retry** | **D3 Hybrid** | 2 auto + manual fallback (vs D1 no-retry crash, vs D2 infinite loop) |
+| **E: Security** | **E2 Pre-impl** | Checklist: auth, scope, rate limit, audit trail, rules |
 
-**Flujo:**
+**Trade-off:** 70% Safety + 80% Flexibility (Opción B configuration)
+
+---
+
+### Flujo Principal
+
 ```
-┌─────────────────────────────────────┐
-│ User clicks "Limpiar datos"         │
-└─────────────────┬───────────────────┘
-                  ↓
-        ┌────────────────────┐
-        │ Modal con opciones │
-        │ ☐ NULL-snapshots   │
-        │ ☐ > 7 días         │
-        │ ☐ Caché local      │
-        └────────────────────┘
-                  ↓
-        ┌────────────────────┐
-        │ Confirmar          │
-        │ "¿Estás seguro?"   │
-        └────────────────────┘
-                  ↓
-        ┌────────────────────────────────┐
-        │ Ejecutar limpieza              │
-        ├────────────────────────────────┤
-        │ 1. IndexedDB cleanup (local)   │
-        │ 2. Cloud Function (Firestore)  │
-        │ 3. LocalStorage reset          │
-        └────────────────────────────────┘
-                  ↓
-        ┌────────────────────┐
-        │ Toast: Éxito/Error │
-        └────────────────────┘
+┌────────────────────────────────────────────┐
+│ User clicks "Limpiar datos"                │
+│ en Testing Tools                           │
+└────────────┬───────────────────────────────┘
+             ↓
+  ┌──────────────────────────────────┐
+  │ MODAL: 5 opciones en 3 secciones │
+  ├──────────────────────────────────┤
+  │ SECCIÓN 1 (Granular):            │
+  │ ☐ Docs sin snapshots (count)    │
+  │ ☐ Docs > 7 días (count)         │
+  ├──────────────────────────────────┤ ← Separador
+  │ SECCIÓN 2 (Nuclear):             │
+  │ ☐ TODO IndexedDB (size)         │
+  │ ☐ TODO localStorage (simple)    │
+  │ ☐ Cascade Delete /city_weather  │
+  └──────────────────────────────────┘
+             ↓
+  ┌──────────────────────────────────┐
+  │ CONFIRMACIÓN 2-STEP              │
+  │ "¿Estás seguro?                  │
+  │  Se eliminarán: X docs +Y items" │
+  └──────────────────────────────────┘
+             ↓
+  ┌──────────────────────────────────┐
+  │ EJECUTAR: Client + Server        │
+  │ 1. cleanupAllIndexedDb()         │
+  │ 2. cleanupAllLocalStorage()      │
+  │ 3. cascadeDeleteWeatherData()    │
+  └──────────────────────────────────┘
+             ↓
+  ┌──────────────────────────────────┐
+  │ TOAST: "✅ Eliminados: X+Y+Z"   │
+  └──────────────────────────────────┘
 ```
 
 ---
 
-## 📋 Subtareas
+### Mutual Exclusion (Opción B2)
 
-### A: UI Modal en TestingTools
+**Sección 1 ↔ Sección 2 Mutual Exclusion:**
+```typescript
+if (anySelectedInSection1()) {
+  disableAllInSection2()  // opacity 0.5, disabled input
+}
+if (anySelectedInSection2()) {
+  disableAllInSection1()  // opacity 0.5, disabled input
+}
+```
+
+---
+
+## 📋 Subtareas (6-7 SP)
+
+### A: UI Modal Refactor (1.5 SP — 90 min)
 
 **Archivo:** `src/components/UI/TestingTools.tsx`
 
-**Agregar componente CleanupModal:**
+**Cambios:**
+- Refactor CleanupModal para 5 opciones en 3 secciones
+- Agregar separador visual (CSS `<hr>`)
+- Implementar mutual exclusion (Opción B2)
+- Preview counts por tipo (Opción A1: Query Precisa)
 
 ```tsx
 interface CleanupOptions {
-  nullSnapshots: boolean    // Docs sin snapshots (Firestore)
-  olderThan7d: boolean      // Docs > 7 días (Firestore)
-  allIndexedDb: boolean     // TODO IndexedDB (reset completo)
-  allLocalStorage: boolean  // TODO localStorage (reset completo)
+  // SECCIÓN 1: Granular
+  nullSnapshots: boolean    // Docs sin snapshots (D-018)
+  olderThan7d: boolean      // Docs > 7 días (TTL manual)
+  
+  // SECCIÓN 2: Nuclear
+  allIndexedDb: boolean     // TODO IndexedDB
+  allLocalStorage: boolean  // TODO localStorage
+  cascadeDeleteAll: boolean // Cascade Delete /city_weather ← NUEVA
 }
 
 // En TestingTools
@@ -311,74 +405,125 @@ export const cleanupAllLocalStorage = (): void => {
 
 ---
 
-### C: Cloud Function para Firestore Cleanup
+### B: Cloud Function Cleanup (2 SP — 120 min)
 
-**Archivo:** `functions/cleanup.ts` (NUEVO)
+**Archivo:** `functions/src/index.ts` (agregar función)
+
+**Nueva Cloud Function:** `cascadeDeleteWeatherData()`
 
 ```typescript
-import * as functions from 'firebase-functions'
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
-import * as admin from 'firebase-admin'
-
-admin.initializeApp()
-
-interface CleanupRequest {
-  nullSnapshots: boolean
-  olderThan7d: boolean
-  // allIndexedDb y allLocalStorage NO se envían (client-side only)
+interface CascadeDeleteRequest {
+  nullSnapshots?: boolean   // D-018
+  olderThan7d?: boolean     // TTL manual
+  cascadeDeleteAll?: boolean // NUEVA: eliminate TODO
 }
 
-export const cleanupFirestore = functions.https.onCall(
-  async (data: CleanupRequest, context) => {
-    // Verificar autenticación
+export const cascadeDeleteWeatherData = functions.https.onCall(
+  async (data: CascadeDeleteRequest, context) => {
+    // E2: Autenticación verificada
     if (!context.auth) {
-      throw new functions.https.HttpsError(
-        'unauthenticated',
-        'User must be authenticated'
-      )
+      throw new functions.https.HttpsError('unauthenticated', 'Auth required')
     }
 
     const db = getFirestore()
     let totalDeleted = 0
+    const startTime = Date.now()
 
     try {
-      // 1. Eliminar docs sin snapshots (D-018)
-      if (data.nullSnapshots) {
-        const nullDocsQuery = await db
+      // OPCIÓN 1: Cascade Delete TODO /city_weather (NUEVA)
+      if (data.cascadeDeleteAll) {
+        const allQuery = db.collectionGroup('forecasts').get()
+        const snapshot = await allQuery
+        
+        // Batch delete con chunking (500 ops per commit)
+        let batch = writeBatch(db)
+        let batchCount = 0
+        
+        for (const doc of snapshot.docs) {
+          batch.delete(doc.ref)
+          batchCount++
+          totalDeleted++
+          
+          // Commit every 500 operations (Firestore limit)
+          if (batchCount >= 500) {
+            await batch.commit()
+            batch = writeBatch(db)
+            batchCount = 0
+          }
+        }
+        
+        // Final commit
+        if (batchCount > 0) {
+          await batch.commit()
+        }
+      }
+
+      // OPCIÓN 2: Eliminar docs sin snapshots (D-018)
+      else if (data.nullSnapshots) {
+        const nullDocs = await db
           .collectionGroup('forecasts')
           .where('snapshots', '==', [])
           .get()
 
-        for (const doc of nullDocsQuery.docs) {
-          await doc.ref.delete()
+        let batch = writeBatch(db)
+        nullDocs.docs.forEach((doc, idx) => {
+          batch.delete(doc.ref)
           totalDeleted++
-        }
+          if ((idx + 1) % 500 === 0) {
+            batch.commit()
+            batch = writeBatch(db)
+          }
+        })
+        await batch.commit()
       }
 
-      // 2. Eliminar docs > 7 días
-      if (data.olderThan7d) {
+      // OPCIÓN 3: Eliminar docs > 7 días (TTL)
+      else if (data.olderThan7d) {
         const sevenDaysAgo = new Date()
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-        const timestamp = admin.firestore.Timestamp.fromDate(sevenDaysAgo)
+        const ts = admin.firestore.Timestamp.fromDate(sevenDaysAgo)
 
-        const oldDocsQuery = await db
+        const oldDocs = await db
           .collectionGroup('forecasts')
-          .where('created_at', '<', timestamp)
+          .where('created_at', '<', ts)
           .get()
 
-        for (const doc of oldDocsQuery.docs) {
-          await doc.ref.delete()
+        let batch = writeBatch(db)
+        oldDocs.docs.forEach((doc, idx) => {
+          batch.delete(doc.ref)
           totalDeleted++
-        }
+          if ((idx + 1) % 500 === 0) {
+            batch.commit()
+            batch = writeBatch(db)
+          }
+        })
+        await batch.commit()
       }
+
+      const duration = Date.now() - startTime
+      
+      // Logging auditado (E2: Audit Trail)
+      console.log('[CLEANUP_SUCCESS]', {
+        user: context.auth.uid,
+        type: data.cascadeDeleteAll ? 'cascade' : data.nullSnapshots ? 'null' : 'ttl',
+        deleted: totalDeleted,
+        duration_ms: duration,
+        timestamp: new Date().toISOString(),
+      })
 
       return {
         success: true,
-        deletedCount: totalDeleted,
-        message: `Successfully deleted ${totalDeleted} documents`,
+        deleted: totalDeleted,
+        duration_ms: duration,
+        timestamp: new Date().toISOString(),
       }
     } catch (error) {
-      console.error('Firestore cleanup error:', error)
+      console.error('[CLEANUP_ERROR]', {
+        user: context.auth.uid,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      })
+      
       throw new functions.https.HttpsError(
         'internal',
         `Cleanup failed: ${error.message}`
@@ -389,9 +534,10 @@ export const cleanupFirestore = functions.https.onCall(
 ```
 
 **Validación:**
-- Solo ejecuta si usuario autenticado (context.auth)
-- Queries no índices necesarios (collectionGroup + where)
-- Retorna count de docs eliminados
+- ✅ Auth verificado (context.auth)
+- ✅ Batch chunking (500 ops/commit)
+- ✅ Logging auditado (user, type, counts)
+- ✅ Error handling con detalles
 
 ---
 
@@ -505,40 +651,62 @@ Hoy:       80 docs NULL ya existen en Firestore
 
 ---
 
-## ✅ Checklist de Implementación
+## ✅ Checklist de Implementación (6-7 SP)
 
-- [ ] Subtarea A: UI Modal
-  - [ ] CleanupModal component creado
-  - [ ] 4 Checkboxes funcionales (D-018, TTL, reset IndexedDB, reset localStorage)
-  - [ ] Preview counts correctos (3 categorías Firestore/IndexedDB/localStorage)
-  - [ ] Separador visual entre opciones granulares y RESET
-  - [ ] Integración en TestingTools
-  - [ ] Botón deshabilitado si hay carga
-  
-- [ ] Subtarea B: IndexedDB + localStorage Cleanup
-  - [ ] `cleanupLocalCache()` — limpieza selectiva (forecasts + forecasts_index)
-  - [ ] `cleanupAllIndexedDb()` — RESET TOTAL (todas las tablas)
-  - [ ] `cleanupLocalStorage()` — limpieza selectiva (timestamps)
-  - [ ] `cleanupAllLocalStorage()` — RESET TOTAL (todos los datos pwe-*)
-  - [ ] Retorna count de registros eliminados
-  - [ ] Sin errores si tablas vacías
-  
-- [ ] Subtarea C: Cloud Function
-  - [ ] `cleanupFirestore` callable function
-  - [ ] Verificación de autenticación
-  - [ ] Query NULL-snapshots funciona
-  - [ ] Query > 7 días funciona
-  - [ ] Retorna count de docs eliminados
-  
-- [ ] Subtarea D: Orquestación
-  - [ ] `executeCleanup()` orquesta todo
-  - [ ] Manejo de errores por layer
-  - [ ] Transaccionalidad (al menos uno debe éxito)
-  - [ ] Returns detailed results
-  
-- [ ] Final:
-  - [ ] Toast feedback (éxito/error)
-  - [ ] Tests: mock Cloud Function
-  - [ ] Tests: IndexedDB cleanup
-  - [ ] Build sin warnings
-  - [ ] Branch ready
+### Subtarea A: Modal UI Refactor (1.5 SP — 90 min)
+- [ ] Refactor CleanupModal: 5 opciones en 3 secciones
+- [ ] Sección 1: D-018 + TTL (2 checkboxes)
+- [ ] Sección 2: Nuclear (3 checkboxes) — Opción 5: Cascade Delete ← NUEVA
+- [ ] Separador visual (CSS `<hr>`)
+- [ ] Mutual Exclusion (Opción B2): Sección 1 ↔ Sección 2 disabled
+- [ ] Preview counts (Opción A1: Query Precisa)
+- [ ] 2-Step confirmation modal
+- [ ] Integración en TestingTools
+- [ ] Botón deshabilitado si hay carga (`isLoading`)
+
+### Subtarea B: Cloud Function Cascade Delete (2 SP — 120 min)
+- [ ] `cascadeDeleteWeatherData()` callable (tres opciones: cascade, null, ttl)
+- [ ] Autenticación: `context.auth` verificado (E2)
+- [ ] Query: `collectionGroup('forecasts').get()` (obtiene TODO)
+- [ ] Batch delete con chunking (500 ops/commit)
+- [ ] Logging auditado (user, type, counts, duration) (E2: Audit)
+- [ ] Retorna: `{ success, deleted, duration_ms, timestamp }`
+- [ ] Error handling con detalles
+
+### Subtarea C: IndexedDB + localStorage Reset (1 SP — 60 min)
+- [ ] `cleanupAllIndexedDb()` — RESET TOTAL (todas las tablas)
+- [ ] `cleanupAllLocalStorage()` — RESET TOTAL (todos los keys pwe-*)
+- [ ] `getIndexedDbSize()` — estimación de tamaño
+- [ ] Retorna counts / size
+- [ ] Sin errores si vacías
+- [ ] Funciones en cacheService.ts
+
+### Subtarea D: Orquestación + Error Handling (1 SP — 60 min)
+- [ ] `executeCleanup()` orquesta: IndexedDB + localStorage + Cloud Function
+- [ ] Retry logic (Opción D3: Hybrid — 2 auto + manual)
+- [ ] Manejo de errores por layer (detailed error messages)
+- [ ] Toast detallado (Opción C2): "✅ Eliminados: X docs + Y items + Z keys"
+- [ ] Toast error: muestra error específico + "Reintentar" button
+
+### Subtarea E: Testing + Validation (0.5 SP — 30 min)
+- [ ] Mock Cloud Function: `cascadeDeleteWeatherData()`
+- [ ] Test mutual exclusion: checkboxes Sección 1 ↔ Sección 2
+- [ ] Test preview accuracy: counts = datos reales
+- [ ] Test IndexedDB cleanup: tablas vacías post-cleanup
+- [ ] Test localStorage cleanup: keys pwe-* eliminados
+- [ ] Test error handling: toast muestra error
+- [ ] **Coverage:** >85% de cleanup logic
+- [ ] Build sin warnings
+- [ ] Branch ready para merge
+
+---
+
+## 🔄 Integración con D-018
+
+**Recordatorio:** D-018 (no guardar sin snapshots) debe estar implementado ANTES de US-1102 para que "Docs sin snapshots" query tenga efecto.
+
+**Timeline:**
+```
+[D-018 implementada] → [nuevos docs solo si snapshots.length > 0]
+[US-1102] → [user puede limpiar los 80 docs NULL ya existentes]
+```

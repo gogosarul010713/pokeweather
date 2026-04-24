@@ -1,312 +1,338 @@
-# 🎯 Sprint 10 — AMPLIADO: US-1102 AMPLIACIÓN EN IMPLEMENTACIÓN ⚙️
+# 🎯 Sprint 10 Fase 4 — US-1106: Auto Sync HH:00 + Toggle Configurable
 
-**Fecha Actualización:** 2026-04-23 (Session 6)  
-**Sprint 10 Fase 1:** ✅ COMPLETADA (2026-04-16 → 2026-04-21) — 5 US
-**Sprint 10 Fase 2:** ⚙️ EN IMPLEMENTACIÓN (2026-04-23) — US-1102 AMPLIADA (6-7 SP con Cascade Delete)
-**Sprint 10 Fase 3:** ✅ IMPLEMENTADA (2026-04-21) — US-1104/1105
-
----
-
-## ✅ Fase 1 Resumen (Completada)
-
-**US Implementadas:**
-- ✅ US-1001: Firebase Extension + BigQuery
-- ✅ US-1002: SQL View snapshots_flat
-- ✅ US-1003: Looker Studio Connection
-- ✅ US-1007: Prediction Analysis Table (TanStack v8)
-- ✅ US-1008: Caché Inteligente Delta Sync (65 docs validados)
-
-**Resultado:** Dashboard analytics funcional + Caché optimizado en IndexedDB
+**Fecha Inicio:** 2026-04-23 (Session 8)  
+**Fecha Finalización:** 2026-04-23 (Session 8)  
+**Sprint:** 10 (Ampliación Fase 4)  
+**Story Points:** 2 SP  
+**Estado:** ✅ IMPLEMENTACIÓN COMPLETADA
 
 ---
 
-## ⏳ Fase 2 — 3 Nuevas US (Ampliación Sprint 10)
+## ✅ Estado de Implementación (2026-04-23 Session 8)
 
-### Estructura Documentada
+### Completado
+- ✅ **Paso 1:** Cloud Function — cron HH:15 → HH:00 + chequeo flag autoSyncEnabled
+- ✅ **Paso 2:** settingsService.ts — CRUD para Firestore /settings/app-config
+- ✅ **Paso 3:** Zustand state — autoSyncEnabled + setAutoSyncEnabled action
+- ✅ **Paso 4:** SyncToggle.tsx — componente de configuración (listo para settings panel)
+- ✅ **Paso 5:** Header integration — toggle button (⏰/🔴) en hd-right
+- ✅ **Paso 6:** App.tsx — cargar settings al iniciar
 
-**3 User Stories:**
-1. **US-1103:** Fix D-018 — No guardar docs sin snapshots (1-2 SP)
-2. **US-1101:** Sincronización Automática (Servidor HH:15) ✅ DOCUMENTADA (6-7 SP)
-3. **US-1102:** Limpieza Firebase granular bajo demanda (3-4 SP)
+### Cambios en Code
+- `functions/src/index.ts`: Cron `15 * * * *` → `0 * * * *` + flag check (11 líneas)
+- `src/services/firebase/settingsService.ts`: **NUEVO** (95 líneas)
+- `src/store/useStore.ts`: Agregado `autoSyncEnabled` field + setter (3 líneas)
+- `src/components/Header/Header.tsx`: Toggle button + handler (50+ líneas)
+- `src/components/Settings/SyncToggle.tsx`: **NUEVO** (100 líneas, opcional)
+- `src/App.tsx`: useEffect para cargar settings (18 líneas)
 
-**Timeline Total:** 5-7 horas
+### Validado ✅ (2026-04-24)
+- ✅ Build sin nuevos errores
+- ✅ Deploy functions exitoso (3/3 functions)
+- ✅ Cron `0 * * * *` activo en Cloud Scheduler
+- ✅ Lógica de chequeo de flag en Cloud Function
+- ✅ Zustand state + settingsService funcional
+- ✅ App.tsx carga settings al montar
 
-**Documentación Creada:**
-```
-src/docs/sprints/sprint-10/
-  ├── 09-US-1101-SyncAutomatic.md       ✅ ACTUALIZADA (Arquitectura servidor)
-  ├── AUTO-SYNC-ARCHITECTURE.md         ✅ NUEVA (Detalle técnico completo)
-  ├── 10-US-1102-CleanupGranular.md     ✅ Documentada
-  ├── 11-US-1103-FixNoSaveEmpty.md      ✅ Documentada
-  └── 12-PlanImplementacionSyncCleanup.md ✅ Documentada (fase a fase)
-```
+### Pendiente para próxima sesión (US-1106-B Refactor UI)
+
+**Cambio 1: Remover toggle del Header**
+- Archivo: `src/components/Header/Header.tsx`
+- Remover:
+  - [ ] Import: `updateAutoSyncSetting`
+  - [ ] State: `isSyncSaving`
+  - [ ] Zustand reads: `autoSyncEnabled`, `setAutoSyncEnabled`
+  - [ ] Handler: `handleToggleAutoSync()`
+  - [ ] HTML button: `<button className="hd-sync-toggle"...>` (~10 líneas)
+  - [ ] CSS: `.hd-sync-toggle { ... }` (~40 líneas)
+- Resultado: Header más limpio (4 botones → 3)
+
+**Cambio 2: Agregar pestaña "Sincronización" en TestingTools**
+- Archivo: `src/components/TestingTools/TestingTools.tsx`
+- Agregar:
+  - [ ] Pestaña 4: "⚙️ Sincronización" (junto a Limpiar, Reportes)
+  - [ ] Toggle: Auto-sync ON/OFF con status visual (🟢/🔴)
+  - [ ] Botón: "Sincronizar Ahora" (mover lógica del Header)
+  - [ ] Reutilizar `updateAutoSyncSetting()` + `handleToggleAutoSync()`
+- Resultado: Todos los controles de admin/testing en un lugar
+
+**Cambio 3: Mantener en Zustand**
+- NO remover `autoSyncEnabled` state (usado por Cloud Function chequeo)
+
+**Testing manual pendiente:**
+- ⬜ Esperar HH:00 UTC con auto-mode ON → verificar sync ejecuta
+- ⬜ Esperar HH:00 UTC con auto-mode OFF → verificar logs muestran `{ skipped: true }`
 
 ---
 
-## 📋 Detalles: US-1103 (Primero — Fix Base)
+## 📋 Objetivo General
 
-**Story Points:** 1-2 SP  
-**Estimado:** 30-45 min  
-**Bloqueador:** Ninguno (va primero)
+Permitir que el usuario **controle totalmente cuándo se generan datos meteorológicos**:
+- **Auto activado:** Servidor sincroniza automáticamente cada HH:00 (24h/día)
+- **Auto desactivado:** Solo sincroniza cuando el usuario abre la app manualmente
+- **Propósito:** Generar datasets de X días, limpiar datos, repetir ciclo para análisis de precisión
 
-### ¿Qué es?
-Implementar Decisión D-018: NO guardar documentos en Firestore si `snapshots.length === 0`.
+---
 
-**Problema actual:**
-- 80 docs (53% del total) se guardan SIN snapshots válidos
-- Ocupan storage innecesariamente
-- Contaminan BigQuery
+## 🏗️ Subtareas
 
-**Solución:**
-- Early return en `firebaseWeatherService.ts` si `snapshots.length === 0`
-- Reduce writes ~50% desde ahora en adelante
+### Subtarea A: Cambiar cron HH:15 → HH:00 + Flag de control
 
-### Cambio de Código (Mínimo)
+**Archivos a modificar:**
+- `functions/src/index.ts` — actualizar cron + agregar chequeo flag
+- `functions/.env` — documentar nueva variable (opcional)
 
-**Archivo:** `src/services/firebase/firebaseWeatherService.ts` (línea ~77)
+**Cambios específicos:**
 
+1. **Línea 14:** Cambiar cron
 ```typescript
-if (snapshots.length === 0) return  // ← AGREGAR (3 líneas)
+// ANTES:
+.schedule('15 * * * *')
+
+// DESPUÉS:
+.schedule('0 * * * *')  // HH:00 cada hora
 ```
 
-### Criterios de Aceptación
-- [ ] firebaseWeatherService NO guarda si `snapshots.length === 0`
-- [ ] Tests verdes (mock empty snapshots)
-- [ ] Compilación sin errores
-- [ ] Documentación data schema actualizada
-
----
-
-## ✅ US-1102 — VALIDADA Y FUNCIONAL (2026-04-23 Session 7)
-
-**Story Points:** 4 SP  
-**Commits:** `c4afecf` + `ea7b414` + fixes de Session 7  
-**Status:** ✅ FUNCIONAL — Cloud Function operativa, 85 docs eliminados en prueba
-
-### ✅ Implementación Completa
-- ✅ CleanupPanel.tsx — 4 checkboxes con descripciones y preview counts
-- ✅ TestingTools.tsx refactorizado — pestaña "🗑️ Limpiar"
-- ✅ cleanupService.ts — usa fetch() directo con x-api-key header
-- ✅ Cloud Function `clearFirestoreData` — onRequest() + CORS + CLEANUP_SECRET
-- ✅ Cascade delete elimina forecasts (subcolección) + city_weather (raíz)
-- ✅ Bugfixes documentados en `src/docs/sprints/sprint-10/bugfixes/` (BUG-001 a BUG-005)
-
-### Bugs Resueltos en Session 7 (todos documentados)
-- ✅ BUG-001: 401 UNAUTHENTICATED — onCall() reemplazado por onRequest() + x-api-key
-- ✅ BUG-002: Deploy sin compilar lib/ — script `npm run deploy:functions` creado
-- ✅ BUG-003: VITE_* no existe en servidor — functions/.env con CLEANUP_SECRET
-- ✅ BUG-004: CORS preflight bloqueado — OPTIONS manejado antes de auth check
-- ✅ BUG-005: Cascade delete incompleto — collectionGroup('forecasts') eliminado primero
-
-### Arquitectura Final Cloud Function
-- Endpoint: `POST https://us-central1-weather-app-prod-ef50d.cloudfunctions.net/clearFirestoreData`
-- Auth: header `x-api-key: CLEANUP_SECRET` (valor = VITE_CRON_SECRET del cliente)
-- CORS: Access-Control-Allow-Origin: * para localhost y producción
-- Cascade: elimina forecasts (collectionGroup) → luego city_weather raíz
-
-### Pendiente
-- ⬜ Validación manual completa desde UI (TestingTools → Limpiar → todas las opciones)
-- ⬜ Commit final de sesión
-- ⬜ Merge US-1102 → develop
-- ✅ Dev server: Funcionando (localhost:5176)
-- ✅ Observaciones aplicadas: Pestaña separada + maximizado default
-
----
-
-## ✅ US-1101 IMPLEMENTADA (2026-04-21 Session 4)
-
-**Story Points:** 6-7 SP (actualizado desde 3-4)  
-**Commit:** `a6ef397` feat(US-1101): Sincronización Automática Servidor-side (HH:15)  
-**Completado:** 7/7 subtareas
-
-### ¿Qué fue implementado?
-
-**Servidor (Firebase Cloud Functions):**
-- ✅ Scheduled Function: `syncWeatherScheduled` (HH:15 UTC daily)
-- ✅ HTTP endpoint: `syncWeatherManual` (manual testing + CRON_SECRET auth)
-- ✅ `syncWeatherLogic()` — Promise.all() 5 ciudades en paralelo (~500ms)
-- ✅ Mapeo AccuWeather → condiciones climáticas
-- ✅ Guardado en Firestore `/city_weather/{cityId}`
-
-**Cliente (React):**
-- ✅ Hook `useFirestoreSync()` — onSnapshot listener real-time (~100ms latencia)
-- ✅ Integración en App.tsx — Merge Firestore data con state local
-- ✅ Botón "Sincronizar ahora" en TestingTools con feedback (success/error)
-- ✅ Configuración .env.local (VITE_CRON_SECRET)
-
-### Arquitectura
-
-```
-HH:15 UTC → Firebase Scheduled Function
-  ↓ [Parallel Promise.all()]
-  ├─ Sydney (AccuWeather → Firestore)
-  ├─ Tokyo
-  ├─ London
-  ├─ New York
-  └─ São Paulo
-         ↓ [Escribe en /city_weather/{cityId}]
-         ↓ [Cliente escucha onSnapshot]
-  → useFirestoreSync detects cambios (~100ms)
-  → React state actualiza automáticamente
-  → UI re-renderiza con datos frescos
-```
-
-### Testing
-- ✅ Build: 126 modules transformed, 619ms
-- ⏳ Manual testing: Esperar HH:15 UTC o usar botón "Sincronizar ahora"
-- ⏳ Firebase Console: Validar executions en Cloud Functions
-
----
-
----
-
-## 📋 Próximas US — Fase 2 (Si continúan)
-
-### ⏳ US-1103 (Primero — Fix Base)
-
-**Story Points:** 1-2 SP  
-**Estimado:** 30-45 min  
-**Prioridad:** ALTA (bloqueador para US-1102)
-
-Implementar Decisión D-018: NO guardar documentos en Firestore si `snapshots.length === 0`.
-
-**Cambio mínimo:** `src/services/firebase/firebaseWeatherService.ts` línea ~77
+2. **Agregar chequeo de flag** (después de línea 16, en onRun):
 ```typescript
-if (snapshots.length === 0) return  // ← AGREGAR
+onRun(async (context) => {
+  try {
+    // ← NUEVO: Chequear si auto-sync está habilitado
+    const settingsRef = db.collection('settings').doc('app-config')
+    const settings = await settingsRef.get()
+    const autoSyncEnabled = settings.data()?.autoSyncEnabled ?? true
+    
+    if (!autoSyncEnabled) {
+      console.log('[syncWeatherScheduled] Auto-sync disabled, skipping')
+      return { skipped: true }
+    }
+    
+    console.log(`[${new Date().toISOString()}] Scheduled sync triggered`)
+    const result = await syncWeatherLogic()
+    console.log(`[${new Date().toISOString()}] Scheduled sync completed:`, result)
+    return result
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] Scheduled sync error:`, error)
+    throw error
+  }
+})
 ```
 
-**Impacto:** -50% Firestore writes desde ahora
+3. **Inicializar documento settings en Firestore** (cuando la app carga por primera vez):
+- Path: `/settings/app-config`
+- Schema:
+```json
+{
+  "autoSyncEnabled": true,
+  "createdAt": Timestamp,
+  "updatedAt": Timestamp
+}
+```
 
-### ⏳ US-1102 (Cleanup)
+**Criterios de aceptación:**
+- [ ] Cron se ejecuta a HH:00 UTC (vs HH:15)
+- [ ] Función chequea `settings/app-config.autoSyncEnabled` antes de ejecutar
+- [ ] Si `autoSyncEnabled === false`, retorna `{ skipped: true }` sin hacer nada
+- [ ] Si `autoSyncEnabled === true`, ejecuta normalmente
+- [ ] Tests verdes (mock Firestore)
+- [ ] Build sin errores
 
-**Story Points:** 3-4 SP  
-**Estimado:** 2-3 h  
-**Dependencia:** US-1101 estable
+**Esfuerzo:** ~20 minutos
 
-### ¿Qué es?
-Botón "Limpiar datos" en Testing Tools que permite eliminar selectivamente:
-1. Documentos sin snapshots (D-018)
-2. Documentos > 7 días (TTL manual)
-3. **Todo IndexedDB** (reset caché completo)
-4. **Todo localStorage** (reset configuración local)
+---
 
-**Usuario elige** qué limpiar via checkboxes en modal.
+### Subtarea B: Toggle UI + Persistencia
 
-**Propósito 3+4:** Reset total de datos locales para validación con datos nuevos o cleanup radical.
+**Archivos a crear/modificar:**
+- `src/store/useStore.ts` — agregar Zustand state para toggle
+- `src/components/Settings/SyncToggle.tsx` — componente nuevo
+- `src/components/Header.tsx` — integración del toggle
+- `src/services/firebase/settingsService.ts` — lógica Firestore
 
-### Cambios Principales
+**Cambios:**
 
-**1. Cloud Function (NUEVO):**
-- `functions/cleanup.ts`
-- Callable: elimina docs Firestore según criterios
-- Autenticada (solo desde app)
+1. **Zustand state** (`src/store/useStore.ts`):
+```typescript
+interface StoreState {
+  // ... existing ...
+  autoSyncEnabled: boolean
+  setAutoSyncEnabled: (enabled: boolean) => void
+}
 
-**2. Client Service:**
-- `src/services/cleanup/cleanupService.ts` (NUEVO)
-- Orquesta: IndexedDB + LocalStorage + Cloud Function
-- Manejo granular de errores
+export const useStore = create<StoreState>((set) => ({
+  // ... existing ...
+  autoSyncEnabled: true,
+  setAutoSyncEnabled: (enabled: boolean) => {
+    set({ autoSyncEnabled: enabled })
+  },
+}))
+```
 
-**3. TestingTools UI:**
-- Botón "Limpiar datos"
-- Modal con 3 checkboxes + preview counts
-- Confirmación: "¿Estás seguro? Se eliminarán X docs"
+2. **Nuevo servicio** (`src/services/firebase/settingsService.ts`):
+```typescript
+import { doc, updateDoc, getDoc } from 'firebase/firestore'
+import { getDb } from './firebaseConfig'
 
-### Criterios de Aceptación
-- [ ] Modal muestra 3 opciones con checkboxes
-- [ ] Preview counts correctos (query antes de eliminar)
-- [ ] Limpieza IndexedDB funciona (client-side)
-- [ ] Cloud Function funciona (Firestore)
-- [ ] Toast feedback (éxito/error)
+export async function updateAutoSyncSetting(enabled: boolean): Promise<void> {
+  const db = await getDb()
+  const settingsRef = doc(db, 'settings', 'app-config')
+  
+  await updateDoc(settingsRef, {
+    autoSyncEnabled: enabled,
+    updatedAt: new Date(),
+  })
+}
+
+export async function getAutoSyncSetting(): Promise<boolean> {
+  const db = await getDb()
+  const settingsRef = doc(db, 'settings', 'app-config')
+  const snapshot = await getDoc(settingsRef)
+  
+  return snapshot.data()?.autoSyncEnabled ?? true
+}
+```
+
+3. **Componente Toggle** (`src/components/Settings/SyncToggle.tsx`):
+```typescript
+import { useStore } from '../../store/useStore'
+import { updateAutoSyncSetting } from '../../services/firebase/settingsService'
+
+export function SyncToggle() {
+  const { autoSyncEnabled, setAutoSyncEnabled } = useStore()
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleToggle = async (enabled: boolean) => {
+    setIsSaving(true)
+    try {
+      await updateAutoSyncSetting(enabled)
+      setAutoSyncEnabled(enabled)
+      // Toast: "Auto-sync " + (enabled ? "activado" : "desactivado")
+    } catch (error) {
+      console.error('Error updating auto-sync setting:', error)
+      // Toast error
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <div className="sync-toggle">
+      <label>
+        Auto-sync de climas
+        <input
+          type="checkbox"
+          checked={autoSyncEnabled}
+          onChange={(e) => handleToggle(e.target.checked)}
+          disabled={isSaving}
+        />
+      </label>
+      {autoSyncEnabled ? (
+        <span className="status">Automático (HH:00 UTC)</span>
+      ) : (
+        <span className="status">Manual (cuando abras la app)</span>
+      )}
+    </div>
+  )
+}
+```
+
+4. **Integración en Header** (`src/components/Header.tsx`):
+- Agregar `<SyncToggle />` en algún lugar visible (settings dropdown o inline)
+
+5. **Cargar setting al iniciar App** (`src/App.tsx`):
+```typescript
+useEffect(() => {
+  async function loadSettings() {
+    const enabled = await getAutoSyncSetting()
+    setAutoSyncEnabled(enabled)
+  }
+  loadSettings()
+}, [])
+```
+
+**Criterios de aceptación:**
+- [ ] Toggle visible en Header o Settings
+- [ ] Cambiar estado actualiza Firestore en tiempo real
+- [ ] Estado persiste entre recargas (localStorage + Firestore)
+- [ ] Cuando `autoSyncEnabled = false`, cron no ejecuta
+- [ ] Cuando `autoSyncEnabled = true`, cron ejecuta normalmente
+- [ ] UI feedback clara (tooltips, status messages)
 - [ ] Tests >85% coverage
+- [ ] Build sin warnings
+
+**Esfuerzo:** ~60 minutos
 
 ---
 
-## 🔄 Decisiones Arquitectónicas Aplicadas
+## 🔄 Flujo de Usuario (Final)
 
-| Decisión | Detalles |
+### Escenario: Recolectar datos 3 días, luego limpiar y repetir
+
+```
+Lunes 8am:
+  ✓ Toggle = AUTO ACTIVADO
+  ✓ HH:00: Cron ejecuta automáticamente
+  ✓ HH:01: Ejecuta de nuevo
+  ... 24 veces ese día
+
+Martes:
+  ✓ El cron sigue automático 24×
+
+Miércoles 2pm:
+  ✓ Presiona botón "Limpiar datos" (US-1102)
+  ✓ Borraría todos los datos de Firestore
+  ✓ Cambia toggle a MANUAL DESACTIVADO
+
+Miércoles 3pm - Nuevo ciclo:
+  ✓ Abre app → presiona "Sincronizar ahora" (botón TestingTools)
+  ✓ Se ejecuta syncWeatherManual UNA sola vez
+  ✓ Cierra app
+  ✓ Cron NO ejecuta (toggle desactivado)
+  ✓ Abre app a las 5pm → presiona "Sincronizar ahora" otra vez
+  ✓ Total: solo los syncs que EL presionó manualmente
+```
+
+---
+
+## 📊 Estimación
+
+| Subtarea | Esfuerzo |
 |----------|----------|
-| **D-018** | No guardar docs sin snapshots (US-1103) |
-| **D-017** | Delta Sync respetado (US-1101 no lo afecta) |
-| **US-1101 Arch:** | Zustand flag + LocalStorage persistence |
-| **US-1102 Arch:** | TTL automático + Forzar Limpieza manual |
-| **Cloud Function** | Autenticada solo desde app (seguridad) |
+| A: Cron + Flag | 20 min |
+| B: UI + Zustand | 60 min |
+| Redeploy + Testing | 20 min |
+| **Total** | **~100 min = 1.7 SP** |
+
+Redondeamos a **2 SP** (margen para QA manual).
 
 ---
 
-## 📊 Impacto Esperado
+## ✅ Checklist Implementación
 
-### Firestore (US-1103)
-- **Antes:** 2,400 writes/día, 53% inútiles
-- **Después:** ~1,128 writes/día, 0% inútiles
-- **Ahorro:** -645 writes/día (-53%)
-
-### Funcionalidad (US-1101)
-- User control sobre sync frequency
-- Compatible con batch processing
-
-### Data Hygiene (US-1102)
-- Usuario puede limpiar data histórica
-- Refuerza D-018 (elimina docs viejos sin snapshots)
-
----
-
-## 📚 Documentación Referencia
-
-**Plan Completo:**
-- `src/docs/sprints/sprint-10/12-PlanImplementacionSyncCleanup.md`
-
-**Documentación Individual:**
-- `09-US-1101-SyncManual.md` — Detalles + subtareas
-- `10-US-1102-CleanupGranular.md` — Detalles + Cloud Function
-- `11-US-1103-FixNoSaveEmpty.md` — Fix D-018 + justificación
-
-**README Sprint 10:**
-- `src/docs/sprints/sprint-10/README.md` — Actualizado con Fase 2
+- [ ] Actualizar `functions/src/index.ts` (cron + flag)
+- [ ] Crear `src/services/firebase/settingsService.ts`
+- [ ] Crear `src/components/Settings/SyncToggle.tsx`
+- [ ] Actualizar `src/store/useStore.ts`
+- [ ] Integrar toggle en Header
+- [ ] Cargar setting en App init
+- [ ] Escribir tests (Vitest + mock Firestore)
+- [ ] Manual testing: activar/desactivar + verificar Firestore
+- [ ] Deploy functions
+- [ ] Validar cron en Firebase Console
+- [ ] Build sin errores
+- [ ] PR + merge a develop
 
 ---
 
-## ✅ FASE 3 — Firebase como Caché Único (Implementada 2026-04-21)
+## 🔗 Decisiones Aplicadas
 
-### Estructura Documentada
-
-**2 User Stories:**
-1. **US-1104:** Firebase as Cache — Climas (TTL simple, 3-4 SP)
-2. **US-1105:** Firebase as Cache — Tabla Predictiva (Delta Sync, 3-4 SP)
-
-**Timeline Total:** 6-8 horas
-
-**Documentación Creada:**
-```
-src/docs/sprints/sprint-10/
-  ├── US-1104-FirebaseAsCache-Climas.md        ✅ Documentada (pseudocódigos, diagramas)
-  └── US-1105-FirebaseAsCache-Tabla.md         ✅ Documentada (Delta Sync 3 algoritmos)
-```
-
-**Arquitectura Clarificada:**
-- **Firestore:** Source of truth (AccuWeather → Firestore)
-- **IndexedDB:** Caché local dual-layer (latencia crítica 40ms)
-- **Climas:** TTL simple (cache fresco = mostrar + FIN, sin sync background)
-- **Tabla Predictiva:** Delta Sync (query WHERE created_at > lastSyncTime, merge + dedup)
+- **D-025 (revisada):** Auto-sync es configurable ahora, no 100% automático
+- **D-002:** Firebase sigue como backend (settings en /settings/app-config)
+- **D-017:** Delta Sync no se ve afectado por este cambio
 
 ---
 
-## ⏭️ Próximas Acciones
+## 📚 Documentación Creada
 
-### Fase 2 (Si se implementa):
-1. **Implementación:** US-1103 (30-45 min)
-2. **Implementación:** US-1101 (2-3 h)
-3. **Implementación:** US-1102 (2-3 h)
+- `src/docs/sprints/sprint-10/14-US-1106-AutoSyncToggle.md` ← Crear durante impl
 
-### Fase 3 (Si se implementa):
-1. **Implementación:** US-1104 Climas (3-4 h)
-2. **Implementación:** US-1105 Tabla (3-4 h)
-
-### Validación Final:
-- Tests >85% coverage
-- Build sin warnings
-- Manual QA (UI + Firebase + IndexedDB)
-- Merge `sprint-10` → `develop`
-
----
-
-**Estado Actual:** ✅ Fases 1/2/3 documentadas, arquitectura definida, **listo para implementación en próxima sesión**.

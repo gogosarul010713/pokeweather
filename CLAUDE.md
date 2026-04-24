@@ -87,7 +87,7 @@ Stack: React 18 + Vite 5 + Leaflet + Zustand 4 + AccuWeather API + idb-keyval + 
 8. **`region` en minúsculas** — `'asia'`, `'europa'`, `'america'`, `'oceania'`, `'africa'`
 9. **Un `<style>` por componente** — con prefijo de clase obligatorio
 10. **WINDY** — reemplaza sunny/partly/cloudy pero NUNCA rain/snow/fog
-11. **NO crear archivos `.md`** — nunca crear archivos Markdown (documentación, READMEs, notas, etc.) a menos que el usuario lo solicite explícitamente en ese mensaje
+11. **Como crear archivos `.md`** — para crear archivos Markdown (documentación, READMEs, notas, etc) confirma con el usuario que vas a utilizar, en donde lo vas a guardar y porque, el te confirmara o te lo  solicitara explícitamente en ese mensaje
 
 ---
 
@@ -207,6 +207,30 @@ Nunca implementes sin confirmación explícita. Cada fase termina con checkpoint
 Nunca hagas `git push` ni `git merge` sin confirmación explícita.
 Pregunta antes: "¿Puedo hacer [push/merge] a [rama]?"
 
+## Dev Server
+- Port: 5175
+- Framework: React
+
 ### Gestión de contexto
 NO uses el sistema de memory nativo de Claude Code para estado del proyecto.
 Los archivos `.claude/context/` son la fuente de verdad.
+
+---
+
+## SKILLS DISPONIBLES
+
+Al inicio de sesión, ejecuta automáticamente `context-load`.
+
+| Cuándo | Skill |
+|--------|-------|
+| Inicio de sesión / "carga el contexto" | `context-load` |
+| Fin de sesión / "guarda el contexto" / "wrap" | `context-save` |
+| Iniciar una US nueva | `us-start` |
+| Analizar una US | `us-analyze` |
+| Validar una US completada | `us-validate` |
+
+**Contexto del proyecto** (fuente de verdad):
+- `.claude/context/sprint.md`
+- `.claude/context/active_task.md`
+- `.claude/context/decisions.md`
+- `.claude/context/next-session.md` (si existe)

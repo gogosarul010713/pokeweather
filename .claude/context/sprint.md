@@ -173,27 +173,41 @@
 - Delta: solo docs con `created_at > lastSyncTime`, merge dedup
 - Status: ✅ Build OK (errores pre-existentes ignorados)
 
-## 🚀 Próximos Pasos (Sprint 10 Session 4+)
+### ✅ FASE 4: AMPLIACIÓN AUTO-SYNC + TOGGLE (2026-04-23 Session 8)
 
-### Validación (Session 4)
-1. [ ] **Manual testing:** Navegador — tabla carga rápido + delta sync silencioso
-2. [ ] **Performance:** DevTools — caché 40ms, delta <300ms
-3. [ ] **Merge verification:** Confirmar sin duplicados tras delta sync
+| US | Descripción | SP | Status | Commits |
+|----|-------------|-----|--------|---------|
+| **US-1106** | **Auto Sync HH:00 + Toggle Configurable** | **2** | **✅ CORE COMPLETO** | Session 8 |
+| **US-1106-B** | **Refactor UI: mover toggle a Testing Tools** | **0.5** | **⏳ PENDIENTE** | Next session |
 
-### Validación
-- [ ] Tests >85% coverage para Fase 2
-- [ ] Build sin warnings
-- [ ] Manual testing: UI + Firebase + IndexedDB
-- [ ] Firestore metrics: reducción ~50% writes (US-1103)
-
-### Finalización
-- [ ] Actualizar sprint.md con estado final
-- [ ] Actualizar active_task.md
-- [ ] Merge `sprint-10` → `develop` (cuando todo aprobado)
+**Fase 4 Status:**
+- ✅ Core implementado (Firestore flag + Zustand + Cloud Function)
+- ✅ Deploy exitoso (cron `0 * * * *` activo)
+- ✅ Validación completada
+- ⏳ **Refactor UI pendiente:**
+  - Mover toggle auto-mode del Header a Testing Tools
+  - Consolidar "Sincronizar ahora" en Testing Tools
 
 ---
 
-**Sprint 10 FINAL Status:** ✅ Fase 1 COMPLETADA | ✅ Fase 2 COMPLETADA | ✅ Fase 3 IMPLEMENTADA
-**Merged:** ✅ sprint-10 → develop (2026-04-21)
+## 🚀 Próximos Pasos (Sprint 10 Session 8+)
+
+### Fase 4 Implementación
+1. [ ] Analizar US-1106-A (cambio cron + flag)
+2. [ ] Analizar US-1106-B (toggle UI)
+3. [ ] Planear arquitectura conjunta
+4. [ ] Implementar ambas en paralelo (~85 min total)
+5. [ ] Redeploy functions
+6. [ ] Testing manual
+
+### Finalización Sprint 10
+- [ ] Tests >85% coverage
+- [ ] Build sin warnings
+- [ ] Manual testing: todas las fases
+- [ ] Merge `sprint-10` → `develop`
+
+---
+
+**Sprint 10 Status:** ✅ Fases 1-3 COMPLETADAS | ⏳ Fase 4 INICIADA (2026-04-23)
 **Build:** ✅ 130 modules, 844 KB, SIN ERRORES
-**Next Step:** Sprint 11 — Validación QA manual Fase 3
+**Next Step:** US-1106 Implementación

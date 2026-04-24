@@ -12,6 +12,7 @@ import { useWeather } from './hooks/useWeather'
 import { useIsMobile } from './hooks/useIsMobile'
 import { useFirestoreSync } from './hooks/useFirestoreSync'
 import { syncForecastsOnLoad } from './services/firebase/forecastSyncService'
+import { initializeSettings, getAutoSyncSetting } from './services/firebase/settingsService'
 import type { City } from './store/useStore'
 
 export default function App() {
@@ -64,6 +65,24 @@ export default function App() {
   // Sincronizar pronósticos al montar la app (background, non-blocking)
   useEffect(() => {
     syncForecastsOnLoad()
+  }, [])
+
+  // US-1106: Cargar settings de auto-sync al iniciar la app
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        await initializeSettings()
+        const autoSyncEnabled = await getAutoSyncSetting()
+        useStore.setState({ autoSyncEnabled })
+        console.log(`[App] Settings loaded: autoSyncEnabled=${autoSyncEnabled}`)
+      } catch (error) {
+        console.error('[App] Error loading settings:', error)
+        // Default to true (auto-sync enabled) on error
+        useStore.setState({ autoSyncEnabled: true })
+      }
+    }
+
+    loadSettings()
   }, [])
 
   // US-1101: Escuchar cambios en Firestore (real-time sync from server HH:15)
