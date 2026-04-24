@@ -88,23 +88,24 @@ export default function App() {
   // US-1101: Escuchar cambios en Firestore (real-time sync from server HH:15)
   // Cuando Firebase Scheduled Function actualiza Firestore, este listener lo detecta
   // y actualiza el estado React automáticamente (~100ms latencia)
-  useFirestoreSync(
-    (firestoreCities) => {
-      // Merge Firestore data con ciudades locales
-      setCities((prevCities) => {
-        const merged = prevCities.map((city) => {
-          const firestoreData = firestoreCities.find((c) => c.id === city.id)
-          if (!firestoreData) return city
-          return { ...city, ...firestoreData }
-        })
-        console.log('[App] Merged Firestore sync:', merged.length, 'cities')
-        return merged
+  const handleFirestoreCitiesUpdate = useCallback((firestoreCities: Partial<City>[]) => {
+    // Merge Firestore data con ciudades locales
+    setCities((prevCities) => {
+      const merged = prevCities.map((city) => {
+        const firestoreData = firestoreCities.find((c) => c.id === city.id)
+        if (!firestoreData) return city
+        return { ...city, ...firestoreData }
       })
-    },
-    (error) => {
-      console.error('[App] Firestore sync error:', error)
-    }
-  )
+      console.log('[App] Merged Firestore sync:', merged.length, 'cities')
+      return merged
+    })
+  }, [])
+
+  const handleFirestoreSyncError = useCallback((error: Error) => {
+    console.error('[App] Firestore sync error:', error)
+  }, [])
+
+  useFirestoreSync(handleFirestoreCitiesUpdate, handleFirestoreSyncError)
 
   // En mobile: Visual feedback en mapa al seleccionar ciudad (sin scroll disruptivo)
   // El highlight visual ocurre en MapPin.tsx, aquí solo aseguramos que el mapa reciba focus
