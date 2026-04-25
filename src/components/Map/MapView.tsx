@@ -5,7 +5,10 @@ import 'leaflet/dist/leaflet.css'
 import { useStore } from '../../store/useStore'
 import { calculateBadges } from '../../services/weather/weatherService'
 import type { City } from '../../store/useStore'
+import type { Nest } from '../../types/nest'
+import nestsData from '../../data/nests.json'
 import MapPin from './MapPin'
+import NestPin from './NestPin'
 import CityTooltip from './CityTooltip'
 import FlyToCity from './FlyToCity'
 import MapLegend from './MapLegend'
@@ -68,7 +71,17 @@ interface MapViewProps {
 }
 
 export default function MapView({ cities }: MapViewProps) {
+  const activeTab = useStore((s) => s.activeTab)
   const badgeFilter = useStore((s) => s.badgeFilter)
+  const nests = useStore((s) => s.nests)
+  const setNests = useStore((s) => s.setNests)
+
+  // Load nests on mount
+  useEffect(() => {
+    if (nests.length === 0 && nestsData?.nests) {
+      setNests(nestsData.nests as Nest[])
+    }
+  }, [nests.length, setNests])
 
   // Calcular badges por ciudad
   const badgesByCity = useMemo(() => {
@@ -152,13 +165,25 @@ export default function MapView({ cities }: MapViewProps) {
         >
           <TileSwitcher />
           <FlyToCity />
-          {filteredCities.map((city) => (
-            <MapPin
-              key={city.id}
-              city={city}
-              badges={badgesByCity.get(city.id)}
-            />
-          ))}
+
+          {/* MapPin (Clima) — renderizar si tab = clima o todo */}
+          {(activeTab === 'clima' || activeTab === 'todo') &&
+            filteredCities.map((city) => (
+              <MapPin
+                key={city.id}
+                city={city}
+                badges={badgesByCity.get(city.id)}
+              />
+            ))
+          }
+
+          {/* NestPin (Nidos) — renderizar si tab = nidos o todo */}
+          {(activeTab === 'nidos' || activeTab === 'todo') &&
+            nests.map((nest) => (
+              <NestPin key={nest.id} nest={nest} />
+            ))
+          }
+
           <SelectedPopup cities={cities} />
         </MapContainer>
 

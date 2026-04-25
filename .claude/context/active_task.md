@@ -127,10 +127,19 @@ Implementar la **base funcional** de Nidos con:
 
 ## 📊 Checklist Sesión 1
 
-- [ ] **US-811:** TabControl.tsx creado y visible
-- [ ] **US-811:** `activeTab` state en Zustand
-- [ ] **US-811:** App.tsx renderiza condicional
-- [ ] **US-811:** localStorage persiste activeTab
+### ✅ US-811 COMPLETADA (con detalles de diseño pendientes)
+- [x] **US-811:** TabControl.tsx creado y visible
+- [x] **US-811:** `activeTab` state en Zustand
+- [x] **US-811:** MapView renderiza condicional
+- [x] **US-811:** Sidebar renderiza condicional
+- [x] **US-811:** localStorage persiste activeTab
+- [x] **npm run build** sin errores (✅ compilación exitosa)
+- [x] ✅ Console limpia (0 TS errors)
+- [x] ✅ Prueba E2E básica (Playwright): 5/5 tests pasando
+- 🔄 **Diseño TabControl:** Opción A (Underline) implementada, pero **necesita ajustes finales en SVG/colores**
+
+### ⏳ Pendiente — Próxima Sesión
+- [ ] **US-811 DISEÑO:** Ajustar SVG y colores del TabControl (Opción A aún en refinamiento)
 - [ ] **US-812:** NestPin.tsx crea hexágonos SVG
 - [ ] **US-812:** MapView renderiza NestPin cuando tab=nidos/todo
 - [ ] **US-812:** Pins diferenciados visualmente (forma + color)
@@ -139,9 +148,6 @@ Implementar la **base funcional** de Nidos con:
 - [ ] **US-817:** Overlay.tsx visible cuando tab=todo
 - [ ] **US-817:** Toast aparece al cambiar a todo
 - [ ] **US-817:** Cursor bloqueado en overlay
-- [ ] ✅ **npm run build** sin errores
-- [ ] ✅ Console limpia (0 TS errors)
-- [ ] ✅ Prueba E2E básica (Playwright): cambiar de tabs
 
 ---
 

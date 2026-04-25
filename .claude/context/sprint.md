@@ -13,7 +13,7 @@
 
 | ID | Descripción | SP | Estado | Docs |
 |----|-------------|-----|--------|------|
-| **US-811** | Tabs sidebar (Clima/Nidos/Todo) — fuente única verdad | 3 | ⏳ Pendiente | [`US-811.md`](../src/docs/sprints/sprint-9/US/US-811.md) |
+| **US-811** | Tabs sidebar (Clima/Nidos/Todo) — fuente única verdad | 3 | ✅ Completa | [`US-811.md`](../src/docs/sprints/sprint-9/US/US-811.md) |
 | **US-812** | Pins diferenciados: hexágonos vs círculos | 2 | ⏳ Pendiente | [`US-812.md`](../src/docs/sprints/sprint-9/US/US-812.md) |
 | **US-817** | Overlay sidebar/filtros en modo Todo | 2 | ⏳ Pendiente | [`US-817.md`](../src/docs/sprints/sprint-9/US/US-817.md) |
 | **US-819** | Datos Nidos (JSON estático) | 1 | ⏳ Pendiente | [`US-819.md`](../src/docs/sprints/sprint-9/US/US-819.md) |
@@ -31,9 +31,10 @@
 
 ## 📊 Progreso
 
-**Completadas:** 0/8 US (documentación ✅ completada 17-04)  
-**Pendientes:** 8/8 US (20 SP)  
-**En progreso:** Sesión 1 (implementación — comenzar por US-811)  
+**Completadas:** 1/8 US (3 SP) — US-811 ✅ (2026-04-17, funcionalidad completa)  
+**En refinamiento:** US-811 diseño (Opción A — Underline, necesita ajustes SVG/colores)
+**Pendientes:** 7/8 US (17 SP)  
+**En progreso:** Sesión 1 (US-812, US-817, US-819 bloqueadas por diseño final de US-811)  
 **Nota:** US antiguas (US-801-807) archivadas en `04-archive/` — arquitectura reemplazada
 
 ---

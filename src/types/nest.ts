@@ -42,28 +42,22 @@ export interface NestPokemon {
 
 export interface Nest {
   // ─── Identidad ───
-  id: string // slug único (ej: "shibuya-nest-01")
+  id: string // slug único (ej: "sf-golden-gate-water")
   name: string // nombre del nido
 
   // ─── Ubicación ───
   lat: number
-  lon: number
-  country: string // ej: "Japan"
-  region: Region
+  lng: number // coordenada oeste (-180..180)
   city: string // ej: "Tokyo"
+  country: string // ej: "Japan"
 
-  // ─── Pokémon Nidificado ───
-  nestPokemon: NestPokemon[]
+  // ─── Pokémon (MVP simplificado) ───
+  pokemon: string // nombre del Pokémon principal
+  pokemonType: PokemonType[] // tipos del Pokémon (1-2)
 
-  // ─── Metadatos ───
-  discoveredAt: string // Fecha ISO (ej: "2026-03-01")
-  lastVerifiedAt: string // Última confirmación
-  radius: number // Radio cobertura en metros (ej: 250)
-  accuracy: Accuracy // Confianza en los datos
-  notes?: string // Observaciones adicionales
-
-  // ─── Insignias ───
-  badges: BadgeType[]
+  // ─── Metadatos opcionales ───
+  spawnRate?: number // porcentaje estimado (0-100)
+  lastReported?: string // fecha ISO de último reporte
 }
 
 export interface NestCacheEntry {

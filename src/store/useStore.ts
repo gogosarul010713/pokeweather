@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { Nest } from '../types/nest'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,6 +74,9 @@ interface AppStore {
   lastUpdated: number | null
   isFilterPanelOpen: boolean
   typeFilter: string[]
+  activeTab: 'clima' | 'nidos' | 'todo'
+  nests: Nest[]
+  selectedNest: Nest | null
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -97,6 +101,9 @@ interface AppStore {
   setTypeFilter: (types: string[]) => void
   toggleType: (type: string) => void
   resetToHome: () => void
+  setActiveTab: (tab: 'clima' | 'nidos' | 'todo') => void
+  setNests: (nests: Nest[]) => void
+  setSelectedNest: (nest: Nest | null) => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -144,6 +151,9 @@ export const useStore = create<AppStore>((set, get) => ({
   lastUpdated: null,
   isFilterPanelOpen: false,
   typeFilter: [],
+  activeTab: (localStorage.getItem('pwe-activeTab') as 'clima' | 'nidos' | 'todo') || 'clima',
+  nests: [],
+  selectedNest: null,
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -234,6 +244,15 @@ export const useStore = create<AppStore>((set, get) => ({
         ? state.typeFilter.filter((t) => t !== type)
         : [...state.typeFilter, type],
     })),
+
+  setActiveTab: (tab) => {
+    localStorage.setItem('pwe-activeTab', tab)
+    set({ activeTab: tab })
+  },
+
+  setNests: (nests) => set({ nests }),
+
+  setSelectedNest: (nest) => set({ selectedNest: nest }),
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {

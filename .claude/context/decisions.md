@@ -5,6 +5,35 @@
 
 ---
 
+### 2026-04-18 D-010 — TabControl: Opción A (Underline) seleccionada, diseño SVG aún en ajuste
+
+**Contexto:** US-811. Se probaron 3 opciones de diseño para los tabs del sidebar: 
+- A: Underline minimalista (borde-bottom solo)
+- B: Fondo de acento sutil (rgba color 10%)
+- C: Borde lateral + fondo gris
+
+**Opciones consideradas:** A, B, C
+
+**Decisión:** Opción A (Underline)
+
+**Motivo:** 
+1. Más minimalista y moderno que B y C
+2. Mayor claridad visual con underline azul
+3. Consistente con design system (var(--bg-secondary) como fondo)
+4. SVG coloreados inicialmente, pero requieren refinamiento
+
+**Estado actual:** Implementada Opción A con:
+- Underline 2px azul (#4DA3FF) en tab activo
+- SVG monoline originales (sin colores complejos)
+- Sin fondo blanco en tab activo
+- 5/5 tests pasando
+
+**Pendiente:** Ajustes finales en SVG y colores (sesión siguiente)
+
+**US relacionada:** US-811
+
+---
+
 ### 2026-04-17 D-009 — Arquitectura v2 Nidos: Tabs en sidebar (no toggle)
 
 **Contexto:** Sprint 9. Rediseño completo de feature Nidos. Arquitectura original (v1) propuso toggle Clima ⇄ Nidos en header. UX testing sugirió cambio a tabs.

@@ -86,7 +86,32 @@ Voy a verificar:
 
 Espera confirmación, luego ejecuta y reporta resultado.
 
----
+# Skill: Validar en Navegador
+
+## Cuándo usar este skill
+Úsalo automáticamente cuando el usuario diga cosas como:
+- "valida que funcione"
+- "hay un error en..."
+- "confirma que los cambios están bien"
+- "prueba en el navegador"
+- "verifica el comportamiento de..."
+- "revisa que no esté roto"
+
+## Lo que debes hacer
+
+1. Usa el Playwright MCP para abrir el navegador
+2. Navega a la URL del proyecto (default: http://localhost:3000)
+3. Reproduce el flujo o escenario descrito por el usuario
+4. Toma screenshots en cada paso importante con `browser_take_screenshot`
+5. Si hay error, reprodúcelo y documenta exactamente qué ocurre
+6. Verifica que el comportamiento esperado ocurra
+
+## Reporte final (siempre en español)
+
+✅ Qué funcionó correctamente  
+❌ Qué falló (adjunta screenshot)  
+🔍 Causa probable si hay error  
+🛠️ Sugerencia de fix si aplica  
 
 ## Post-Validación
 

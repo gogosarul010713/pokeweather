@@ -1,124 +1,100 @@
 {
   "nests": [
     {
-      "id": "shinjuku-sandshrew",
-      "name": "Shinjuku Central Park",
-      "lat": 35.6839,
-      "lon": 139.7462,
-      "country": "Japan",
-      "region": "asia",
-      "city": "Tokyo",
-      "nestPokemon": [
-        {
-          "pokemonId": 27,
-          "name": "Sandshrew",
-          "type": "ground",
-          "rarity": "common",
-          "spawnRate": 45,
-          "minIV": 60
-        }
-      ],
-      "discoveredAt": "2026-01-15",
-      "lastVerifiedAt": "2026-04-09",
-      "radius": 250,
-      "accuracy": "high",
-      "badges": ["verified", "hot"]
+      "id": "sf-golden-gate-water",
+      "name": "Golden Gate Park — Water Nest",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": 37.7701,
+      "lng": -122.4686,
+      "pokemon": "Squirtle",
+      "pokemonType": ["water"],
+      "spawnRate": 45,
+      "lastReported": "2026-04-10T14:30:00Z"
     },
     {
-      "id": "harajuku-vulpix",
-      "name": "Harajuku Omotesando",
-      "lat": 35.6653,
-      "lon": 139.7297,
-      "country": "Japan",
-      "region": "asia",
-      "city": "Tokyo",
-      "nestPokemon": [
-        {
-          "pokemonId": 37,
-          "name": "Vulpix",
-          "type": "fire",
-          "rarity": "uncommon",
-          "spawnRate": 32,
-          "minIV": 55
-        }
-      ],
-      "discoveredAt": "2026-02-01",
-      "lastVerifiedAt": "2026-04-08",
-      "radius": 200,
-      "accuracy": "high",
-      "badges": ["verified"]
-    },
-    {
-      "id": "hyde-park-squirtle",
-      "name": "Hyde Park Serpentine",
-      "lat": 51.5044,
-      "lon": -0.1653,
-      "country": "United Kingdom",
-      "region": "europa",
-      "city": "London",
-      "nestPokemon": [
-        {
-          "pokemonId": 7,
-          "name": "Squirtle",
-          "type": "water",
-          "rarity": "rare",
-          "spawnRate": 28,
-          "minIV": 65
-        }
-      ],
-      "discoveredAt": "2026-01-20",
-      "lastVerifiedAt": "2026-04-09",
-      "radius": 300,
-      "accuracy": "high",
-      "badges": ["verified", "hot", "new"]
-    },
-    {
-      "id": "sydney-charmander",
-      "name": "Sydney Botanic Garden",
-      "lat": -33.8568,
-      "lon": 151.2153,
-      "country": "Australia",
-      "region": "oceania",
-      "city": "Sydney",
-      "nestPokemon": [
-        {
-          "pokemonId": 4,
-          "name": "Charmander",
-          "type": "fire",
-          "rarity": "uncommon",
-          "spawnRate": 38,
-          "minIV": 58
-        }
-      ],
-      "discoveredAt": "2026-03-05",
-      "lastVerifiedAt": "2026-04-09",
-      "radius": 280,
-      "accuracy": "medium",
-      "badges": ["verified", "common_spawn"]
-    },
-    {
-      "id": "central-park-bulbasaur",
-      "name": "Central Park Main Mall",
-      "lat": 40.785,
-      "lon": -73.9681,
-      "country": "United States",
-      "region": "america",
+      "id": "nyc-central-park-grass",
+      "name": "Central Park — Grass Nest",
       "city": "New York",
-      "nestPokemon": [
-        {
-          "pokemonId": 1,
-          "name": "Bulbasaur",
-          "type": "grass",
-          "rarity": "rare",
-          "spawnRate": 41,
-          "minIV": 70
-        }
-      ],
-      "discoveredAt": "2026-01-10",
-      "lastVerifiedAt": "2026-04-07",
-      "radius": 320,
-      "accuracy": "high",
-      "badges": ["verified", "hot"]
+      "country": "USA",
+      "lat": 40.7829,
+      "lng": -73.9654,
+      "pokemon": "Bulbasaur",
+      "pokemonType": ["grass", "poison"],
+      "spawnRate": 52,
+      "lastReported": "2026-04-12T09:15:00Z"
+    },
+    {
+      "id": "tokyo-yoyogi-fire",
+      "name": "Yoyogi Park — Fire Nest",
+      "city": "Tokyo",
+      "country": "Japan",
+      "lat": 35.6757,
+      "lng": 139.7018,
+      "pokemon": "Charmander",
+      "pokemonType": ["fire"],
+      "spawnRate": 38,
+      "lastReported": "2026-04-11T18:45:00Z"
+    },
+    {
+      "id": "london-hyde-park-electric",
+      "name": "Hyde Park — Electric Nest",
+      "city": "London",
+      "country": "UK",
+      "lat": 51.5072,
+      "lng": -0.1666,
+      "pokemon": "Pikachu",
+      "pokemonType": ["electric"],
+      "spawnRate": 40,
+      "lastReported": "2026-04-09T16:20:00Z"
+    },
+    {
+      "id": "sydney-opera-dragon",
+      "name": "Sydney Opera House — Dragon Nest",
+      "city": "Sydney",
+      "country": "Australia",
+      "lat": -33.8568,
+      "lng": 151.2153,
+      "pokemon": "Dratini",
+      "pokemonType": ["dragon"],
+      "spawnRate": 35,
+      "lastReported": "2026-04-13T11:30:00Z"
+    },
+    {
+      "id": "seoul-lotte-ice",
+      "name": "Lotte World — Ice Nest",
+      "city": "Seoul",
+      "country": "South Korea",
+      "lat": 37.5109,
+      "lng": 127.0976,
+      "pokemon": "Seel",
+      "pokemonType": ["water", "ice"],
+      "spawnRate": 42,
+      "lastReported": "2026-04-14T10:00:00Z"
+    },
+    {
+      "id": "berlin-tiergarten-flying",
+      "name": "Tiergarten — Flying Nest",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": 52.5200,
+      "lng": 13.4050,
+      "pokemon": "Pidgeot",
+      "pokemonType": ["normal", "flying"],
+      "spawnRate": 48,
+      "lastReported": "2026-04-15T13:45:00Z"
+    },
+    {
+      "id": "toronto-cn-tower-psychic",
+      "name": "CN Tower Area — Psychic Nest",
+      "city": "Toronto",
+      "country": "Canada",
+      "lat": 43.6426,
+      "lng": -79.3871,
+      "pokemon": "Abra",
+      "pokemonType": ["psychic"],
+      "spawnRate": 36,
+      "lastReported": "2026-04-16T08:20:00Z"
     }
   ]
 }

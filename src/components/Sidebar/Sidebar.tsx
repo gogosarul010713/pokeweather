@@ -1,11 +1,14 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
+import TabControl from './TabControl'
+import Overlay from '../UI/Overlay'
 
 interface SidebarProps {
   cities: City[]
 }
 
 export default function Sidebar({ cities }: SidebarProps) {
+  const activeTab = useStore((s) => s.activeTab)
   const sidebarMode = useStore((s) => s.sidebarMode)
   const setSidebarMode = useStore((s) => s.setSidebarMode)
   const selectedCity = useStore((s) => s.selectedCity)
@@ -148,9 +151,19 @@ export default function Sidebar({ cities }: SidebarProps) {
         </div>
 
         {/* ── Content ── */}
-        <div className="sb-content">
-          {/* Modo Lista / Favoritos: LocationFeed (hidden in mobile, visible in tablet+) */}
-          {(sidebarMode === 'list' || sidebarMode === 'favorites') && (
+        <div className="sb-content" style={{ position: 'relative' }}>
+          {/* TabControl: Clima / Nidos / Todo */}
+          <TabControl />
+
+          {/* Overlay cuando activeTab = 'todo' */}
+          <Overlay
+            isActive={activeTab === 'todo'}
+            message="Activa Clima o Nidos para explorar la lista y filtros"
+            zIndex={100}
+          />
+
+          {/* Modo Lista / Favoritos: LocationFeed (solo si activeTab = 'clima') */}
+          {activeTab === 'clima' && (sidebarMode === 'list' || sidebarMode === 'favorites') && (
             <LocationFeed cities={cities} />
           )}
 

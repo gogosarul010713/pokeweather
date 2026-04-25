@@ -1,0 +1,77 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "PokéWeather Map Tracker" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+        - generic [ref=e13]:
+          - generic [ref=e14]: PokéWeather
+          - generic [ref=e15]: Map Tracker
+      - generic [ref=e17]:
+        - button "Todas ▼" [ref=e19] [cursor=pointer]:
+          - generic [ref=e21]: Todas
+          - generic [ref=e22]: ▼
+        - button "Clima ▼" [ref=e24] [cursor=pointer]:
+          - generic [ref=e26]: Clima
+          - generic [ref=e27]: ▼
+        - button "Tipo ▼" [ref=e29] [cursor=pointer]:
+          - generic [ref=e31]: Tipo
+          - generic [ref=e32]: ▼
+        - button "Ordenar por ▼" [ref=e34] [cursor=pointer]:
+          - generic [ref=e36]: Ordenar por
+          - generic [ref=e37]: ▼
+        - generic [ref=e40]:
+          - img
+          - textbox "Buscar ciudad" [ref=e41]:
+            - /placeholder: Buscar ciudad...
+      - generic [ref=e42]:
+        - button "Testing Tools" [ref=e43] [cursor=pointer]: 🧪
+        - generic [ref=e44]: ✓ Ahora
+        - button "Cambiar a tema claro" [ref=e45] [cursor=pointer]: ☀️
+  - generic [ref=e46]:
+    - complementary [ref=e47]:
+      - generic [ref=e48]:
+        - button "📋" [ref=e49] [cursor=pointer]
+        - button "📍" [ref=e50] [cursor=pointer]
+        - button "⭐" [ref=e51] [cursor=pointer]
+      - generic [ref=e53]:
+        - generic [ref=e55]: 📋 Ciudades • 0
+        - generic [ref=e57]:
+          - generic [ref=e58]: 🔍
+          - generic [ref=e59]: Sin resultados
+    - main [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - generic:
+            - generic [ref=e63]:
+              - button "Zoom in" [ref=e64] [cursor=pointer]: +
+              - button "Zoom out" [disabled] [ref=e65]: −
+            - generic [ref=e66]:
+              - link "Leaflet" [ref=e67] [cursor=pointer]:
+                - /url: https://leafletjs.com
+                - img [ref=e68]
+                - text: Leaflet
+              - text: "| ©"
+              - link "OSM" [ref=e72] [cursor=pointer]:
+                - /url: https://www.openstreetmap.org/copyright
+              - text: ©
+              - link "CARTO" [ref=e73] [cursor=pointer]:
+                - /url: https://carto.com/
+        - generic [ref=e74]:
+          - generic [ref=e75] [cursor=pointer]:
+            - generic [ref=e76]: Leyenda
+            - generic [ref=e77]: ▼
+          - generic [ref=e78]:
+            - button "Clima" [ref=e79] [cursor=pointer]
+            - button "Categorías" [ref=e80] [cursor=pointer]
+          - generic [ref=e81]:
+            - generic [ref=e84]: Soleado
+            - generic [ref=e87]: Parcial
+            - generic [ref=e90]: Nublado
+            - generic [ref=e93]: Niebla
+            - generic [ref=e96]: Lluvia
+            - generic [ref=e99]: Nieve
+            - generic [ref=e102]: Ventoso
+```
