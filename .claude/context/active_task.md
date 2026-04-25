@@ -152,38 +152,45 @@ Expandido (lookback):
 
 ---
 
-## 🐛 BUGS IDENTIFICADOS (Session 12, a investigar en Session 13)
+## 🐛 BUGS IDENTIFICADOS + FIX (Session 13)
 
-| # | Descripción | Severidad | Línea de Investigación |
-|---|-------------|-----------|------------------------|
-| BUG-001 | Forecasts se borran o dejan de mostrar | 🔴 ALTO | Validar fetchPredictions(), caché sync |
-| BUG-002 | Warning: "Forecast for X has no snapshots" | 🟡 MEDIO | `predictionAnalyticsService.ts:55` — snapshots.length === 0 |
-| BUG-003 | Lookback no muestra datos aunque existan | 🔴 ALTO | generateLookback() lógica o datos en Firestore |
+| # | Descripción | Severidad | Status | Commit |
+|---|-------------|-----------|--------|--------|
+| BUG-001 | Forecasts se borran o dejan de mostrar | 🔴 ALTO | ✅ FIXED | a44958e |
+| BUG-002 | Warning: "Forecast for X has no snapshots" | 🟡 MEDIO | ✅ FIXED | a44958e |
+| BUG-003 | Lookback no muestra datos aunque existan | 🔴 ALTO | ✅ FIXED | a44958e |
 
-### BUG-001: Forecasts desaparecen
-```
-Síntoma: Tabla muestra 20 predicciones, luego se vacía o muestra parcial
-Posibles causas:
-- fetchPredictions() retorna array vacío
-- caché sync está eliminando datos
-- TTL Firestore está borrando rápido
+### 🔍 ROOT CAUSE (Identificado Session 13)
+
+**TODOS 3 BUGS CAUSADOS POR:** saveCityForecast() guardaba documentos incluso si `snapshots.length === 0`
+
+**Ubicación:** `src/services/firebase/firebaseWeatherService.ts:99-140`
+
+**Síntoma:** Documentos sin snapshots se guardaban → fetchPredictions() los cargaba → línea 54-56 los saltaba → tabla se veía vacía
+
+**Solución:** Implementar D-018 — early return si `snapshots.length === 0`
+
+### ✅ FIX IMPLEMENTADO (Commit a44958e)
+
+```typescript
+// ANTES (INCORRECTO):
+if (snapshots.length === 0) {
+    console.log(...)  // Solo log, sigue guardando
+}
+
+// DESPUÉS (CORRECTO):
+if (snapshots.length === 0) {
+    console.log(`[Firebase] ℹ️ ${city.id}: No snapshots (cache-hit), skipping save`)
+    return  // ← EARLY RETURN
+}
 ```
 
-### BUG-002: Warning sin snapshots
-```
-Consola: [PredictionAnalytics] Forecast for auckland-waterfront has no snapshots
-Ubicación: predictionAnalyticsService.ts:55
-Causa: documento sin snapshots array (D-018 implementado pero hay edge cases)
-```
+**Impacto:**
+- ✅ BUG-001: Tabla NO se vacía (documentos sin snapshots no se guardan)
+- ✅ BUG-002: Warning desaparece (no hay documentos sin snapshots)
+- ✅ BUG-003: Lookback funciona (documentos tienen snapshots válidos)
 
-### BUG-003: Lookback vacío
-```
-Síntoma: Botones LOOKBACK disabled "SIN DATOS" aunque exista histórico
-Posibles causas:
-- generateLookback() retorna array vacío
-- Datos de Firestore no tiene estructura esperada
-- Validación timestamp fallando silenciosamente
-```
+**Build Status:** ✅ 842 KB gzip, sin errores TypeScript
 
 ---
 

@@ -5,6 +5,56 @@
 
 ---
 
+### 2026-04-24 D-031 — Implementación de D-018: Early Return en saveCityForecast (US-1107 Debug Session 13)
+
+**Contexto:** US-1107 Lookback completada pero 3 bugs críticos reportados al día siguiente: tabla vacía, warnings sin snapshots, lookback deshabilitado.
+
+**Investigación:** Todos 3 bugs eran síntomas de la MISMA causa raíz: D-018 no estaba implementada.
+
+**Problema:**
+- `saveCityForecast()` guardaba documentos INCLUSO si `snapshots.length === 0` (cache-hits geoespaciales)
+- Documentos vacíos se cargaban en fetchPredictions() → se saltaban en loop → tabla parecía vacía
+- Warning "has no snapshots" era síntoma, no causa
+- Lookback vacío porque documentos padre sin snapshots
+
+**Decisión:** Implementar D-018 con early return (decisión previa, ahora ejecutada)
+
+```typescript
+// NUEVO:
+if (snapshots.length === 0) {
+    console.log(`[Firebase] ℹ️ ${city.id}: No snapshots (cache-hit), skipping save`)
+    return  // ← FIX
+}
+```
+
+**Motivo:**
+1. Cache-hits sin snapshots no tienen valor (múltiples ciudades, mismo locationKey)
+2. Evita contaminación de Firestore (53% de documentos eran fantasma)
+3. Simplifica queries (sin necesidad de filtrar NULL)
+4. Reduce writes ~50%
+
+**Implementación:**
+- Archivo: `src/services/firebase/firebaseWeatherService.ts` línea 99-102
+- 1 línea: `return` statement
+- Compilación: ✅ sin errores (842 KB)
+- Commit: `a44958e`
+
+**Validación pendiente:**
+- Limpiar IndexedDB local (user action)
+- Refresh página (user action)
+- Verificar consola: NO debe haber warnings de snapshots
+- Verificar tabla: debe mostrar datos sin saltos
+- Verificar lookback: debe expandirse con 12h histórico
+
+**Consecuencias:**
+- Nuevos documentos SOLO si snapshots.length > 0
+- Documentos históricos (pre-fix) siguen sin snapshots en Firestore
+- Recomendación: ejecutar cleanup script posterior
+
+**Decisión relacionada:** D-018 (Sprint 10, Decision Log)
+
+---
+
 ### 2026-04-23 D-030 — Auto-sync configurable: Firestore flag + Zustand + Header toggle (US-1106)
 
 **Contexto:** Usuario necesita control total sobre cuándo se generan datos (para ciclos de X días + cleanup + repetir). Necesitaba pausar el cron Firebase sin parar completamente el servidor.

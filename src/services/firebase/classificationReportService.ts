@@ -267,10 +267,57 @@ export async function saveWeatherReport(
   }
 }
 
+/**
+ * Obtener reportes de clima real (weather_reports)
+ * BUG-008 FIX: Agregada para sincronizar tabla después de reportar
+ * @param hours - últimas N horas (default 24)
+ * @returns array de reportes con estructura para predictionAnalyticsService
+ */
+export async function getRecentWeatherReports(
+  hours: number = 24
+): Promise<Array<{ city_id: string; date_hour: string; reported_condition: string }>> {
+  const { collection, getDocs, Timestamp } = await import('firebase/firestore')
+  const db = await getDb()
+
+  try {
+    const minDate = new Timestamp(
+      Math.floor((Date.now() - hours * 60 * 60 * 1000) / 1000),
+      0
+    )
+
+    if (!db) {
+      console.warn('[Firebase] Firestore not initialized, returning empty weather reports')
+      return []
+    }
+
+    // Leer desde 'weather_reports' (donde saveWeatherReport() guarda)
+    const allReports = await getDocs(collection(db, 'weather_reports'))
+
+    const filtered = allReports.docs
+      .map((doc) => ({
+        city_id: doc.data().city_id,
+        date_hour: doc.data().date_hour,
+        reported_condition: doc.data().reported_condition,
+      }))
+      .filter((report) => {
+        // El timestamp está en el documento original
+        const docData = allReports.docs.find((d) => d.data().city_id === report.city_id && d.data().date_hour === report.date_hour)?.data()
+        return docData?.timestamp >= minDate
+      })
+
+    console.log(`[Firebase] ✅ Loaded ${filtered.length} weather reports from last ${hours}h`)
+    return filtered
+  } catch (err) {
+    console.error('[Firebase] ⚠️ Error al leer weather reports:', err)
+    return []
+  }
+}
+
 export default {
   saveClassificationReport,
   getRecentClassificationReports,
   getCityClassificationReports,
   isDuplicateReport,
   saveWeatherReport,
+  getRecentWeatherReports,
 }
