@@ -96,8 +96,12 @@ export async function saveCityForecast(
       `[Firebase] Warning: ${city.id} has ${snapshots.length} snapshots (expected 12)`
     )
   }
+  // D-018: No guardar documentos sin snapshots
+  // Snapshots vacío = cache-hit geoespacial (múltiples ciudades, mismo locationKey)
+  // Sin snapshots = sin predicción válida → documento sin valor
   if (snapshots.length === 0) {
-    console.log(`[Firebase] ℹ️ ${city.id}: No snapshots (from cache), saving aggregated data only`)
+    console.log(`[Firebase] ℹ️ ${city.id}: No snapshots (cache-hit), skipping save`)
+    return
   }
 
   try {
