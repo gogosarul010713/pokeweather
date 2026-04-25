@@ -152,13 +152,14 @@ Expandido (lookback):
 
 ---
 
-## 🐛 BUGS IDENTIFICADOS + FIX (Session 13)
+## 🐛 BUGS IDENTIFICADOS + FIXES IMPLEMENTADOS (Session 13)
 
 | # | Descripción | Severidad | Status | Commit |
 |---|-------------|-----------|--------|--------|
 | BUG-001 | Forecasts se borran o dejan de mostrar | 🔴 ALTO | ✅ FIXED | a44958e |
 | BUG-002 | Warning: "Forecast for X has no snapshots" | 🟡 MEDIO | ✅ FIXED | a44958e |
 | BUG-003 | Lookback no muestra datos aunque existan | 🔴 ALTO | ✅ FIXED | a44958e |
+| BUG-008 | Reporte clima no actualiza tabla predictiva | 🟡 MEDIO | ✅ FIXED | dd8e7b8 |
 
 ### 🔍 ROOT CAUSE (Identificado Session 13)
 
@@ -191,6 +192,26 @@ if (snapshots.length === 0) {
 - ✅ BUG-003: Lookback funciona (documentos tienen snapshots válidos)
 
 **Build Status:** ✅ 842 KB gzip, sin errores TypeScript
+
+---
+
+### ✅ BUG-008: Reporte Clima No Actualiza Tabla (Commit dd8e7b8)
+
+**Root Cause:** Mismatch de colecciones
+- `saveWeatherReport()` guarda en `'weather_reports'`
+- Pero `fetchPredictions()` buscaba SOLO en `'classification_reports'`
+- Resultado: Reportes nuevos no aparecían en tabla
+
+**Solución:** Unified Report Index
+1. Nueva función: `getRecentWeatherReports()` en classificationReportService.ts
+2. Actualizado `fetchPredictions()` para leer ambas colecciones
+3. Merge automático en índice (classification_reports prioridad si hay conflicto)
+
+**Archivos Modificados:**
+- `src/services/firebase/classificationReportService.ts` — +getRecentWeatherReports()
+- `src/services/predictions/predictionAnalyticsService.ts` — Unified index
+
+**Build Status:** ✅ 843 KB gzip, sin errores TypeScript
 
 ---
 

@@ -39,6 +39,7 @@ export interface PredictionRow {
 interface Props {
   rows: PredictionRow[];
   title?: string;
+  onReportSuccess?: () => void | Promise<void>;
 }
 
 
@@ -93,7 +94,7 @@ function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
-export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas' }: Props) {
+export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas', onReportSuccess }: Props) {
   const [sorting, setSorting]             = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter]   = useState('');
@@ -115,8 +116,16 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
     setTimeout(() => setCopiedCoords(null), 2000);
   };
 
-  const handleReportSuccess = () => {
+  const handleReportSuccess = async () => {
     showToast('✓ Reporte enviado correctamente');
+    // BUG-008 FIX: Refetch datos después de reportar
+    if (onReportSuccess) {
+      try {
+        await onReportSuccess();
+      } catch (err) {
+        console.warn('[PredictionAnalysisTable] Error in onReportSuccess callback:', err);
+      }
+    }
   };
 
   const columnHelper = createColumnHelper<PredictionRow>();

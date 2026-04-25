@@ -80,6 +80,21 @@ export function PredictionAnalysisDemo() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // BUG-008 FIX: Función de refetch para llamar después de reportar clima
+  const handleReportSuccess = async () => {
+    try {
+      console.log('[PredictionDemo] Refetching after weather report...');
+      const realData = await fetchPredictions();
+      if (realData.length > 0) {
+        setRows(realData);
+        console.log(`[PredictionDemo] ✅ Refetch completado: ${realData.length} predictions`);
+      }
+    } catch (err) {
+      console.warn('[PredictionDemo] Refetch error:', err);
+      // No es crítico, mantiene datos anteriores
+    }
+  };
+
   useEffect(() => {
     async function loadPredictions() {
       try {
@@ -170,7 +185,7 @@ export function PredictionAnalysisDemo() {
           {rows.length === generateMockData().length ? '📊 Mock data' : '✅ Real data from Firestore'}
         </div>
       )}
-      <PredictionAnalysisTable rows={rows} title="Análisis de Predicciones" />
+      <PredictionAnalysisTable rows={rows} title="Análisis de Predicciones" onReportSuccess={handleReportSuccess} />
     </div>
   );
 }
