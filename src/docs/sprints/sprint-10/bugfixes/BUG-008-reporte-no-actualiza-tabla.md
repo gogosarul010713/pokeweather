@@ -123,17 +123,156 @@ weatherReports.forEach(report => {
 
 ---
 
-## ⏳ Validación Manual (Pendiente user action)
+---
 
-**Pasos:**
-1. Abre tabla de predicciones
-2. Click en ⚠️ (botón reporte)
-3. Selecciona condición climática
-4. Envía reporte
-5. **Verifica:** Tabla debe actualizarse automáticamente
-   - Columna "Real" debe mostrar la condición reportada
-   - Columna "Resultado" debe mostrar ✓ o ✗ según acierto
+## 🔄 Solución v2 Implementada (Commit 4d8c37f)
+
+**Problema con fix v1:**
+- getRecentWeatherReports() funcionaba correctamente
+- Pero tabla NO se actualizaba después de reportar
+- Causa: NO había refetch de datos
+
+**Root Cause v2:**
+`useEffect` en PredictionAnalysisDemo (línea 154) tiene dependency array vacío `[]`
+→ Se ejecuta UNA SOLA VEZ al montar
+→ Después de reportar, nunca vuelve a ejecutarse
+
+**Solución v2: Callback Chain**
+```
+WeatherReportModal (salva)
+  ↓
+onSuccess callback
+  ↓
+PredictionAnalysisTable.handleReportSuccess()
+  ↓
+Llama prop onReportSuccess (desde padre)
+  ↓
+PredictionAnalysisDemo.handleReportSuccess()
+  ↓
+fetchPredictions() + setRows
+  ↓
+Tabla se re-renderiza con datos nuevos ✅
+```
+
+### Cambios Implementados
+
+#### 1. **PredictionAnalysisDemo: Agregar callback**
+```typescript
+const handleReportSuccess = async () => {
+  try {
+    console.log('[PredictionDemo] Refetching after weather report...');
+    const realData = await fetchPredictions();
+    if (realData.length > 0) {
+      setRows(realData);
+    }
+  } catch (err) {
+    console.warn('[PredictionDemo] Refetch error:', err);
+  }
+};
+```
+
+#### 2. **PredictionAnalysisTable: Recibir prop + llamar callback**
+```typescript
+interface Props {
+  rows: PredictionRow[];
+  title?: string;
+  onReportSuccess?: () => void | Promise<void>;  // ← NEW
+}
+
+const handleReportSuccess = async () => {
+  showToast('✓ Reporte enviado correctamente');
+  if (onReportSuccess) {
+    await onReportSuccess();  // ← Refetch
+  }
+};
+```
+
+#### 3. **Pasar prop desde Demo a Table**
+```typescript
+<PredictionAnalysisTable 
+  rows={rows} 
+  title="..." 
+  onReportSuccess={handleReportSuccess}  // ← NEW
+/>
+```
+
+### Build Status
+- ✅ TypeScript: Sin errores
+- ✅ Vite: 843 KB gzip
+- ✅ No regressions
 
 ---
 
-**Sesión:** 13 | **Usuario:** Geovanny M | **Rama:** sprint-10
+---
+
+## ❌ Por qué v1 y v2 NO resolvieron el problema
+
+Ambas soluciones anteriores atacaron síntomas, no la causa raíz:
+
+- **v1:** Agregó `getRecentWeatherReports()` — correcto, pero inútil si las claves no coinciden
+- **v2:** Agregó callback de refetch — correcto, pero el `reportIndex` sigue sin encontrar el reporte
+
+Ninguna detectó el **date_hour mismatch** entre el writer y el reader.
+
+---
+
+## ✅ Solución v3 — Root Cause Real (Session 14)
+
+**Archivo:** `src/services/firebase/classificationReportService.ts`
+
+### Diagnóstico
+
+| Componente | Fórmula date_hour | Ejemplo (09:34 local UTC-5) |
+|-----------|-------------------|------------------------------|
+| `saveCityForecast()` | LOCAL time + next hour | `getHours()+1` → `"2026-04-25-10"` |
+| `saveWeatherReport()` (ANTES) | UTC via `.toISOString()` | `T09:34Z` → `"2026-04-25-09"` (UTC!)|
+| `fetchPredictions()` lookup | `forecast.date_hour` | `"2026-04-25-10"` |
+| **Resultado** | **MISMATCH** | `"10"` != `"09"` → reporte nunca encontrado |
+
+En un usuario UTC-5: el `date_hour` del reporte difería por 5 horas del forecast.
+En UTC+0: difería por 1 hora (falta el redondeo a siguiente hora).
+
+### Fix
+
+**Antes:**
+```typescript
+date_hour: queryTimeDate.toISOString().slice(0, 13).replace('T', '-'),
+```
+
+**Después:**
+```typescript
+// Mismo algoritmo que saveCityForecast(): LOCAL time + redondeo hora siguiente
+const reportNextHour = new Date(queryTimeDate)
+reportNextHour.setHours(reportNextHour.getHours() + 1, 0, 0, 0)
+const yyyy = reportNextHour.getFullYear()
+const mm = String(reportNextHour.getMonth() + 1).padStart(2, '0')
+const dd = String(reportNextHour.getDate()).padStart(2, '0')
+const hh = String(reportNextHour.getHours()).padStart(2, '0')
+const dateHour = `${yyyy}-${mm}-${dd}-${hh}`
+```
+
+### Por qué esto es correcto
+
+`forecast.created_at` es un Firestore Timestamp (UTC). Al llamar `.toDate()` se obtiene un JavaScript Date con los milisegundos correctos. Aplicar `getHours() + 1` sobre ese Date usa tiempo LOCAL (igual que `saveCityForecast()`), produciendo exactamente el mismo `date_hour` que se guardó en el forecast.
+
+### Build Status
+- ✅ TypeScript: Sin errores (tsc --noEmit limpio)
+- ✅ No regressions
+
+---
+
+## ✅ Validación Manual (Pendiente)
+
+**Pasos:**
+1. Abre tabla de predicciones
+2. Click en ⚠️ de cualquier fila
+3. Selecciona condición climática (ej: "rain")
+4. Envía reporte
+5. **Verifica:** Tabla debe actualizarse sin refresh
+   - Columna "Real" muestra la condición reportada
+   - Columna "Resultado" muestra ✓ o ✗
+
+---
+
+**Sesión:** 14 | **Commits:** dd8e7b8 (v1), 4d8c37f (v2), pendiente (v3 — date_hour fix)
+**Usuario:** Geovanny M | **Rama:** sprint-10

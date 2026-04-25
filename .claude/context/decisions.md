@@ -5,6 +5,30 @@
 
 ---
 
+### 2026-04-25 D-032 — BUG-008 Root Cause: date_hour LOCAL vs UTC en saveWeatherReport (Session 14)
+
+**Contexto:** BUG-008 persistia despues de 2 fixes (v1 colecciones, v2 callback refetch). Tabla seguia sin actualizar columna "Real" tras reportar clima.
+
+**Problema Identificado:**
+- `saveCityForecast()`: `date_hour = formatDateHour(nextHour)` → usa `getHours()+1` (LOCAL time)
+- `saveWeatherReport()`: `date_hour = queryTimeDate.toISOString().slice(0,13)` → UTC, sin redondeo
+- Ejemplo UTC-5: forecast key = `"city|2026-04-25-10"` (local), report key = `"city|2026-04-25-14"` (UTC) → MISMATCH
+- `reportIndex.get(key)` siempre null → columna "Real" = vacia siempre
+
+**Decision:** En `saveWeatherReport()`, replicar exactamente el algoritmo de `saveCityForecast()`:
+```typescript
+const reportNextHour = new Date(queryTimeDate)
+reportNextHour.setHours(reportNextHour.getHours() + 1, 0, 0, 0)
+// formatear con getFullYear/getMonth/getDate/getHours (LOCAL)
+```
+
+**Por que es correcto:** `queryTimeDate` es `forecast.created_at.toDate()` — mismo punto en el tiempo que `now` en saveCityForecast. Aplicar `getHours()+1` produce exactamente el mismo `date_hour` que se guardo en el forecast document.
+
+**Archivo:** `src/services/firebase/classificationReportService.ts` — funcion `saveWeatherReport()`
+**Commit:** pendiente
+
+---
+
 ### 2026-04-24 D-031 — Implementación de D-018: Early Return en saveCityForecast (US-1107 Debug Session 13)
 
 **Contexto:** US-1107 Lookback completada pero 3 bugs críticos reportados al día siguiente: tabla vacía, warnings sin snapshots, lookback deshabilitado.

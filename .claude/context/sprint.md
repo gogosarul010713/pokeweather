@@ -234,12 +234,30 @@
 - ✅ Build sin errores (132 modules, 842 KB)
 - ✅ Testing manual: 6/6 cases (Fase 5) + tabla preview (Fase 6)
 
+### 🐛 BUGS RESUELTOS (Session 13-14)
+
+| # | Bug | Causa Raíz | Status | Fix |
+|---|-----|-----------|--------|-----|
+| BUG-007 (001-003) | Tabla vacía + warnings + lookback vacío | D-018 no implementada (docs sin snapshots) | ✅ FIXED | `a44958e` |
+| BUG-008 v1 | Tabla no actualiza tras reportar | Mismatch colecciones (weather_reports vs classification_reports) | ✅ FIXED | `dd8e7b8` |
+| BUG-008 v2 | Tabla no refetch tras reportar | useEffect sin re-ejecución — faltaba callback | ✅ FIXED | `4d8c37f` |
+| BUG-008 v3 | Columna "Real" nunca se actualiza | `date_hour` mismatch: UTC vs LOCAL + sin redondeo | ✅ FIXED | pendiente commit |
+
+**BUG-008 v3 (Root Cause Final):**
+- `saveWeatherReport()` usaba `.toISOString()` (UTC) sin redondear a hora siguiente
+- `saveCityForecast()` usa `getHours() + 1` (LOCAL time) para `date_hour`
+- Diferencia en UTC+0: 1h | En UTC-5: 6h → reporte nunca coincidía con forecast en `reportIndex`
+- Fix: replicar fórmula de `saveCityForecast` en `saveWeatherReport`
+- Archivo: `src/services/firebase/classificationReportService.ts` (función `saveWeatherReport`)
+
 ### Próximo Paso
-- **Merge `sprint-10` → `develop`** ← Ready to merge
+1. Commit BUG-008 v3 fix
+2. Validación manual: reportar clima → tabla se actualiza ✓
+3. Merge `sprint-10` → `develop`
 
 ---
 
-**Sprint 10 Status:** ✅ **COMPLETADO + AMPLIACIÓN** (2026-04-16 → 2026-04-24)
-**Build:** ✅ 132 modules, 842 KB (JS gzip), SIN ERRORES
-**Last Commit:** c5191c2 - feat(US-1107): Implementar lookback 12h en tabla predictiva
-**Testing:** ✅ 6/6 Manual test cases (Fase 5) + tabla preview (Fase 6)
+**Sprint 10 Status:** ✅ COMPLETADO + AMPLIACIÓN + BUGFIXES (2026-04-16 → 2026-04-25)
+**Build:** ✅ tsc --noEmit limpio, SIN ERRORES
+**Last Commit:** 4d8c37f - BUG-008 v2 callback chain
+**Pending Commit:** BUG-008 v3 date_hour fix (classificationReportService.ts)

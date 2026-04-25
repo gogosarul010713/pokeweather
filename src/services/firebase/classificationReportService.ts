@@ -242,11 +242,21 @@ export async function saveWeatherReport(
       queryTimeDate = new Date()
     }
 
+    // BUG-008 FIX: date_hour debe usar tiempo LOCAL + redondeo a hora SIGUIENTE
+    // Mismo algoritmo que saveCityForecast() para que las claves coincidan en reportIndex
+    const reportNextHour = new Date(queryTimeDate)
+    reportNextHour.setHours(reportNextHour.getHours() + 1, 0, 0, 0)
+    const yyyy = reportNextHour.getFullYear()
+    const mm = String(reportNextHour.getMonth() + 1).padStart(2, '0')
+    const dd = String(reportNextHour.getDate()).padStart(2, '0')
+    const hh = String(reportNextHour.getHours()).padStart(2, '0')
+    const dateHour = `${yyyy}-${mm}-${dd}-${hh}`
+
     const report = {
       city_id: cityId,
       city_name: cityName,
       timestamp: now,
-      date_hour: queryTimeDate.toISOString().slice(0, 13).replace('T', '-'),
+      date_hour: dateHour,
 
       // Clima predicho vs reportado
       predicted_condition: predictedCondition,
