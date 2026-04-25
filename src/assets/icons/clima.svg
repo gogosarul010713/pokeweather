@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 310" width="360" height="310">
+  <!-- icono_clima_refinado.svg -->
+  <!-- 4 paths limpios: nube trasera, nube delantera, gota, reflejo -->
+  <!-- stroke-width uniforme 7px en todas las formas -->
+
   <!-- Nube trasera (pequeña, arriba derecha) -->
   <path
     fill="white"
