@@ -1,153 +1,157 @@
-# 🎯 Tarea Activa: Sesión 1 — Fundación Nidos (Arquitectura v2)
+# 🎯 Tarea Activa: Sesión 2 — Interfaz Completa Nidos (Filtros + Leyenda)
 
 **Sprint:** 9 — Nidos de Pokémon  
 **Rama:** `sprint-9-nests`  
-**Sesión:** 1/3 (Fundación: Tabs + Pins + Datos + Overlay)  
+**Sesión:** 2/3 (Interfaz: Filtros dinámicos + Leyenda dinámica)  
 **Duración estimada:** 3-4 horas  
-**Story Points:** 9 SP (US-811, US-812, US-817, US-819)  
-**Última actualización:** 2026-04-17
+**Story Points:** 11 SP (US-814, US-815, US-816, US-818)  
+**Última actualización:** 2026-04-24
 
 ---
 
-## 📋 Objetivo de Sesión 1
+## 📋 Objetivo de Sesión 2
 
-Implementar la **base funcional** de Nidos con:
-1. Tabs en sidebar como control de capas (fuente única de verdad)
-2. Pins diferenciados (hexágonos para nidos, círculos para clima)
-3. Datos estáticos cargando desde JSON
-4. Overlay en modo "Todo" para bloquear sidebar/filtros
+Implementar la **interfaz completa** de Nidos con:
+1. Filtros dinámicos según tab activo
+2. Leyenda dinámica con colores de tipos
+3. Leyenda acordeón en modo "Todo"
+4. Listado de Nidos en sidebar
 
 **Resultado esperado:** 
-- ✅ Tres tabs en sidebar funcionando
-- ✅ Cambiar entre tabs actualiza el mapa
-- ✅ Modo "Todo" muestra ambas capas + overlay bloqueante
-- ✅ Toast informativo al entrar en modo "Todo"
+- ✅ Filtros contextuales por tab
+- ✅ Leyenda actualiza según tipos visibles
+- ✅ Listado NestFeed con búsqueda
+- ✅ Acordeón en modo "Todo"
 - ✅ 0 errores TypeScript
 
 ---
 
-## 🎯 User Stories (En Orden de Implementación)
+## ✅ SESIÓN 1 — COMPLETADA (2026-04-24)
 
-### 1️⃣ **US-811** — Tabs del Sidebar (3 SP) ← COMENZAR AQUÍ
+**Commit:** 423297b — "feat: Sesión 1 Nidos — Tabs, NestPins, Datos y Overlay"
 
-📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-811.md`](../src/docs/sprints/sprint-9/US/US-811.md)
+✅ **US-811** Tabs del Sidebar (3 SP) — COMPLETADA
+✅ **US-812** Pins Diferenciados (2 SP) — COMPLETADA  
+✅ **US-819** Datos JSON (1 SP) — COMPLETADA
+✅ **US-817** Overlay Modo Todo (2 SP) — COMPLETADA
 
-**Objetivo:** Control de capas mediante tabs en sidebar
+**Build:** ✓ 1.43s, sin errores TypeScript
+**Status:** Listo para Sesión 2
+
+---
+
+## 🎯 User Stories Sesión 2 (En Orden de Implementación)
+
+### 1️⃣ **US-814** — Filtros Dinámicos por Tab (3 SP) ← COMENZAR AQUÍ
+
+📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-814.md`](../src/docs/sprints/sprint-9/US/US-814.md)
+
+**Objetivo:** Filtros contextuales que cambian según tab activo
 
 **Archivos a crear:**
-- `src/components/Sidebar/TabControl.tsx` (~120 líneas)
-  - 3 tabs: Clima / Nidos / Todo
-  - Uno siempre activo (pill style activo)
-  - Contador contextual (Ciudades · N / Nidos · N / etc)
+- `src/components/UI/FilterBarClima.tsx` (~150 líneas)
+  - Filtros: región, condición, búsqueda
+- `src/components/UI/FilterBarNests.tsx` (~150 líneas)
+  - Filtros: tipo Pokémon, región, búsqueda
+- `src/components/UI/FilterBarTodo.tsx` (~80 líneas)
+  - Ambos filtros en tab único o acordeón
 
 **Archivos a modificar:**
-- `src/store/useStore.ts` → agregar state `activeTab: 'clima' | 'nidos' | 'todo'` + setter
-- `src/components/Sidebar/Sidebar.tsx` → integrar `<TabControl>`
-- `src/App.tsx` → renderización condicional según `activeTab`
+- `src/components/UI/FilterBar.tsx` → renderización condicional según tab
+- `src/store/useStore.ts` → agregar nestTypeFilter state
+- `src/components/Sidebar/Sidebar.tsx` → integrar FilterBar condicional
 
 **Criterios de éxito:**
-- ✅ Tabs visibles en sidebar
-- ✅ Click en tab → cambio instantáneo
-- ✅ localStorage persiste `activeTab`
-- ✅ Al recargar se restaura último tab
-- ✅ No hay errores de TypeScript
+- ✅ En tab Clima: solo filtros de clima
+- ✅ En tab Nidos: solo filtros de nidos
+- ✅ En tab Todo: ambos filtros (acordeón)
+- ✅ Filtros aplicados en tiempo real
+- ✅ 0 errores TypeScript
 
 ---
 
-### 2️⃣ **US-812** — Pins Diferenciados (2 SP)
+### 2️⃣ **US-815** — Leyenda Dinámica (3 SP)
 
-📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-812.md`](../src/docs/sprints/sprint-9/US/US-812.md)
+📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-815.md`](../src/docs/sprints/sprint-9/US/US-815.md)
 
-**Objetivo:** Visual diferenciación entre pins
+**Objetivo:** Leyenda que cambia según tab activo
 
 **Archivos a crear:**
-- `src/components/Map/NestPin.tsx` (~150 líneas)
-  - SVG hexágono (32×32px)
-  - Color según tipo de Pokémon
-  - Click abre popup
+- `src/components/Map/NestLegend.tsx` (~200 líneas)
+  - Grid 2 columnas con tipos Pokémon
+  - Búsqueda por nombre
+- `src/components/Map/ClimaLegend.tsx` (actualizar existente)
+  - Iconos de condiciones clima
 
 **Archivos a modificar:**
-- `src/components/Map/MapView.tsx` → renderizar condicional `<NestPin>` cuando tab=nidos/todo
+- `src/components/Map/MapLegend.tsx` → renderización condicional
+- `src/store/useStore.ts` → agregar filterNestType state
 
 **Criterios de éxito:**
-- ✅ En tab Clima: solo pines circulares
-- ✅ En tab Nidos: solo hexágonos
-- ✅ En tab Todo: ambos visibles simultáneamente
-- ✅ Hexágonos con color correcto
+- ✅ En tab Clima: leyenda de condiciones
+- ✅ En tab Nidos: leyenda de tipos Pokémon
+- ✅ Colores consistentes con pins
+- ✅ 0 errores TypeScript
 
 ---
 
-### 3️⃣ **US-819** — Datos JSON (1 SP)
+### 3️⃣ **US-816** — Leyenda Acordeón en Modo Todo (2 SP)
 
-📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-819.md`](../src/docs/sprints/sprint-9/US/US-819.md)
+📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-816.md`](../src/docs/sprints/sprint-9/US/US-816.md)
 
-**Objetivo:** Fuente de datos estática
+**Objetivo:** Leyenda combinada en modo Todo
 
 **Archivos a crear:**
-- `src/data/nests.json`
-  - Array con 5-8 nidos
-  - Estructura: id, name, city, country, lat, lng, pokemon, pokemonType[], spawnRate, lastReported
-  - Distribución geográfica variada
+- `src/components/Map/CombinedLegend.tsx` (~150 líneas)
+  - Acordeón: Clima / Nidos
+  - Colapsables independientes
 
 **Criterios de éxito:**
-- ✅ JSON válido
-- ✅ Mínimo 5 nidos
-- ✅ Tipos válidos (Water, Fire, Grass, Electric, Dragon, etc)
-- ✅ Coordenadas realistas
+- ✅ Acordeón funcional en modo Todo
+- ✅ Secciones expandible/colapsable
+- ✅ Espacio optimizado
 
 ---
 
-### 4️⃣ **US-817** — Overlay Modo Todo (2 SP)
+### 4️⃣ **US-818** — Listado Nidos en Sidebar (3 SP)
 
-📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-817.md`](../src/docs/sprints/sprint-9/US/US-817.md)
+📄 **Referencia:** [`src/docs/sprints/sprint-9/US/US-818.md`](../src/docs/sprints/sprint-9/US/US-818.md)
 
-**Objetivo:** Feedback visual cuando modo = "todo"
+**Objetivo:** Feed de nidos en sidebar (como LocationFeed de clima)
 
 **Archivos a crear:**
-- `src/components/UI/Overlay.tsx` (~50 líneas)
-  - Fondo semi-transparente + mensaje centrado
-  - Reutilizable
-
-- `src/components/UI/Toast.tsx` (~80 líneas)
-  - Notificación bottom-right
-  - Auto-dismiss 3s o click ✕
+- `src/components/Sidebar/NestCard.tsx` (~120 líneas)
+  - Card con info del nido
+  - Tipo, spawn rate, ubicación
+- `src/components/Sidebar/NestFeed.tsx` (~150 líneas)
+  - Listado de nidos
+  - Búsqueda integrada
+  - Click abre popup en mapa
 
 **Archivos a modificar:**
-- `src/components/Sidebar/Sidebar.tsx` → integrar `<Overlay>` cuando tab=todo
-- `src/components/UI/FilterBar.tsx` → integrar `<Overlay>` cuando tab=todo
-- `src/App.tsx` → mostrar `<Toast>` cuando tab cambia a 'todo'
+- `src/components/Sidebar/Sidebar.tsx` → renderizar NestFeed cuando tab=nidos
+- `src/store/useStore.ts` → agregar filtros de nidos
 
 **Criterios de éxito:**
-- ✅ Toast aparece al entrar en modo Todo
-- ✅ Overlay visible en sidebar y filtros
-- ✅ Cursor `not-allowed` en área bloqueada
-- ✅ Desaparece al cambiar de tab
+- ✅ NestFeed visible cuando tab=nidos
+- ✅ Click en card → foco en mapa
+- ✅ Búsqueda por nombre/tipo
+- ✅ Scroll fluido
 
 ---
 
-## 📊 Checklist Sesión 1
+## 📊 Checklist Sesión 2
 
-### ✅ US-811 COMPLETADA (con detalles de diseño pendientes)
-- [x] **US-811:** TabControl.tsx creado y visible
-- [x] **US-811:** `activeTab` state en Zustand
-- [x] **US-811:** MapView renderiza condicional
-- [x] **US-811:** Sidebar renderiza condicional
-- [x] **US-811:** localStorage persiste activeTab
-- [x] **npm run build** sin errores (✅ compilación exitosa)
-- [x] ✅ Console limpia (0 TS errors)
-- [x] ✅ Prueba E2E básica (Playwright): 5/5 tests pasando
-- 🔄 **Diseño TabControl:** Opción A (Underline) implementada, pero **necesita ajustes finales en SVG/colores**
-
-### ⏳ Pendiente — Próxima Sesión
-- [ ] **US-811 DISEÑO:** Ajustar SVG y colores del TabControl (Opción A aún en refinamiento)
-- [ ] **US-812:** NestPin.tsx crea hexágonos SVG
-- [ ] **US-812:** MapView renderiza NestPin cuando tab=nidos/todo
-- [ ] **US-812:** Pins diferenciados visualmente (forma + color)
-- [ ] **US-819:** nests.json creado con 5+ nidos
-- [ ] **US-819:** JSON válido y estructura correcta
-- [ ] **US-817:** Overlay.tsx visible cuando tab=todo
-- [ ] **US-817:** Toast aparece al cambiar a todo
-- [ ] **US-817:** Cursor bloqueado en overlay
+### ⏳ En Progreso — Sesión 2
+- [ ] **US-814:** FilterBarClima.tsx + FilterBarNests.tsx
+- [ ] **US-814:** Filtros contextuales por tab
+- [ ] **US-815:** NestLegend.tsx con grid 2 columnas
+- [ ] **US-815:** MapLegend renderiza condicional
+- [ ] **US-816:** CombinedLegend.tsx con acordeón
+- [ ] **US-818:** NestCard.tsx + NestFeed.tsx
+- [ ] **US-818:** Renderización condicional en Sidebar
+- [ ] **npm run build** sin errores
+- [ ] Pruebas E2E actualizadas
 
 ---
 

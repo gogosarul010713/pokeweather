@@ -5,6 +5,33 @@
 
 ---
 
+### 2026-04-24 D-011 — Sesión 1 Completada: Arquitectura MVP Nidos funcional
+
+**Contexto:** Sprint 9 Sesión 1 implementada en un turno. 4/4 US completadas (9 SP).
+
+**Decisión:** Arquitectura MVP simplificada para Nidos:
+1. Nest interface minimalista: solo pokemon/pokemonType/lat/lng/city/country
+2. Datos estáticos en nests.json (8 nidos distribuidos geográficamente)
+3. Hexágonos SVG (32x32px) para diferenciar de pins circulares
+4. Overlay + Toast para comunicar restricciones en modo "Todo"
+
+**Motivo:** 
+- MVP viable para Sesión 1: UI base funcional sin complejidad
+- JSON estático permite iterar sin API
+- Forma + color = máxima accesibilidad en modo "Todo"
+- Overlay + Toast = UX clara cuando ambas capas activas
+
+**Consecuencias:** 
+- Sesión 2 puede agregar filtros/leyenda sin refactoring
+- Migración a API futura es trivial (crear nestService con fetch)
+- Nidos cargados en memoria (8 registros), no escalable a miles
+
+**Commit:** 423297b — "feat: Sesión 1 Nidos — Tabs, NestPins, Datos y Overlay"
+**Build time:** 1.43s, 0 TS errors
+**Próximo:** Sesión 2 — Filtros dinámicos + Leyenda
+
+---
+
 ### 2026-04-18 D-010 — TabControl: Opción A (Underline) seleccionada, diseño SVG aún en ajuste
 
 **Contexto:** US-811. Se probaron 3 opciones de diseño para los tabs del sidebar: 
