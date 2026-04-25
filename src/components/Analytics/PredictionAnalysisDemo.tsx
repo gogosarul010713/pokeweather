@@ -105,9 +105,9 @@ export function PredictionAnalysisDemo() {
         const cachedMetadata = await getPredictionsCacheMetadata();
 
         if (cachedMetadata && isPredictionsCacheValid(cachedMetadata)) {
-          // Caché válido: mostrar inmediato
+          // Caché válido: mostrar inmediato usando los docs del metadata (no getForecastCache)
           try {
-            const realData = await fetchPredictions();
+            const realData = await fetchPredictions(cachedMetadata.documents as any);
             setRows(realData);
             console.log(`[PredictionDemo] ✅ Cache hit (${cachedMetadata.documents.length} docs)`);
           } catch (err) {

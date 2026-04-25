@@ -146,10 +146,12 @@ export const getForecastCache = async (): Promise<ForecastDoc[]> => {
 export const setForecastCache = async (docs: ForecastDoc[]): Promise<void> => {
   try {
     // Convertir Timestamps de Firebase a milisegundos (para serializar a IndexedDB)
+    // IMPORTANTE: si ya es número (docs re-serializados), preservar el valor original
+    const now = Date.now()
     const serialized = docs.map(doc => ({
       ...doc,
-      created_at: doc.created_at?.toMillis?.() ?? Date.now(),
-      ttl: doc.ttl?.toMillis?.() ?? Date.now(),
+      created_at: typeof doc.created_at === 'number' ? doc.created_at : doc.created_at?.toMillis?.() ?? now,
+      ttl: typeof doc.ttl === 'number' ? doc.ttl : doc.ttl?.toMillis?.() ?? now,
     }))
     await set(KEY_FORECAST_CACHE, serialized)
   } catch { /* silencioso */ }
@@ -168,7 +170,10 @@ export const mergeForecastDocs = (
 export const cleanExpiredForecastDocs = (docs: ForecastDoc[]): ForecastDoc[] => {
   const cutoff = Date.now() - FORECAST_TTL_MS
   return docs.filter(doc => {
-    const createdAt = doc.created_at?.toMillis?.() ?? 0
+    // created_at puede ser Timestamp (Firestore) o number (serializado en IndexedDB)
+    const createdAt = typeof doc.created_at === 'number'
+      ? doc.created_at
+      : doc.created_at?.toMillis?.() ?? 0
     return createdAt > cutoff
   })
 }
@@ -222,10 +227,11 @@ export const setPredictionsCacheMetadata = async (
     const now = Date.now()
 
     // Serializar Timestamps (timestamps se convierten a números para IndexedDB)
+    // IMPORTANTE: si ya es número (docs re-serializados), preservar el valor original
     const serialized = docs.map(doc => ({
       ...doc,
-      created_at: doc.created_at?.toMillis?.() ?? now,
-      ttl: doc.ttl?.toMillis?.() ?? now,
+      created_at: typeof doc.created_at === 'number' ? doc.created_at : doc.created_at?.toMillis?.() ?? now,
+      ttl: typeof doc.ttl === 'number' ? doc.ttl : doc.ttl?.toMillis?.() ?? now,
     })) as any as ForecastDoc[] // Type assertion necesaria para IndexedDB
 
     const metadata: PredictionsCacheMetadata = {

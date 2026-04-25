@@ -17,7 +17,7 @@ import WeatherReportModal from './WeatherReportModal';
 export interface LookbackItem {
   hoursAgo: number;
   condition: string;
-  wouldBeCorrect: boolean;
+  wouldBeCorrect: boolean | null; // null = sin reporte manual todavía
   timestamp?: string;
 }
 
@@ -854,7 +854,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                         <td colSpan={columns.length}>
                           <div className="pat-lookback-panel">
                             <div className={`pat-lookback-title ${original.correct === true ? 'success' : 'error'}`}>
-                              🔍 Lookback 12h — {original.lookback12h.filter(x => x.wouldBeCorrect).length}/{original.lookback12h.length} acertarían
+                              🔍 Lookback 12h — {original.lookback12h.length} predicciones anteriores{(() => { const confirmed = original.lookback12h.filter(x => x.wouldBeCorrect !== null); return confirmed.length > 0 ? ` · ${confirmed.filter(x => x.wouldBeCorrect).length}/${confirmed.length} confirmados acertaron` : ''; })()}
                             </div>
                             <div className="pat-lookback-grid">
                               {original.lookback12h.map((item, i) => {

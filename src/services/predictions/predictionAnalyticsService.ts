@@ -16,11 +16,11 @@ import { getForecastCache } from '../cache/cacheService'
  *
  * @returns Promise<PredictionRow[]> — filas listas para tabla
  */
-export async function fetchPredictions(): Promise<PredictionRow[]> {
+export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<PredictionRow[]> {
   try {
-    // 1. Intentar caché local primero
-    let forecasts = await getForecastCache()
-    let source = 'cache'
+    // 1. Usar docs pre-cargados si se pasan (evita doble lookup de caché)
+    let forecasts: ForecastDoc[] = preloadedDocs ?? await getForecastCache()
+    let source = preloadedDocs ? 'preloaded' : 'cache'
 
     // Si caché vacío, cargar de Firestore
     if (forecasts.length === 0) {
@@ -181,24 +181,22 @@ function generateLookback(
 
     if (!targetSnapshot) continue
 
-    // 5. Buscar reporte de confirmación para esta fecha_hora
+    // 5. Buscar reporte de confirmación para esta fecha_hora (opcional)
     const reportKey = `${cityId}|${nearbyForecast.date_hour}`
     const report = reportIndex.get(reportKey)
 
-    // 6. Determinar si habría sido correcto
-    const wouldBeCorrect = report
+    // 6. Determinar si habría sido correcto (null = sin reporte todavía)
+    const wouldBeCorrect: boolean | null = report
       ? targetSnapshot.classified === report.should_be
-      : false
+      : null
 
-    // 7. Incluir solo si hay confirmación real (report exists)
-    if (report) {
-      lookbackItems.push({
-        hoursAgo: Math.round(hoursAgo * 10) / 10, // Redondear a 1 decimal
-        condition: targetSnapshot.classified || 'Unknown',
-        wouldBeCorrect,
-        timestamp: timestampToDate(nearbyForecast.created_at).toISOString(), // Convertir a ISO string
-      })
-    }
+    // 7. Incluir siempre — reporte opcional (null = sin confirmar)
+    lookbackItems.push({
+      hoursAgo: Math.round(hoursAgo * 10) / 10,
+      condition: targetSnapshot.classified || 'Unknown',
+      wouldBeCorrect,
+      timestamp: timestampToDate(nearbyForecast.created_at).toISOString(),
+    })
   }
 
   // 8. Ordenar DESC por hoursAgo (recientes primero: 0.5h, 1.5h, 2.5h, ...)
