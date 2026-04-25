@@ -5,6 +5,23 @@
 
 ---
 
+### 2026-04-25 D-012 — IconClima: SVG inline en JSX (no archivo externo)
+
+**Contexto:** US-811. El icon del tab Clima fue implementado primero como `<img src={climaSvg}>` importando un archivo .svg. El usuario eliminó el archivo y pidio renderizar el SVG directamente.
+
+**Decisión:** SVG inline en el componente `IconClima` dentro de `TabControl.tsx`
+
+**Motivo:** El usuario prefiere SVG inline en lugar de archivos externos para los iconos de tabs. Mas control, sin request adicional, directamente en JSX.
+
+**Consecuencias:**
+- No existe `src/assets/icons/clima.svg` (borrado intencionalmente)
+- El SVG del icono Clima esta en `src/components/Sidebar/TabControl.tsx` lineas ~5-60
+- Patron a seguir para otros iconos: inline SVG en JSX, no imports de archivos
+
+**US relacionada:** US-811
+
+---
+
 ### 2026-04-24 D-011 — Sesión 1 Completada: Arquitectura MVP Nidos funcional
 
 **Contexto:** Sprint 9 Sesión 1 implementada en un turno. 4/4 US completadas (9 SP).

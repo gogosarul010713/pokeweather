@@ -5,7 +5,7 @@
 **Sesión:** 2/3 (Interfaz: Filtros dinámicos + Leyenda dinámica)  
 **Duración estimada:** 3-4 horas  
 **Story Points:** 11 SP (US-814, US-815, US-816, US-818)  
-**Última actualización:** 2026-04-24
+**Última actualización:** 2026-04-25
 
 ---
 
@@ -26,17 +26,24 @@ Implementar la **interfaz completa** de Nidos con:
 
 ---
 
-## ✅ SESIÓN 1 — COMPLETADA (2026-04-24)
+## ✅ SESIÓN 1 — COMPLETADA (2026-04-25)
 
-**Commit:** 423297b — "feat: Sesión 1 Nidos — Tabs, NestPins, Datos y Overlay"
+**Commits:**
+- 423297b — "feat: Sesión 1 Nidos — Tabs, NestPins, Datos y Overlay"
+- e9dc6f7 — "refactor: Renderizar IconClima como SVG inline en JSX"
 
 ✅ **US-811** Tabs del Sidebar (3 SP) — COMPLETADA
-✅ **US-812** Pins Diferenciados (2 SP) — COMPLETADA  
+✅ **US-812** Pins Diferenciados (2 SP) — COMPLETADA
 ✅ **US-819** Datos JSON (1 SP) — COMPLETADA
 ✅ **US-817** Overlay Modo Todo (2 SP) — COMPLETADA
+✅ **IconClima** SVG inline en TabControl.tsx (sin archivo externo)
 
-**Build:** ✓ 1.43s, sin errores TypeScript
-**Status:** Listo para Sesión 2
+**Pendiente para próxima conversación:**
+- ⚠️ IconClima SVG (TabControl.tsx:5-60) será modificado manualmente por el usuario
+- No tocar `src/components/Sidebar/TabControl.tsx` hasta confirmar con el usuario
+
+**Build:** ✓ 1.33s, sin errores TypeScript
+**Status:** Listo para Sesión 2 (US-814/815/816/818)
 
 ---
 
