@@ -1,9 +1,72 @@
 import { useStore } from '../../store/useStore'
-import climaSvg from '../../assets/icons/clima.svg'
 
 // SVG Icons
 const IconClima = ({ width = 60, height = 40 } = {}) => (
-  <img src={climaSvg} alt="Clima" width={width} height={height} style={{ display: 'block', objectFit: 'contain' }} />
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 310" width={width} height={height} style={{ display: 'block' }}>
+    {/* Nube trasera (pequeña, arriba derecha) */}
+    <path
+      fill="white"
+      stroke="rgb(102,125,149)"
+      strokeWidth="7"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      d="
+        M 212,110
+        C 212,90 225,76 244,76
+        C 262,76 276,89 277,107
+        C 290,105 304,116 304,130
+        C 304,145 291,155 277,155
+        L 220,155
+        C 206,155 196,146 196,134
+        C 196,121 203,112 212,110 Z
+      "
+    />
+
+    {/* Nube delantera (grande) */}
+    <path
+      fill="white"
+      stroke="rgb(102,125,149)"
+      strokeWidth="7"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      d="
+        M 62,180
+        C 62,157 78,138 100,134
+        C 107,112 126,97 149,97
+        C 174,97 195,113 201,137
+        C 214,134 230,143 232,158
+        C 245,155 260,164 260,178
+        C 260,194 245,205 230,204
+        L 93,204
+        C 76,204 62,193 62,180 Z
+      "
+    />
+
+    {/* Gota de agua */}
+    <path
+      fill="rgb(188,232,250)"
+      stroke="rgb(102,125,149)"
+      strokeWidth="7"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      d="
+        M 170,218
+        C 170,218 144,252 144,270
+        C 144,288 156,300 170,300
+        C 184,300 196,288 196,270
+        C 196,252 170,218 170,218 Z
+      "
+    />
+
+    {/* Reflejo interior de la gota */}
+    <path
+      fill="none"
+      stroke="rgb(80,105,130)"
+      strokeWidth="5"
+      strokeLinecap="round"
+      d="M 160,283 Q 166,292 176,288"
+    />
+  </svg>
 )
 
 const IconNidos = ({ width = 60, height = 40 } = {}) => (
