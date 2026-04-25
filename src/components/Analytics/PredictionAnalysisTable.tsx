@@ -850,12 +850,13 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                             <div className="pat-lookback-grid">
                               {original.lookback12h.map((item, i) => {
                                 const cond  = item.condition.toLowerCase() as WeatherCondition;
+                                const itemTime = item.timestamp ? getCityLocalTime(item.timestamp, original.timezone) : 'N/A';
                                 return (
                                   <div
                                     key={`${row.id}-lb-${i}`}
                                     className={`pat-lookback-item ${item.wouldBeCorrect ? 'hit' : ''}`}
                                   >
-                                    <div className="pat-lookback-hours">{item.timestamp}</div>
+                                    <div className="pat-lookback-hours">{itemTime}</div>
                                     <div className="pat-lookback-ago">-{item.hoursAgo}h</div>
                                     <div className="pat-lookback-condition">
                                       <img

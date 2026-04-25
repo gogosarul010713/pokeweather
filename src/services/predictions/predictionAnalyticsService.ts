@@ -112,10 +112,17 @@ export async function fetchPredictions(): Promise<PredictionRow[]> {
  */
 
 /**
- * Generar lookback 12h: encontrar qué condición climática habría sido correcta
- * en las 12 horas previas a esta predicción
+ * US-1107: Generar lookback 12h — predicciones anteriores que predijeron la misma hora
  *
- * Busca en reports si la predicción (classified) coincidía con lo real (should_be)
+ * Para cada hora en las últimas 12h, busca qué condición se predijo para targetHour
+ * y compara con lo real (reportIndex).
+ *
+ * Ej: Si targetHour=4 y targetTime=04:00, busca:
+ *   - 03:00: ¿qué se predijo para 04:00?
+ *   - 02:00: ¿qué se predijo para 04:00?
+ *   - ... (hasta 16:00 del día anterior)
+ *
+ * Retorna array ordenado DESC por hoursAgo (1h atrás, 2h atrás, ... 12h atrás)
  */
 function generateLookback(
   cityId: string,
@@ -126,56 +133,62 @@ function generateLookback(
 ): LookbackItem[] {
   const lookbackItems: LookbackItem[] = []
 
-  // Buscar en forecasts de la misma ciudad
+  // 1. Filtrar forecasts de esta ciudad solamente
   const citySamples = allForecasts.filter(f => f.city_id === cityId)
 
   if (!citySamples.length) {
     return lookbackItems
   }
 
-  // Para cada hora en las últimas 12h antes de targetTime
-  for (let hoursAgo = 1; hoursAgo <= 12; hoursAgo++) {
+  // 2. Ordenar DESC por created_at (para búsqueda eficiente)
+  const sortedByTime = citySamples.sort((a, b) => {
+    const timeA = timestampToDate(a.created_at).getTime()
+    const timeB = timestampToDate(b.created_at).getTime()
+    return timeB - timeA
+  })
+
+  // 3. Para cada hora en las últimas 12h antes de targetTime
+  for (let hoursAgo = 0.5; hoursAgo <= 12; hoursAgo += 0.5) {
     const checkTime = new Date(targetTime.getTime() - hoursAgo * 60 * 60 * 1000)
 
-    // Buscar un forecast cercano a checkTime (dentro de 30 min)
-    const nearbyForecast = citySamples.find(f => {
+    // Buscar forecast más cercano en el tiempo (dentro de ±15 min)
+    const nearbyForecast = sortedByTime.find(f => {
       const forecastTime = timestampToDate(f.created_at)
       const diff = Math.abs(forecastTime.getTime() - checkTime.getTime())
-      return diff < 30 * 60 * 1000 // 30 minutos
+      return diff < 15 * 60 * 1000 // ±15 minutos
     })
 
-    if (nearbyForecast) {
-      // Encontrar el snapshot de la hora correspondiente
-      const targetSnapshot = nearbyForecast.snapshots.find(
-        s => s.hour === targetHour
-      )
+    if (!nearbyForecast) continue
 
-      if (targetSnapshot) {
-        // Buscar el reporte para esta fecha_hora
-        const reportKey = `${cityId}|${nearbyForecast.date_hour}`
-        const report = reportIndex.get(reportKey)
+    // 4. Encontrar snapshot que predice para targetHour
+    const targetSnapshot = nearbyForecast.snapshots.find(
+      s => s.hour === targetHour
+    )
 
-        // ¿Esta condición habría sido correcta?
-        // Solo sí hay reporte (si no hay, no sabemos qué fue real)
-        const wouldBeCorrect = report
-          ? targetSnapshot.classified === report.should_be
-          : false
+    if (!targetSnapshot) continue
 
-        // Si no hay reporte, omitir este item (no incluir si no hay confirmación)
-        if (report) {
-          lookbackItems.push({
-            hoursAgo,
-            condition: targetSnapshot.classified || 'Unknown',
-            wouldBeCorrect,
-            timestamp: `${String(targetSnapshot.hour).padStart(2, '0')}:00`,
-          })
-        }
-      }
+    // 5. Buscar reporte de confirmación para esta fecha_hora
+    const reportKey = `${cityId}|${nearbyForecast.date_hour}`
+    const report = reportIndex.get(reportKey)
+
+    // 6. Determinar si habría sido correcto
+    const wouldBeCorrect = report
+      ? targetSnapshot.classified === report.should_be
+      : false
+
+    // 7. Incluir solo si hay confirmación real (report exists)
+    if (report) {
+      lookbackItems.push({
+        hoursAgo: Math.round(hoursAgo * 10) / 10, // Redondear a 1 decimal
+        condition: targetSnapshot.classified || 'Unknown',
+        wouldBeCorrect,
+        timestamp: timestampToDate(nearbyForecast.created_at).toISOString(), // Convertir a ISO string
+      })
     }
   }
 
-  // Ordenar por hoursAgo (más reciente primero)
-  return lookbackItems.sort((a, b) => a.hoursAgo - b.hoursAgo)
+  // 8. Ordenar DESC por hoursAgo (recientes primero: 0.5h, 1.5h, 2.5h, ...)
+  return lookbackItems.sort((a, b) => b.hoursAgo - a.hoursAgo)
 }
 
 /**

@@ -43,7 +43,10 @@
       "Bash(curl -sv -X OPTIONS https://us-central1-weather-app-prod-ef50d.cloudfunctions.net/clearFirestoreData -H 'Origin: http://localhost:5176' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type,x-api-key')",
       "Skill(us-analyze)",
       "Skill(us-analyze:*)",
-      "Bash(grep -i \"\\\\.ts$\")"
+      "Bash(grep -i \"\\\\.ts$\")",
+      "Bash(pkill -f \"vite|node.*dev\")",
+      "Bash(curl -s http://localhost:5180/)",
+      "mcp__chrome-devtools__take_snapshot"
     ],
     "additionalDirectories": [
       "C:\\Workspace\\React\\pokeweather"

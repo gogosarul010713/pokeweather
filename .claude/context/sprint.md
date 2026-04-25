@@ -191,22 +191,41 @@
 
 ---
 
-## 🚀 Próximos Pasos
+### ✅ FASE 5: TESTING + FEATURES AMPLIADAS (2026-04-24 Session 11)
 
-### Validación Final Sprint 10
-- ✅ Fases 1-4 completadas
-- ✅ Build sin errores (1,054 KB gzip)
-- ⏳ Testing manual de ambas subtareas A + B
-- ⏳ Verificar HH:00 UTC con toggle ON/OFF
+| Feature | Descripción | Status | Details |
+|---------|------------|--------|---------|
+| **Feature 1** | Mover "Reportar Clima" → Tabla Predictiva | ✅ IMPLEMENTADO + VALIDADO | Commit 44d94df, Modal nuevo (NO reutiliza) |
+| **Feature 2** | Botón Copiar Coords en Tabla | ✅ IMPLEMENTADO + VALIDADO | Icono 📋, feedback visual ✓ |
+| **Testing** | Manual 6 casos de prueba | ✅ **TODOS PASARON** | Session 11 completado |
 
-### Finalización Sprint 10
-- ✅ Tests >85% coverage (por validar)
-- ✅ Build sin warnings
-- ✅ Manual testing: todas las fases
-- ⏳ Merge `sprint-10` → `develop` (pending final QA)
+**Fase 5 Testing Results:**
+1. ✅ PASS - Tabla visible con columnas ⚠️ y 📋
+2. ✅ PASS - Click ⚠️ abre WeatherReportModal
+3. ✅ PASS - Envío reporte con confirmación
+4. ✅ PASS - Click 📋 copia coords
+5. ✅ PASS - LocationDetail sin ⚠️ (removido)
+6. ✅ PASS - Firestore `weather_reports` con source='prediction-table'
+
+**Build Status:** ✅ Sin errores, 842 KB gzip
+**Commit 44d94df:** feat(sprint-10): Reporte clima real en tabla + copiar coords
 
 ---
 
-**Sprint 10 Status:** ✅ FASES 1-4 COMPLETADAS (2026-04-16 → 2026-04-24)
-**Build:** ✅ 132 modules, 842 KB (CSS), 842 KB (JS gzip), SIN ERRORES
-**Last Commit:** 80041a7 - refactor(US-1106-B): Mover toggle auto-sync a Testing Tools
+## 🚀 Estado Final Sprint 10
+
+### ✅ COMPLETADO
+- ✅ Fases 1-5 implementadas y validadas
+- ✅ Build sin errores (132 modules, 842 KB)
+- ✅ Testing manual: 6/6 casos pasados
+- ✅ Commit 44d94df verified
+
+### Próximo Paso
+- **Merge `sprint-10` → `develop`** ← Ready to merge
+
+---
+
+**Sprint 10 Status:** ✅ **COMPLETADO** (2026-04-16 → 2026-04-24)
+**Build:** ✅ 132 modules, 842 KB (JS gzip), SIN ERRORES
+**Last Commit:** 44d94df - feat(sprint-10): Reporte clima real en tabla + copiar coords
+**Testing:** ✅ 6/6 Manual test cases PASSED (Session 11)

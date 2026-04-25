@@ -1,340 +1,157 @@
-# 🎯 Sprint 10 Fase 4 — US-1106: Auto Sync HH:00 + Toggle Configurable
+# 🎯 Sprint 10 Features: Reporte Clima Real + Copiar Coords en Tabla
 
-**Fecha Inicio:** 2026-04-23 (Session 8)  
-**Fecha Finalización:** 2026-04-24 (Session 9)  
-**Sprint:** 10 (Ampliación Fase 4)  
-**Story Points:** 2 SP  
-**Estado:** ✅ COMPLETADA (Ambas subtareas A y B)
-
----
-
-## ✅ Estado de Implementación (2026-04-23 Session 8)
-
-### Completado
-- ✅ **Paso 1:** Cloud Function — cron HH:15 → HH:00 + chequeo flag autoSyncEnabled
-- ✅ **Paso 2:** settingsService.ts — CRUD para Firestore /settings/app-config
-- ✅ **Paso 3:** Zustand state — autoSyncEnabled + setAutoSyncEnabled action
-- ✅ **Paso 4:** SyncToggle.tsx — componente de configuración (listo para settings panel)
-- ✅ **Paso 5:** Header integration — toggle button (⏰/🔴) en hd-right
-- ✅ **Paso 6:** App.tsx — cargar settings al iniciar
-
-### Cambios en Code
-- `functions/src/index.ts`: Cron `15 * * * *` → `0 * * * *` + flag check (11 líneas)
-- `src/services/firebase/settingsService.ts`: **NUEVO** (95 líneas)
-- `src/store/useStore.ts`: Agregado `autoSyncEnabled` field + setter (3 líneas)
-- `src/components/Header/Header.tsx`: Toggle button + handler (50+ líneas)
-- `src/components/Settings/SyncToggle.tsx`: **NUEVO** (100 líneas, opcional)
-- `src/App.tsx`: useEffect para cargar settings (18 líneas)
-
-### Validado ✅ (2026-04-24)
-- ✅ Build sin nuevos errores
-- ✅ Deploy functions exitoso (3/3 functions)
-- ✅ Cron `0 * * * *` activo en Cloud Scheduler
-- ✅ Lógica de chequeo de flag en Cloud Function
-- ✅ Zustand state + settingsService funcional
-- ✅ App.tsx carga settings al montar
-
-### ✅ Completado Session 9 (US-1106-B Refactor UI)
-
-**Cambio 1: Remover toggle del Header** ✅
-- Archivo: `src/components/Header/Header.tsx`
-- Removido:
-  - ✅ Import: `updateAutoSyncSetting`
-  - ✅ State: `isSyncSaving`
-  - ✅ Zustand reads: `autoSyncEnabled`, `setAutoSyncEnabled`
-  - ✅ Handler: `handleToggleAutoSync()`
-  - ✅ HTML button: `<button className="hd-sync-toggle"...>` (14 líneas)
-  - ✅ CSS: `.hd-sync-toggle { ... }` (44 líneas)
-- Resultado: Header más limpio (4 botones → 3) ✅
-
-**Cambio 2: Agregar pestaña "Sincronización" en TestingTools** ✅
-- Archivo: `src/components/TestingTools/TestingTools.tsx`
-- Agregado:
-  - ✅ Pestaña 4: "⚙️ Sincronización" (junto a Reportes, Limpiar, Predicciones)
-  - ✅ Toggle: Auto-sync ON/OFF con status visual (🟢/🔴)
-  - ✅ Botón: "Sincronizar Ahora" (movido del Header)
-  - ✅ Reutilizar `updateAutoSyncSetting()` + `handleToggleAutoSync()`
-- Resultado: Todos los controles de admin/testing en un lugar ✅
-
-**Cambio 3: Mantener en Zustand** ✅
-- ✅ `autoSyncEnabled` state preservado (usado por Cloud Function chequeo)
-
-**Testing manual completado:**
-- ✅ Build sin errores (1.54s, 132 modules)
-- ✅ Header sin toggle (3 botones visibles)
-- ✅ TestingTools con 4 pestañas (Reportes, Limpiar, Predicciones, Sincronización)
-- ⏳ Esperar HH:00 UTC con auto-mode ON → verificar sync ejecuta (future validation)
+**Fecha Inicio:** 2026-04-24 (Session 10)  
+**Fecha Finalización:** 2026-04-24 (Session 10)  
+**Sprint:** 10 (Ampliación)  
+**Estado:** ✅ COMPLETADA
 
 ---
 
-## 📋 Objetivo General
+## ✅ Features Implementadas (2026-04-24 Session 10)
 
-Permitir que el usuario **controle totalmente cuándo se generan datos meteorológicos**:
-- **Auto activado:** Servidor sincroniza automáticamente cada HH:00 (24h/día)
-- **Auto desactivado:** Solo sincroniza cuando el usuario abre la app manualmente
-- **Propósito:** Generar datasets de X días, limpiar datos, repetir ciclo para análisis de precisión
+### Feature 1: Mover "Reportar Clima" de LocationDetail → Tabla Predictiva
+
+**Completado:**
+- ✅ Expandir `PredictionRow` interface: agregar `lat`, `lon`
+- ✅ Crear `WeatherReportModal.tsx` (nuevo componente)
+  - Propósito: reportar clima real observado (NO fallo de clasificación)
+  - Permite reportar del **mismo clima predicho** (sin validación "debe ser diferente")
+  - Bottom-sheet centrado, z-index 1100/1101
+  - Modal-specific: NO reutilizar ClassificationReportModal
+- ✅ Agregar `saveWeatherReport()` en classificationReportService.ts
+  - Nueva colección Firestore: `weather_reports`
+  - Schema: predicted_condition vs reported_condition, source='prediction-table'
+  - TTL: 30 días (auto-delete)
+- ✅ Actualizar datos reales:
+  - `predictionAnalyticsService.ts`: mapear lat/lon desde ForecastDoc
+  - `PredictionAnalysisDemo.tsx`: agregar coords a mock data
+- ✅ Remover de LocationDetail:
+  - ✅ Remover botón ⚠️ de header
+  - ✅ Remover estado: `showReportModal`, `showReportToast`
+  - ✅ Remover handler: `handleReportSuccess()`
+  - ✅ Remover modal renderizado + toast
+  - ✅ Remover import: ClassificationReportModal
+  - ✅ **MANTENER:** botón 📋 copiar coords (diferente contexto)
+
+### Feature 2: Botón Copiar Coordenadas en Tabla
+
+**Completado:**
+- ✅ Nueva columna "📋 Copiar Coords" en PredictionAnalysisTable
+- ✅ Botón solo icono (sin texto)
+- ✅ Copia formato: `${lat.toFixed(4)}, ${lon.toFixed(4)}`
+- ✅ Feedback visual: icono cambia a ✓ por 2s
+- ✅ Estado: `copiedCoords` para trackear fila recientemente copiada
 
 ---
 
-## 🏗️ Subtareas
+## 📊 Cambios por Archivo
 
-### Subtarea A: Cambiar cron HH:15 → HH:00 + Flag de control
+| Archivo | Cambio | Líneas |
+|---------|--------|--------|
+| `src/components/Analytics/PredictionAnalysisTable.tsx` | +2 columnas, estado modal, CSS | +50 |
+| `src/components/Analytics/WeatherReportModal.tsx` | **NUEVO** | 280 |
+| `src/components/Sidebar/LocationDetail.tsx` | Remover reporte | -40 |
+| `src/services/firebase/classificationReportService.ts` | +saveWeatherReport() | +60 |
+| `src/services/predictions/predictionAnalyticsService.ts` | Mapear lat/lon | +2 |
+| `src/components/Analytics/PredictionAnalysisDemo.tsx` | Coords mock data | +12 |
 
-**Archivos a modificar:**
-- `functions/src/index.ts` — actualizar cron + agregar chequeo flag
-- `functions/.env` — documentar nueva variable (opcional)
+**Total:** 451 líneas agregadas, 33 removidas
 
-**Cambios específicos:**
+---
 
-1. **Línea 14:** Cambiar cron
-```typescript
-// ANTES:
-.schedule('15 * * * *')
+## ✅ Build & QA
 
-// DESPUÉS:
-.schedule('0 * * * *')  // HH:00 cada hora
+- ✅ **TypeScript:** Sin errores de compilación
+- ✅ **Build:** `npm run build` exitoso (132 modules, 842 KB gzip)
+- ✅ **Dev server:** Corriendo en `http://localhost:5180`
+- ✅ **Commit:** `44d94df` — feat(sprint-10): Reporte clima real en tabla + copiar coords
+
+---
+
+## ✅ Testing Manual Completado (2026-04-24 Session 11)
+
+| # | Test | Resultado | Detalles |
+|---|------|-----------|----------|
+| 1 | Tabla visible con columnas | ✅ PASS | ⚠️ y 📋 visibles en todas las filas |
+| 2 | Click ⚠️ abre modal | ✅ PASS | WeatherReportModal abre correctamente, muestra predicción |
+| 3 | Envío reporte | ✅ PASS | Toast "✓ Reporte enviado correctamente", Firestore doc: g5L5LKdHRC6vk1dPejuS |
+| 4 | Click 📋 copiar coords | ✅ PASS | Botón funciona, feedback visual confirmado |
+| 5 | LocationDetail sin ⚠️ | ✅ PASS | Modal abierto, NO tiene botón ⚠️, mantiene 📋 copiar coords |
+| 6 | Firestore schema | ✅ PASS | `weather_reports` collection con source='prediction-table', TTL 30d, todos campos OK |
+
+**Todos los casos de prueba: ✅ PASARON**
+
+---
+
+## 🏗️ Decisiones de Arquitectura Aplicadas
+
+- **D-031 (NUEVA):** Modal único WeatherReportModal para tabla (NO reutilizar ClassificationReportModal)
+  - Propósito diferente: reportar clima real vs reportar fallo
+  - Permite mismo clima predicho (sin validación)
+  - Schema Firestore separado: `weather_reports` (no `classification_reports`)
+  - Razón: Semántica distinta, uso separado para analytics
+
+---
+
+## 📝 Documentación Generada
+
+- Plan completo en: `C:\Users\geova\.claude\plans\majestic-yawning-dahl.md`
+- Commit message detallado: `44d94df`
+
+---
+
+## ⏭️ Próximos Pasos
+
+1. ✅ Testing manual completado (Session 11)
+2. 📋 **NEW: US-1107 — Lookback 12h en Tabla Predictiva (Session 12)**
+3. Merge a `develop` (post-1107)
+4. Cerrar Sprint 10
+
+---
+
+# 📋 US-1107: Lookback 12 Horas (Session 12)
+
+**Sprint:** 10 (Ampliación)  
+**Story Points:** 3-4  
+**Estado:** 📋 ESPECIFICACIÓN COMPLETADA | PLAN LISTO
+**Documentación:** [src/docs/sprints/sprint-10/12-US-1107-Lookback12h.md](../../src/docs/sprints/sprint-10/12-US-1107-Lookback12h.md)
+
+## ¿Qué es?
+Implementar vista expandible "lookback de 12 horas" en tabla de predicciones. Para cada predicción, mostrar las 12 predicciones ANTERIORES que también predijeron esa misma hora.
+
+**Ejemplo:**
+```
+Fila actual: Pier 39 | 04:00 | Predicción: "sunny" | Real: "cloudy"
+
+Expandido (lookback):
+  [0.5h atrás]  03:00 predijo para 04:00: "cloudy" ✗
+  [1.5h atrás]  02:00 predijo para 04:00: "sunny" ✓
+  [2.2h atrás]  01:00 predijo para 04:00: "cloudy" ✗
+  ... (hasta 12h atrás)
 ```
 
-2. **Agregar chequeo de flag** (después de línea 16, en onRun):
-```typescript
-onRun(async (context) => {
-  try {
-    // ← NUEVO: Chequear si auto-sync está habilitado
-    const settingsRef = db.collection('settings').doc('app-config')
-    const settings = await settingsRef.get()
-    const autoSyncEnabled = settings.data()?.autoSyncEnabled ?? true
-    
-    if (!autoSyncEnabled) {
-      console.log('[syncWeatherScheduled] Auto-sync disabled, skipping')
-      return { skipped: true }
-    }
-    
-    console.log(`[${new Date().toISOString()}] Scheduled sync triggered`)
-    const result = await syncWeatherLogic()
-    console.log(`[${new Date().toISOString()}] Scheduled sync completed:`, result)
-    return result
-  } catch (error) {
-    console.error(`[${new Date().toISOString()}] Scheduled sync error:`, error)
-    throw error
-  }
-})
-```
+## Cambios Requeridos
+1. Implementar `generateLookback()` en predictionAnalyticsService.ts (+80 líneas)
+2. Renderizar lookback expandible en PredictionAnalysisTable.tsx (+40 líneas)
+3. CSS para estilos (gris/verde según acierto)
 
-3. **Inicializar documento settings en Firestore** (cuando la app carga por primera vez):
-- Path: `/settings/app-config`
-- Schema:
-```json
-{
-  "autoSyncEnabled": true,
-  "createdAt": Timestamp,
-  "updatedAt": Timestamp
-}
-```
+## Arquitectura
+- **Cálculo:** Durante `fetchPredictions()` (una sola vez)
+- **Performance:** O(N²) aceptable (450 forecasts × 12h = 5.4K ops)
+- **Edge cases:** Forecasts sin snapshots, sin reportes, <12h data
+- **Límite:** Máximo 12 items, ordenado desc por horasAgo
 
-**Criterios de aceptación:**
-- [ ] Cron se ejecuta a HH:00 UTC (vs HH:15)
-- [ ] Función chequea `settings/app-config.autoSyncEnabled` antes de ejecutar
-- [ ] Si `autoSyncEnabled === false`, retorna `{ skipped: true }` sin hacer nada
-- [ ] Si `autoSyncEnabled === true`, ejecuta normalmente
-- [ ] Tests verdes (mock Firestore)
+## Checklist de Implementación
+- [ ] `generateLookback()` implementada y probada
+- [ ] PredictionAnalysisTable renderiza expandible
+- [ ] Estilos: ✓ verde, ✗ gris
+- [ ] Testing manual con Pier 39, Sydney
 - [ ] Build sin errores
-
-**Esfuerzo:** ~20 minutos
-
----
-
-### Subtarea B: Toggle UI + Persistencia
-
-**Archivos a crear/modificar:**
-- `src/store/useStore.ts` — agregar Zustand state para toggle
-- `src/components/Settings/SyncToggle.tsx` — componente nuevo
-- `src/components/Header.tsx` — integración del toggle
-- `src/services/firebase/settingsService.ts` — lógica Firestore
-
-**Cambios:**
-
-1. **Zustand state** (`src/store/useStore.ts`):
-```typescript
-interface StoreState {
-  // ... existing ...
-  autoSyncEnabled: boolean
-  setAutoSyncEnabled: (enabled: boolean) => void
-}
-
-export const useStore = create<StoreState>((set) => ({
-  // ... existing ...
-  autoSyncEnabled: true,
-  setAutoSyncEnabled: (enabled: boolean) => {
-    set({ autoSyncEnabled: enabled })
-  },
-}))
-```
-
-2. **Nuevo servicio** (`src/services/firebase/settingsService.ts`):
-```typescript
-import { doc, updateDoc, getDoc } from 'firebase/firestore'
-import { getDb } from './firebaseConfig'
-
-export async function updateAutoSyncSetting(enabled: boolean): Promise<void> {
-  const db = await getDb()
-  const settingsRef = doc(db, 'settings', 'app-config')
-  
-  await updateDoc(settingsRef, {
-    autoSyncEnabled: enabled,
-    updatedAt: new Date(),
-  })
-}
-
-export async function getAutoSyncSetting(): Promise<boolean> {
-  const db = await getDb()
-  const settingsRef = doc(db, 'settings', 'app-config')
-  const snapshot = await getDoc(settingsRef)
-  
-  return snapshot.data()?.autoSyncEnabled ?? true
-}
-```
-
-3. **Componente Toggle** (`src/components/Settings/SyncToggle.tsx`):
-```typescript
-import { useStore } from '../../store/useStore'
-import { updateAutoSyncSetting } from '../../services/firebase/settingsService'
-
-export function SyncToggle() {
-  const { autoSyncEnabled, setAutoSyncEnabled } = useStore()
-  const [isSaving, setIsSaving] = useState(false)
-
-  const handleToggle = async (enabled: boolean) => {
-    setIsSaving(true)
-    try {
-      await updateAutoSyncSetting(enabled)
-      setAutoSyncEnabled(enabled)
-      // Toast: "Auto-sync " + (enabled ? "activado" : "desactivado")
-    } catch (error) {
-      console.error('Error updating auto-sync setting:', error)
-      // Toast error
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  return (
-    <div className="sync-toggle">
-      <label>
-        Auto-sync de climas
-        <input
-          type="checkbox"
-          checked={autoSyncEnabled}
-          onChange={(e) => handleToggle(e.target.checked)}
-          disabled={isSaving}
-        />
-      </label>
-      {autoSyncEnabled ? (
-        <span className="status">Automático (HH:00 UTC)</span>
-      ) : (
-        <span className="status">Manual (cuando abras la app)</span>
-      )}
-    </div>
-  )
-}
-```
-
-4. **Integración en Header** (`src/components/Header.tsx`):
-- Agregar `<SyncToggle />` en algún lugar visible (settings dropdown o inline)
-
-5. **Cargar setting al iniciar App** (`src/App.tsx`):
-```typescript
-useEffect(() => {
-  async function loadSettings() {
-    const enabled = await getAutoSyncSetting()
-    setAutoSyncEnabled(enabled)
-  }
-  loadSettings()
-}, [])
-```
-
-**Criterios de aceptación:**
-- [ ] Toggle visible en Header o Settings
-- [ ] Cambiar estado actualiza Firestore en tiempo real
-- [ ] Estado persiste entre recargas (localStorage + Firestore)
-- [ ] Cuando `autoSyncEnabled = false`, cron no ejecuta
-- [ ] Cuando `autoSyncEnabled = true`, cron ejecuta normalmente
-- [ ] UI feedback clara (tooltips, status messages)
-- [ ] Tests >85% coverage
-- [ ] Build sin warnings
-
-**Esfuerzo:** ~60 minutos
+- [ ] Commit + Merge
 
 ---
 
-## 🔄 Flujo de Usuario (Final)
-
-### Escenario: Recolectar datos 3 días, luego limpiar y repetir
-
-```
-Lunes 8am:
-  ✓ Toggle = AUTO ACTIVADO
-  ✓ HH:00: Cron ejecuta automáticamente
-  ✓ HH:01: Ejecuta de nuevo
-  ... 24 veces ese día
-
-Martes:
-  ✓ El cron sigue automático 24×
-
-Miércoles 2pm:
-  ✓ Presiona botón "Limpiar datos" (US-1102)
-  ✓ Borraría todos los datos de Firestore
-  ✓ Cambia toggle a MANUAL DESACTIVADO
-
-Miércoles 3pm - Nuevo ciclo:
-  ✓ Abre app → presiona "Sincronizar ahora" (botón TestingTools)
-  ✓ Se ejecuta syncWeatherManual UNA sola vez
-  ✓ Cierra app
-  ✓ Cron NO ejecuta (toggle desactivado)
-  ✓ Abre app a las 5pm → presiona "Sincronizar ahora" otra vez
-  ✓ Total: solo los syncs que EL presionó manualmente
-```
-
----
-
-## 📊 Estimación
-
-| Subtarea | Esfuerzo |
-|----------|----------|
-| A: Cron + Flag | 20 min |
-| B: UI + Zustand | 60 min |
-| Redeploy + Testing | 20 min |
-| **Total** | **~100 min = 1.7 SP** |
-
-Redondeamos a **2 SP** (margen para QA manual).
-
----
-
-## ✅ Checklist Implementación
-
-- [ ] Actualizar `functions/src/index.ts` (cron + flag)
-- [ ] Crear `src/services/firebase/settingsService.ts`
-- [ ] Crear `src/components/Settings/SyncToggle.tsx`
-- [ ] Actualizar `src/store/useStore.ts`
-- [ ] Integrar toggle en Header
-- [ ] Cargar setting en App init
-- [ ] Escribir tests (Vitest + mock Firestore)
-- [ ] Manual testing: activar/desactivar + verificar Firestore
-- [ ] Deploy functions
-- [ ] Validar cron en Firebase Console
-- [ ] Build sin errores
-- [ ] PR + merge a develop
-
----
-
-## 🔗 Decisiones Aplicadas
-
-- **D-025 (revisada):** Auto-sync es configurable ahora, no 100% automático
-- **D-002:** Firebase sigue como backend (settings en /settings/app-config)
-- **D-017:** Delta Sync no se ve afectado por este cambio
-
----
-
-## 📚 Documentación Creada
-
-- `src/docs/sprints/sprint-10/14-US-1106-AutoSyncToggle.md` ← Crear durante impl
-
+**Session 10:** Implementación | **Session 11:** Testing & Validation  
+**User:** Geovanny M | **Repo:** pokeweather  
+**Rama:** sprint-10 (ready to merge + US-1107)  
+**Última actualización:** 2026-04-24 (Session 12 - US-1107 especificación iniciada)
