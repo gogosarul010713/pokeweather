@@ -212,20 +212,34 @@
 
 ---
 
-## 🚀 Estado Final Sprint 10
+## ✅ FASE 6: AMPLIACIÓN POST-TESTING (2026-04-24 Session 12)
 
-### ✅ COMPLETADO
-- ✅ Fases 1-5 implementadas y validadas
+| US | Descripción | SP | Status | Commits |
+|----|-------------|-----|--------|---------|
+| **US-1107** | **Lookback 12h en Tabla Predictiva** | **3** | **✅ COMPLETA** | `c5191c2` |
+
+**Fase 6 Status:**
+- ✅ generateLookback() implementada y corregida
+- ✅ Renderizado expandible en PredictionAnalysisTable
+- ✅ Testing manual: tabla cargando, botones presentes
+- ✅ Build OK (842 KB gzip, sin errores TS)
+
+---
+
+## 🚀 Estado Final Sprint 10 + US-1107
+
+### ✅ COMPLETADO (6/6 Fases)
+- ✅ Fases 1-5 implementadas y validadas (Session 1-11)
+- ✅ Fase 6: US-1107 Lookback implementada (Session 12)
 - ✅ Build sin errores (132 modules, 842 KB)
-- ✅ Testing manual: 6/6 casos pasados
-- ✅ Commit 44d94df verified
+- ✅ Testing manual: 6/6 cases (Fase 5) + tabla preview (Fase 6)
 
 ### Próximo Paso
 - **Merge `sprint-10` → `develop`** ← Ready to merge
 
 ---
 
-**Sprint 10 Status:** ✅ **COMPLETADO** (2026-04-16 → 2026-04-24)
+**Sprint 10 Status:** ✅ **COMPLETADO + AMPLIACIÓN** (2026-04-16 → 2026-04-24)
 **Build:** ✅ 132 modules, 842 KB (JS gzip), SIN ERRORES
-**Last Commit:** 44d94df - feat(sprint-10): Reporte clima real en tabla + copiar coords
-**Testing:** ✅ 6/6 Manual test cases PASSED (Session 11)
+**Last Commit:** c5191c2 - feat(US-1107): Implementar lookback 12h en tabla predictiva
+**Testing:** ✅ 6/6 Manual test cases (Fase 5) + tabla preview (Fase 6)

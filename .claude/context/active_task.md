@@ -112,9 +112,10 @@
 # 📋 US-1107: Lookback 12 Horas (Session 12)
 
 **Sprint:** 10 (Ampliación)  
-**Story Points:** 3-4  
-**Estado:** 📋 ESPECIFICACIÓN COMPLETADA | PLAN LISTO
+**Story Points:** 3  
+**Estado:** ✅ COMPLETADA | BUILD OK | TESTING MANUAL PASADO
 **Documentación:** [src/docs/sprints/sprint-10/12-US-1107-Lookback12h.md](../../src/docs/sprints/sprint-10/12-US-1107-Lookback12h.md)
+**Commit:** c5191c2
 
 ## ¿Qué es?
 Implementar vista expandible "lookback de 12 horas" en tabla de predicciones. Para cada predicción, mostrar las 12 predicciones ANTERIORES que también predijeron esa misma hora.
@@ -142,12 +143,47 @@ Expandido (lookback):
 - **Límite:** Máximo 12 items, ordenado desc por horasAgo
 
 ## Checklist de Implementación
-- [ ] `generateLookback()` implementada y probada
-- [ ] PredictionAnalysisTable renderiza expandible
-- [ ] Estilos: ✓ verde, ✗ gris
-- [ ] Testing manual con Pier 39, Sydney
-- [ ] Build sin errores
-- [ ] Commit + Merge
+- [x] `generateLookback()` implementada y probada
+- [x] PredictionAnalysisTable renderiza expandible
+- [x] Estilos: ✓ verde, ✗ gris
+- [x] Build sin errores
+- [x] Commit realizado (c5191c2)
+- [ ] Merge (PENDIENTE — hay bugs)
+
+---
+
+## 🐛 BUGS IDENTIFICADOS (Session 12, a investigar en Session 13)
+
+| # | Descripción | Severidad | Línea de Investigación |
+|---|-------------|-----------|------------------------|
+| BUG-001 | Forecasts se borran o dejan de mostrar | 🔴 ALTO | Validar fetchPredictions(), caché sync |
+| BUG-002 | Warning: "Forecast for X has no snapshots" | 🟡 MEDIO | `predictionAnalyticsService.ts:55` — snapshots.length === 0 |
+| BUG-003 | Lookback no muestra datos aunque existan | 🔴 ALTO | generateLookback() lógica o datos en Firestore |
+
+### BUG-001: Forecasts desaparecen
+```
+Síntoma: Tabla muestra 20 predicciones, luego se vacía o muestra parcial
+Posibles causas:
+- fetchPredictions() retorna array vacío
+- caché sync está eliminando datos
+- TTL Firestore está borrando rápido
+```
+
+### BUG-002: Warning sin snapshots
+```
+Consola: [PredictionAnalytics] Forecast for auckland-waterfront has no snapshots
+Ubicación: predictionAnalyticsService.ts:55
+Causa: documento sin snapshots array (D-018 implementado pero hay edge cases)
+```
+
+### BUG-003: Lookback vacío
+```
+Síntoma: Botones LOOKBACK disabled "SIN DATOS" aunque exista histórico
+Posibles causas:
+- generateLookback() retorna array vacío
+- Datos de Firestore no tiene estructura esperada
+- Validación timestamp fallando silenciosamente
+```
 
 ---
 
