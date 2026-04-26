@@ -14,10 +14,11 @@ export interface CleanupCounts {
   oldDocs: number
   cacheSize: string
   cascadeDocs: number
+  reportsDocs: number
 }
 
 export interface CleanupResults {
-  firestore: { deleted: number; error: string | null }
+  firestore: { deleted: number; reportsDeleted: number; error: string | null }
   indexedDb: { deleted: number; error: string | null }
   localStorage: { cleared: boolean; error: string | null }
 }
@@ -74,11 +75,24 @@ export const fetchCleanupCounts = async (): Promise<CleanupCounts> => {
     // Tamaño de caché local
     const cacheSize = await cacheService.getIndexedDbSize()
 
+    // Query 4: Count de weather_reports + classification_reports (D-035)
+    let reportsCount = 0
+    try {
+      const [wrDocs, crDocs] = await Promise.all([
+        getDocs(collection(db, 'weather_reports')),
+        getDocs(collection(db, 'classification_reports')),
+      ])
+      reportsCount = wrDocs.size + crDocs.size
+    } catch {
+      reportsCount = 0
+    }
+
     return {
       nullDocs: nullDocsCount,
       oldDocs: oldDocsCount,
       cacheSize,
       cascadeDocs: cascadeDocsCount,
+      reportsDocs: reportsCount,
     }
   } catch (error) {
     console.error('Failed to fetch cleanup counts:', error)
@@ -87,6 +101,7 @@ export const fetchCleanupCounts = async (): Promise<CleanupCounts> => {
       oldDocs: 0,
       cacheSize: '0 MB',
       cascadeDocs: 0,
+      reportsDocs: 0,
     }
   }
 }
@@ -98,7 +113,7 @@ export const fetchCleanupCounts = async (): Promise<CleanupCounts> => {
  */
 export const executeCleanup = async (options: CleanupOptions): Promise<CleanupResults> => {
   const results: CleanupResults = {
-    firestore: { deleted: 0, error: null },
+    firestore: { deleted: 0, reportsDeleted: 0, error: null },
     indexedDb: { deleted: 0, error: null },
     localStorage: { cleared: false, error: null },
   }
@@ -179,7 +194,9 @@ export const executeCleanup = async (options: CleanupOptions): Promise<CleanupRe
         const data = await response.json()
         console.log('✅ Cloud Function response:', data)
         console.log('   Deleted:', data.deletedCount, 'documents')
+        console.log('   Reports deleted:', data.reportsDeleted ?? 0, '(D-035)')
         results.firestore.deleted = data.deletedCount ?? 0
+        results.firestore.reportsDeleted = data.reportsDeleted ?? 0
       } catch (error) {
         console.error('❌ Cloud Function error:', error)
         results.firestore.error = (error as Error).message

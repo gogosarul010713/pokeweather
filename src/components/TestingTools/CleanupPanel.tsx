@@ -14,6 +14,7 @@ export const CleanupPanel: React.FC = () => {
     oldDocs: 0,
     cacheSize: '0 MB',
     cascadeDocs: 0,
+    reportsDocs: 0,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -84,6 +85,9 @@ export const CleanupPanel: React.FC = () => {
       const parts = []
       if (results.firestore.deleted > 0) {
         parts.push(`${results.firestore.deleted} docs (Firestore)`)
+      }
+      if (results.firestore.reportsDeleted > 0) {
+        parts.push(`${results.firestore.reportsDeleted} reportes (Firestore)`)
       }
       if (results.indexedDb.deleted > 0) {
         parts.push(`${results.indexedDb.deleted} items (IDB)`)
@@ -210,11 +214,12 @@ export const CleanupPanel: React.FC = () => {
             disabled={isLoading || cleanupOptions.nullSnapshots || cleanupOptions.olderThan7d}
           />
           <span style={styles.labelText}>
-            <strong>🔥 CASCADE DELETE: Todo /city_weather</strong> <span style={styles.count}>({counts.cascadeDocs})</span>
+            <strong>🔥 CASCADE DELETE: Todo /city_weather + reports</strong> <span style={styles.count}>({counts.cascadeDocs} forecasts, {counts.reportsDocs} reports)</span>
           </span>
         </label>
         <p style={styles.description}>
-          Elimina TODOS los documentos y subcollections de city_weather (nuclear reset). No se puede combinar con limpieza selectiva.
+          Elimina TODOS los documentos de city_weather, weather_reports y classification_reports
+          (nuclear reset). Sin ForecastDoc, los reportes son datos huerfanos (D-035). No se puede combinar con limpieza selectiva.
         </p>
       </div>
 

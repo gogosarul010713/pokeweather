@@ -5,6 +5,32 @@
 
 ---
 
+### 2026-04-25 D-035 — Cascade Delete incluye weather_reports + classification_reports (BUG-011 / US-1109)
+
+**Contexto:** BUG-011 detectado en Session 17. Cascade Delete de `/city_weather` no borraba `weather_reports` ni `classification_reports`. Al regenerar ForecastDocs en la misma hora, el `reportIndex` en `fetchPredictions()` encontraba reportes del ciclo anterior, contaminando la tabla con datos "pre-limpieza".
+
+**Opciones consideradas:**
+- A: Opcion separada en CleanupPanel para borrar reports (independiente del cascade)
+- B: Incluir reports en Cascade Delete automaticamente — **ELEGIDA**
+- C: Solo warning informativo en tabla (no destructivo)
+
+**Decision:** Opcion B — incluir `weather_reports` y `classification_reports` en el Cascade Delete.
+
+**Motivo (decision del usuario):**
+Sin la fuente de verdad (ForecastDoc), los reportes son datos huerfanos sin valor analitico.
+Un reporte `{ city_id, date_hour, reported_condition: "rain" }` no sirve si no existe el ForecastDoc
+con el que comparar. La semantica correcta de "limpiar todo" es: ForecastDocs + Reportes asociados.
+
+**Implementacion (US-1109):**
+- Cloud Function `clearFirestoreData`: borrar `weather_reports` + `classification_reports` cuando `cascadeDeleteAll=true`
+- `CleanupCounts`: +`reportsDocs: number` (count para mostrar en UI)
+- `CleanupPanel.tsx`: descripcion y toast actualizados con count de reports
+
+**Archivos:** `functions/src/index.ts`, `cleanupService.ts`, `CleanupPanel.tsx`
+**US relacionada:** US-1109 | **Bug:** BUG-011
+
+---
+
 ### 2026-04-25 D-034 — US-1108: Agrupacion Dinamica con estado local (no TanStack Grouping API)
 
 **Contexto:** US-1108. Tabla predictiva necesita toggle para cambiar criterio de agrupacion entre hora/ciudad/clima.

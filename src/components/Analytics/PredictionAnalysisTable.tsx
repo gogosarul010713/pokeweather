@@ -1,4 +1,4 @@
-import { useState, useMemo, Fragment } from 'react';
+import React, { useState, useMemo, Fragment } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -956,7 +956,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                 });
 
                 let lastBucket = '';
-                const result: JSX.Element[] = [];
+                const result: React.ReactNode[] = [];
 
                 for (const row of pageRows) {
                   const bucket = getGroupKey(row.original, groupBy);
