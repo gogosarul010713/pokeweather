@@ -77,11 +77,12 @@ async function fetchAccuWeatherForecast(
   }
 
   try {
-    const url = `https://api.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}`
+    const url = `https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}`
     const response = await axios.get(url, {
       params: {
         apikey: apiKey,
         details: true,
+        metric: true,
       },
       timeout: 10000,
     })
