@@ -1,9 +1,27 @@
-# 🎯 Sprint 10 — Epic Dashboard + Sync Control + Cleanup ✅ COMPLETADO
+# 🎯 Sprint 10 — Dashboard + Sync Control + Cleanup ✅ COMPLETADO (9/9 Fases)
 
-**Período:** 2026-04-16 → 2026-04-25 (6 Fases + Bugfixes)  
-**Objetivo:** Dashboard Looker Studio + Control Manual de Sync + Limpieza Firebase Granular  
-**Estado:** ✅ **COMPLETADO** — 6 Fases implementadas, 5 bugs resueltos, 2 features extras  
-**Versión:** v2.3.0-sprint10-complete
+**Período:** 2026-04-16 → 2026-04-26 (10 días)  
+**Objetivo:** Dashboard Looker Studio MVP + Sincronización Automática + Limpieza Firebase Granular  
+**Estado:** ✅ **COMPLETADO** — 9 Fases, 20 US, 11 bugs resueltos, Testing validado  
+**Rama:** `sprint-10` (ready para merge a `develop`)  
+**Build:** ✅ Sin errores (242.54 KB gzip)  
+**Versión:** v2.1.0
+
+---
+
+## 📁 Estructura de Carpetas
+
+```
+sprint-10/
+├── us/                          ← TODAS las User Stories (20 archivos numerados)
+├── archive/                     ← Looker + documentos archivados (6 archivos)
+├── bugfixes/                    ← Bug tracking (11 bugs + summary)
+├── 01-validacion-firestore.md   ← Validación de schema Firestore
+├── 02-cleanup-guide.md          ← Guía de limpieza granular
+├── 03-validacion-bigquery-session2.md
+├── 04-cloud-functions-testing-guia.md
+└── README.md                    ← Este archivo
+```
 
 ---
 
@@ -138,64 +156,38 @@ Peor Hora:               23:00 (64% precisión)
 
 ## 📚 Documentos por US
 
-### Fase 1: Analytics & Caché
+### Todas las US (20 archivos en `us/`)
 
-1. **[US-1001: Firebase Extension + BigQuery](01-DecisionLookerVsMetabase.md)**
-   - Instalar extensión
-   - Configurar path
-   - Backfill de datos históricos
+**Análisis & Tabla Predictiva:**
+- [01-us-1001-firebase-extension.md](us/01-us-1001-firebase-extension.md)
+- [02-us-1002-sql-view.md](us/02-us-1002-sql-view.md)
+- [03-us-1003-looker-studio.md](us/03-us-1003-looker-studio.md)
+- [07-us-1007-prediction-analysis-table.md](us/07-us-1007-prediction-analysis-table.md)
+- [17-us-1107-lookback-12h.md](us/17-us-1107-lookback-12h.md)
+- [18-us-1108-agrupacion-dinamica.md](us/18-us-1108-agrupacion-dinamica.md)
 
-2. **[US-1002: SQL View snapshots_flat](02-PlanImplementacion.md)**
-   - Crear view que expande array
-   - Template SQL dado
+**Cache Inteligente (4 subtareas):**
+- [08-us-1008-cache-inteligente-a.md](us/08-us-1008-cache-inteligente-a.md) — Query Delta
+- [08-us-1008-cache-inteligente-b.md](us/08-us-1008-cache-inteligente-b.md) — IndexedDB Cache
+- [08-us-1008-cache-inteligente-c.md](us/08-us-1008-cache-inteligente-c.md) — Orchestration
+- [08-us-1008-cache-inteligente-d.md](us/08-us-1008-cache-inteligente-d.md) — Testing
 
-3. **[US-1003: Looker Studio Conexión](FIRESTORE-CLEANUP-GUIDE.md)**
-   - Crear reporte
-   - Conectar a BigQuery
+**Sincronización & Cleanup:**
+- [11-us-1101-sync-automatico.md](us/11-us-1101-sync-automatico.md)
+- [12-us-1102-cleanup-granular.md](us/12-us-1102-cleanup-granular.md)
+- [13-us-1103-fix-d018-deprecada.md](us/13-us-1103-fix-d018-deprecada.md) 🚫
+- [14-us-1104-firebase-cache-climas.md](us/14-us-1104-firebase-cache-climas.md)
+- [15-us-1105-firebase-cache-tabla.md](us/15-us-1105-firebase-cache-tabla.md)
+- [16-us-1106-auto-sync-toggle.md](us/16-us-1106-auto-sync-toggle.md)
+- [19-us-1109-cascade-delete.md](us/19-us-1109-cascade-delete.md)
 
-4. **[US-1007: Prediction Analysis Table](07-PredictionValidation.md)**
-   - Tabla TanStack v8
-   - Filtros, búsqueda, paginación
+**Testing:**
+- [20-us-1110-testing-cloud-functions.md](us/20-us-1110-testing-cloud-functions.md)
 
-5. **[US-1008: Caché Inteligente Delta Sync](US-1008-A-QueryDelta.md)**
-   - Query delta: only new docs since lastSync
-   - IndexedDB caching + dedup
-   - Orchestration: syncForecastsOnLoad()
-
-### Fase 2: Sync Control + Cleanup ✅
-
-6. **[US-1103: Fix D-018 — No guardar docs sin snapshots](11-US-1103-FixNoSaveEmpty.md)** — 🚫 Deprecada (incluida en BUG-007)
-
-7. **[US-1101: Sincronizacion Automatica Servidor HH:00](09-US-1101-SyncAutomatic.md)** ✅
-   - Firebase Scheduled Function cron `0 * * * *`
-   - Firestore flag `autoSyncEnabled` para pausar/reanudar
-   - Botón manual en Testing Tools (siempre disponible)
-
-8. **[US-1102: Limpieza Firebase Granular](10-US-1102-CleanupGranular.md)** ✅
-   - Modal con 5 opciones (NULL-snapshots, >7d, IndexedDB, localStorage, cascade delete)
-   - Cloud Function onRequest + x-api-key (migrado de onCall)
-   - Cascade delete subcolecciones
-   - Retry logic 2 intentos + backoff exponencial
-
-### Fase 3: Firebase como Caché Único ✅
-
-9. **[US-1104: Firebase as Cache — Climas](US-1104-FirebaseAsCache-Climas.md)** ✅
-   - `getWeatherFromFirestore()` nueva funcion
-   - Lectura 2 capas: IndexedDB (40ms) → Firestore fallback
-   - Commit: `56e58b9`
-
-10. **[US-1105: Firebase as Cache — Tabla Predictiva](US-1105-FirebaseAsCache-Tabla.md)** ✅
-    - Delta Sync `WHERE created_at > lastSyncTime`
-    - Metadata helpers: `getPredictionsCacheMetadata()`, `setPredictionsCacheMetadata()`
-    - Commit: `f2ac003`
-
-### Fase 4-6: Features y Bugfixes ✅
-
-11. **US-1106**: Auto-Sync toggle configurable (`80041a7`)
-12. **US-1107**: [Lookback 12h expandible](12-US-1107-Lookback12h.md) (`c5191c2`)
-13. **BUG-007..010**: Tabla predictiva — todos resueltos
-14. **F-001/002**: WeatherReportModal + Copiar Coords (`44d94df`)
-15. **F-003**: Agrupacion visual por hora descendente (`aa977c2`)
+### Archivadas (Looker Plan B en `archive/`)
+- [04-us-1004-dashboard-performance.md](archive/04-us-1004-dashboard-performance.md) 📦
+- [05-us-1005-dashboard-analisis.md](archive/05-us-1005-dashboard-analisis.md) 📦
+- [06-us-1006-react-integration.md](archive/06-us-1006-react-integration.md) 📦
 
 ---
 
@@ -282,15 +274,20 @@ El Sprint 10 está **COMPLETADO** cuando:
 
 ## 🔗 Referencias Rápidas
 
-**Decisiones:**
-- [D-010: Looker Studio vs Metabase](01-DecisionLookerVsMetabase.md)
+**Documentos de Sprint (enumerados en raíz):**
+- [01-validacion-firestore.md](01-validacion-firestore.md) — Validación schema Firestore
+- [02-cleanup-guide.md](02-cleanup-guide.md) — Guía de limpieza granular
+- [03-validacion-bigquery-session2.md](03-validacion-bigquery-session2.md) — Validación autónoma
+- [04-cloud-functions-testing-guia.md](04-cloud-functions-testing-guia.md) — Testing CF
 
-**Plan Detallado:**
-- [Plan de Implementación](02-PlanImplementacion.md)
+**Archive (reutilizable):**
+- [archive/01-decision-looker-vs-metabase.md](archive/01-decision-looker-vs-metabase.md) — Evaluación BI tools
+- [archive/02-plan-implementacion.md](archive/02-plan-implementacion.md) — Template plan
+- [archive/03-auto-sync-architecture.md](archive/03-auto-sync-architecture.md) — Arquitectura sync
 
-**Mantenimiento:**
-- [**FIRESTORE-CLEANUP-GUIDE.md**](FIRESTORE-CLEANUP-GUIDE.md) ← Guía de limpieza (NEW 2026-04-19)
-- [FIREBASE-MONITORING.md](FIREBASE-MONITORING.md) — Vigilancia automática
+**Bugfixes:**
+- [bugfixes/bug-summary.md](bugfixes/bug-summary.md) — Índice de 11 bugs
+- [bugfixes/](bugfixes/) — Carpeta completa con BUG-001 a BUG-011
 
 **Firestore Schema:**
 - `/weather_catalog/` — Estático (condiciones, tipos)
@@ -303,36 +300,56 @@ El Sprint 10 está **COMPLETADO** cuando:
 
 ---
 
-## ✅ Sprint 10 — Estado Final
+## ✅ Sprint 10 — Estado Final (Session 18 — 2026-04-26)
 
-**Completado:** 2026-04-25 (6 fases, 15 US/features/bugs)
+**COMPLETADO:** 9/9 Fases, 20 US activas, 11 bugs resueltos, testing validado
 
-### Logros:
+### Logros por Fase:
+
+**Fase 1 (Analytics):**
 - ✅ Firebase Extension + BigQuery streaming activo
-- ✅ SQL View `snapshots_flat` → datos aplanados para analytics
-- ✅ Looker Studio conectado → dashboards MVP funcionales
-- ✅ PredictionAnalysisTable con TanStack v8 (filtros, sort, paginacion)
-- ✅ Caché Delta Sync → 99% menos reads Firestore en modo cache
-- ✅ Sync Automatico servidor HH:00 (Firebase Scheduled Function)
-- ✅ Limpieza Granular + Cascade Delete (Cloud Function onRequest)
-- ✅ Lookback 12h expandible con colores acierto/fallo
-- ✅ WeatherReportModal en tabla (fuente separada de LocationDetail)
-- ✅ Agrupacion visual por hora descendente
-- ✅ 5 bugs resueltos (BUG-007 a BUG-010)
-- ✅ Build: 843 KB gzip, 0 errores TypeScript
+- ✅ SQL View `snapshots_flat` → datos aplanados
+- ✅ Looker Studio MVP funcional
+- ✅ PredictionAnalysisTable con TanStack v8
+- ✅ Caché Delta Sync (99% menos reads)
 
-### Documentacion:
-- 📄 [`07-PredictionValidation.md`](07-PredictionValidation.md) — Flujo validacion
-- 📄 [`FIRESTORE-CLEANUP-GUIDE.md`](FIRESTORE-CLEANUP-GUIDE.md) — Limpieza granular
-- 📄 [`12-US-1107-Lookback12h.md`](12-US-1107-Lookback12h.md) — Lookback completado
-- 📄 [`AUTO-SYNC-ARCHITECTURE.md`](AUTO-SYNC-ARCHITECTURE.md) — Arquitectura sync
-- 📄 [Architecture: Data Schema](../architecture/10-firestore-data-schema.md)
+**Fase 2-4 (Sync + Cleanup):**
+- ✅ Sincronización automática servidor HH:00
+- ✅ Limpieza granular + cascade delete
+- ✅ Auto-sync toggle configurable
+- ✅ D-018 implementada (no guardar sin snapshots)
 
-### Pendiente antes de merge:
-- [ ] US-1108: Agrupacion dinamica (hora / ciudad / clima)
-- [ ] Merge `sprint-10` → `develop`
+**Fase 5-9 (Features + Testing):**
+- ✅ Lookback 12h expandible con colores
+- ✅ WeatherReportModal en tabla
+- ✅ Copiar coords con feedback visual
+- ✅ Agrupación dinámica (hora/ciudad/clima)
+- ✅ Cascade delete incluye weather_reports
+- ✅ Testing Cloud Functions validado
+
+### Bugs Resueltos (11 total):
+- ✅ BUG-001 a BUG-011 (Auth, Deploy, Data Integrity, Cascade Delete)
+- 📄 [bugfixes/bug-summary.md](bugfixes/bug-summary.md) — Índice completo
+
+### Build & Quality:
+- ✅ **242.54 KB gzip** (sin regresiones)
+- ✅ **0 errores TypeScript**
+- ✅ **6/6 test cases** (Fase 5)
+- ✅ **Cloud Functions** validadas (localhost + Vercel)
+
+### Documentación:
+- 📁 **20 US** en [us/](us/) (01-20, enumeradas)
+- 📁 **3 archivadas** en [archive/](archive/) (Plan B)
+- 📁 **11 bugs** en [bugfixes/](bugfixes/) + summary
+- 📄 **4 docs sprint** en raíz (01-04, enumerados)
+
+### Próximos Pasos:
+1. ✅ Reorganización completada
+2. ⏳ Merge `sprint-10` → `develop`
+3. ⏳ Release v2.1.0 a Vercel
+4. ⏳ Iniciar Sprint 11
 
 ---
 
-**Ultima actualizacion:** 2026-04-25  
-**Estado:** ✅ COMPLETADO (pendiente US-1108 y merge)
+**Última actualización:** 2026-04-26 (Session 18)  
+**Estado:** ✅ **COMPLETADO** — Ready para merge

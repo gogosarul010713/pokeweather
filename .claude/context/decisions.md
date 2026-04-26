@@ -5,6 +5,79 @@
 
 ---
 
+### 2026-04-26 D-037 — Reorganización de Sprint 10: Estructura Clara de Documentación (Session 19)
+
+**Contexto:** Sprint 10 completado con 9 fases, 20 US, 11 bugs, pero documentación desorganizada en carpeta sprint-10/ (41 archivos .md con nomenclatura inconsistente, distribución confusa).
+
+**Problema:** 
+- Archivos numerados desordenadamente (01-, 02-, 07-, 09-, 09-, 10-, 11-, 12-, 13-, 13-, 14-, 15-, 16-, 17-, 17-)
+- US distribuidas entre raíz y carpeta `us/`
+- Looker docs dispersos sin agrupación clara
+- Bugs en carpeta `bugfixes/` con nomenclatura mayúsculas
+
+**Decisión:** Reorganizar en estructura temática clara con carpetas minúsculas
+
+**Estructura Elegida:**
+```
+sprint-10/
+├── us/                    ← TODAS las US (01-20, enumeradas)
+├── archive/               ← Looker + docs reutilizables (01-06)
+├── bugfixes/              ← Bug tracking (001-011 + summary)
+├── 01-04-docs-sprint      ← Documentos generales (minúsculas)
+└── README.md              ← Actualizado
+```
+
+**Motivo:**
+1. Claridad visual: 4 carpetas temáticas claras
+2. Escalabilidad: Sprint 11+ pueden replicar estructura
+3. Reusabilidad: `archive/` contiene decisiones/planes para futuros sprints
+4. Mantenibilidad: Búsqueda y navegación más rápida
+5. Nomenclatura: Minúsculas consistentes (proyect style guide)
+
+**Implementación:**
+- Renombradas todas las US (uppercase → lowercase, numeración consistente)
+- Movidas archivadas a `archive/`
+- Renombrados bugfixes a minúsculas
+- Creados BUG-009 y BUG-010 (faltaban documentar)
+- Creado `bug-summary.md` con índice de 11 bugs
+- README.md completamente actualizado
+
+**Resultado:**
+- ✅ 41 archivos .md organizados en 4 carpetas + raíz
+- ✅ Nomenclatura consistente
+- ✅ Índices claros en README.md
+- ✅ Ready para commit + merge
+
+**Impacto:** Zero (reorganización pura, sin cambios de código ni decisiones técnicas)
+
+**US Relacionada:** Ninguna (tarea de mantenimiento)
+
+---
+
+### 2026-04-26 D-036 — AccuWeather Base URL: dataservice.accuweather.com en Cloud Functions (US-1110)
+
+**Contexto:** US-1110 Testing. Cloud Function `syncWeatherManual` retornaba 403 Forbidden de AccuWeather.
+
+**Investigación:** 
+- Cliente (React) usa proxy en `vite.config.ts`: `/api/accuweather/` → `https://dataservice.accuweather.com/`
+- Cloud Function estaba usando: `https://api.accuweather.com/` (endpoint incorrecto)
+
+**Decisión:** Cloud Function debe usar mismo endpoint base que cliente: `https://dataservice.accuweather.com/`
+
+**Motivo:**
+1. Consistencia: ambos usan mismo servidor AccuWeather
+2. API key válida para dataservice, no para api
+3. Client-tested: el cliente ya funciona con dataservice.accuweather.com
+
+**Implementación:**
+- Cambiar URL en `functions/src/syncWeatherLogic.ts` línea 80
+- Agregar parámetro `metric: true` (consistente con cliente)
+- Commit: `57ea15d` ✅
+
+**Validación:** syncWeatherManual retorna `success:true, citiesUpdated:5` ✅
+
+---
+
 ### 2026-04-25 D-035 — Cascade Delete incluye weather_reports + classification_reports (BUG-011 / US-1109)
 
 **Contexto:** BUG-011 detectado en Session 17. Cascade Delete de `/city_weather` no borraba `weather_reports` ni `classification_reports`. Al regenerar ForecastDocs en la misma hora, el `reportIndex` en `fetchPredictions()` encontraba reportes del ciclo anterior, contaminando la tabla con datos "pre-limpieza".

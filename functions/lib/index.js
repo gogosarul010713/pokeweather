@@ -125,8 +125,9 @@ export const clearFirestoreData = functions.https.onRequest(async (req, res) => 
             }
             return docs.length;
         };
-        // 1. Cascade delete TODO /city_weather + subcoleccion forecasts
+        // 1. Cascade delete TODO /city_weather + subcoleccion forecasts + reports (D-035)
         // Firestore NO elimina subcolecciones automaticamente al borrar el padre
+        let reportsDeleted = 0;
         if (data.cascadeDeleteAll) {
             // Primero eliminar todos los docs de la subcoleccion forecasts
             const allForecasts = await db.collectionGroup('forecasts').get();
@@ -134,8 +135,20 @@ export const clearFirestoreData = functions.https.onRequest(async (req, res) => 
             // Luego eliminar los documentos raiz de city_weather
             const allCityDocs = await db.collection('city_weather').get();
             const cityDocsDeleted = await executeBatchDelete(allCityDocs.docs);
-            totalDeleted = forecastsDeleted + cityDocsDeleted;
-            console.log('[clearFirestoreData] cascade:', { forecastsDeleted, cityDocsDeleted });
+            // Eliminar weather_reports (D-035: reportes son datos huerfanos sin ForecastDoc)
+            const allWeatherReports = await db.collection('weather_reports').get();
+            const weatherReportsDeleted = await executeBatchDelete(allWeatherReports.docs);
+            // Eliminar classification_reports (D-035: mismo motivo)
+            const allClassReports = await db.collection('classification_reports').get();
+            const classReportsDeleted = await executeBatchDelete(allClassReports.docs);
+            reportsDeleted = weatherReportsDeleted + classReportsDeleted;
+            totalDeleted = forecastsDeleted + cityDocsDeleted + reportsDeleted;
+            console.log('[clearFirestoreData] cascade:', {
+                forecastsDeleted,
+                cityDocsDeleted,
+                weatherReportsDeleted,
+                classReportsDeleted,
+            });
         }
         // 2. Delete docs with empty snapshots (D-018)
         // Note: array equality filter requires composite index — fetch all and filter in memory instead
@@ -169,7 +182,8 @@ export const clearFirestoreData = functions.https.onRequest(async (req, res) => 
         res.status(200).json({
             success: true,
             deletedCount: totalDeleted,
-            message: `Successfully deleted ${totalDeleted} documents`,
+            reportsDeleted: reportsDeleted,
+            message: `Successfully deleted ${totalDeleted} documents${reportsDeleted > 0 ? ` (${reportsDeleted} reports)` : ''}`,
         });
     }
     catch (error) {
