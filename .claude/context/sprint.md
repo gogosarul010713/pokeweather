@@ -14,9 +14,9 @@
 | ID | Descripción | SP | Estado | Docs |
 |----|-------------|-----|--------|------|
 | **US-811** | Tabs sidebar (Clima/Nidos/Todo) — fuente única verdad | 3 | ✅ Completa | [`US-811.md`](../src/docs/sprints/sprint-9/US/US-811.md) |
-| **US-812** | Pins diferenciados: hexágonos vs círculos | 2 | ⏳ Pendiente | [`US-812.md`](../src/docs/sprints/sprint-9/US/US-812.md) |
-| **US-817** | Overlay sidebar/filtros en modo Todo | 2 | ⏳ Pendiente | [`US-817.md`](../src/docs/sprints/sprint-9/US/US-817.md) |
-| **US-819** | Datos Nidos (JSON estático) | 1 | ⏳ Pendiente | [`US-819.md`](../src/docs/sprints/sprint-9/US/US-819.md) |
+| **US-812** | Pins diferenciados: hexágonos vs círculos | 2 | ✅ Completa | [`US-812.md`](../src/docs/sprints/sprint-9/US/US-812.md) |
+| **US-817** | Overlay sidebar/filtros en modo Todo | 2 | ✅ Completa | [`US-817.md`](../src/docs/sprints/sprint-9/US/US-817.md) |
+| **US-819** | Datos Nidos (JSON estático) | 1 | ✅ Completa | [`US-819.md`](../src/docs/sprints/sprint-9/US/US-819.md) |
 
 ### Sesión 2 — 11 SP
 
@@ -31,14 +31,15 @@
 
 ## 📊 Progreso
 
-**Completadas:** 4/8 US (9 SP) — Sesión 1 ✅ (2026-04-24)
+**Completadas:** 4/8 US (9 SP) — Sesión 1 ✅ (2026-04-24/26)
 - ✅ US-811: Tabs del Sidebar (3 SP)
 - ✅ US-812: Pins Diferenciados (2 SP)
 - ✅ US-819: Datos JSON (1 SP)
 - ✅ US-817: Overlay Modo Todo (2 SP)
+- ✅ Refinamientos UX/UI: Icons AVIF/WebP + optimizaciones (2026-04-26)
 
 **Pendientes:** 4/8 US (11 SP)  
-**En progreso:** Sesión 2 (US-814, US-815, US-816, US-818)
+**Próximo:** Sesión 2 (US-814, US-815, US-816, US-818) ← LISTO PARA COMENZAR
 **Nota:** US antiguas (US-801-807) archivadas en `archive/` — arquitectura reemplazada
 
 ---

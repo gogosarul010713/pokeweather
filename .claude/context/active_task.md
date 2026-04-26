@@ -5,7 +5,7 @@
 **Sesión:** 2/3 (Interfaz: Filtros dinámicos + Leyenda dinámica)  
 **Duración estimada:** 3-4 horas  
 **Story Points:** 11 SP (US-814, US-815, US-816, US-818)  
-**Última actualización:** 2026-04-25
+**Última actualización:** 2026-04-26 (Refinamientos UX/UI completados)
 
 ---
 
@@ -52,8 +52,21 @@ Implementar la **interfaz completa** de Nidos con:
 
 **Justificación:** Mejor UX visual. AVIF/WebP pequeños (56KB) pero valor visual incomparable vs SVG flat.
 
+## ✅ OPTIMIZACIONES UX/UI (2026-04-26)
+
+**Commit:**
+- 33bde3e — "refactor(ux): Optimizar TabControl icons - reducción 15%, mejor spacing"
+
+**Cambios ejecutados (Post-análisis usuario):**
+- ✅ Reducir tamaño 60px → 51px (-15%): proporción visual mejora, menos cramped
+- ✅ Aumentar gap icono/texto 2px → 6px (+200%): gota NO empalma, más legible
+- ✅ Cambiar IconTodo: SVG lista → mapa.avif/webp: intuitivo (mapa=ambas capas)
+- ✅ Validado visual en desktop: tabs perfectos, legibilidad excelente
+
+**Decisión UX/UI:** Visibilidad > compacidad. Usuario interactúa constantemente con sidebar.
+
 **Build:** ✓ Clean build, sin errores TypeScript  
-**Status:** ✅ Sesión 1 FINALIZADA — Listo para Sesión 2 (US-814/815/816/818)
+**Status:** ✅ SESIÓN 1 + REFINAMIENTOS COMPLETADOS — Listo para Sesión 2 (US-814/815/816/818)
 
 ---
 
