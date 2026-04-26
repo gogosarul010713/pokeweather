@@ -251,6 +251,22 @@
 - Fix: replicar fórmula de `saveCityForecast` en `saveWeatherReport`
 - Archivo: `src/services/firebase/classificationReportService.ts` (función `saveWeatherReport`)
 
+### ✅ FASE 8: CLEANUP REPORTS + BUG-011 (2026-04-25 Session 17)
+
+| Feature / US | Descripcion | Status | Commit |
+|-------------|-------------|--------|--------|
+| **BUG-011** | Reportes sobreviven cascade delete (análisis 3 roles) | ✅ ANALIZADO | Session 17 |
+| **US-1109** | Cascade Delete incluye weather_reports + classification_reports | ✅ COMPLETA | `acb6f9c` |
+
+**Fase 8 Status:**
+- ✅ Análisis: Analista SR → Arquitecto → Desarrollador (3 roles)
+- ✅ Documentación: BUG-011 + US-1109 + D-035 creadas
+- ✅ Implementación: Cloud Function + UI + cleanupService
+- ✅ Build: ✅ Sin errores (242.54 KB gzip)
+- ✅ Commit: `acb6f9c`
+
+---
+
 ### ✅ FASE 7: FEATURES TABLA + US-1108 (2026-04-25 Session 16)
 
 | Feature / US | Descripcion | Status | Commit |

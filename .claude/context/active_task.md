@@ -1,36 +1,33 @@
-# ✅ US-1108: Agrupacion Dinamica — Session 16 COMPLETADA
+# ✅ US-1109: Cascade Delete Reportes — Session 17 COMPLETADA
 
 **Fecha:** 2026-04-25
-**Sprint:** 10 (Cierre + Features)
-**Estado:** ✅ US-1108 COMPLETADA | Sprint 10 listo para merge
+**Sprint:** 10 (Ampliación — Bug Fix)
+**Estado:** ✅ US-1109 COMPLETADA | Fase 8 completada
 
 ---
 
-## ✅ Completado Esta Sesion (Session 16)
+## ✅ Completado Esta Sesion (Session 17)
 
-### BUG-010 — Copiar Coords muestra checkmark en TODAS las filas (Commit aa977c2)
-- **Causa:** `copiedCoords` guardaba `row.cityId` — todas las filas de la misma ciudad compartian ID
-- **Fix:** Usar `info.row.id` (ID unico por fila TanStack) en lugar de `cityId`
-- **Archivo:** `PredictionAnalysisTable.tsx` — columna copiarCoords
+### BUG-011 — Reportes sobreviven cascade delete (Analizado + Documentado)
+- **Problema:** Cascade Delete de `/city_weather` no borraba `weather_reports` ni `classification_reports`
+- **Causa:** Ambas colecciones persisten — al regenerar ForecastDocs con mismo `date_hour`, el `reportIndex` encuentra reportes del ciclo anterior
+- **Analisis:** 3 roles (Analista SR → Arquitecto → Desarrollador)
+- **Decision (D-035):** Incluir reportes en Cascade Delete (no como opción separada)
+- **Justificación:** Sin ForecastDoc, los reportes son datos huerfanos sin valor analítico
 
-### F-003 — Agrupacion visual por hora descendente (Commit aa977c2)
-- Helper `getHourBucket(localTimeUser)` → bucket "DD/MM HH:00"
-- Group headers azules con hora + contador de predicciones
-- Sort por defecto: horaLocal desc (bloque mas reciente primero)
+### US-1109 — Cascade Delete incluye weather_reports + classification_reports (Commit acb6f9c)
+- **Implementación completa:**
+  - Cloud Function: borrado de ambas colecciones cuando `cascadeDeleteAll=true`
+  - cleanupService: `reportsDocs` count + `reportsDeleted` en results
+  - CleanupPanel: descripción actualizada + toast con counts
+  - PredictionAnalysisTable: fix JSX.Element → React.ReactNode (pre-existente)
+- **Criterios de aceptación:** TODOS pasaron ✅
+- **Build:** ✅ Sin errores (242.54 KB gzip)
 
-### US-1108 — Agrupacion Dinamica hora/ciudad/clima (Commit 0c86741)
-- **Tipo:** `GroupBy = 'hora' | 'ciudad' | 'clima'`
-- **Constante:** `GROUP_SORTS` con SortingState por modo
-- **Funcion:** `getGroupKey(row, groupBy)` generaliza getHourBucket
-- **Handler:** `handleGroupByChange` — cambia groupBy + sort + vuelve pagina 1
-- **UI:** 3 pills "⏰ Hora / 🏙️ Ciudad / 🌤️ Clima" en header de tabla
-- **Group headers:** icono segun modo (emoji para hora/ciudad, img weather para clima)
-- **CSS:** `.pat-group-toggle`, `.pat-group-btn`, `.pat-group-btn.active`
-
-### Docs Actualizadas (Commit 57e7138)
-- `README.md` sprint-10: desfasado → estado real completo 6 fases
-- `12-US-1107-Lookback12h.md`: "📋 Especificacion" → "✅ COMPLETADA"
-- `15-US-1108-AgrupacionDinamica.md`: nueva US creada
+### Documentación Creada (Session 17)
+- `bugfixes/BUG-011-reports-survive-cascade-delete.md` — diagnóstico completo
+- `16-US-1109-ClearReportsOnCleanup.md` — plan implementación + criterios
+- `decisions.md` — D-035 agregada
 
 ---
 
@@ -38,24 +35,33 @@
 
 | Commit | Descripcion |
 |--------|-------------|
-| `aa977c2` | fix BUG-010 copiar coords + F-003 agrupacion visual hora |
-| `57e7138` | docs sprint-10 actualizados + US-1108 spec |
-| `0c86741` | feat US-1108 agrupacion dinamica hora/ciudad/clima |
+| `acb6f9c` | feat(US-1109): Cascade Delete incluye weather_reports + classification_reports |
 
 ---
 
 ## ⬜ Pendiente
 
-1. **Merge `sprint-10` → `develop`** (confirmacion usuario requerida)
-2. **Actualizar `sprint.md`** con estado US-1108 completada
-3. **Iniciar Sprint 11** cuando usuario confirme
+1. **Validación manual de US-1109** (testing en el navegador)
+2. **Merge `sprint-10` → `develop`** (requiere confirmacion usuario)
+3. **Iniciar Sprint 11** o siguiente tarea
 
 ---
 
-## 🏗️ Arquitectura US-1108
+## 🏗️ Arquitectura US-1109
 
-**PredictionAnalysisTable.tsx** — unico archivo modificado (+100 lineas):
-- `groupBy` estado local: `'hora' | 'ciudad' | 'clima'`
-- Sin cambios en data layer, Firebase, interfaces PredictionRow
-- Sort multi-columna via `GROUP_SORTS[mode]` aplicado con `setSorting()`
-- Headings de grupo renderizan diferente segun modo (clima usa `<img>` de WEATHER_IMAGES)
+**3 archivos modificados** (120 lineas nuevas):
+
+1. **Cloud Function** (`functions/src/index.ts`)
+   - Cascade delete incluye `weather_reports` + `classification_reports`
+   - Batch delete chunking de 500 ops (existente)
+   - Response: `{ deletedCount, reportsDeleted }`
+
+2. **cleanupService.ts**
+   - `CleanupCounts`: +`reportsDocs` count
+   - `fetchCleanupCounts()`: query de ambas colecciones
+   - `CleanupResults`: +`reportsDeleted`
+
+3. **CleanupPanel.tsx**
+   - Descripcion: muestra count de reports
+   - Toast: incluye reports eliminados
+   - Estado: mutuamente excluyente (sin cambios)
