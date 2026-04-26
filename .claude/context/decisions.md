@@ -5,6 +5,56 @@
 
 ---
 
+### 2026-04-25 D-034 — US-1108: Agrupacion Dinamica con estado local (no TanStack Grouping API)
+
+**Contexto:** US-1108. Tabla predictiva necesita toggle para cambiar criterio de agrupacion entre hora/ciudad/clima.
+
+**Decision:** Estado local `groupBy` + render custom con `getGroupKey()`. NO usar TanStack Table v8 Grouping API.
+
+**Motivo:**
+1. TanStack Grouping API introduce subrows y expanded rows que no encajan con el patron de "group header como `<tr>` inyectado" ya implementado
+2. El patron existente (IIFE con for-loop y group headers) es trivialmente extensible con una funcion `getGroupKey(row, groupBy)`
+3. Sort dinamico via `GROUP_SORTS` record: cambio de modo = `setSorting(GROUP_SORTS[mode])` + `table.setPageIndex(0)`
+
+**Implementacion:**
+- `GroupBy = 'hora' | 'ciudad' | 'clima'` — tipo TypeScript
+- `GROUP_SORTS: Record<GroupBy, SortingState>` — sorts predefinidos por modo
+- `getGroupKey(row, groupBy)`: hora=getHourBucket, ciudad=cityName, clima=prediction.toLowerCase()
+- Para clima: group header usa `<img>` de WEATHER_IMAGES (no emoji estatico)
+- UI: 3 pills en `.pat-header` con `.pat-group-btn.active`
+
+**Archivo:** `PredictionAnalysisTable.tsx` (+100 lineas, 0 cambios en data layer)
+**Commit:** `0c86741`
+
+---
+
+### 2026-04-25 D-033 — BUG-009: Serialización de Timestamps en cacheService (Session 15)
+
+**Contexto:** Lookback 12h siempre vacio. 3 causas encontradas via auto-debugger.
+
+**Problema principal (causa 2):** `setPredictionsCacheMetadata` y `setForecastCache` sobreescriben `created_at` al re-serializar:
+```typescript
+// INCORRECTO:
+created_at: doc.created_at?.toMillis?.() ?? Date.now()
+// Cuando created_at ya es number: toMillis() = undefined -> Date.now()
+// Todos los docs quedan con el mismo timestamp
+
+// CORRECTO:
+created_at: typeof doc.created_at === 'number' ? doc.created_at : doc.created_at?.toMillis?.() ?? now
+```
+
+**Regla general:** Siempre verificar `typeof === 'number'` antes de llamar `.toMillis()` en campos que pueden ser Timestamp O number (docs que vienen de IndexedDB ya estan serializados).
+
+**Causa 3:** `fetchPredictions()` usaba `getForecastCache()` (sync cache, 4 docs) ignorando `getPredictionsCacheMetadata().documents` (30 docs). Fix: acepta `preloadedDocs` param.
+
+**Causa 1:** Gate `if (report)` en `generateLookback` — lookback solo mostraba items confirmados. Ahora `wouldBeCorrect: boolean | null`.
+
+**Afecta:** `cacheService.ts` (setForecastCache, setPredictionsCacheMetadata, cleanExpiredForecastDocs), `predictionAnalyticsService.ts`, `PredictionAnalysisTable.tsx`, `PredictionAnalysisDemo.tsx`
+
+**Commit:** `e6da311`
+
+---
+
 ### 2026-04-25 D-032 — BUG-008 Root Cause: date_hour LOCAL vs UTC en saveWeatherReport (Session 14)
 
 **Contexto:** BUG-008 persistia despues de 2 fixes (v1 colecciones, v2 callback refetch). Tabla seguia sin actualizar columna "Real" tras reportar clima.

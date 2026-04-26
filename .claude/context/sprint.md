@@ -241,7 +241,8 @@
 | BUG-007 (001-003) | Tabla vacía + warnings + lookback vacío | D-018 no implementada (docs sin snapshots) | ✅ FIXED | `a44958e` |
 | BUG-008 v1 | Tabla no actualiza tras reportar | Mismatch colecciones (weather_reports vs classification_reports) | ✅ FIXED | `dd8e7b8` |
 | BUG-008 v2 | Tabla no refetch tras reportar | useEffect sin re-ejecución — faltaba callback | ✅ FIXED | `4d8c37f` |
-| BUG-008 v3 | Columna "Real" nunca se actualiza | `date_hour` mismatch: UTC vs LOCAL + sin redondeo | ✅ FIXED | pendiente commit |
+| BUG-008 v3 | Columna "Real" nunca se actualiza | `date_hour` mismatch: UTC vs LOCAL + sin redondeo | ✅ FIXED | `e47e03a` |
+| BUG-009 | Lookback 12h siempre vacío | 3 causas: gate if(report) + created_at corrupto + cache mal leído | ✅ FIXED | `e6da311` |
 
 **BUG-008 v3 (Root Cause Final):**
 - `saveWeatherReport()` usaba `.toISOString()` (UTC) sin redondear a hora siguiente
@@ -250,14 +251,25 @@
 - Fix: replicar fórmula de `saveCityForecast` en `saveWeatherReport`
 - Archivo: `src/services/firebase/classificationReportService.ts` (función `saveWeatherReport`)
 
-### Próximo Paso
-1. Commit BUG-008 v3 fix
-2. Validación manual: reportar clima → tabla se actualiza ✓
-3. Merge `sprint-10` → `develop`
+### ✅ FASE 7: FEATURES TABLA + US-1108 (2026-04-25 Session 16)
+
+| Feature / US | Descripcion | Status | Commit |
+|-------------|-------------|--------|--------|
+| **BUG-010** | Fix copiar coords: checkmark en todas las filas (cityId→rowId) | ✅ FIXED | `aa977c2` |
+| **F-003** | Agrupacion visual por hora descendente (getHourBucket + group headers) | ✅ DONE | `aa977c2` |
+| **US-1108** | Agrupacion dinamica hora/ciudad/clima (GroupBy toggle en tabla) | ✅ COMPLETA | `0c86741` |
+| **Docs** | README sprint-10 actualizado + US-1107 corregida + US-1108 creada | ✅ DONE | `57e7138` |
+
+### Proximo Paso
+1. ✅ BUG-010 fix copiar coords (`aa977c2`)
+2. ✅ US-1108 agrupacion dinamica (`0c86741`)
+3. ✅ Docs actualizadas (`57e7138`)
+4. **Merge `sprint-10` → `develop`** (pendiente confirmacion usuario)
+5. Iniciar Sprint 11
 
 ---
 
-**Sprint 10 Status:** ✅ COMPLETADO + AMPLIACIÓN + BUGFIXES (2026-04-16 → 2026-04-25)
+**Sprint 10 Status:** ✅ COMPLETADO TOTAL (2026-04-16 → 2026-04-25)
 **Build:** ✅ tsc --noEmit limpio, SIN ERRORES
-**Last Commit:** 4d8c37f - BUG-008 v2 callback chain
-**Pending Commit:** BUG-008 v3 date_hour fix (classificationReportService.ts)
+**Last Commit:** `0c86741` feat US-1108 agrupacion dinamica
+**Pending:** Merge sprint-10 → develop (requiere confirmacion)

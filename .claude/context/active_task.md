@@ -1,221 +1,61 @@
-# 🎯 Sprint 10 Features: Reporte Clima Real + Copiar Coords en Tabla
+# ✅ US-1108: Agrupacion Dinamica — Session 16 COMPLETADA
 
-**Fecha Inicio:** 2026-04-24 (Session 10)  
-**Fecha Finalización:** 2026-04-24 (Session 10)  
-**Sprint:** 10 (Ampliación)  
-**Estado:** ✅ COMPLETADA
-
----
-
-## ✅ Features Implementadas (2026-04-24 Session 10)
-
-### Feature 1: Mover "Reportar Clima" de LocationDetail → Tabla Predictiva
-
-**Completado:**
-- ✅ Expandir `PredictionRow` interface: agregar `lat`, `lon`
-- ✅ Crear `WeatherReportModal.tsx` (nuevo componente)
-  - Propósito: reportar clima real observado (NO fallo de clasificación)
-  - Permite reportar del **mismo clima predicho** (sin validación "debe ser diferente")
-  - Bottom-sheet centrado, z-index 1100/1101
-  - Modal-specific: NO reutilizar ClassificationReportModal
-- ✅ Agregar `saveWeatherReport()` en classificationReportService.ts
-  - Nueva colección Firestore: `weather_reports`
-  - Schema: predicted_condition vs reported_condition, source='prediction-table'
-  - TTL: 30 días (auto-delete)
-- ✅ Actualizar datos reales:
-  - `predictionAnalyticsService.ts`: mapear lat/lon desde ForecastDoc
-  - `PredictionAnalysisDemo.tsx`: agregar coords a mock data
-- ✅ Remover de LocationDetail:
-  - ✅ Remover botón ⚠️ de header
-  - ✅ Remover estado: `showReportModal`, `showReportToast`
-  - ✅ Remover handler: `handleReportSuccess()`
-  - ✅ Remover modal renderizado + toast
-  - ✅ Remover import: ClassificationReportModal
-  - ✅ **MANTENER:** botón 📋 copiar coords (diferente contexto)
-
-### Feature 2: Botón Copiar Coordenadas en Tabla
-
-**Completado:**
-- ✅ Nueva columna "📋 Copiar Coords" en PredictionAnalysisTable
-- ✅ Botón solo icono (sin texto)
-- ✅ Copia formato: `${lat.toFixed(4)}, ${lon.toFixed(4)}`
-- ✅ Feedback visual: icono cambia a ✓ por 2s
-- ✅ Estado: `copiedCoords` para trackear fila recientemente copiada
+**Fecha:** 2026-04-25
+**Sprint:** 10 (Cierre + Features)
+**Estado:** ✅ US-1108 COMPLETADA | Sprint 10 listo para merge
 
 ---
 
-## 📊 Cambios por Archivo
+## ✅ Completado Esta Sesion (Session 16)
 
-| Archivo | Cambio | Líneas |
-|---------|--------|--------|
-| `src/components/Analytics/PredictionAnalysisTable.tsx` | +2 columnas, estado modal, CSS | +50 |
-| `src/components/Analytics/WeatherReportModal.tsx` | **NUEVO** | 280 |
-| `src/components/Sidebar/LocationDetail.tsx` | Remover reporte | -40 |
-| `src/services/firebase/classificationReportService.ts` | +saveWeatherReport() | +60 |
-| `src/services/predictions/predictionAnalyticsService.ts` | Mapear lat/lon | +2 |
-| `src/components/Analytics/PredictionAnalysisDemo.tsx` | Coords mock data | +12 |
+### BUG-010 — Copiar Coords muestra checkmark en TODAS las filas (Commit aa977c2)
+- **Causa:** `copiedCoords` guardaba `row.cityId` — todas las filas de la misma ciudad compartian ID
+- **Fix:** Usar `info.row.id` (ID unico por fila TanStack) en lugar de `cityId`
+- **Archivo:** `PredictionAnalysisTable.tsx` — columna copiarCoords
 
-**Total:** 451 líneas agregadas, 33 removidas
+### F-003 — Agrupacion visual por hora descendente (Commit aa977c2)
+- Helper `getHourBucket(localTimeUser)` → bucket "DD/MM HH:00"
+- Group headers azules con hora + contador de predicciones
+- Sort por defecto: horaLocal desc (bloque mas reciente primero)
 
----
+### US-1108 — Agrupacion Dinamica hora/ciudad/clima (Commit 0c86741)
+- **Tipo:** `GroupBy = 'hora' | 'ciudad' | 'clima'`
+- **Constante:** `GROUP_SORTS` con SortingState por modo
+- **Funcion:** `getGroupKey(row, groupBy)` generaliza getHourBucket
+- **Handler:** `handleGroupByChange` — cambia groupBy + sort + vuelve pagina 1
+- **UI:** 3 pills "⏰ Hora / 🏙️ Ciudad / 🌤️ Clima" en header de tabla
+- **Group headers:** icono segun modo (emoji para hora/ciudad, img weather para clima)
+- **CSS:** `.pat-group-toggle`, `.pat-group-btn`, `.pat-group-btn.active`
 
-## ✅ Build & QA
-
-- ✅ **TypeScript:** Sin errores de compilación
-- ✅ **Build:** `npm run build` exitoso (132 modules, 842 KB gzip)
-- ✅ **Dev server:** Corriendo en `http://localhost:5180`
-- ✅ **Commit:** `44d94df` — feat(sprint-10): Reporte clima real en tabla + copiar coords
-
----
-
-## ✅ Testing Manual Completado (2026-04-24 Session 11)
-
-| # | Test | Resultado | Detalles |
-|---|------|-----------|----------|
-| 1 | Tabla visible con columnas | ✅ PASS | ⚠️ y 📋 visibles en todas las filas |
-| 2 | Click ⚠️ abre modal | ✅ PASS | WeatherReportModal abre correctamente, muestra predicción |
-| 3 | Envío reporte | ✅ PASS | Toast "✓ Reporte enviado correctamente", Firestore doc: g5L5LKdHRC6vk1dPejuS |
-| 4 | Click 📋 copiar coords | ✅ PASS | Botón funciona, feedback visual confirmado |
-| 5 | LocationDetail sin ⚠️ | ✅ PASS | Modal abierto, NO tiene botón ⚠️, mantiene 📋 copiar coords |
-| 6 | Firestore schema | ✅ PASS | `weather_reports` collection con source='prediction-table', TTL 30d, todos campos OK |
-
-**Todos los casos de prueba: ✅ PASARON**
+### Docs Actualizadas (Commit 57e7138)
+- `README.md` sprint-10: desfasado → estado real completo 6 fases
+- `12-US-1107-Lookback12h.md`: "📋 Especificacion" → "✅ COMPLETADA"
+- `15-US-1108-AgrupacionDinamica.md`: nueva US creada
 
 ---
 
-## 🏗️ Decisiones de Arquitectura Aplicadas
+## 📋 Commits de Esta Sesion
 
-- **D-031 (NUEVA):** Modal único WeatherReportModal para tabla (NO reutilizar ClassificationReportModal)
-  - Propósito diferente: reportar clima real vs reportar fallo
-  - Permite mismo clima predicho (sin validación)
-  - Schema Firestore separado: `weather_reports` (no `classification_reports`)
-  - Razón: Semántica distinta, uso separado para analytics
-
----
-
-## 📝 Documentación Generada
-
-- Plan completo en: `C:\Users\geova\.claude\plans\majestic-yawning-dahl.md`
-- Commit message detallado: `44d94df`
+| Commit | Descripcion |
+|--------|-------------|
+| `aa977c2` | fix BUG-010 copiar coords + F-003 agrupacion visual hora |
+| `57e7138` | docs sprint-10 actualizados + US-1108 spec |
+| `0c86741` | feat US-1108 agrupacion dinamica hora/ciudad/clima |
 
 ---
 
-## ⏭️ Próximos Pasos
+## ⬜ Pendiente
 
-1. ✅ Testing manual completado (Session 11)
-2. 📋 **NEW: US-1107 — Lookback 12h en Tabla Predictiva (Session 12)**
-3. Merge a `develop` (post-1107)
-4. Cerrar Sprint 10
-
----
-
-# 📋 US-1107: Lookback 12 Horas (Session 12)
-
-**Sprint:** 10 (Ampliación)  
-**Story Points:** 3  
-**Estado:** ✅ COMPLETADA | BUILD OK | TESTING MANUAL PASADO
-**Documentación:** [src/docs/sprints/sprint-10/12-US-1107-Lookback12h.md](../../src/docs/sprints/sprint-10/12-US-1107-Lookback12h.md)
-**Commit:** c5191c2
-
-## ¿Qué es?
-Implementar vista expandible "lookback de 12 horas" en tabla de predicciones. Para cada predicción, mostrar las 12 predicciones ANTERIORES que también predijeron esa misma hora.
-
-**Ejemplo:**
-```
-Fila actual: Pier 39 | 04:00 | Predicción: "sunny" | Real: "cloudy"
-
-Expandido (lookback):
-  [0.5h atrás]  03:00 predijo para 04:00: "cloudy" ✗
-  [1.5h atrás]  02:00 predijo para 04:00: "sunny" ✓
-  [2.2h atrás]  01:00 predijo para 04:00: "cloudy" ✗
-  ... (hasta 12h atrás)
-```
-
-## Cambios Requeridos
-1. Implementar `generateLookback()` en predictionAnalyticsService.ts (+80 líneas)
-2. Renderizar lookback expandible en PredictionAnalysisTable.tsx (+40 líneas)
-3. CSS para estilos (gris/verde según acierto)
-
-## Arquitectura
-- **Cálculo:** Durante `fetchPredictions()` (una sola vez)
-- **Performance:** O(N²) aceptable (450 forecasts × 12h = 5.4K ops)
-- **Edge cases:** Forecasts sin snapshots, sin reportes, <12h data
-- **Límite:** Máximo 12 items, ordenado desc por horasAgo
-
-## Checklist de Implementación
-- [x] `generateLookback()` implementada y probada
-- [x] PredictionAnalysisTable renderiza expandible
-- [x] Estilos: ✓ verde, ✗ gris
-- [x] Build sin errores
-- [x] Commit realizado (c5191c2)
-- [ ] Merge (PENDIENTE — hay bugs)
+1. **Merge `sprint-10` → `develop`** (confirmacion usuario requerida)
+2. **Actualizar `sprint.md`** con estado US-1108 completada
+3. **Iniciar Sprint 11** cuando usuario confirme
 
 ---
 
-## 🐛 BUGS IDENTIFICADOS + FIXES IMPLEMENTADOS (Session 13)
+## 🏗️ Arquitectura US-1108
 
-| # | Descripción | Severidad | Status | Commit |
-|---|-------------|-----------|--------|--------|
-| BUG-001 | Forecasts se borran o dejan de mostrar | 🔴 ALTO | ✅ FIXED | a44958e |
-| BUG-002 | Warning: "Forecast for X has no snapshots" | 🟡 MEDIO | ✅ FIXED | a44958e |
-| BUG-003 | Lookback no muestra datos aunque existan | 🔴 ALTO | ✅ FIXED | a44958e |
-| BUG-008 | Reporte clima no actualiza tabla predictiva | 🟡 MEDIO | ✅ FIXED | dd8e7b8 |
-
-### 🔍 ROOT CAUSE (Identificado Session 13)
-
-**TODOS 3 BUGS CAUSADOS POR:** saveCityForecast() guardaba documentos incluso si `snapshots.length === 0`
-
-**Ubicación:** `src/services/firebase/firebaseWeatherService.ts:99-140`
-
-**Síntoma:** Documentos sin snapshots se guardaban → fetchPredictions() los cargaba → línea 54-56 los saltaba → tabla se veía vacía
-
-**Solución:** Implementar D-018 — early return si `snapshots.length === 0`
-
-### ✅ FIX IMPLEMENTADO (Commit a44958e)
-
-```typescript
-// ANTES (INCORRECTO):
-if (snapshots.length === 0) {
-    console.log(...)  // Solo log, sigue guardando
-}
-
-// DESPUÉS (CORRECTO):
-if (snapshots.length === 0) {
-    console.log(`[Firebase] ℹ️ ${city.id}: No snapshots (cache-hit), skipping save`)
-    return  // ← EARLY RETURN
-}
-```
-
-**Impacto:**
-- ✅ BUG-001: Tabla NO se vacía (documentos sin snapshots no se guardan)
-- ✅ BUG-002: Warning desaparece (no hay documentos sin snapshots)
-- ✅ BUG-003: Lookback funciona (documentos tienen snapshots válidos)
-
-**Build Status:** ✅ 842 KB gzip, sin errores TypeScript
-
----
-
-### ✅ BUG-008: Reporte Clima No Actualiza Tabla (Commit dd8e7b8)
-
-**Root Cause:** Mismatch de colecciones
-- `saveWeatherReport()` guarda en `'weather_reports'`
-- Pero `fetchPredictions()` buscaba SOLO en `'classification_reports'`
-- Resultado: Reportes nuevos no aparecían en tabla
-
-**Solución:** Unified Report Index
-1. Nueva función: `getRecentWeatherReports()` en classificationReportService.ts
-2. Actualizado `fetchPredictions()` para leer ambas colecciones
-3. Merge automático en índice (classification_reports prioridad si hay conflicto)
-
-**Archivos Modificados:**
-- `src/services/firebase/classificationReportService.ts` — +getRecentWeatherReports()
-- `src/services/predictions/predictionAnalyticsService.ts` — Unified index
-
-**Build Status:** ✅ 843 KB gzip, sin errores TypeScript
-
----
-
-**Session 10:** Implementación | **Session 11:** Testing & Validation  
-**User:** Geovanny M | **Repo:** pokeweather  
-**Rama:** sprint-10 (ready to merge + US-1107)  
-**Última actualización:** 2026-04-24 (Session 12 - US-1107 especificación iniciada)
+**PredictionAnalysisTable.tsx** — unico archivo modificado (+100 lineas):
+- `groupBy` estado local: `'hora' | 'ciudad' | 'clima'`
+- Sin cambios en data layer, Firebase, interfaces PredictionRow
+- Sort multi-columna via `GROUP_SORTS[mode]` aplicado con `setSorting()`
+- Headings de grupo renderizan diferente segun modo (clima usa `<img>` de WEATHER_IMAGES)
