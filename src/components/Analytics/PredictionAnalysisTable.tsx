@@ -73,6 +73,15 @@ function getCityLocalTime(queryTime: string | Date | number, timezone: number): 
   return `${day}/${month} ${hours}:${mins}`;
 }
 
+function getHourBucket(localTimeUser: string): string {
+  if (!localTimeUser || localTimeUser === 'N/A') return 'Sin fecha';
+  const parts = localTimeUser.split(' ');
+  if (parts.length < 2) return localTimeUser;
+  const [date, time] = parts;
+  const hour = time.split(':')[0];
+  return `${date} ${hour}:00`;
+}
+
 function WeatherBadge({ condition }: { condition: string }) {
   const cond = condition.toLowerCase() as WeatherCondition;
   return (
@@ -108,12 +117,6 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
-  };
-
-  const handleCopyCoords = (row: PredictionRow) => {
-    navigator.clipboard.writeText(`${row.lat.toFixed(4)}, ${row.lon.toFixed(4)}`);
-    setCopiedCoords(row.cityId);
-    setTimeout(() => setCopiedCoords(null), 2000);
   };
 
   const handleReportSuccess = async () => {
@@ -258,11 +261,16 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       header: '📋',
       cell: info => {
         const row = info.row.original;
-        const isCopied = copiedCoords === row.cityId;
+        const rowId = info.row.id;
+        const isCopied = copiedCoords === rowId;
         return (
           <button
             className={`pat-btn-coords ${isCopied ? 'copied' : ''}`}
-            onClick={() => handleCopyCoords(row)}
+            onClick={() => {
+              navigator.clipboard.writeText(`${row.lat.toFixed(4)}, ${row.lon.toFixed(4)}`);
+              setCopiedCoords(rowId);
+              setTimeout(() => setCopiedCoords(null), 2000);
+            }}
             title={isCopied ? 'Copiado' : 'Copiar coordenadas'}
             type="button"
           >
@@ -286,7 +294,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 20 } },
+    initialState: { pagination: { pageSize: 20 }, sorting: [{ id: 'horaLocal', desc: true }] },
   });
 
   const { pageIndex, pageSize } = table.getState().pagination;
@@ -729,6 +737,32 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           color: var(--ui-success);
         }
 
+        /* ── Group headers ──────────────────────────────── */
+        .pat-group-header td {
+          padding: 5px 12px;
+          background: rgba(88, 166, 255, 0.06);
+          border-top: 2px solid var(--border-default);
+          border-bottom: 1px solid var(--border-subtle);
+        }
+        .pat-group-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .pat-group-hour {
+          font-family: 'Rajdhani', monospace;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          color: var(--ui-accent);
+        }
+        .pat-group-count {
+          font-family: 'Rajdhani', monospace;
+          font-size: 10px;
+          color: var(--text-secondary);
+        }
+
         /* ── Toast ─────────────────────────────────────── */
         .pat-toast {
           position: fixed;
@@ -832,61 +866,93 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                 </td>
               </tr>
             ) : (
-              table.getRowModel().rows.map(row => {
-                const original = row.original;
-                const isOpen   = openLookbacks.has(row.id);
-                const hasLb    = original.lookback12h.length > 0;
-                return (
-                  <Fragment key={row.id}>
-                    <tr>
-                      {row.getVisibleCells().map(cell => (
-                        <td key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
-                    </tr>
+              (() => {
+                const pageRows = table.getRowModel().rows;
+                const bucketCounts = new Map<string, number>();
+                pageRows.forEach(r => {
+                  const b = getHourBucket(r.original.localTimeUser);
+                  bucketCounts.set(b, (bucketCounts.get(b) || 0) + 1);
+                });
 
-                    {isOpen && hasLb && (
-                      <tr
-                        key={`lb-${row.id}`}
-                        className={`pat-lookback-row ${original.correct === true ? 'success' : ''}`}
-                      >
+                let lastBucket = '';
+                const result: JSX.Element[] = [];
+
+                for (const row of pageRows) {
+                  const bucket = getHourBucket(row.original.localTimeUser);
+
+                  if (bucket !== lastBucket) {
+                    lastBucket = bucket;
+                    const count = bucketCounts.get(bucket) || 0;
+                    result.push(
+                      <tr key={`group-${bucket}`} className="pat-group-header">
                         <td colSpan={columns.length}>
-                          <div className="pat-lookback-panel">
-                            <div className={`pat-lookback-title ${original.correct === true ? 'success' : 'error'}`}>
-                              🔍 Lookback 12h — {original.lookback12h.length} predicciones anteriores{(() => { const confirmed = original.lookback12h.filter(x => x.wouldBeCorrect !== null); return confirmed.length > 0 ? ` · ${confirmed.filter(x => x.wouldBeCorrect).length}/${confirmed.length} confirmados acertaron` : ''; })()}
-                            </div>
-                            <div className="pat-lookback-grid">
-                              {original.lookback12h.map((item, i) => {
-                                const cond  = item.condition.toLowerCase() as WeatherCondition;
-                                const itemTime = item.timestamp ? getCityLocalTime(item.timestamp, original.timezone) : 'N/A';
-                                return (
-                                  <div
-                                    key={`${row.id}-lb-${i}`}
-                                    className={`pat-lookback-item ${item.wouldBeCorrect ? 'hit' : ''}`}
-                                  >
-                                    <div className="pat-lookback-hours">{itemTime}</div>
-                                    <div className="pat-lookback-ago">-{item.hoursAgo}h</div>
-                                    <div className="pat-lookback-condition">
-                                      <img
-                                        src={WEATHER_IMAGES[cond] || '/weather/cloudy.png'}
-                                        alt={item.condition}
-                                        style={{ width: '16px', height: '16px' }}
-                                      />
-                                      <span>{CONDITION_LABEL[cond] || item.condition}</span>
-                                    </div>
-                                    {item.wouldBeCorrect && <div className="pat-lookback-check">✓</div>}
-                                  </div>
-                                );
-                              })}
-                            </div>
+                          <div className="pat-group-row">
+                            <span className="pat-group-hour">⏰ {bucket}</span>
+                            <span className="pat-group-count">{count} prediccion{count !== 1 ? 'es' : ''}</span>
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                );
-              })
+                    );
+                  }
+
+                  const original = row.original;
+                  const isOpen   = openLookbacks.has(row.id);
+                  const hasLb    = original.lookback12h.length > 0;
+
+                  result.push(
+                    <Fragment key={row.id}>
+                      <tr>
+                        {row.getVisibleCells().map(cell => (
+                          <td key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+
+                      {isOpen && hasLb && (
+                        <tr
+                          key={`lb-${row.id}`}
+                          className={`pat-lookback-row ${original.correct === true ? 'success' : ''}`}
+                        >
+                          <td colSpan={columns.length}>
+                            <div className="pat-lookback-panel">
+                              <div className={`pat-lookback-title ${original.correct === true ? 'success' : 'error'}`}>
+                                🔍 Lookback 12h — {original.lookback12h.length} predicciones anteriores{(() => { const confirmed = original.lookback12h.filter(x => x.wouldBeCorrect !== null); return confirmed.length > 0 ? ` · ${confirmed.filter(x => x.wouldBeCorrect).length}/${confirmed.length} confirmados acertaron` : ''; })()}
+                              </div>
+                              <div className="pat-lookback-grid">
+                                {original.lookback12h.map((item, i) => {
+                                  const cond  = item.condition.toLowerCase() as WeatherCondition;
+                                  const itemTime = item.timestamp ? getCityLocalTime(item.timestamp, original.timezone) : 'N/A';
+                                  return (
+                                    <div
+                                      key={`${row.id}-lb-${i}`}
+                                      className={`pat-lookback-item ${item.wouldBeCorrect ? 'hit' : ''}`}
+                                    >
+                                      <div className="pat-lookback-hours">{itemTime}</div>
+                                      <div className="pat-lookback-ago">-{item.hoursAgo}h</div>
+                                      <div className="pat-lookback-condition">
+                                        <img
+                                          src={WEATHER_IMAGES[cond] || '/weather/cloudy.png'}
+                                          alt={item.condition}
+                                          style={{ width: '16px', height: '16px' }}
+                                        />
+                                        <span>{CONDITION_LABEL[cond] || item.condition}</span>
+                                      </div>
+                                      {item.wouldBeCorrect && <div className="pat-lookback-check">✓</div>}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                }
+
+                return result;
+              })()
             )}
           </tbody>
         </table>
