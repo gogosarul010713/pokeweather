@@ -1,8 +1,8 @@
 # US-1107: Lookback 12 Horas — Análisis de Precisión Histórica
 
 **Sprint:** 10 (Ampliación)  
-**Story Points:** 3-4  
-**Estado:** 📋 Especificación  
+**Story Points:** 3  
+**Estado:** ✅ COMPLETADA (2026-04-24 Session 12 | Commit: `c5191c2`)  
 **Roles:** 🔍 Analista | 🏛️ Arquitecto | 💻 Desarrollador  
 
 ---
@@ -243,16 +243,26 @@ Lookback (expandible):
 
 ---
 
-## 🚀 Próximos Pasos (Esta Sesión)
+## ✅ Implementacion Completada
 
-1. ✅ Presentar plan detallado (este documento)
-2. 🤔 **Confirmación del usuario**
-3. 🔨 Implementar `generateLookback()`
-4. 🎨 Actualizar renderizado en PredictionAnalysisTable
-5. 🧪 Testing manual
-6. 🎉 Commit + Merge Sprint 10
+| Paso | Status | Notas |
+|------|--------|-------|
+| Presentar plan | ✅ | Este documento |
+| Confirmacion usuario | ✅ | Session 12 |
+| `generateLookback()` | ✅ | predictionAnalyticsService.ts |
+| Renderizado expandible | ✅ | PredictionAnalysisTable.tsx |
+| Testing manual | ✅ | 6/6 casos pasados |
+| Commit | ✅ | `c5191c2` |
+
+## 🐛 Bugs Resueltos Post-Implementacion (Sessions 13-15)
+
+| Bug | Causa | Fix | Commit |
+|-----|-------|-----|--------|
+| BUG-003: Lookback vacio | Gate `if(report)` en generateLookback | `wouldBeCorrect: boolean \| null` | `a44958e` |
+| BUG-009 causa 2 | `toMillis()` en number → todos docs mismo timestamp | `typeof === 'number'` check | `e6da311` |
+| BUG-009 causa 3 | fetchPredictions ignoraba metadata cache | `preloadedDocs` param | `e6da311` |
 
 ---
 
-**Responsable:** Claude Code | **Fecha:** 2026-04-24  
-**Status:** ✏️ Draft — Esperando confirmación del usuario  
+**Responsable:** Claude Code | **Fecha inicio:** 2026-04-24 | **Fecha fin:** 2026-04-25  
+**Status:** ✅ COMPLETADA | 20/20 filas con LOOKBACK validado  
