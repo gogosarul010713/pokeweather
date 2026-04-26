@@ -1,6 +1,7 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
 import TabControl from './TabControl'
+import FeedHeader from './FeedHeader'
 import Overlay from '../UI/Overlay'
 
 interface SidebarProps {
@@ -164,7 +165,10 @@ export default function Sidebar({ cities }: SidebarProps) {
 
           {/* Modo Lista / Favoritos: LocationFeed (solo si activeTab = 'clima') */}
           {activeTab === 'clima' && (sidebarMode === 'list' || sidebarMode === 'favorites') && (
-            <LocationFeed cities={cities} />
+            <>
+              <FeedHeader label="Ciudades" icon="📍" />
+              <LocationFeed cities={cities} />
+            </>
           )}
 
           {/* Modo Detalle: Placeholder */}

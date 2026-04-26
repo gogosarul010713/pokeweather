@@ -6,8 +6,8 @@ const IconClima = () => (
     avifSrc="/assets/icons/nube_avif.avif"
     webpSrc="/assets/icons/nube_webp.webp"
     alt="Ícono de clima"
-    width={51}
-    height={51}
+    width={40}
+    height={40}
   />
 )
 
@@ -16,8 +16,8 @@ const IconNidos = () => (
     avifSrc="/assets/icons/pokenido_avif.avif"
     webpSrc="/assets/icons/pokenido_webp.webp"
     alt="Ícono de nidos"
-    width={51}
-    height={51}
+    width={46}
+    height={46}
   />
 )
 
@@ -26,8 +26,8 @@ const IconTodo = () => (
     avifSrc="/assets/icons/mapa_avif.avif"
     webpSrc="/assets/icons/mapa_webp.webp"
     alt="Ícono de mapa - ambas capas"
-    width={51}
-    height={51}
+    width={46}
+    height={46}
   />
 )
 
@@ -43,23 +43,23 @@ export default function TabControl() {
     <>
       <style>{`
         .tab-control {
-          padding: 6px 6px 4px 6px;
+          padding: 4px 6px 2px 6px;
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 2px;
           border-bottom: 0.5px solid var(--border-default);
         }
 
         .tab-buttons {
           display: flex;
           flex-direction: row;
-          gap: 2px;
+          gap: 1px;
           width: 100%;
         }
 
         .tab-button {
           flex: 1;
-          padding: 4px 8px;
+          padding: 3px 8px;
           background: transparent;
           border: none;
           border-bottom: 2px solid transparent;
@@ -69,7 +69,7 @@ export default function TabControl() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 6px;
+          gap: 4px;
           font-weight: 400;
           color: var(--text-muted);
           font-size: 13px;
@@ -82,15 +82,24 @@ export default function TabControl() {
         .tab-button svg,
         .tab-button picture {
           flex-shrink: 0;
-          width: 51px;
-          height: auto;
-          max-height: 51px;
+          width: 46px;
+          height: 46px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .tab-button picture img {
           width: 100%;
-          height: auto;
+          height: 100%;
           display: block;
+          object-fit: contain;
+          object-position: center;
+        }
+
+        .tab-button:first-child picture {
+          width: 40px;
+          height: 40px;
         }
 
         .tab-button:hover {
