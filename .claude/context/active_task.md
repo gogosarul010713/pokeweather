@@ -36,14 +36,24 @@ Implementar la **interfaz completa** de Nidos con:
 ✅ **US-812** Pins Diferenciados (2 SP) — COMPLETADA
 ✅ **US-819** Datos JSON (1 SP) — COMPLETADA
 ✅ **US-817** Overlay Modo Todo (2 SP) — COMPLETADA
-✅ **IconClima** SVG inline en TabControl.tsx (sin archivo externo)
+✅ **Refinamiento:** Migración SVG → AVIF/WebP icons (2026-04-26)
 
-**Pendiente para próxima conversación:**
-- ⚠️ IconClima SVG (TabControl.tsx:5-60) será modificado manualmente por el usuario
-- No tocar `src/components/Sidebar/TabControl.tsx` hasta confirmar con el usuario
+## ✅ REFINAMIENTOS POST-SESIÓN 1 (2026-04-26)
 
-**Build:** ✓ 1.33s, sin errores TypeScript
-**Status:** Listo para Sesión 2 (US-814/815/816/818)
+**Commit:**
+- c1782c2 — "refactor: Migrar TabControl icons de SVG inline a imágenes AVIF/WebP"
+
+**Cambios ejecutados:**
+- ✅ ResponsiveImage.tsx: componente con fallback AVIF→WebP→fallback img
+- ✅ IconClima: nube.avif/webp (sombras, gradientes, detalle)
+- ✅ IconNidos: pokéball+nido.avif/webp (textura, colores ricos)
+- ✅ Assets servidos desde public/assets/icons/ (Vite static)
+- ✅ Validado desktop/tablet/mobile: sin errores, carga rápida
+
+**Justificación:** Mejor UX visual. AVIF/WebP pequeños (56KB) pero valor visual incomparable vs SVG flat.
+
+**Build:** ✓ Clean build, sin errores TypeScript  
+**Status:** ✅ Sesión 1 FINALIZADA — Listo para Sesión 2 (US-814/815/816/818)
 
 ---
 

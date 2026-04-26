@@ -5,6 +5,29 @@
 
 ---
 
+### 2026-04-26 D-013 — TabControl Icons: AVIF/WebP rasterizadas (no SVG inline)
+
+**Contexto:** D-012 implementó IconClima/IconNidos como SVG inline. Usuario reportó "se ve simple, sin estilo, muy cuadrado" sin poder representar sombras/3D/gradientes complejos. Evaluación: AVIF/WebP dan mejor UX visual a costo aceptable.
+
+**Decisión:** Cambiar TabControl icons a imágenes AVIF/WebP rasterizadas
+
+**Justificación:**
+- SVG inline: incapaz sombras reales, gradientes complejos, efectos 3D
+- AVIF/WebP: pequeños (nube~20KB, pokéball~40KB), carga instant (caché), fallback automático
+- Componente ResponsiveImage.tsx reutilizable: AVIF→WebP→fallback
+- Impacto visual: sombras, textura, profesionalismo incomparable con SVG flat
+
+**Motivo:** UX visual justifica 56KB penalty (vs 0 requests). TabControl no es crítico para performance.
+
+**Consecuencias:**
+- public/assets/icons/ contiene todos UI icons servidos estáticamente Vite
+- ResponsiveImage.tsx patrón a seguir para futuros UI components
+- D-012 revertida: SVG solo para IconTodo (simple lista, no necesita complejidad)
+
+**Commit:** c1782c2 — "refactor: Migrar TabControl icons de SVG inline a imágenes AVIF/WebP"
+
+---
+
 ### 2026-04-25 D-012 — IconClima: SVG inline en JSX (no archivo externo)
 
 **Contexto:** US-811. El icon del tab Clima fue implementado primero como `<img src={climaSvg}>` importando un archivo .svg. El usuario eliminó el archivo y pidio renderizar el SVG directamente.
