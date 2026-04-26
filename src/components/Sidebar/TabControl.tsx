@@ -6,8 +6,8 @@ const IconClima = () => (
     avifSrc="/assets/icons/nube_avif.avif"
     webpSrc="/assets/icons/nube_webp.webp"
     alt="Ícono de clima"
-    width={60}
-    height={60}
+    width={51}
+    height={51}
   />
 )
 
@@ -16,17 +16,19 @@ const IconNidos = () => (
     avifSrc="/assets/icons/pokenido_avif.avif"
     webpSrc="/assets/icons/pokenido_webp.webp"
     alt="Ícono de nidos"
-    width={60}
-    height={60}
+    width={51}
+    height={51}
   />
 )
 
 const IconTodo = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-       stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="16" rx="2"/>
-    <path d="M7 8h10M7 12h10M7 16h10"/>
-  </svg>
+  <ResponsiveImage
+    avifSrc="/assets/icons/mapa_avif.avif"
+    webpSrc="/assets/icons/mapa_webp.webp"
+    alt="Ícono de mapa - ambas capas"
+    width={51}
+    height={51}
+  />
 )
 
 export default function TabControl() {
@@ -67,7 +69,7 @@ export default function TabControl() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 2px;
+          gap: 6px;
           font-weight: 400;
           color: var(--text-muted);
           font-size: 13px;
@@ -80,9 +82,9 @@ export default function TabControl() {
         .tab-button svg,
         .tab-button picture {
           flex-shrink: 0;
-          width: 60px;
+          width: 51px;
           height: auto;
-          max-height: 45px;
+          max-height: 51px;
         }
 
         .tab-button picture img {
