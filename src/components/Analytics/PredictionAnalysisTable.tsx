@@ -73,6 +73,14 @@ function getCityLocalTime(queryTime: string | Date | number, timezone: number): 
   return `${day}/${month} ${hours}:${mins}`;
 }
 
+type GroupBy = 'hora' | 'ciudad' | 'clima';
+
+const GROUP_SORTS: Record<GroupBy, SortingState> = {
+  hora:   [{ id: 'horaLocal',  desc: true  }],
+  ciudad: [{ id: 'ciudad',     desc: false }, { id: 'horaLocal', desc: true }],
+  clima:  [{ id: 'prediccion', desc: false }, { id: 'horaLocal', desc: true }],
+};
+
 function getHourBucket(localTimeUser: string): string {
   if (!localTimeUser || localTimeUser === 'N/A') return 'Sin fecha';
   const parts = localTimeUser.split(' ');
@@ -80,6 +88,14 @@ function getHourBucket(localTimeUser: string): string {
   const [date, time] = parts;
   const hour = time.split(':')[0];
   return `${date} ${hour}:00`;
+}
+
+function getGroupKey(row: PredictionRow, groupBy: GroupBy): string {
+  switch (groupBy) {
+    case 'hora':   return getHourBucket(row.localTimeUser);
+    case 'ciudad': return row.cityName;
+    case 'clima':  return row.prediction.toLowerCase();
+  }
 }
 
 function WeatherBadge({ condition }: { condition: string }) {
@@ -110,6 +126,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const [openLookbacks, setOpenLookbacks] = useState<Set<string>>(new Set());
   const [reportingRow, setReportingRow]   = useState<PredictionRow | null>(null);
   const [copiedCoords, setCopiedCoords]   = useState<string | null>(null);
+  const [groupBy, setGroupBy]             = useState<GroupBy>('hora');
 
   const toggleLookback = (key: string) => {
     setOpenLookbacks(prev => {
@@ -296,6 +313,12 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 20 }, sorting: [{ id: 'horaLocal', desc: true }] },
   });
+
+  const handleGroupByChange = (mode: GroupBy) => {
+    setGroupBy(mode);
+    setSorting(GROUP_SORTS[mode]);
+    table.setPageIndex(0);
+  };
 
   const { pageIndex, pageSize } = table.getState().pagination;
   const totalFiltered = table.getFilteredRowModel().rows.length;
@@ -763,6 +786,48 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           color: var(--text-secondary);
         }
 
+        /* ── Group-by toggle ───────────────────────────── */
+        .pat-group-toggle {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .pat-group-toggle-label {
+          font-family: 'Rajdhani', monospace;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          margin-right: 4px;
+          white-space: nowrap;
+        }
+        .pat-group-btn {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 3px 8px;
+          border-radius: 4px;
+          border: 1px solid var(--border-default);
+          background: transparent;
+          color: var(--text-secondary);
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s;
+          white-space: nowrap;
+        }
+        .pat-group-btn:hover {
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
+        }
+        .pat-group-btn.active {
+          background: rgba(88, 166, 255, 0.12);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
+        }
+
         /* ── Toast ─────────────────────────────────────── */
         .pat-toast {
           position: fixed;
@@ -787,6 +852,22 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       <div className="pat-header">
         <h3>{title}</h3>
         <span className="pat-count">{rows.length} predicciones</span>
+
+        <div className="pat-group-toggle">
+          <span className="pat-group-toggle-label">Agrupar:</span>
+          {(['hora', 'ciudad', 'clima'] as GroupBy[]).map(mode => (
+            <button
+              key={mode}
+              className={`pat-group-btn ${groupBy === mode ? 'active' : ''}`}
+              onClick={() => handleGroupByChange(mode)}
+            >
+              {mode === 'hora'   ? '⏰ Hora'   :
+               mode === 'ciudad' ? '🏙️ Ciudad' :
+                                   '🌤️ Clima'}
+            </button>
+          ))}
+        </div>
+
         <div className="pat-actions">
           <button className="pat-btn" onClick={handleExportCSV}>📥 CSV</button>
           <button className="pat-btn" onClick={handleCopyJSON}>📋 JSON</button>
@@ -870,7 +951,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                 const pageRows = table.getRowModel().rows;
                 const bucketCounts = new Map<string, number>();
                 pageRows.forEach(r => {
-                  const b = getHourBucket(r.original.localTimeUser);
+                  const b = getGroupKey(r.original, groupBy);
                   bucketCounts.set(b, (bucketCounts.get(b) || 0) + 1);
                 });
 
@@ -878,16 +959,32 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                 const result: JSX.Element[] = [];
 
                 for (const row of pageRows) {
-                  const bucket = getHourBucket(row.original.localTimeUser);
+                  const bucket = getGroupKey(row.original, groupBy);
 
                   if (bucket !== lastBucket) {
                     lastBucket = bucket;
                     const count = bucketCounts.get(bucket) || 0;
+                    const cond = bucket as WeatherCondition;
                     result.push(
                       <tr key={`group-${bucket}`} className="pat-group-header">
                         <td colSpan={columns.length}>
                           <div className="pat-group-row">
-                            <span className="pat-group-hour">⏰ {bucket}</span>
+                            {groupBy === 'clima' ? (
+                              <img
+                                src={WEATHER_IMAGES[cond] || '/weather/cloudy.png'}
+                                alt={bucket}
+                                style={{ width: 14, height: 14 }}
+                              />
+                            ) : (
+                              <span className="pat-group-hour">
+                                {groupBy === 'hora' ? '⏰' : '🏙️'}
+                              </span>
+                            )}
+                            <span className="pat-group-hour">
+                              {groupBy === 'clima'
+                                ? (CONDITION_LABEL[cond] || bucket)
+                                : bucket}
+                            </span>
                             <span className="pat-group-count">{count} prediccion{count !== 1 ? 'es' : ''}</span>
                           </div>
                         </td>
