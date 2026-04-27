@@ -31,9 +31,13 @@ dist-ssr
 # Vercel — contiene projectId y orgId (no subir)
 .vercel
 
-# Archivos de ejemplo con valores reales — nunca subir
-.env.example.env.serviceAccountKey.json
+# Firebase — credenciales NUNCA subir (Admin SDK keys, service account)
+*.serviceAccountKey.json
+**/serviceAccountKey.json
 .env.serviceAccountKey.json
+src/.env.serviceAccountKey.json
+functions/.env
+functions/.env.local
 
 # Test reports & artifacts (generados, no commitear)
 playwright-report/
