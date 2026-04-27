@@ -40,6 +40,8 @@ functions/.env
 functions/.env.local
 
 # Test reports & artifacts (generados, no commitear)
-playwright-report/
+tests/artifacts/
+tests/.auth/
 test-results/
 test-screenshots/
+playwright-report/

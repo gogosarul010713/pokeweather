@@ -25,8 +25,16 @@ tests/
 │   │   └── test-sort-dynamic-labels.spec.ts         — Labels de sort
 │   └── README.md
 ├── fixtures/                    ← Datos compartidos
-│   └── mock-cities.ts           — Mock de ciudades para testing
-└── setup.ts                     ← Setup global (si necesario)
+│   ├── mock-cities.ts           — Mock de ciudades para testing
+│   └── test-batch-accuracy.ts   — Batch validation utilities
+├── artifacts/                   ← Generados (NO commitear, en .gitignore)
+│   ├── test-results/            — Resultados Playwright
+│   ├── html-report/             — Reporte HTML Playwright
+│   ├── snapshots/               — Screenshots/snapshots Playwright
+│   └── results.json             — JSON results
+├── .auth/                       ← Auth state (Playwright, si aplica)
+├── setup.ts                     ← Setup global (si necesario)
+└── README.md
 ```
 
 ---
