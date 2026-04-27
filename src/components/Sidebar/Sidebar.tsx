@@ -159,41 +159,44 @@ export default function Sidebar({ cities }: SidebarProps) {
           </button>
         </div>
 
-        {/* TabControl: Clima / Nidos / Todo */}
-        <TabControl />
-
         {/* ── Content ── */}
         <div className="sb-content" style={{ position: 'relative' }}>
-          {/* Overlay cuando activeTab = 'todo' — bloquea solo contenido (bajo TabControl) */}
-          <Overlay
-            isActive={activeTab === 'todo'}
-            message="Activa Clima o Nidos para explorar la lista y filtros"
-            zIndex={100}
-          />
+          {/* TabControl: Clima / Nidos / Todo */}
+          <TabControl />
 
-          {/* Modo Lista / Favoritos: LocationFeed (solo si activeTab = 'clima') */}
-          {activeTab === 'clima' && (sidebarMode === 'list' || sidebarMode === 'favorites') && (
-            <LocationFeed cities={cities} />
-          )}
+          {/* Content Wrapper — posición relativa para Overlay */}
+          <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {/* Overlay cuando activeTab = 'todo' — bloquea solo contenido (bajo TabControl) */}
+            <Overlay
+              isActive={activeTab === 'todo'}
+              message="Activa Clima o Nidos para explorar la lista y filtros"
+              zIndex={100}
+            />
 
-          {/* Modo Detalle: Placeholder */}
-          {sidebarMode === 'detail' && (
-            <div className="sb-detail-placeholder">
-              <span className="sb-detail-icon">📍</span>
-              {selectedCity ? (
-                <div>
-                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>
-                    {selectedCity.name}
+            {/* Modo Lista / Favoritos: LocationFeed (solo si activeTab = 'clima') */}
+            {activeTab === 'clima' && (sidebarMode === 'list' || sidebarMode === 'favorites') && (
+              <LocationFeed cities={cities} />
+            )}
+
+            {/* Modo Detalle: Placeholder */}
+            {sidebarMode === 'detail' && (
+              <div className="sb-detail-placeholder">
+                <span className="sb-detail-icon">📍</span>
+                {selectedCity ? (
+                  <div>
+                    <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                      {selectedCity.name}
+                    </div>
+                    <div style={{ fontSize: '11px', opacity: 0.7 }}>
+                      (Modal se abre sobre el mapa)
+                    </div>
                   </div>
-                  <div style={{ fontSize: '11px', opacity: 0.7 }}>
-                    (Modal se abre sobre el mapa)
-                  </div>
-                </div>
-              ) : (
-                <div>Selecciona una ciudad para verdetalles</div>
-              )}
-            </div>
-          )}
+                ) : (
+                  <div>Selecciona una ciudad para verdetalles</div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </>
