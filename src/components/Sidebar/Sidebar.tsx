@@ -159,12 +159,12 @@ export default function Sidebar({ cities }: SidebarProps) {
           </button>
         </div>
 
+        {/* TabControl: Clima / Nidos / Todo */}
+        <TabControl />
+
         {/* ── Content ── */}
         <div className="sb-content" style={{ position: 'relative' }}>
-          {/* TabControl: Clima / Nidos / Todo */}
-          <TabControl />
-
-          {/* Overlay cuando activeTab = 'todo' */}
+          {/* Overlay cuando activeTab = 'todo' — bloquea solo contenido (bajo TabControl) */}
           <Overlay
             isActive={activeTab === 'todo'}
             message="Activa Clima o Nidos para explorar la lista y filtros"

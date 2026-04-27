@@ -1,25 +1,33 @@
+import { useCallback } from 'react'
 import { useStore } from '../../store/useStore'
 import CustomSelect from '../UI/CustomSelect'
-import type { SelectOption } from '../UI/CustomSelect'
+import SortDropdown from './SortDropdown'
 import { POKEMON_TYPES, TYPE_IMAGES } from '../../config/pokemonTypes'
-
-const NEST_SORT_OPTIONS: SelectOption[] = [
-  { label: 'Nombre', value: 'name' },
-  { label: 'Tipo Pokémon', value: 'type' },
-  { label: 'Spawn Rate', value: 'spawnRate' },
-]
 
 export default function FilterPanelNests() {
   const nestTypeFilter = useStore((s) => s.nestTypeFilter)
   const nestSortBy = useStore((s) => s.nestSortBy)
+  const nestSortDirection = useStore((s) => s.nestSortDirection)
   const setNestTypeFilter = useStore((s) => s.setNestTypeFilter)
   const setNestSortBy = useStore((s) => s.setNestSortBy)
+  const setNestSortDirection = useStore((s) => s.setNestSortDirection)
 
-  const hasActiveFilters = nestTypeFilter !== null || nestSortBy !== 'name'
+  const hasActiveFilters = nestTypeFilter.length > 0 || nestSortBy !== 'name'
+
+  const handleTypeChange = (items: string | string[]) => {
+    const selected = Array.isArray(items) ? items : (items ? [items] : [])
+    setNestTypeFilter(selected)
+  }
+
+  const handleSortChange = useCallback((mode: string, direction: string) => {
+    setNestSortBy(mode as any)
+    setNestSortDirection(direction as any)
+  }, [setNestSortBy, setNestSortDirection])
 
   const handleClearAll = () => {
-    setNestTypeFilter(null)
+    setNestTypeFilter([])
     setNestSortBy('name')
+    setNestSortDirection('asc')
   }
 
   return (
@@ -32,13 +40,6 @@ export default function FilterPanelNests() {
           flex: 1;
           height: 48px;
           max-width: none;
-        }
-
-        .fpn-filters {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-          flex-wrap: wrap;
         }
 
         .fpn-divider {
@@ -93,64 +94,36 @@ export default function FilterPanelNests() {
             gap: 6px;
             height: 44px;
           }
-
-          .fpn-filters {
-            gap: 6px;
-          }
         }
       `}</style>
 
       <div className="fpn-root">
-        <button
-          className="fpn-clear-btn"
-          onClick={() => {
-            setNestTypeFilter(null)
-            setNestSortBy('name')
-          }}
-          style={{
-            background: nestTypeFilter === null && nestSortBy === 'name'
-              ? 'var(--bg-elevated)'
-              : 'transparent',
-            color: nestTypeFilter === null && nestSortBy === 'name'
-              ? 'var(--ui-accent)'
-              : 'var(--text-secondary)',
-            border: nestTypeFilter === null && nestSortBy === 'name'
-              ? '1px solid var(--ui-accent)'
-              : '1px solid var(--border-default)',
-          }}
-          title="Ver todos los nidos"
-        >
-          Todos
-        </button>
-
+        {/* Tipo Pokémon - Multi-select */}
         <CustomSelect
-          label="Tipo Pokémon"
-          value={nestTypeFilter || ''}
-          options={[
-            { label: 'Todos los tipos', value: '' },
-            ...POKEMON_TYPES.map((type) => ({
-              label: type.charAt(0).toUpperCase() + type.slice(1),
-              value: type,
-              icon: TYPE_IMAGES[type],
-            })),
-          ]}
-          onChange={(v) => setNestTypeFilter(v ? (v as string) : null)}
-          isMulti={false}
+          label="Tipo"
+          selectedItems={nestTypeFilter}
+          options={POKEMON_TYPES.map((type) => ({
+            label: type.charAt(0).toUpperCase() + type.slice(1),
+            value: type,
+            icon: TYPE_IMAGES[type],
+          }))}
+          onChange={handleTypeChange}
+          isMulti={true}
         />
 
-        <CustomSelect
-          label="Ordenar"
-          value={nestSortBy}
-          options={NEST_SORT_OPTIONS}
-          onChange={(v) => setNestSortBy(v as any)}
-          isMulti={false}
+        {/* Ordenamiento */}
+        <SortDropdown
+          sortMode={nestSortBy}
+          sortDirection={nestSortDirection}
+          onSortChange={handleSortChange}
         />
 
+        {/* Botón Restablecer — solo si hay filtros activos */}
         {hasActiveFilters && (
           <button
             className="fpn-clear-btn"
             onClick={handleClearAll}
-            title="Restablecer filtros"
+            title={`Restablecer ${nestTypeFilter.length > 0 ? nestTypeFilter.length + ' tipo(s)' : ''} ${nestSortBy !== 'name' ? '+ orden' : ''}`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>

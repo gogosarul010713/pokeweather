@@ -77,8 +77,9 @@ interface AppStore {
   activeTab: 'clima' | 'nidos' | 'todo'
   nests: Nest[]
   selectedNest: Nest | null
-  nestTypeFilter: string | null
+  nestTypeFilter: string[]
   nestSortBy: 'name' | 'type' | 'spawnRate'
+  nestSortDirection: 'asc' | 'desc'
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -106,8 +107,10 @@ interface AppStore {
   setActiveTab: (tab: 'clima' | 'nidos' | 'todo') => void
   setNests: (nests: Nest[]) => void
   setSelectedNest: (nest: Nest | null) => void
-  setNestTypeFilter: (type: string | null) => void
+  setNestTypeFilter: (types: string[]) => void
+  toggleNestType: (type: string) => void
   setNestSortBy: (mode: 'name' | 'type' | 'spawnRate') => void
+  setNestSortDirection: (direction: 'asc' | 'desc') => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -158,8 +161,9 @@ export const useStore = create<AppStore>((set, get) => ({
   activeTab: (localStorage.getItem('pwe-activeTab') as 'clima' | 'nidos' | 'todo') || 'clima',
   nests: [],
   selectedNest: null,
-  nestTypeFilter: null,
+  nestTypeFilter: [],
   nestSortBy: 'name',
+  nestSortDirection: 'asc',
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -260,9 +264,18 @@ export const useStore = create<AppStore>((set, get) => ({
 
   setSelectedNest: (nest) => set({ selectedNest: nest }),
 
-  setNestTypeFilter: (type) => set({ nestTypeFilter: type }),
+  setNestTypeFilter: (types) => set({ nestTypeFilter: types }),
+
+  toggleNestType: (type) =>
+    set((state) => ({
+      nestTypeFilter: state.nestTypeFilter.includes(type)
+        ? state.nestTypeFilter.filter((t) => t !== type)
+        : [...state.nestTypeFilter, type],
+    })),
 
   setNestSortBy: (mode) => set({ nestSortBy: mode }),
+
+  setNestSortDirection: (direction) => set({ nestSortDirection: direction }),
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {
