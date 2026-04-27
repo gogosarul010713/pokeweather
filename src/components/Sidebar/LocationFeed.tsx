@@ -89,18 +89,18 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
         .lf-header {
           display: flex;
           align-items: center;
-          padding: 0 12px;
-          height: 40px;
-          background: var(--bg-secondary);
+          padding: 0 8px;
+          height: 28px;
+          background: var(--bg-primary);
           border-bottom: 1px solid var(--border-default);
           flex-shrink: 0;
-          gap: 8px;
+          gap: 6px;
         }
 
         .lf-header-label {
           font-family: 'Exo 2', sans-serif;
-          font-size: 12px;
-          font-weight: 600;
+          font-size: 10px;
+          font-weight: 500;
           color: var(--text-secondary);
           flex: 1;
         }

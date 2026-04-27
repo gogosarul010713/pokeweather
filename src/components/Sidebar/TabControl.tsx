@@ -6,8 +6,8 @@ const IconClima = () => (
     avifSrc="/assets/icons/nube_avif.avif"
     webpSrc="/assets/icons/nube_webp.webp"
     alt="Ícono de clima"
-    width={40}
-    height={40}
+    width={28}
+    height={28}
   />
 )
 
@@ -16,8 +16,8 @@ const IconNidos = () => (
     avifSrc="/assets/icons/pokenido_avif.avif"
     webpSrc="/assets/icons/pokenido_webp.webp"
     alt="Ícono de nidos"
-    width={46}
-    height={46}
+    width={32}
+    height={32}
   />
 )
 
@@ -26,8 +26,8 @@ const IconTodo = () => (
     avifSrc="/assets/icons/mapa_avif.avif"
     webpSrc="/assets/icons/mapa_webp.webp"
     alt="Ícono de mapa - ambas capas"
-    width={46}
-    height={46}
+    width={32}
+    height={32}
   />
 )
 
@@ -47,6 +47,7 @@ export default function TabControl() {
           display: flex;
           flex-direction: column;
           gap: 2px;
+          background: var(--bg-primary);
           border-bottom: 0.5px solid var(--border-default);
         }
 
@@ -82,8 +83,8 @@ export default function TabControl() {
         .tab-button svg,
         .tab-button picture {
           flex-shrink: 0;
-          width: 46px;
-          height: 46px;
+          width: 32px;
+          height: 32px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -98,8 +99,8 @@ export default function TabControl() {
         }
 
         .tab-button:first-child picture {
-          width: 40px;
-          height: 40px;
+          width: 28px;
+          height: 28px;
         }
 
         .tab-button:hover {

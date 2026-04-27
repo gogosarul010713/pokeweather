@@ -5,6 +5,72 @@
 
 ---
 
+### 2026-04-26 D-016 — TabControl Icons: Reducción 30% final (28px/32px vs 40px/46px)
+
+**Contexto:** Post-implementación Opción A, usuario observó iconos "un poco grandes". Iteración 1: 51px → 46px. Iteración 2: visualizó aún grandes. Usuario pidió 30% más pequeño.
+
+**Decisión:** Reducir todos los iconos 30%:
+- IconClima: 40px → 28px
+- IconNidos/Todo: 46px → 32px
+
+**Motivo:** 
+1. Tabs más discretas, menos cramped
+2. Mantiene proporción visual con gap/padding reducido
+3. Aún accesible (toque fácil)
+4. Identidad clara sin dominar el sidebar
+
+**Impacto:** TabControl ahora ultra-compacto pero aún evidente. Jerarquía visual: tabs < header < items.
+
+**Commit:** (parte de 71c1ae9 — refactor UI completo tabs)
+
+---
+
+### 2026-04-26 D-015 — Unificación de fondos: TabControl + LocationFeed header + LocationCard = var(--bg-primary)
+
+**Contexto:** Usuario reportó "dos ciudades con fondo blanco" — redundancia visual. LocationFeed header (var(--bg-secondary)) vs LocationCard items (var(--bg-primary)). Pidió unificar.
+
+**Decisión:** Todos los componentes usan var(--bg-primary):
+- TabControl: agregar background var(--bg-primary)
+- LocationFeed header: var(--bg-secondary) → var(--bg-primary)
+- LocationCard items: mantienen var(--bg-primary)
+
+**Motivo:**
+1. Grid visual coherente (todo blanco)
+2. Sidebar ahora solo es contenedor (gris), contenido es blanco
+3. Mejor separación visual: gris (sidebar) vs blanco (contenido)
+4. FeedHeader innecesario (redundancia eliminada)
+
+**Consecuencias:**
+- FeedHeader.tsx creado pero no usado → removido del renderizado
+- LocationFeed header aún visible, pero compacto y unificado
+- Jerarquía clara: pestañas → header mini → items
+
+**Commit:** 71c1ae9 — parte de refactor UI
+
+---
+
+### 2026-04-26 D-014 — Compactación TabControl: Padding/Gap/Height reducidos
+
+**Contexto:** US Sesión 1 refinamientos post-AVIF/WebP. Usuario pidió TabControl "discreto, pero ligeramente notorio vs LocationFeed". Iteración de opciones (A: FeedHeader, B: Badge, A: consolidado).
+
+**Decisión:** Reducción quirúrgica de espacios:
+- Padding: 6px 6px 4px → 4px 6px 2px
+- Gap botones: 2px → 1px
+- Gap icono/texto: 6px → 4px
+- Padding botones: 4px → 3px
+- LocationFeed header height: 40px → 28px, font-size: 12px → 10px
+
+**Motivo:**
+1. Usuario quería "discreto" → mayor compactación
+2. Pero "ligeramente notorio" vs LocationFeed → bordes/colores mantienen distinción
+3. FeedHeader (Opción A) intentó separación visual, pero generó redundancia
+
+**Resultado:** TabControl 30-33% más compacto. Jerarquía mantiene claridad.
+
+**Commit:** 71c1ae9
+
+---
+
 ### 2026-04-26 D-013 — TabControl Icons: AVIF/WebP rasterizadas (no SVG inline)
 
 **Contexto:** D-012 implementó IconClima/IconNidos como SVG inline. Usuario reportó "se ve simple, sin estilo, muy cuadrado" sin poder representar sombras/3D/gradientes complejos. Evaluación: AVIF/WebP dan mejor UX visual a costo aceptable.

@@ -5,7 +5,7 @@
 **Sesión:** 2/3 (Interfaz: Filtros dinámicos + Leyenda dinámica)  
 **Duración estimada:** 3-4 horas  
 **Story Points:** 11 SP (US-814, US-815, US-816, US-818)  
-**Última actualización:** 2026-04-26 (Refinamientos UX/UI completados)
+**Última actualización:** 2026-04-26 (Refinamientos UX/UI Tabs — FASE NUEVA)
 
 ---
 
@@ -23,6 +23,23 @@ Implementar la **interfaz completa** de Nidos con:
 - ✅ Listado NestFeed con búsqueda
 - ✅ Acordeón en modo "Todo"
 - ✅ 0 errores TypeScript
+
+---
+
+## ✅ SESIÓN 2 — EN PROGRESO (2026-04-26)
+
+**Commits:**
+- (en progreso)
+
+✅ **US-814** Filtros Dinámicos por Tab (3 SP) — IMPLEMENTADA (2026-04-26)
+- Creado `src/config/pokemonTypes.ts` — constante POKEMON_TYPES centralizada
+- Extendido useStore: `nestTypeFilter`, `nestSortBy` + acciones
+- Refactor FilterPanel.tsx → wrapper condicional por activeTab
+- Creado FilterPanelClima.tsx (versión clima)
+- Creado FilterPanelNests.tsx (versión nidos)
+- Build ✓ sin errores, listo para validar
+
+**Próximo:** Validación manual + commit
 
 ---
 
@@ -67,6 +84,37 @@ Implementar la **interfaz completa** de Nidos con:
 
 **Build:** ✓ Clean build, sin errores TypeScript  
 **Status:** ✅ SESIÓN 1 + REFINAMIENTOS COMPLETADOS — Listo para Sesión 2 (US-814/815/816/818)
+
+## ✅ OPTIMIZACIONES TABS COMPACTACIÓN (2026-04-26 — NUEVA SESIÓN)
+
+**Commits:**
+- 71c1ae9 — "refactor(ui): Opción A - FeedHeader compacto + TabControl optimizado"
+
+**Cambios ejecutados (Iteraciones de diseño):**
+1. ✅ **Opción A (FeedHeader):** Mini-header antes de LocationFeed
+   - FeedHeader.tsx: padding 4px 8px, font-size 11px, background var(--bg-secondary)
+   - Problema: redundancia — "Ciudades" aparecía dos veces
+
+2. ✅ **Opción B (Badge minimalista):** Badge gris muted sin fondo
+   - Muy discreto pero poco visible
+   - Decisión: regresamos a Opción A
+
+3. ✅ **Eliminación FeedHeader + unificación colores:**
+   - Removido FeedHeader.tsx del renderizado
+   - LocationFeed header: var(--bg-secondary) → var(--bg-primary) (unificación)
+   - TabControl: agregar background var(--bg-primary)
+   - Resultado: header + tabs + items list todo mismo fondo blanco
+
+4. ✅ **Reducción de tamaños iconos:**
+   - TabControl padding: 6px 6px → 4px 6px (-33% altura)
+   - IconClima: 46px → 40px → 28px (-30% final)
+   - IconNidos/Todo: 46px → 32px (-30% final)
+   - LocationFeed header: height 40px → 28px (-30%)
+   - LocationFeed header: font-size 12px → 10px, font-weight 600 → 500
+
+**Resultado visual:** TabControl ultra-compacto + discreto, pero aún notorio vs LocationFeed items. Todo grid unificado (mismo fondo blanco).
+
+**Build:** ✓ Clean, sin errores TypeScript, cambios CSS/layout solo
 
 ---
 

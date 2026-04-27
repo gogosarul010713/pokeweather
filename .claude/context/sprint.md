@@ -22,7 +22,7 @@
 
 | ID | Descripción | SP | Estado | Docs |
 |----|-------------|-----|--------|------|
-| **US-814** | Filtros dinámicos por tab | 3 | ⏳ Pendiente | [`US-814.md`](../src/docs/sprints/sprint-9/US/US-814.md) |
+| **US-814** | Filtros dinámicos por tab | 3 | ✅ Implementada | [`US-814.md`](../src/docs/sprints/sprint-9/US/US-814.md) |
 | **US-815** | Leyenda dinámica (Clima/Nidos) | 3 | ⏳ Pendiente | [`US-815.md`](../src/docs/sprints/sprint-9/US/US-815.md) |
 | **US-816** | Leyenda acordeón en modo Todo | 2 | ⏳ Pendiente | [`US-816.md`](../src/docs/sprints/sprint-9/US/US-816.md) |
 | **US-818** | Listado Nidos en sidebar | 3 | ⏳ Pendiente | [`US-818.md`](../src/docs/sprints/sprint-9/US/US-818.md) |
@@ -31,15 +31,16 @@
 
 ## 📊 Progreso
 
-**Completadas:** 4/8 US (9 SP) — Sesión 1 ✅ (2026-04-24/26)
+**Completadas:** 5/8 US (12 SP) — Sesión 1 ✅ + Sesión 2 en progreso
 - ✅ US-811: Tabs del Sidebar (3 SP)
 - ✅ US-812: Pins Diferenciados (2 SP)
 - ✅ US-819: Datos JSON (1 SP)
 - ✅ US-817: Overlay Modo Todo (2 SP)
+- ✅ US-814: Filtros Dinámicos por Tab (3 SP) — 2026-04-26
 - ✅ Refinamientos UX/UI: Icons AVIF/WebP + optimizaciones (2026-04-26)
 
-**Pendientes:** 4/8 US (11 SP)  
-**Próximo:** Sesión 2 (US-814, US-815, US-816, US-818) ← LISTO PARA COMENZAR
+**Pendientes:** 3/8 US (8 SP)  
+**Próximo:** US-815 (Leyenda Dinámica)
 **Nota:** US antiguas (US-801-807) archivadas en `archive/` — arquitectura reemplazada
 
 ---

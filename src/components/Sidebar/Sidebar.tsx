@@ -1,7 +1,6 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
 import TabControl from './TabControl'
-import FeedHeader from './FeedHeader'
 import Overlay from '../UI/Overlay'
 
 interface SidebarProps {
@@ -74,6 +73,15 @@ export default function Sidebar({ cities }: SidebarProps) {
           display: flex;
           flex-direction: column;
           overflow: hidden;
+        }
+
+        .sb-feed-badge {
+          padding: 2px 8px;
+          font-size: 10px;
+          font-weight: 400;
+          color: var(--text-muted);
+          flex-shrink: 0;
+          white-space: nowrap;
         }
 
         .sb-detail-placeholder {
@@ -165,10 +173,7 @@ export default function Sidebar({ cities }: SidebarProps) {
 
           {/* Modo Lista / Favoritos: LocationFeed (solo si activeTab = 'clima') */}
           {activeTab === 'clima' && (sidebarMode === 'list' || sidebarMode === 'favorites') && (
-            <>
-              <FeedHeader label="Ciudades" icon="📍" />
-              <LocationFeed cities={cities} />
-            </>
+            <LocationFeed cities={cities} />
           )}
 
           {/* Modo Detalle: Placeholder */}

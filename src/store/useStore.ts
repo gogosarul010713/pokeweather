@@ -77,6 +77,8 @@ interface AppStore {
   activeTab: 'clima' | 'nidos' | 'todo'
   nests: Nest[]
   selectedNest: Nest | null
+  nestTypeFilter: string | null
+  nestSortBy: 'name' | 'type' | 'spawnRate'
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -104,6 +106,8 @@ interface AppStore {
   setActiveTab: (tab: 'clima' | 'nidos' | 'todo') => void
   setNests: (nests: Nest[]) => void
   setSelectedNest: (nest: Nest | null) => void
+  setNestTypeFilter: (type: string | null) => void
+  setNestSortBy: (mode: 'name' | 'type' | 'spawnRate') => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -154,6 +158,8 @@ export const useStore = create<AppStore>((set, get) => ({
   activeTab: (localStorage.getItem('pwe-activeTab') as 'clima' | 'nidos' | 'todo') || 'clima',
   nests: [],
   selectedNest: null,
+  nestTypeFilter: null,
+  nestSortBy: 'name',
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -253,6 +259,10 @@ export const useStore = create<AppStore>((set, get) => ({
   setNests: (nests) => set({ nests }),
 
   setSelectedNest: (nest) => set({ selectedNest: nest }),
+
+  setNestTypeFilter: (type) => set({ nestTypeFilter: type }),
+
+  setNestSortBy: (mode) => set({ nestSortBy: mode }),
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {
