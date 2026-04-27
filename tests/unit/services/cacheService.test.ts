@@ -12,8 +12,8 @@ import {
   cleanExpiredForecastDocs,
   getLastSyncTimestamp,
   setLastSyncTimestamp,
-} from './cacheService'
-import type { ForecastDoc } from '../firebase/firebaseWeatherService'
+} from '../../../src/services/cache/cacheService'
+import type { ForecastDoc } from '../../../src/services/firebase/firebaseWeatherService'
 
 // Mock de idb-keyval
 vi.mock('idb-keyval', () => ({

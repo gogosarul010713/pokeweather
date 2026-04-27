@@ -5,6 +5,54 @@
 
 ---
 
+### 2026-04-26 D-038 — Organización de Tests: unit/ + e2e/ui/ + Documentación (Session 21)
+
+**Contexto:** Proyecto acumuló tests dispersos en múltiples ubicaciones (tests/, tests/unit/, src/services/, tests/e2e/) sin estructura clara. Documentación de testing inexistente.
+
+**Problema:**
+- Tests unitarios en `tests/unit/` vs `tests/` vs `src/services/` (sin estándar)
+- Tests E2E en `tests/e2e/` vs raíz de `tests/`
+- Imports inconsistentes (relativos con profundidad variable)
+- Sin guía de cómo escribir tests (convenciones, patrones)
+- Fixtures compartidas sin documentación
+
+**Decisión:** Estructura clara + documentación
+
+**Estructura Final:**
+```
+tests/
+├── unit/
+│   ├── services/        (weatherService, cacheService)
+│   ├── hooks/           (useStore)
+│   └── README.md
+├── e2e/
+│   ├── ui/              (6 smoke/interaction tests)
+│   └── README.md
+├── fixtures/            (mock-cities.ts)
+└── README.md
+```
+
+**Motivo:**
+1. **Claridad:** Vitest (unitarios) vs Playwright (E2E) completamente separados
+2. **Escalabilidad:** `tests/unit/hooks/`, `tests/unit/components/` futura sin conflicto
+3. **Documentación:** 3 READMEs definen convenciones, patrones, debugging
+4. **Imports consistentes:** Todos relative a `tests/unit/` o `tests/e2e/` raíz
+5. **Fixtures centralizadas:** `tests/fixtures/` para datos compartidos
+
+**Implementación:**
+- Movidos 9 archivos `.test.ts` y `.spec.ts` a ubicaciones finales
+- Actualizados imports en 2 servicios (weatherService, cacheService)
+- Eliminados duplicados (`tests/unit/weatherService.test.ts` old)
+- Creados 3 READMEs con patrones, ejemplos, debugging
+
+**Consecuencias:**
+- Cero cambios de código (puro refactoring de estructura)
+- Tests siguen funcionando sin cambios (`npm test`, `npm run test:e2e`)
+- Nuevo desarrollador tiene guía clara para escribir tests
+- Estructura soporta crecimiento futuro (componentes, utilities)
+
+---
+
 ### 2026-04-26 D-037 — Reorganización de Sprint 10: Estructura Clara de Documentación (Session 19)
 
 **Contexto:** Sprint 10 completado con 9 fases, 20 US, 11 bugs, pero documentación desorganizada en carpeta sprint-10/ (41 archivos .md con nomenclatura inconsistente, distribución confusa).

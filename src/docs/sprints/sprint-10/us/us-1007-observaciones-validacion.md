@@ -114,4 +114,3 @@ npm run monitor:firebase
 ---
 
 **Próxima acción:** Esperar 1 ciclo de datos (1 hora) con el fix aplicado, luego ejecutar validación.
-

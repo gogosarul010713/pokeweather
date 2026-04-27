@@ -4,8 +4,8 @@ import {
   CONDITION_TO_TYPES,
   getBaseCondition,
   resolveCondition,
-} from '../src/services/weather/weatherService'
-import type { WeatherCondition } from '../src/config/weatherImages'
+} from '../../../src/services/weather/weatherService'
+import type { WeatherCondition } from '../../../src/config/weatherImages'
 
 describe('weatherService — Algoritmo clasificación clima (Doc 20)', () => {
   // ─────────────────────────────────────────────────────────────────────────────

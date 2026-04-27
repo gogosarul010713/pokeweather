@@ -199,9 +199,9 @@ VITE_ACCUWEATHER_KEY=   # ⚠️ REQUERIDA (sin key → error de inicialización
 Nunca implementes sin confirmación explícita. Cada fase termina con checkpoint.
 
 ### Contexto del proyecto
-- `.claude/context/sprint.md` — estado del sprint y US
-- `.claude/context/active_task.md` — US activa con detalle
-- `.claude/context/decisions.md` — decisiones de arquitectura
+- `.claude/context/sprint.md` — estado del sprint (minimalista, solo tabla)
+- `.claude/context/active_task.md` — tarea activa (minimalista, 5-10 líneas)
+- `src/docs/architecture/11-decision-log.md` — decisiones permanentes (referencia, no contexto)
 
 ### Regla Git
 Nunca hagas `git push` ni `git merge` sin confirmación explícita.
@@ -230,7 +230,7 @@ Al inicio de sesión, ejecuta automáticamente `context-load`.
 | Validar una US completada | `us-validate` |
 
 **Contexto del proyecto** (fuente de verdad):
-- `.claude/context/sprint.md`
-- `.claude/context/active_task.md`
-- `.claude/context/decisions.md`
+- `.claude/context/sprint.md` (minimalista)
+- `.claude/context/active_task.md` (minimalista)
+- `src/docs/architecture/11-decision-log.md` (referencia permanente, no contexto)
 - `.claude/context/next-session.md` (si existe)
