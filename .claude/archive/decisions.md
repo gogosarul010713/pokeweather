@@ -5,6 +5,72 @@
 
 ---
 
+### 2026-04-26 D-017 — FilterPanelNests: Multi-select types (Array), no single string
+
+**Contexto:** US-814 implementación inicial tenía `nestTypeFilter: string | null` (single select). Usuario reportó que debe ser como Clima (multi-select).
+
+**Decisión:** Cambiar a `nestTypeFilter: string[]` — array multi-select
+
+**Motivo:**
+1. Coherencia con Clima filters (mismo UX pattern)
+2. Permite exploración de múltiples tipos simultáneamente
+3. CustomSelect multi-select es componente existente, reutilizable
+
+**Impacto:**
+- useStore: nestTypeFilter string[] (no string | null)
+- FilterPanelNests: handleTypeChange usa CustomSelect isMulti={true}
+- Botón "Todos": removido (no está en especificación Nidos)
+
+**Commit:** 47c73b6
+
+---
+
+### 2026-04-26 D-016 — Z-Index Hierarchy: Local (Overlay sidebar 100) vs Global (Header 1001)
+
+**Contexto:** US-814. Necesidad de renderizar Overlay en Sidebar sin competir con z-index global (Leaflet 1000, Header 1001).
+
+**Decisión:** Usar z-index 100 para Overlay en sidebar (local context), mantener 1001 para Header
+
+**Motivo:**
+1. Overlay en sidebar es local a sb-content (position: relative) — no compite con Leaflet
+2. Header overlay 50 (FilterPanel) < Sidebar overlay 100 — clara jerarquía
+3. Leaflet 1000 < Header 1001 — Header siempre sobre mapa
+4. Evita z-index inflation (no usar 2000+)
+
+**Impacto:** Z-index scale clara: 50 (FilterPanel) < 100 (Sidebar) < 1000 (Leaflet) < 1001 (Header)
+
+**Commit:** 47c73b6
+
+---
+
+### 2026-04-26 D-015 — Sidebar Layout: TabControl siempre accesible en modo "Todo"
+
+**Contexto:** US-814. Problema: Tab "Todo" bloqueaba TabControl, no se podía volver a otro tab para desbloquear.
+
+**Decisión:** Mantener TabControl dentro sb-content (no sobre Overlay), usar wrapper interno para contenido bloqueado
+
+**Motivo:**
+1. UX crítica: usuario debe poder siempre cambiar tab
+2. TabControl = control, contenido = data (separación clara)
+3. Overlay bloquea contenido (LocationFeed), no controles (TabControl)
+
+**Implementación:**
+```jsx
+<div className="sb-content">
+  <TabControl />  ← Siempre visible, no bloqueado
+  <div style={{ flex: 1, position: 'relative' }}>
+    <Overlay ... />  ← Solo aquí, sobre contenido
+    <LocationFeed ... />
+  </div>
+</div>
+```
+
+**Impacto:** Sidebar layout correcto, flex structure intacta, TabControl accesible
+
+**Commit:** a9f6c17
+
+---
+
 ### 2026-04-26 D-016 — TabControl Icons: Reducción 30% final (28px/32px vs 40px/46px)
 
 **Contexto:** Post-implementación Opción A, usuario observó iconos "un poco grandes". Iteración 1: 51px → 46px. Iteración 2: visualizó aún grandes. Usuario pidió 30% más pequeño.

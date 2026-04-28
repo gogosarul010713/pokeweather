@@ -1,20 +1,31 @@
 import { useStore } from '../../store/useStore'
 import FilterPanelClima from './FilterPanelClima'
 import FilterPanelNests from './FilterPanelNests'
-import Overlay from '../UI/Overlay'
+import OverlayFilterPanel from '../UI/OverlayFilterPanel'
 
 export default function FilterPanel() {
   const activeTab = useStore((s) => s.activeTab)
+  const isTodo = activeTab === 'todo'
 
   return (
-    <div style={{ position: 'relative', flex: 1 }}>
-      {activeTab === 'clima' && <FilterPanelClima />}
-      {activeTab === 'nidos' && <FilterPanelNests />}
+    <div
+      style={{
+        position: 'relative',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+        minWidth: 0,
+        height: '100%',
+      }}
+    >
+      {!isTodo && activeTab === 'clima' && <FilterPanelClima />}
+      {!isTodo && activeTab === 'nidos' && <FilterPanelNests />}
 
-      {activeTab === 'todo' && (
-        <Overlay
+      {isTodo && (
+        <OverlayFilterPanel
           isActive={true}
-          message="No se puede filtrar cuando Todo está activo"
+          message="Activa Clima o Nidos para filtrar"
           zIndex={50}
         />
       )}

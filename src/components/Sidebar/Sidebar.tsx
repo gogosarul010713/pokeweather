@@ -9,9 +9,6 @@ interface SidebarProps {
 
 export default function Sidebar({ cities }: SidebarProps) {
   const activeTab = useStore((s) => s.activeTab)
-  const sidebarMode = useStore((s) => s.sidebarMode)
-  const setSidebarMode = useStore((s) => s.setSidebarMode)
-  const selectedCity = useStore((s) => s.selectedCity)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
 
   return (
@@ -21,50 +18,11 @@ export default function Sidebar({ cities }: SidebarProps) {
           width: 280px;
           flex-shrink: 0;
           display: flex;
-          flex-direction: row;
+          flex-direction: column;
           background: var(--bg-secondary);
           border-right: 1px solid var(--border-default);
           overflow: hidden;
           height: 100%;
-        }
-
-        /* ── MenuStrip ── */
-        .sb-menu-strip {
-          width: 44px;
-          flex-shrink: 0;
-          background: var(--bg-primary);
-          border-right: 1px solid var(--border-subtle);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding-top: 12px;
-          gap: 4px;
-        }
-
-        .sb-menu-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          border: none;
-          background: transparent;
-          color: var(--text-secondary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: color 0.12s, background 0.12s;
-          position: relative;
-          font-size: 18px;
-        }
-
-        .sb-menu-btn:hover {
-          color: var(--text-primary);
-          background: var(--bg-tertiary);
-        }
-
-        .sb-menu-btn.sb-active {
-          color: var(--text-primary);
-          background: var(--bg-elevated);
         }
 
         /* ── Content ── */
@@ -126,39 +84,6 @@ export default function Sidebar({ cities }: SidebarProps) {
       `}</style>
 
       <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
-        {/* ── MenuStrip — 3 modos ── */}
-        <div className="sb-menu-strip">
-          {/* Lista */}
-          <button
-            className={`sb-menu-btn ${sidebarMode === 'list' ? 'sb-active' : ''}`}
-            onClick={() => setSidebarMode('list')}
-            title="Lista de ciudades"
-            type="button"
-          >
-            📋
-          </button>
-
-          {/* Detalle */}
-          <button
-            className={`sb-menu-btn ${sidebarMode === 'detail' ? 'sb-active' : ''}`}
-            onClick={() => setSidebarMode('detail')}
-            title="Detalle de ciudad"
-            type="button"
-          >
-            📍
-          </button>
-
-          {/* Favoritos */}
-          <button
-            className={`sb-menu-btn ${sidebarMode === 'favorites' ? 'sb-active' : ''}`}
-            onClick={() => setSidebarMode('favorites')}
-            title="Ciudades favoritas"
-            type="button"
-          >
-            ⭐
-          </button>
-        </div>
-
         {/* ── Content ── */}
         <div className="sb-content" style={{ position: 'relative' }}>
           {/* TabControl: Clima / Nidos / Todo */}
@@ -169,32 +94,13 @@ export default function Sidebar({ cities }: SidebarProps) {
             {/* Overlay cuando activeTab = 'todo' — bloquea solo contenido (bajo TabControl) */}
             <Overlay
               isActive={activeTab === 'todo'}
-              message="Activa Clima o Nidos para explorar la lista y filtros"
+              message="Activa Clima o Nidos para explorar la lista y mostrar los filtros"
               zIndex={100}
             />
 
-            {/* Modo Lista / Favoritos: LocationFeed (solo si activeTab = 'clima') */}
-            {activeTab === 'clima' && (sidebarMode === 'list' || sidebarMode === 'favorites') && (
+            {/* LocationFeed — lista de ciudades */}
+            {activeTab === 'clima' && (
               <LocationFeed cities={cities} />
-            )}
-
-            {/* Modo Detalle: Placeholder */}
-            {sidebarMode === 'detail' && (
-              <div className="sb-detail-placeholder">
-                <span className="sb-detail-icon">📍</span>
-                {selectedCity ? (
-                  <div>
-                    <div style={{ fontWeight: 600, marginBottom: '4px' }}>
-                      {selectedCity.name}
-                    </div>
-                    <div style={{ fontSize: '11px', opacity: 0.7 }}>
-                      (Modal se abre sobre el mapa)
-                    </div>
-                  </div>
-                ) : (
-                  <div>Selecciona una ciudad para verdetalles</div>
-                )}
-              </div>
             )}
           </div>
         </div>

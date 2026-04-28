@@ -1,14 +1,14 @@
-# 📊 Sprint 9 — Nidos de Pokémon (Arquitectura v2)
+# 📊 Sprint 9 — Nidos de Pokémon (Arquitectura v3 - Layer-Based + Colapsable)
 
 **Fechas:** 2026-04-17 hasta TBD  
 **Duración:** 2-3 sesiones  
-**Story Points Totales:** 20 SP (distribuidos en 2 sesiones de implementación)
+**Story Points Totales:** 23 SP (Sesión 1: 9 SP, Sesión 2: 14 SP)
 
 ---
 
 ## 🎯 Objetivo Sprint
 
-Implementar la feature de **Nidos de Pokémon** como una capa independiente del mapa de Clima, con un control único de capas mediante **tabs en el sidebar** y un modo combinado "Todo" que muestre ambas capas simultáneamente.
+Implementar la feature de **Nidos de Pokémon** como una capa independiente del mapa de Clima, con **layer selector en Header** (Clima/Nidos binario), **sidebar colapsable**, y **filtros relocados al sidebar**. Rediseño radical: mapa como elemento principal.
 
 ---
 
@@ -39,17 +39,25 @@ Tabs del sidebar funcionales, pins diferenciados, modo Todo con overlay, datos c
 
 ---
 
-### Sesión 2: Interfaz Completa — 11 SP
+### Sesión 2: Rediseño UI + Interfaz Completa — 14 SP
 
 | US | Título | SP | Status |
 |----|--------|----|----|
-| **US-814** | Filtros contextuales por tab | 3 | 📝 Pendiente |
+| **US-820** | Remover TabControl del sidebar | 2 | 📝 Pendiente |
+| **US-821** | Panel de filtros en sidebar (top) | 3 | 📝 Pendiente |
+| **US-822** | Sidebar colapsable + hamburger | 3 | 📝 Pendiente |
+| **US-823** | Layer selector en Header (Clima/Nidos) | 2 | 📝 Pendiente |
+| **US-824** | Layout redesign: mapa = elemento principal | 3 | 📝 Pendiente |
+| **US-825** | Remover barra vertical izquierda | 1 | ⏳ Bloqueado (aclaración) |
 | **US-815** | Leyenda del mapa dinámica (tipos + clasificación) | 3 | 📝 Pendiente |
-| **US-816** | Leyenda modo Todo (acordeón) | 2 | 📝 Pendiente |
 | **US-818** | Listado de Nidos en sidebar | 3 | 📝 Pendiente |
 
 **Resultado esperado:**  
-Interfaz completa: filtros funcionales, leyenda dinámica, listado de nidos browseables.
+Interfaz completa con rediseño radical: layer selector en header, sidebar colapsable, filtros en sidebar, mapa principal, leyenda dinámica, listado browseable.
+
+**Archivado (v1 obsoleto):**
+- ~~US-814~~ → Reemplazado por US-820/821/823
+- ~~US-816~~ → No aplica (sin modo Todo)
 
 ---
 
@@ -77,20 +85,20 @@ Interfaz completa: filtros funcionales, leyenda dinámica, listado de nidos brow
 
 ---
 
-## 🔄 Cambios vs Arquitectura v1
+## 🔄 Cambios vs Arquitectura v1/v2
 
-| Aspecto | v1 (Archivado) | v2 (Actual) |
-|---------|---|---|
-| **Control de capas** | Toggle en header | Tabs en sidebar |
-| **Modos** | Clima ⇄ Nidos (2) | Clima, Nidos, Todo (3) |
-| **Componente toggle** | `ModeToggle.tsx` en header | ❌ Eliminado |
-| **Pins Nidos** | Gota púrpura | Hexágono coloreado por tipo |
-| **Filtros** | Estáticos por modo | Dinámicos + contextuales |
-| **Leyenda Nidos** | Grid simple | Grid 2col + búsqueda + tabs internos |
-| **Modo Todo** | No existía | ✅ Nuevo (ambas capas + overlay) |
-| **Sidebar en Todo** | N/A | Bloqueado con overlay informativo |
+| Aspecto | v1 (Archivado) | v2 (Archivado) | v3 (Actual) |
+|---------|---|---|---|
+| **Control de capas** | Toggle en header | Tabs en sidebar | Layer selector en Header |
+| **Modos** | Clima ⇄ Nidos (2) | Clima, Nidos, Todo (3) | Clima XOR Nidos (binario) |
+| **Ubicación selector** | Header | Sidebar | Header (derecha) |
+| **Sidebar** | N/A | Con tabs (fijo) | Colapsable (dinamico) |
+| **Filtros** | Estáticos | En Header dinámicos | En Sidebar (top) |
+| **Mapa** | Secundario | Secundario | Principal (protagonista) |
+| **Modo Todo** | No | ✅ Sí + overlay | ❌ Eliminado |
+| **Nav vertical** | ❓ Existe | ❓ Existe | ❌ Se elimina |
 
-**Razón del cambio:** Feedback UX confirmó que tabs en sidebar es más natural y permite modo combinado de forma elegante.
+**Razón del cambio v2→v3:** UX testing confirmó que mapa debe ser protagonista. Sidebar colapsable permite área máxima para mapa. Layer selector en Header es más rápido que navegar sidebar.
 
 ---
 

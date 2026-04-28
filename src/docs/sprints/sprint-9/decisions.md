@@ -57,7 +57,40 @@
 
 ## Decisiones Tomadas
 
-(Se completarán durante Sprint 9)
+### D4: UI Redesign Radical — Layer-Based Architecture sin Tabs (Sesión 2)
+
+**Decisión:** ✅ **Opción C: Rediseño radical** — Arquitectura v3 layer-based + sidebar colapsable
+
+**Contexto:**
+- Opción A: Mantener tabs en sidebar (arquitectura v2) — Feedback UX: "sidebar limita el mapa"
+- Opción B: Toggle binario en header (v1) — Rechazado: muy pequeño, no es protagonista
+- Opción C: Layer selector en header + sidebar colapsable + mapa principal — **ELEGIDA**
+
+**Por qué:**
+1. **Mapa como protagonista:** El mapa gana ~30% más de espacio (sidebar colapsable)
+2. **Selector más visible:** Layer selector en header es más rápido que tabs en sidebar
+3. **Filtros accesibles:** Mover filtros al sidebar mantiene la lógica clara (filters dentro de la capa)
+4. **Arquitectura más limpia:** Sin modo "Todo" complejo; cada layer es independiente
+
+**Trade-offs:**
+- ❌ Requiere 6 nuevas US en Sesión 2 (14 SP vs 11 SP originales)
+- ❌ Cambio significativo después de documentación v2
+- ✅ Mejor UX, mapa más accesible, layout más intuitivo
+
+**Impacto:**
+- Sesión 2: +3 SP (14 vs 11)
+- Total Sprint: 23 SP (vs 20 SP originales)
+- Archivos nuevos: 6 (LayerSelector, SidebarToggle, FilterPanel en sidebar, etc.)
+- Archivos eliminados: TabControl, ModeToggle (antiguo), Nav vertical
+
+**Validación:**
+- [ ] Mapa ocupa ~70% pantalla (sidebar colapsado)
+- [ ] Layer selector visible y responsive
+- [ ] Sidebar colapsable con transición suave
+- [ ] Filtros accesibles en sidebar
+- [ ] UX testing: cambio de layer < 1s
+
+---
 
 ---
 

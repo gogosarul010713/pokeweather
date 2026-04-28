@@ -381,6 +381,28 @@ interface Props {}  // Lee del store
 
 ---
 
+## 📝 ACTUALIZACIÓN v3 — REDISEÑO RADICAL (27-04-2026)
+
+**Cambios Sesión 2 (nueva arquitectura layer-based):**
+
+### Componentes a CREAR (Sesión 2 - Rediseño)
+1. **`src/components/Header/LayerSelector.tsx`** — Selector Clima/Nidos en header (US-823)
+2. **`src/components/Sidebar/SidebarToggle.tsx`** — Botón hamburger (US-822)
+3. **`src/components/Sidebar/FilterPanel.tsx`** — Wrapper condicional (US-821)
+4. **`src/components/Sidebar/FilterPanelClima.tsx`** — Filtros Clima en sidebar (US-821)
+5. **`src/components/Sidebar/FilterPanelNests.tsx`** — Filtros Nidos en sidebar (US-821)
+
+### Componentes a ELIMINAR
+- ~~`src/components/Header/FilterPanel.tsx`~~ → Mover a Sidebar
+- ~~`src/components/Sidebar/TabControl.tsx`~~ → Completamente eliminado (US-820)
+
+### Componentes MODIFICAR (Layout redesign - US-824)
+- `src/App.tsx` — Estructura flex, sidebar fixed
+- `src/index.css` — Z-index scale, layout general
+- `src/components/Header/Header.tsx` — Agregar LayerSelector, remover FilterPanel
+
+---
+
 ## 🎨 CSS Variables (index.css - agregar)
 
 ```css
@@ -397,6 +419,10 @@ interface Props {}  // Lee del store
   --badge-hot: #D29922;         /* Naranja */
   --badge-new: #58A6FF;         /* Azul */
   --badge-common: #6E7681;      /* Gris */
+  
+  /* Layout */
+  --sidebar-width: 320px;
+  --header-height: 60px;
 }
 ```
 

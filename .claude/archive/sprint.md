@@ -31,16 +31,17 @@
 
 ## 📊 Progreso
 
-**Completadas:** 5/8 US (12 SP) — Sesión 1 ✅ + Sesión 2 en progreso
+**Completadas:** 5/8 US (12 SP) — Sesión 1 ✅ + Sesión 2 en progreso ✅
 - ✅ US-811: Tabs del Sidebar (3 SP)
 - ✅ US-812: Pins Diferenciados (2 SP)
 - ✅ US-819: Datos JSON (1 SP)
 - ✅ US-817: Overlay Modo Todo (2 SP)
-- ✅ US-814: Filtros Dinámicos por Tab (3 SP) — 2026-04-26
+- ✅ US-814: Filtros Dinámicos por Tab (3 SP) — ✅ 2026-04-26 (COMPLETADA)
 - ✅ Refinamientos UX/UI: Icons AVIF/WebP + optimizaciones (2026-04-26)
+- ✅ Bug fixes layout: Sidebar restored, TabControl always accessible
 
 **Pendientes:** 3/8 US (8 SP)  
-**Próximo:** US-815 (Leyenda Dinámica)
+**Próximo:** US-815 (Leyenda Dinámica) ← Listo para comenzar Sesión 2 Fase 2
 **Nota:** US antiguas (US-801-807) archivadas en `archive/` — arquitectura reemplazada
 
 ---

@@ -26,20 +26,46 @@ Implementar la **interfaz completa** de Nidos con:
 
 ---
 
-## ✅ SESIÓN 2 — EN PROGRESO (2026-04-26)
+## ✅ SESIÓN 2 — COMPLETADA (2026-04-26)
 
-**Commits:**
-- (en progreso)
+**Commits realizados:**
+- c1b4561 — feat(us-814): Filtros dinámicos por tab — Header context-aware
+- 47c73b6 — fix(us-814): Correciones críticas — TabControl accessible en modo Todo + FilterPanelNests mejorado
+- a9f6c17 — fix(sidebar): Restaurar layout — TabControl dentro sb-content, Overlay solo sobre contenido
 
-✅ **US-814** Filtros Dinámicos por Tab (3 SP) — IMPLEMENTADA (2026-04-26)
-- Creado `src/config/pokemonTypes.ts` — constante POKEMON_TYPES centralizada
-- Extendido useStore: `nestTypeFilter`, `nestSortBy` + acciones
-- Refactor FilterPanel.tsx → wrapper condicional por activeTab
-- Creado FilterPanelClima.tsx (versión clima)
-- Creado FilterPanelNests.tsx (versión nidos)
-- Build ✓ sin errores, listo para validar
+✅ **US-814** Filtros Dinámicos por Tab (3 SP) — ✅ COMPLETADA (2026-04-26)
+- ✅ Creado `src/config/pokemonTypes.ts` — constante POKEMON_TYPES + TYPE_IMAGES centralizada
+- ✅ Extendido useStore: `nestTypeFilter` (string[]), `nestSortBy`, `nestSortDirection` + acciones
+- ✅ Refactor FilterPanel.tsx → wrapper condicional por activeTab
+- ✅ Creado FilterPanelClima.tsx (versión clima: región, clima, tipo, ordenar)
+- ✅ Creado FilterPanelNests.tsx (versión nidos: tipos multi-select, SortDropdown con asc/desc)
+- ✅ Corregido: Tab Todo bloquea solo contenido, TabControl siempre accesible
+- ✅ Corregido: Sidebar layout restaurado (flex structure correcta)
+- ✅ Build ✓ limpio, 0 errores TypeScript
+- ✅ Validado con ui-ux-pro-max: layout correcto, responsive, accesibilidad OK
 
-**Próximo:** Validación manual + commit
+**Problemas resueltos en sesión:**
+1. Tab "Todo" bloqueaba TabControl (no se podía desbloquear)
+   - Solución: Mover Overlay dentro content-wrapper, no sobre TabControl
+   - Resultado: TabControl siempre accesible para cambiar tab
+   
+2. FilterPanelNests tenía problemas especificación
+   - Botón "Todos" innecesario → removido
+   - Tipo debe ser multi-select → implementado como string[]
+   - Ordenamiento sin asc/desc → integrado SortDropdown
+   - Botón limpiar no funciona → lógica corregida
+   
+3. Sidebar layout se rompió tras cambios
+   - Causa: TabControl movido FUERA de sb-content
+   - Solución: Mantener TabControl dentro sb-content, usar wrapper para Overlay
+   - Resultado: Flex layout correcto, sidebar no se reduce
+
+**Decisiones tomadas:**
+- D-017: FilterPanelNests multi-select types (no single) — mejor UX para exploración
+- D-016: Overlay local vs global — usar z-index 100 (local a sb-content) vs 1001 (Header)
+- D-015: TabControl siempre accesible en modo "Todo" — mejor UX de desbloqueo
+
+**Próximo:** US-815 (Leyenda Dinámica) — Sesión 2 fase 2
 
 ---
 
