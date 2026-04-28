@@ -1,6 +1,5 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
-import TabControl from './TabControl'
 import Overlay from '../UI/Overlay'
 
 interface SidebarProps {
@@ -86,9 +85,6 @@ export default function Sidebar({ cities }: SidebarProps) {
       <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
         {/* ── Content ── */}
         <div className="sb-content" style={{ position: 'relative' }}>
-          {/* TabControl: Clima / Nidos / Todo */}
-          <TabControl />
-
           {/* Content Wrapper — posición relativa para Overlay */}
           <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             {/* Overlay cuando activeTab = 'todo' — bloquea solo contenido (bajo TabControl) */}
