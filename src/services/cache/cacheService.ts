@@ -232,7 +232,8 @@ export const setPredictionsCacheMetadata = async (
       ...doc,
       created_at: typeof doc.created_at === 'number' ? doc.created_at : doc.created_at?.toMillis?.() ?? now,
       ttl: typeof doc.ttl === 'number' ? doc.ttl : doc.ttl?.toMillis?.() ?? now,
-    })) as any as ForecastDoc[] // Type assertion necesaria para IndexedDB
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    })) as any as ForecastDoc[]
 
     const metadata: PredictionsCacheMetadata = {
       documents: serialized,
@@ -250,9 +251,14 @@ export const setPredictionsCacheMetadata = async (
  * @param metadata Metadata del caché
  * @returns true si es válido
  */
+const MOCK_CITY_IDS = new Set(['sydney', 'tokyo', 'london'])
+
 export const isPredictionsCacheValid = (metadata: PredictionsCacheMetadata | null): boolean => {
   if (!metadata) return false
-  return metadata.expiresAt > Date.now()
+  if (metadata.expiresAt <= Date.now()) return false
+  // Invalidar si el caché contiene city_ids de mock (datos de cuando Firebase no estaba inicializado)
+  const hasMockData = metadata.documents.some(doc => MOCK_CITY_IDS.has(doc.city_id))
+  return !hasMockData
 }
 
 // ─── Cleanup Functions (US-1102) ───────────────────────────────────────────────

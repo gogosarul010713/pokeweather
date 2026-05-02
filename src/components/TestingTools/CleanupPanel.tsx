@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { fetchCleanupCounts, executeCleanup, type CleanupOptions, type CleanupCounts } from '../../services/cleanup/cleanupService'
+import { fetchCleanupCounts, executeCleanup, type CleanupOptions, type CleanupCounts, type CleanupResults } from '../../services/cleanup/cleanupService'
 
-export const CleanupPanel: React.FC = () => {
+interface CleanupPanelProps {
+  onCleanupComplete?: () => void
+}
+
+export const CleanupPanel: React.FC<CleanupPanelProps> = ({ onCleanupComplete }) => {
   const [cleanupOptions, setCleanupOptions] = useState<CleanupOptions>({
     nullSnapshots: false,
     olderThan7d: false,
@@ -53,7 +57,7 @@ export const CleanupPanel: React.FC = () => {
   }
 
   // Opción D3: Retry logic (2 auto + manual fallback)
-  const executeWithRetry = async (maxRetries = 2): Promise<any> => {
+  const executeWithRetry = async (maxRetries = 2): Promise<CleanupResults> => {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         return await executeCleanup(cleanupOptions)
@@ -63,6 +67,7 @@ export const CleanupPanel: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
       }
     }
+    throw new Error('executeWithRetry: exhausted retries')
   }
 
   const handleConfirm = async () => {
@@ -113,6 +118,7 @@ export const CleanupPanel: React.FC = () => {
         allLocalStorage: false,
         cascadeDeleteAll: false,
       })
+      onCleanupComplete?.()
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Fallo desconocido'
       setMessage({

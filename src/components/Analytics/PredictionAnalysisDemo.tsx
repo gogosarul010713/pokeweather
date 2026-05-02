@@ -75,7 +75,11 @@ function generateMockData(): PredictionRow[] {
   return rows;
 }
 
-export function PredictionAnalysisDemo() {
+interface PredictionAnalysisDemoProps {
+  refreshKey?: number;
+}
+
+export function PredictionAnalysisDemo({ refreshKey = 0 }: PredictionAnalysisDemoProps) {
   const [rows, setRows] = useState<PredictionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,10 +111,10 @@ export function PredictionAnalysisDemo() {
         if (cachedMetadata && isPredictionsCacheValid(cachedMetadata)) {
           // Caché válido: mostrar inmediato usando los docs del metadata (no getForecastCache)
           try {
-            const realData = await fetchPredictions(cachedMetadata.documents as any);
+            const realData = await fetchPredictions(cachedMetadata.documents);
             setRows(realData);
             console.log(`[PredictionDemo] ✅ Cache hit (${cachedMetadata.documents.length} docs)`);
-          } catch (err) {
+          } catch {
             console.warn('[PredictionDemo] Cache fetch error, showing mock data');
             setRows(generateMockData());
           }
@@ -123,8 +127,8 @@ export function PredictionAnalysisDemo() {
 
               if (newDocs.length > 0) {
                 // Hay nuevos documentos: mergear + actualizar caché
-                const merged = mergeForecastDocs(cachedMetadata.documents as any, newDocs);
-                await setPredictionsCacheMetadata(merged as any);
+                const merged = mergeForecastDocs(cachedMetadata.documents, newDocs);
+                await setPredictionsCacheMetadata(merged);
                 console.log(`[PredictionDemo] ✅ Delta sync completado: ${newDocs.length} nuevos docs`);
               } else {
                 console.log('[PredictionDemo] Delta sync: sin cambios');
@@ -145,7 +149,7 @@ export function PredictionAnalysisDemo() {
             // Guardar docs en caché para próximas lecturas
             const allDocs = await getRecentForecasts('24h');
             if (allDocs.length > 0) {
-              await setPredictionsCacheMetadata(allDocs as any);
+              await setPredictionsCacheMetadata(allDocs);
             }
             console.log(`[PredictionDemo] ✅ Loaded ${realData.length} real predictions`);
           } else {
@@ -166,7 +170,7 @@ export function PredictionAnalysisDemo() {
     }
 
     loadPredictions();
-  }, []);
+  }, [refreshKey]);
 
   return (
     <div style={{ padding: '20px', background: 'var(--bg-primary)' }}>

@@ -16,6 +16,7 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('reportes')
   const [isMaximized, setIsMaximized] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [predictionRefreshKey, setPredictionRefreshKey] = useState(0)
   const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [isSyncSaving, setIsSyncSaving] = useState(false)
 
@@ -393,9 +394,9 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
             {/* Tab: Reportes */}
             {activeTab === 'reportes' && <ReportsPanel />}
             {/* Tab: Limpiar */}
-            {activeTab === 'limpiar' && <CleanupPanel />}
+            {activeTab === 'limpiar' && <CleanupPanel onCleanupComplete={() => setPredictionRefreshKey(k => k + 1)} />}
             {/* Tab: Predicciones */}
-            {activeTab === 'predicciones' && <PredictionAnalysisDemo />}
+            {activeTab === 'predicciones' && <PredictionAnalysisDemo refreshKey={predictionRefreshKey} />}
             {/* Tab: Sincronización */}
             {activeTab === 'sincronizacion' && (
               <>
