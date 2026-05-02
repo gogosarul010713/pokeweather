@@ -5,6 +5,8 @@ import admin from 'firebase-admin'
 interface CityData {
   id: string
   name: string
+  country: string
+  region: string
   accuLocationKey: string
   lat: number
   lon: number
@@ -20,47 +22,59 @@ interface WeatherSnapshot {
   iconCode: number
 }
 
-// Lista de ciudades (puede venir de Firestore en el futuro)
+// Ciudades sincronizadas con src/data/pokedensity-cities.json
+// IDs generados con mismo algoritmo que transformCitiesToCityFormat: name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+// accuLocationKey obtenidos via AccuWeather geoposition API con coordenadas del JSON
 const CITIES: CityData[] = [
   {
-    id: 'sydney',
-    name: 'Sydney',
-    accuLocationKey: '4743',
-    lat: -33.8688,
-    lon: 151.2093,
-    timezone: 10,
+    id: 'pier-39-san-francisco',
+    name: 'Pier 39, San Francisco',
+    country: 'EE.UU.',
+    region: 'america',
+    accuLocationKey: '2628254',
+    lat: 37.8086,
+    lon: -122.4098,
+    timezone: -8,
   },
   {
-    id: 'tokyo',
-    name: 'Tokyo',
-    accuLocationKey: '1876',
-    lat: 35.6762,
-    lon: 139.6503,
-    timezone: 9,
-  },
-  {
-    id: 'london',
-    name: 'London',
-    accuLocationKey: '310015',
-    lat: 51.5074,
-    lon: -0.1278,
-    timezone: 0,
-  },
-  {
-    id: 'newyork',
-    name: 'New York',
-    accuLocationKey: '349727',
-    lat: 40.7128,
-    lon: -74.006,
+    id: 'times-square-midtown-nyc',
+    name: 'Times Square / Midtown, NYC',
+    country: 'EE.UU.',
+    region: 'america',
+    accuLocationKey: '2627484',
+    lat: 40.7552,
+    lon: -73.983,
     timezone: -5,
   },
   {
-    id: 'saopaulo',
-    name: 'São Paulo',
-    accuLocationKey: '32022',
-    lat: -23.5505,
-    lon: -46.6333,
-    timezone: -3,
+    id: 'zaragoza-centro',
+    name: 'Zaragoza Centro',
+    country: 'España',
+    region: 'europa',
+    accuLocationKey: '306788',
+    lat: 41.661012,
+    lon: -0.893407,
+    timezone: 1,
+  },
+  {
+    id: 'auckland-waterfront',
+    name: 'Auckland Waterfront',
+    country: 'Nueva Zelanda',
+    region: 'oceania',
+    accuLocationKey: '3590462',
+    lat: -36.852095,
+    lon: 174.76318,
+    timezone: 12,
+  },
+  {
+    id: 'itaewon-jung-gu-se-l',
+    name: 'Itaewon / Jung-gu, Seúl',
+    country: 'Corea del Sur',
+    region: 'asia',
+    accuLocationKey: '3430003',
+    lat: 37.567308,
+    lon: 126.977133,
+    timezone: 9,
   },
 ]
 
@@ -155,17 +169,14 @@ function getLocalTimeUser(): string {
 
 /**
  * Get date_hour key (YYYY-MM-DD-HH)
- * Rounded to next full hour from now
+ * Uses current hour (cron runs AT HH:00, so now IS the forecast hour)
  */
 function getDateHourKey(): string {
   const now = new Date()
-  const nextHour = new Date(now)
-  nextHour.setHours(nextHour.getHours() + 1, 15, 0, 0)
-
-  const year = nextHour.getFullYear()
-  const month = String(nextHour.getMonth() + 1).padStart(2, '0')
-  const day = String(nextHour.getDate()).padStart(2, '0')
-  const hour = String(nextHour.getHours()).padStart(2, '0')
+  const year = now.getUTCFullYear()
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(now.getUTCDate()).padStart(2, '0')
+  const hour = String(now.getUTCHours()).padStart(2, '0')
 
   return `${year}-${month}-${day}-${hour}`
 }
@@ -190,8 +201,8 @@ async function saveCityForecast(
   const forecastDoc = {
     city_id: city.id,
     city_name: city.name,
-    country: 'Unknown',
-    region: 'unknown',
+    country: city.country,
+    region: city.region,
     lat: city.lat,
     lon: city.lon,
     accuLocationKey: city.accuLocationKey,

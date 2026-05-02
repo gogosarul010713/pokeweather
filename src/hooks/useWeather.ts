@@ -249,9 +249,8 @@ export function useWeather() {
   // Ref para quebrar la circular dependency entre doRefresh y scheduleNextRefresh
   const scheduleNextRefreshRef = useRef<() => void>(() => {})
 
-  // ✅ FIX: Helper para ejecutar refresh y reprogramar siguiente
+  // Helper para ejecutar refresh y reprogramar siguiente
   const doRefresh = useCallback(async () => {
-    // Mostrar LoadingScreen durante auto-refresh (en lugar de Toast sutil)
     setLoadingStatus('loading')
 
     try {
@@ -259,14 +258,29 @@ export function useWeather() {
       setLoadingStatus('ready')
       setLastUpdated(Date.now())
       onReadyRef.current(refreshed)
-
-      // Después del fade-out del LoadingScreen (400ms), programar siguiente
       setTimeout(() => scheduleNextRefreshRef.current(), 400)
     } catch (error) {
-      console.error('❌ Auto-refresh error:', error)
-      setLoadingStatus('error')
-      // Reintentar en 1 minuto
-      refreshRef.current = setTimeout(() => scheduleNextRefreshRef.current(), 60 * 1000)
+      console.error('❌ Auto-refresh AccuWeather error, falling back to cache/Firestore:', error)
+
+      // Fallback: cargar desde IndexedDB/Firestore para no dejar sidebar vacío
+      try {
+        const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+        const cities = transformCitiesToCityFormat(rawCities)
+        const fallbackCities = await loadCitiesFromCache(cities)
+        if (fallbackCities.length > 0) {
+          setLoadingStatus('ready')
+          setLastUpdated(Date.now())
+          onReadyRef.current(fallbackCities)
+          console.log(`✅ Fallback: ${fallbackCities.length} ciudades desde caché/Firestore`)
+        } else {
+          setLoadingStatus('error')
+        }
+      } catch {
+        setLoadingStatus('error')
+      }
+
+      // Reintentar AccuWeather en 5 minutos
+      refreshRef.current = setTimeout(() => scheduleNextRefreshRef.current(), 5 * 60 * 1000)
     }
   }, [loadCities, setLoadingStatus, setLastUpdated])
 
