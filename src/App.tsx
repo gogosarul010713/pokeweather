@@ -47,13 +47,26 @@ export default function App() {
 
   // Aplicar filtros a las ciudades cargadas — se recalcula cuando cambian filtros
   const filteredCities = useMemo(() => {
+    const filtered = getFilteredCities(cities)
     console.log('📊 useMemo recalculando filtros:', {
       sortMode,
       sortDirection,
       citiesCount: cities.length,
-      filteredCount: getFilteredCities(cities).length,
+      filteredCount: filtered.length,
+      regionFilter,
+      conditionFilter,
+      typeFilter,
+      searchQuery,
+      sample: cities[0] ? {
+        id: cities[0].id,
+        name: cities[0].name,
+        condition: cities[0].condition,
+        tempC: cities[0].tempC,
+        boostedTypes: cities[0].boostedTypes,
+        region: cities[0].region,
+      } : null,
     })
-    return getFilteredCities(cities)
+    return filtered
   }, [cities, regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection])
 
   // Ejecutar una sola vez al montar el componente

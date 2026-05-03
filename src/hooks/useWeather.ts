@@ -353,21 +353,43 @@ export function useWeather() {
 
         let cities = await loadCities()
 
-        // Si la carga retornó ciudades sin datos reales (todas con tempC=0 y sin boostedTypes),
-        // forzar refresh desde API. Ocurre en Vercel cuando localStorage tiene timestamp reciente
-        // pero IndexedDB y Firestore están vacíos (primer deploy o caché limpiado).
-        const allEmpty = cities.length > 0 && cities.every(c => c.tempC === 0 && c.boostedTypes.length === 0)
-        if (allEmpty) {
-          console.warn('⚠️ Ciudades cargadas sin datos reales, forzando refresh desde API...')
+        // DIAGNOSTIC: log de lo que cargó realmente
+        console.log('🔬 [DIAG] cities tras loadCities():', {
+          count: cities.length,
+          withRealData: cities.filter(c => c.tempC > 0 || c.boostedTypes.length > 0).length,
+          withZeroTemp: cities.filter(c => c.tempC === 0).length,
+          withEmptyBoosted: cities.filter(c => c.boostedTypes.length === 0).length,
+          firstCity: cities[0] ? {
+            id: cities[0].id,
+            name: cities[0].name,
+            tempC: cities[0].tempC,
+            condition: cities[0].condition,
+            boostedTypes: cities[0].boostedTypes,
+            region: cities[0].region,
+            accuLocationKey: cities[0].accuLocationKey,
+          } : null,
+        })
+
+        // Detectar ciudades sin datos reales y forzar refresh API
+        const noRealData = cities.length > 0 && cities.every(
+          c => c.tempC === 0 && c.boostedTypes.length === 0
+        )
+        if (noRealData) {
+          console.warn('⚠️ Ciudades sin datos reales, forzando refresh API + limpiando localStorage stale...')
+          // Limpiar el flag de localStorage que estaba bloqueando el refresh
+          localStorage.removeItem('pwe-lastUpdateHour')
           try {
             cities = await loadCities(true)
+            console.log('✅ Refresh API completado:', cities.length, 'ciudades')
           } catch (forceErr) {
-            console.error('❌ Force refresh también falló, usando Firestore:', forceErr)
+            console.error('❌ Force refresh API falló:', forceErr)
+            // Último intento: Firestore directo
             const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
             const baseCities = transformCitiesToCityFormat(rawCities)
             const firestoreCities = await loadCitiesFromCache(baseCities)
             if (firestoreCities.some(c => c.tempC > 0 || c.boostedTypes.length > 0)) {
               cities = firestoreCities
+              console.log('✅ Datos recuperados desde Firestore:', cities.length)
             }
           }
         }
