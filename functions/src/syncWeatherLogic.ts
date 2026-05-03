@@ -13,13 +13,16 @@ interface CityData {
   timezone: number
 }
 
+// Raw snapshot — clasificacion ocurre en el frontend via resolveCondition()
 interface WeatherSnapshot {
   hour: number
-  condition: string
-  tempC: number
-  windKmh: number
+  icon_code: number       // AccuWeather WeatherIcon (1-44)
+  icon_phrase: string     // Texto crudo AccuWeather ("Mostly Sunny", etc.)
+  temp_c: number
+  wind_kmh: number
+  gust_kmh: number
   humidity: number
-  iconCode: number
+  has_precipitation: boolean
 }
 
 // Ciudades sincronizadas con src/data/pokedensity-cities.json
@@ -101,15 +104,17 @@ async function fetchAccuWeatherForecast(
       timeout: 10000,
     })
 
-    // Map AccuWeather response to WeatherSnapshot
+    // Map AccuWeather response to raw WeatherSnapshot (sin clasificacion)
     const snapshots: WeatherSnapshot[] = response.data.map(
       (item: any, index: number) => ({
         hour: index,
-        condition: mapAccuWeatherCondition(item.IconPhrase),
-        tempC: item.Temperature.Value,
-        windKmh: item.Wind.Speed.Value,
+        icon_code: item.WeatherIcon,
+        icon_phrase: item.IconPhrase || '',
+        temp_c: item.Temperature.Value,
+        wind_kmh: item.Wind.Speed.Value,
+        gust_kmh: item.WindGust?.Speed?.Value ?? item.Wind.Speed.Value,
         humidity: item.RelativeHumidity || 0,
-        iconCode: item.WeatherIcon,
+        has_precipitation: item.HasPrecipitation ?? false,
       })
     )
 
@@ -120,40 +125,9 @@ async function fetchAccuWeatherForecast(
   }
 }
 
-/**
- * Map AccuWeather IconPhrase to weather condition
- */
-function mapAccuWeatherCondition(phrase: string): string {
-  const lower = phrase.toLowerCase()
-
-  if (lower.includes('sunny') || lower.includes('clear')) return 'sunny'
-  if (lower.includes('cloud')) return 'cloudy'
-  if (lower.includes('part') || lower.includes('partly')) return 'partly'
-  if (lower.includes('rain') || lower.includes('drizzle')) return 'rain'
-  if (lower.includes('snow') || lower.includes('sleet')) return 'snow'
-  if (lower.includes('fog') || lower.includes('haze')) return 'fog'
-  if (lower.includes('wind')) return 'windy'
-
-  return 'cloudy' // Default
-}
-
-/**
- * Calculate main condition from first 3 hours snapshots
- */
-function calculateCondition(snapshots: WeatherSnapshot[]): string {
-  if (snapshots.length === 0) return 'sunny'
-
-  const firstThree = snapshots.slice(0, 3)
-  const conditions = firstThree.map((s) => s.condition)
-
-  // Most common condition wins
-  const counts: { [key: string]: number } = {}
-  conditions.forEach((c) => {
-    counts[c] = (counts[c] || 0) + 1
-  })
-
-  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
-}
+// ELIMINADO: mapAccuWeatherCondition() y calculateCondition()
+// Clasificacion ocurre SOLO en el frontend via weatherService.ts:resolveCondition()
+// La CF guarda datos raw (icon_code, wind_kmh, gust_kmh) para que el frontend clasifique
 
 /**
  * Get local time for user's machine (for persistency in Firestore)
@@ -196,8 +170,8 @@ async function saveCityForecast(
     .collection('forecasts')
     .doc(dateHour)
 
-  const calculatedCondition = calculateCondition(snapshots)
-
+  // D-039: CF guarda datos raw, el frontend clasifica con resolveCondition()
+  // icon_code + gust_kmh son los campos que resolveCondition() necesita
   const forecastDoc = {
     city_id: city.id,
     city_name: city.name,
@@ -208,7 +182,6 @@ async function saveCityForecast(
     accuLocationKey: city.accuLocationKey,
     date_hour: dateHour,
     snapshots: snapshots,
-    calculated_condition: calculatedCondition,
     timezone: city.timezone,
     local_time_user: getLocalTimeUser(),
     created_at: admin.firestore.Timestamp.now(),

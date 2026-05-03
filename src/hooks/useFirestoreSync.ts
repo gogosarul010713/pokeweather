@@ -1,6 +1,12 @@
 /**
  * useFirestoreSync — Real-time listener para cambios en Firestore
  * US-1101: Escucha cambios en /city_weather y actualiza estado React automáticamente
+ *
+ * NOTA ARQUITECTONICA (D-039):
+ * - La CF escribe en /city_weather/{id}/forecasts/{date_hour} (subcoleccion)
+ * - Este listener escucha /city_weather (docs raiz) — actualmente nadie escribe ahí
+ * - El flujo real de actualizacion es via getWeatherFromFirestore() en useWeather.ts
+ * - Pendiente: migrar listener a collectionGroup('forecasts') o escribir summary en doc raiz
  */
 
 import { useEffect } from 'react'
@@ -8,21 +14,24 @@ import { onSnapshot, collection, type Unsubscribe } from 'firebase/firestore'
 import { getDb } from '../services/firebase/firebaseConfig'
 import type { City } from '../store/useStore'
 
+// D-039: Estos campos ya no vienen de Firestore en el schema nuevo
+// La CF guarda datos raw en la subcoleccion forecasts, no en el doc raiz
 interface FirestoreCityWeather {
   city_id: string
   city_name: string
-  condition: string
-  tempC: number
-  feelsLike: number
-  humidity: number
-  windKmh: number
-  gustKmh: number
-  weatherIcon: number
-  isExtreme: boolean
-  timezone: number
-  boostedTypes: string[]
-  weatherImage: string
-  updatedAt: number
+  // Schema legado — la CF ya no escribe estos campos en el doc raiz
+  condition?: string
+  tempC?: number
+  feelsLike?: number
+  humidity?: number
+  windKmh?: number
+  gustKmh?: number
+  weatherIcon?: number
+  isExtreme?: boolean
+  timezone?: number
+  boostedTypes?: string[]
+  weatherImage?: string
+  updatedAt?: number
 }
 
 /**

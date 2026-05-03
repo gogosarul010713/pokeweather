@@ -1200,4 +1200,50 @@ const dateHour = formatDateHour(nextHour)
 
 ---
 
+### 2026-05-03 D-039 — CF guarda raw, frontend clasifica (US-1113)
+
+**Contexto:** La Cloud Function `syncWeatherLogic.ts` tenia su propio algoritmo de clasificacion (`mapAccuWeatherCondition` via texto libre de `IconPhrase`) duplicando la logica de `weatherService.ts:resolveCondition()` (que usa numeros `WeatherIcon` + Windy override). Resultado: preview/prod mostraba climas distintos a localhost.
+
+**Problema:**
+- `mapAccuWeatherCondition("Mostly Sunny")` texto libre, inconsistente
+- `resolveCondition(2, windKmh, gustKmh)` usa 44 iconos exactos + Windy override
+- Sin `gust_kmh` en schema CF → Windy nunca se activaba en prod
+- `calculated_condition` en Firestore era incorrecto por el algoritmo inferior
+
+**Decision:** Cloud Function guarda datos raw. Frontend es el unico que clasifica.
+
+**Schema nuevo en Firestore (snapshots[]):**
+```
+icon_code: number         // WeatherIcon AccuWeather (1-44)
+icon_phrase: string       // Texto crudo ("Mostly Sunny")
+temp_c: number
+wind_kmh: number
+gust_kmh: number          // NUEVO: necesario para Windy override
+humidity: number
+has_precipitation: boolean
+```
+
+**Clasificacion:**
+- `getWeatherFromFirestore()` llama `resolveCondition(icon_code, wind_kmh, gust_kmh)` al leer
+- Mismo resultado en dev y prod (mismo algoritmo, mismos datos)
+
+**Motivo:**
+1. Un solo lugar para logica de clasificacion (`weatherService.ts`)
+2. Sin drift entre entornos
+3. Windy override funciona en prod
+4. Cambiar algoritmo = un solo archivo
+
+**Implementacion:**
+- `functions/src/syncWeatherLogic.ts`: eliminado `mapAccuWeatherCondition()`, `calculateCondition()`; nuevo schema raw
+- `firebaseWeatherService.ts:getWeatherFromFirestore()`: clasifica con `resolveCondition()`
+- `useFirestoreSync.ts`: documentado bug del listener (escucha raiz, no subcoleccion)
+- Documento completo: `src/docs/architecture/12-data-flow-architecture.md`
+
+**Pendiente:**
+- Deploy CF con nuevo schema
+- Implementar real-time update (summary doc en raiz de city_weather)
+- Eliminar `VITE_ACCUWEATHER_KEY` de Vercel
+
+**US relacionada:** US-1113
+
 <!-- Agrega nuevas decisiones aquí, más recientes primero -->

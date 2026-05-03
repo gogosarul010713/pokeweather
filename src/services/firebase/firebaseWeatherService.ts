@@ -304,34 +304,31 @@ export async function getWeatherFromFirestore(cityId: string): Promise<any | nul
 
     const snapshot = doc.snapshots[0]
 
-    // Mapear condición clasificada a tipos Pokémon
-    const CONDITION_TO_TYPES: Record<string, string[]> = {
-      sunny: ['fire', 'ground', 'grass'],
-      partly: ['normal', 'rock'],
-      cloudy: ['fairy', 'fighting', 'poison'],
-      fog: ['ghost', 'dark'],
-      rain: ['water', 'electric', 'bug'],
-      snow: ['ice', 'steel'],
-      windy: ['flying', 'dragon', 'psychic'],
-    }
+    // D-039: Clasificar con el mismo algoritmo que el frontend (resolveCondition)
+    // Soporta tanto schema nuevo (icon_code/gust_kmh) como viejo (raw_condition_code/wind_kmh)
+    const { resolveCondition, CONDITION_TO_TYPES } = await import('../weather/weatherService')
 
-    const condition = snapshot.classified || 'unknown'
+    const iconCode: number = (snapshot as any).icon_code ?? (snapshot as any).raw_condition_code ?? 0
+    const windKmh: number = (snapshot as any).wind_kmh ?? 0
+    const gustKmh: number = (snapshot as any).gust_kmh ?? windKmh
+
+    const condition = iconCode > 0 ? resolveCondition(iconCode, windKmh, gustKmh) : (snapshot as any).classified || 'cloudy'
     const boostedTypes = CONDITION_TO_TYPES[condition] || []
 
     // Retornar en formato WeatherData (compatible con cacheService)
     return {
       condition,
       boostedTypes,
-      isExtreme: false, // No disponible en Firestore, asumir false
-      tempC: snapshot.temperature_c ?? 0,
-      feelsLike: snapshot.temperature_c ?? 0, // Usar tempC como fallback
-      humidity: snapshot.humidity_pct ?? 0,
-      windKmh: snapshot.wind_kmh ?? 0,
-      gustKmh: snapshot.wind_kmh ?? 0, // Usar windKmh como fallback
-      weatherIcon: 0, // No disponible
+      isExtreme: false,
+      tempC: (snapshot as any).temp_c ?? (snapshot as any).temperature_c ?? 0,
+      feelsLike: (snapshot as any).temp_c ?? (snapshot as any).temperature_c ?? 0,
+      humidity: (snapshot as any).humidity ?? (snapshot as any).humidity_pct ?? 0,
+      windKmh,
+      gustKmh,
+      weatherIcon: iconCode,
       timezone: doc.timezone ?? 0,
       updatedAt: doc.created_at?.toMillis?.() ?? Date.now(),
-      weatherImage: '', // Será seteado por enrichCityWithWeatherData
+      weatherImage: '',
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
