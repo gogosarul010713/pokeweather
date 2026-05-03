@@ -45,12 +45,26 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
     }
 
     // Filtrar por badges seleccionados (OR logic) — secundario al filtrado de header
-    if (badgeFilter.length > 0) {
+    // Solo filtra si el usuario ha modificado el filtro respecto al default (los 4 badges).
+    // Default = todos los badges seleccionados = no debe ocultar ciudades sin badge calculado.
+    const ALL_BADGES = ['stops', 'gyms', 'community', 'best']
+    const isDefaultFilter = badgeFilter.length === ALL_BADGES.length &&
+      ALL_BADGES.every(b => badgeFilter.includes(b))
+    if (badgeFilter.length > 0 && !isDefaultFilter) {
       result = result.filter(city => {
         const cityBadges = badgesByCity.get(city.id) || []
         return cityBadges.some((badge: string) => badgeFilter.includes(badge))
       })
     }
+
+    console.log('🔬 [LocationFeed] displayedCities:', {
+      input: cities.length,
+      output: result.length,
+      sidebarMode,
+      badgeFilter,
+      isDefaultFilter,
+      sampleBadges: cities[0] ? badgesByCity.get(cities[0].id) : null,
+    })
 
     return result
   }, [cities, sidebarMode, favorites, badgeFilter, badgesByCity])
