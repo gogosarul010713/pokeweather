@@ -57,15 +57,6 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
       })
     }
 
-    console.log('🔬 [LocationFeed] displayedCities:', {
-      input: cities.length,
-      output: result.length,
-      sidebarMode,
-      badgeFilter,
-      isDefaultFilter,
-      sampleBadges: cities[0] ? badgesByCity.get(cities[0].id) : null,
-    })
-
     return result
   }, [cities, sidebarMode, favorites, badgeFilter, badgesByCity])
 

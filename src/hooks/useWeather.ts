@@ -33,12 +33,45 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
   const result: City[] = []
 
   for (const city of cities) {
-    // CAPA 1: IndexedDB caché (por accuLocationKey de AccuWeather)
     const locationKey = city.accuLocationKey
     const cached = await getCachedWeather(locationKey)
 
+    // CAPA 1: Firestore (source of truth — Cloud Function escribe cada hora)
+    // Comparar timestamp: usar Firestore si es más reciente que IndexedDB
+    const firestoreWeather = await getWeatherFromFirestore(city.id)
+
+    if (firestoreWeather) {
+      const firestoreTime = firestoreWeather.updatedAt ?? 0
+      const cachedTime = (cached as any)?.updatedAt ?? 0
+
+      // Firestore gana si: no hay cache O Firestore es más reciente
+      if (!cached || firestoreTime > cachedTime) {
+        const { weatherImage, ...cacheableData } = firestoreWeather
+        await setCachedWeather(locationKey, cacheableData)
+
+        const merged = {
+          ...city,
+          condition: firestoreWeather.condition as any,
+          boostedTypes: firestoreWeather.boostedTypes,
+          tempC: firestoreWeather.tempC,
+          feelsLike: firestoreWeather.feelsLike,
+          humidity: firestoreWeather.humidity,
+          windKmh: firestoreWeather.windKmh,
+          gustKmh: firestoreWeather.gustKmh,
+          weatherIcon: firestoreWeather.weatherIcon,
+          isExtreme: firestoreWeather.isExtreme,
+          timezone: firestoreWeather.timezone,
+          updatedAt: firestoreWeather.updatedAt,
+          localTime: calculateLocalTime(firestoreWeather.timezone),
+          weatherImage: firestoreWeather.weatherImage,
+        } as City
+        result.push(merged)
+        continue
+      }
+    }
+
+    // CAPA 2: IndexedDB (si Firestore vacío o cache es más reciente)
     if (cached) {
-      // Cache hit — retornar inmediato sin sincronización adicional
       const merged = {
         ...(cached as Partial<City>),
         id: city.id,
@@ -52,35 +85,7 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
       continue
     }
 
-    // CAPA 2: Firestore (si caché vacío o expirado)
-    const firestoreWeather = await getWeatherFromFirestore(city.id)
-
-    if (firestoreWeather) {
-      // Guardar en caché para próxima lectura (WeatherData format)
-      const { weatherImage, ...cacheableData } = firestoreWeather
-      await setCachedWeather(locationKey, cacheableData)
-
-      const merged = {
-        ...city,
-        condition: firestoreWeather.condition as any,
-        boostedTypes: firestoreWeather.boostedTypes,
-        tempC: firestoreWeather.tempC,
-        feelsLike: firestoreWeather.feelsLike,
-        humidity: firestoreWeather.humidity,
-        windKmh: firestoreWeather.windKmh,
-        gustKmh: firestoreWeather.gustKmh,
-        weatherIcon: firestoreWeather.weatherIcon,
-        isExtreme: firestoreWeather.isExtreme,
-        timezone: firestoreWeather.timezone,
-        updatedAt: firestoreWeather.updatedAt,
-        localTime: calculateLocalTime(firestoreWeather.timezone),
-        weatherImage: firestoreWeather.weatherImage,
-      } as City
-      result.push(merged)
-      continue
-    }
-
-    // FALLBACK: Sin datos (sin caché, sin Firestore)
+    // FALLBACK: Sin datos
     const withTime = { ...city, localTime: calculateLocalTime(city.timezone) }
     result.push(withTime)
   }
@@ -352,23 +357,6 @@ export function useWeather() {
         await clearOldSnapshots()
 
         let cities = await loadCities()
-
-        // DIAGNOSTIC: log de lo que cargó realmente
-        console.log('🔬 [DIAG] cities tras loadCities():', {
-          count: cities.length,
-          withRealData: cities.filter(c => c.tempC > 0 || c.boostedTypes.length > 0).length,
-          withZeroTemp: cities.filter(c => c.tempC === 0).length,
-          withEmptyBoosted: cities.filter(c => c.boostedTypes.length === 0).length,
-          firstCity: cities[0] ? {
-            id: cities[0].id,
-            name: cities[0].name,
-            tempC: cities[0].tempC,
-            condition: cities[0].condition,
-            boostedTypes: cities[0].boostedTypes,
-            region: cities[0].region,
-            accuLocationKey: cities[0].accuLocationKey,
-          } : null,
-        })
 
         // Detectar ciudades sin datos reales y forzar refresh API
         const noRealData = cities.length > 0 && cities.every(
