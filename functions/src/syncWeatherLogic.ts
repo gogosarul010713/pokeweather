@@ -157,6 +157,12 @@ function getDateHourKey(): string {
 
 /**
  * Save city forecast to Firestore
+ *
+ * D-039 + Opcion A real-time:
+ * - Escribe RAW en subcoleccion /city_weather/{id}/forecasts/{date_hour}
+ * - Escribe SUMMARY en doc raiz /city_weather/{id} con updatedAt
+ *   El summary doc es solo un trigger para useFirestoreSync. NO contiene datos
+ *   clasificados — el frontend los obtiene de la subcoleccion via getWeatherFromFirestore().
  */
 async function saveCityForecast(
   db: admin.firestore.Firestore,
@@ -164,14 +170,15 @@ async function saveCityForecast(
   snapshots: WeatherSnapshot[]
 ): Promise<void> {
   const dateHour = getDateHourKey()
-  const docRef = db
+  const now = admin.firestore.Timestamp.now()
+
+  const forecastRef = db
     .collection('city_weather')
     .doc(city.id)
     .collection('forecasts')
     .doc(dateHour)
 
-  // D-039: CF guarda datos raw, el frontend clasifica con resolveCondition()
-  // icon_code + gust_kmh son los campos que resolveCondition() necesita
+  // Doc raw en subcoleccion (source of truth para clasificacion)
   const forecastDoc = {
     city_id: city.id,
     city_name: city.name,
@@ -184,14 +191,28 @@ async function saveCityForecast(
     snapshots: snapshots,
     timezone: city.timezone,
     local_time_user: getLocalTimeUser(),
-    created_at: admin.firestore.Timestamp.now(),
+    created_at: now,
     ttl: admin.firestore.Timestamp.fromDate(
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     ),
   }
 
-  await docRef.set(forecastDoc)
-  console.log(`Saved forecast for ${city.name} (${dateHour})`)
+  // Summary doc en raiz (trigger para listener real-time)
+  const summaryRef = db.collection('city_weather').doc(city.id)
+  const summaryDoc = {
+    city_id: city.id,
+    city_name: city.name,
+    last_date_hour: dateHour,
+    updatedAt: now.toMillis(),
+  }
+
+  // Batch atomico: ambas escrituras o ninguna
+  const batch = db.batch()
+  batch.set(forecastRef, forecastDoc)
+  batch.set(summaryRef, summaryDoc, { merge: true })
+  await batch.commit()
+
+  console.log(`Saved forecast + summary for ${city.name} (${dateHour})`)
 }
 
 /**

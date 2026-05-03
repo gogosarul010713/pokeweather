@@ -1,47 +1,41 @@
 /**
  * useFirestoreSync — Real-time listener para cambios en Firestore
- * US-1101: Escucha cambios en /city_weather y actualiza estado React automáticamente
+ * US-1101 + D-039: Escucha summary docs en /city_weather y refetch clasificado al detectar cambios
  *
- * NOTA ARQUITECTONICA (D-039):
- * - La CF escribe en /city_weather/{id}/forecasts/{date_hour} (subcoleccion)
- * - Este listener escucha /city_weather (docs raiz) — actualmente nadie escribe ahí
- * - El flujo real de actualizacion es via getWeatherFromFirestore() en useWeather.ts
- * - Pendiente: migrar listener a collectionGroup('forecasts') o escribir summary en doc raiz
+ * ARQUITECTURA (D-039 + Opcion A real-time):
+ * - CF escribe RAW en /city_weather/{id}/forecasts/{date_hour} (subcoleccion)
+ * - CF escribe SUMMARY en /city_weather/{id} con `updatedAt` (trigger doc)
+ * - Este hook escucha el summary doc. Cuando cambia (cron HH:00), por cada doc
+ *   modificado llama a getWeatherFromFirestore(cityId) que clasifica con resolveCondition.
+ * - El payload entregado al callback son ciudades ya clasificadas (Partial<City>).
  */
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { onSnapshot, collection, type Unsubscribe } from 'firebase/firestore'
 import { getDb } from '../services/firebase/firebaseConfig'
+import { getWeatherFromFirestore } from '../services/firebase/firebaseWeatherService'
 import type { City } from '../store/useStore'
 
-// D-039: Estos campos ya no vienen de Firestore en el schema nuevo
-// La CF guarda datos raw en la subcoleccion forecasts, no en el doc raiz
-interface FirestoreCityWeather {
+interface SummaryDoc {
   city_id: string
-  city_name: string
-  // Schema legado — la CF ya no escribe estos campos en el doc raiz
-  condition?: string
-  tempC?: number
-  feelsLike?: number
-  humidity?: number
-  windKmh?: number
-  gustKmh?: number
-  weatherIcon?: number
-  isExtreme?: boolean
-  timezone?: number
-  boostedTypes?: string[]
-  weatherImage?: string
+  city_name?: string
+  last_date_hour?: string
   updatedAt?: number
 }
 
 /**
- * Hook que escucha cambios en la colección city_weather de Firestore
- * Dispara callback cuando hay cambios (sin pending writes locales)
+ * Hook que escucha cambios en /city_weather (summary docs escritos por la CF).
+ * Por cada change, refetcha el clima clasificado desde la subcoleccion forecasts.
  */
 export function useFirestoreSync(
   onUpdate: (cities: Partial<City>[]) => void,
   onError?: (error: Error) => void
 ) {
+  // Trackeamos el ultimo updatedAt visto por cityId para evitar re-fetch innecesario
+  // (snapshot inicial dispara para todos los docs aunque no haya cambio real)
+  const lastUpdatedRef = useRef<Map<string, number>>(new Map())
+  const isFirstSnapshotRef = useRef<boolean>(true)
+
   useEffect(() => {
     let unsubscribe: Unsubscribe | null = null
 
@@ -49,40 +43,74 @@ export function useFirestoreSync(
       try {
         const db = await getDb()
 
-        // Escuchar cambios en la colección city_weather
         unsubscribe = onSnapshot(
           collection(db, 'city_weather'),
-          (snapshot) => {
-            // Ignorar writes locales (pending writes)
-            if (snapshot.metadata.hasPendingWrites) {
-              console.log('[useFirestoreSync] Ignoring pending writes')
+          async (snapshot) => {
+            // Ignorar writes locales pendientes
+            if (snapshot.metadata.hasPendingWrites) return
+
+            // Detectar que cityIds tienen updatedAt nuevo
+            const changedCityIds: string[] = []
+
+            for (const doc of snapshot.docs) {
+              const data = doc.data() as SummaryDoc
+              const cityId = data.city_id || doc.id
+              const updatedAt = data.updatedAt ?? 0
+
+              const lastSeen = lastUpdatedRef.current.get(cityId) ?? 0
+
+              // En el primer snapshot solo registramos baseline, no fetcheamos
+              // (los datos ya vienen via useWeather → loadCitiesFromCache)
+              if (isFirstSnapshotRef.current) {
+                lastUpdatedRef.current.set(cityId, updatedAt)
+                continue
+              }
+
+              if (updatedAt > lastSeen) {
+                lastUpdatedRef.current.set(cityId, updatedAt)
+                changedCityIds.push(cityId)
+              }
+            }
+
+            if (isFirstSnapshotRef.current) {
+              isFirstSnapshotRef.current = false
+              console.log(
+                `[useFirestoreSync] Baseline registered for ${snapshot.docs.length} cities`
+              )
               return
             }
 
-            // Mapear documentos de Firestore a formato City
-            const cities: Partial<City>[] = snapshot.docs.map((doc) => {
-              const data = doc.data() as FirestoreCityWeather
-              return {
-                id: data.city_id,
-                condition: data.condition as any,
-                tempC: data.tempC,
-                feelsLike: data.feelsLike,
-                humidity: data.humidity,
-                windKmh: data.windKmh,
-                gustKmh: data.gustKmh,
-                weatherIcon: data.weatherIcon,
-                isExtreme: data.isExtreme,
-                timezone: data.timezone,
-                boostedTypes: data.boostedTypes,
-                weatherImage: data.weatherImage,
-                updatedAt: data.updatedAt,
-              }
-            })
+            if (changedCityIds.length === 0) return
 
             console.log(
-              `[useFirestoreSync] Updated ${cities.length} cities from Firestore`
+              `[useFirestoreSync] ${changedCityIds.length} cities updated by CF, refetching classified data...`
             )
-            onUpdate(cities)
+
+            // Refetch clasificado en paralelo
+            const refetched = await Promise.all(
+              changedCityIds.map(async (cityId) => {
+                const weather = await getWeatherFromFirestore(cityId)
+                if (!weather) return null
+                return {
+                  id: cityId,
+                  condition: weather.condition,
+                  boostedTypes: weather.boostedTypes,
+                  isExtreme: weather.isExtreme,
+                  tempC: weather.tempC,
+                  feelsLike: weather.feelsLike,
+                  humidity: weather.humidity,
+                  windKmh: weather.windKmh,
+                  gustKmh: weather.gustKmh,
+                  weatherIcon: weather.weatherIcon,
+                  timezone: weather.timezone,
+                  updatedAt: weather.updatedAt,
+                  weatherImage: weather.weatherImage,
+                } as Partial<City>
+              })
+            )
+
+            const valid = refetched.filter((c): c is Partial<City> => c !== null)
+            if (valid.length > 0) onUpdate(valid)
           },
           (error) => {
             console.error('[useFirestoreSync] Listener error:', error)
@@ -97,7 +125,6 @@ export function useFirestoreSync(
 
     setupListener()
 
-    // Cleanup: desuscribirse cuando el componente se desmonta
     return () => {
       if (unsubscribe) {
         unsubscribe()

@@ -79,18 +79,25 @@ export default function App() {
     loadSettings()
   }, [])
 
-  // US-1101: Escuchar cambios en Firestore (real-time sync from server HH:15)
-  // Cuando Firebase Scheduled Function actualiza Firestore, este listener lo detecta
-  // y actualiza el estado React automáticamente (~100ms latencia)
+  // US-1101 + D-039: Escuchar cambios en Firestore (real-time sync from server HH:00)
+  // Cuando la CF actualiza Firestore, useFirestoreSync detecta el summary doc,
+  // refetcha los datos clasificados y los entrega ya como Partial<City>.
   const handleFirestoreCitiesUpdate = useCallback((firestoreCities: Partial<City>[]) => {
-    // Merge Firestore data con ciudades locales
     setCities((prevCities) => {
+      let updatedCount = 0
       const merged = prevCities.map((city) => {
         const firestoreData = firestoreCities.find((c) => c.id === city.id)
         if (!firestoreData) return city
-        return { ...city, ...firestoreData }
+        updatedCount++
+        // Recalcular localTime con timezone de la ciudad (no de Firestore data)
+        const tz = firestoreData.timezone ?? city.timezone
+        const now = new Date()
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000
+        const local = new Date(utcMs + tz * 60 * 60 * 1000)
+        const localTime = `${String(local.getHours()).padStart(2, '0')}:${String(local.getMinutes()).padStart(2, '0')}`
+        return { ...city, ...firestoreData, localTime }
       })
-      console.log('[App] Merged Firestore sync:', merged.length, 'cities')
+      console.log(`[App] Real-time sync: ${updatedCount}/${prevCities.length} cities updated from Firestore`)
       return merged
     })
   }, [])

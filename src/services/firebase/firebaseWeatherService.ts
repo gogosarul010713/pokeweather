@@ -313,7 +313,7 @@ export async function getWeatherFromFirestore(cityId: string): Promise<any | nul
     const gustKmh: number = (snapshot as any).gust_kmh ?? windKmh
 
     const condition = iconCode > 0 ? resolveCondition(iconCode, windKmh, gustKmh) : (snapshot as any).classified || 'cloudy'
-    const boostedTypes = CONDITION_TO_TYPES[condition] || []
+    const boostedTypes = CONDITION_TO_TYPES[condition as keyof typeof CONDITION_TO_TYPES] || []
 
     // Retornar en formato WeatherData (compatible con cacheService)
     return {
