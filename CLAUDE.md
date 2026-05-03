@@ -57,3 +57,34 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 | Iniciar una US nueva | `us-start` |
 | Analizar una US | `us-analyze` |
 | Validar una US completada | `us-validate` |
+
+---
+
+## Estado Sprint 10 — al 2026-05-03
+
+**Branch activa:** `sprint-10` | Ultimo commit: `8ee4e46`
+
+### Completado esta sesion
+- BUG sidebar vacio (badgeFilter isDefaultFilter) — commit 9e93f22
+- US-1113 D-039: CF guarda raw, frontend clasifica — commit 0017629
+- Limpieza logs diagnostico — commit 8ee4e46
+- Documento arquitectura: `src/docs/architecture/12-data-flow-architecture.md`
+
+### Pendiente proxima sesion (en orden)
+1. **Deploy CF** con nuevo schema raw: `firebase deploy --only functions`
+2. **Verificar** en Firebase Console que `forecasts/{date_hour}` tiene `icon_code` (no `condition`)
+3. **Fix useFirestoreSync**: listener escucha `/city_weather` (raiz), CF escribe en subcoleccion `forecasts`. Real-time update NO llega al frontend. Ver opciones en `12-data-flow-architecture.md`
+4. **Eliminar** `VITE_ACCUWEATHER_KEY` de Vercel si existe (no debe estar en prod)
+5. **Build final + push** `sprint-10` para deploy preview
+
+### Arquitectura D-039 (clave)
+- CF (`syncWeatherLogic.ts`) guarda raw: `icon_code`, `gust_kmh`, sin clasificacion
+- `getWeatherFromFirestore()` clasifica con `resolveCondition(icon_code, wind_kmh, gust_kmh)`
+- `weatherService.ts:resolveCondition` es el UNICO lugar de clasificacion
+- Dev (localhost): frontend llama AccuWeather via proxy Vite con `VITE_ACCUWEATHER_KEY`
+- Prod/preview: solo Firestore, `VITE_ACCUWEATHER_KEY` NO debe existir en Vercel
+
+### Variables de entorno criticas
+- `.env.local` (dev): `VITE_ACCUWEATHER_KEY` + todas `VITE_FIREBASE_*`
+- Vercel (prod): solo `VITE_FIREBASE_*` — SIN `VITE_ACCUWEATHER_KEY`
+- `functions/.env` (CF): `ACCUWEATHER_KEY` + `CLEANUP_SECRET`
