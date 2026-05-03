@@ -353,12 +353,30 @@ export function useWeather() {
 
         let cities = await loadCities()
 
+        // Si la carga retornó ciudades sin datos reales (todas con tempC=0 y sin boostedTypes),
+        // forzar refresh desde API. Ocurre en Vercel cuando localStorage tiene timestamp reciente
+        // pero IndexedDB y Firestore están vacíos (primer deploy o caché limpiado).
+        const allEmpty = cities.length > 0 && cities.every(c => c.tempC === 0 && c.boostedTypes.length === 0)
+        if (allEmpty) {
+          console.warn('⚠️ Ciudades cargadas sin datos reales, forzando refresh desde API...')
+          try {
+            cities = await loadCities(true)
+          } catch (forceErr) {
+            console.error('❌ Force refresh también falló, usando Firestore:', forceErr)
+            const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+            const baseCities = transformCitiesToCityFormat(rawCities)
+            const firestoreCities = await loadCitiesFromCache(baseCities)
+            if (firestoreCities.some(c => c.tempC > 0 || c.boostedTypes.length > 0)) {
+              cities = firestoreCities
+            }
+          }
+        }
+
         // ✅ FIX #3: Deduplicación defensiva
         const ids = cities.map(c => c.id)
         const uniqueIds = new Set(ids)
         if (ids.length !== uniqueIds.size) {
           console.warn('⚠️ Duplicados detectados, deduplicando...')
-          // Mantener primer elemento de cada id único
           const seen = new Set<string>()
           cities = cities.filter(city => {
             if (seen.has(city.id)) return false
@@ -377,8 +395,26 @@ export function useWeather() {
         // Programar auto-refresh + Visibility listener
         scheduleNextRefresh()
         document.addEventListener('visibilitychange', handleVisibilityChange)
-      } catch {
-        setLoadingStatus('error')
+      } catch (err) {
+        console.error('❌ run() falló, intentando Firestore como último fallback:', err)
+        // Último recurso: cargar desde Firestore para no dejar sidebar vacío
+        try {
+          const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+          const baseCities = transformCitiesToCityFormat(rawCities)
+          const fallback = await loadCitiesFromCache(baseCities)
+          if (fallback.length > 0) {
+            setLoadingStatus('ready')
+            setLastUpdated(Date.now())
+            onReady(fallback)
+            scheduleNextRefresh()
+            document.addEventListener('visibilitychange', handleVisibilityChange)
+            console.log(`✅ run() fallback Firestore: ${fallback.length} ciudades`)
+          } else {
+            setLoadingStatus('error')
+          }
+        } catch {
+          setLoadingStatus('error')
+        }
       } finally {
         loadingCitiesRef.current = false  // Permitir siguiente carga
       }
