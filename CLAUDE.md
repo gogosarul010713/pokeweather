@@ -60,33 +60,53 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
-## Estado Sprint 10 — al 2026-05-03
+## Estado Sprint 10 — COMPLETADO v2.1.0 (2026-05-04)
 
-**Branch activa:** `sprint-10` | Ultimo commit: `8ee4e46`
+**Branch activa:** `sprint-10` | Tag: `v2.1.0` (stable) | Ultimo commit: `d381f9c`
 
-### Completado esta sesion
-- BUG sidebar vacio (badgeFilter isDefaultFilter) — commit 9e93f22
-- US-1113 D-039: CF guarda raw, frontend clasifica — commit 0017629
-- Limpieza logs diagnostico — commit 8ee4e46
-- Documento arquitectura: `src/docs/architecture/12-data-flow-architecture.md`
+### Sprint 10 — COMPLETADO 100%
 
-### Pendiente Sprint 11 — Auditoría Completada 2026-05-04
+✅ **17 US + 4 Features + 5 Bugs = 26 items, 44 SP entregados**
+✅ **Documentación:** 51 archivos auditados, 100% sync código
+✅ **Build:** v2.1.0 estable, 243.73 KB gzip, 0 TS errors
+✅ **Linter:** 79 → 53 problemas (26 errores menos, tipos TS corregidos)
+✅ **Deuda técnica:** 10 items identificados, categorizados, certificados
+
+**Commits últimos:**
+- `d381f9c` chore: bump version to v2.1.0 (stable release)
+- `7e3f77e` refactor: fix typescript build errors
+- `93a1cfd` refactor: fix linter errors
+- `b38308c` docs(sprint-10): auditoría deuda técnica
+
+### Pendiente Sprint 11 — Plan Ejecutable
 
 📄 **Ver certificación completa:** `sprints/sprint-10/DEUDA-TECNICA-AUDITORIA.md`
 
 **CRÍTICO (1.5 h):**
-1. `firebase deploy --only functions` — CF schema raw icon_code + gust_kmh ✅ Código OK
-2. Validar Firestore recibe docs con `icon_code` (no `condition`)
-3. Test useFirestoreSync real-time en preview (Opcion A implementada) ✅ Código OK
+1. `firebase deploy --only functions` — CF schema raw OK, lista deploy ✅
+2. Validar Firestore recibe icon_code (no condition) en docs nuevos
+3. Test useFirestoreSync real-time en preview (Opcion A OK) ✅
 
 **SEGURIDAD (2 h):**
 4. Implementar `firestore.rules` — App Check o origin validation 🔴 CRÍTICO
-5. Remover `VITE_ACCUWEATHER_KEY` de Vercel Dashboard (verificar no está en preview)
+5. Remover `VITE_ACCUWEATHER_KEY` de Vercel Dashboard
 
 **TECH DEBT (2.5 h):**
-6. Test unitario: `accuLocationKey = ''` regression (BUG-007 fix)
-7. Eliminar `calculated_condition` de ForecastDoc tipo (huérfano post-D-039)
-8. ✅ Limpiar logs diagnostico — YA HECHO (commit 8ee4e46)
+6. Test unitario: `accuLocationKey = ''` regression
+7. Eliminar `calculated_condition` de ForecastDoc tipo
+
+### 🐛 BUG DETECTADO EN PREVIEW (2026-05-04)
+
+**Componente afectado:** `PredictionAnalysisTable`
+**Síntoma:** Al eliminar datos (Cleanup → TODO IndexedDB), tabla NO se actualiza
+**Localización:** `src/components/Analytics/PredictionAnalysisTable.tsx` + `src/services/cleanup/cleanupService.ts`
+**Root cause:** Cache se elimina pero tabla no refetch ni limpian state local
+**Acción:** Crear BUG-008 en Sprint 11 (requiere re-fetch tras cleanup)
+
+**Reproducir:**
+1. Cargar app (tabla muestra datos)
+2. Testing Tools → Cleanup → "TODO IndexedDB" → confirmar
+3. Tabla sigue mostrando datos stale (debería vaciar)
 
 ### Arquitectura D-039 (clave)
 - CF (`syncWeatherLogic.ts`) guarda raw: `icon_code`, `gust_kmh`, sin clasificacion
