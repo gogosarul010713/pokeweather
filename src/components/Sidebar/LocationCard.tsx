@@ -28,6 +28,12 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
 
   const isFavorite = favorites.includes(city.id)
 
+  // BUG-011: Detectar ciudad sin datos sincronizados (placeholder de transformCitiesToCityFormat)
+  // Tras cleanup, Firestore puede estar vacío y la ciudad llega solo con datos del JSON estático.
+  // Heurística: weatherIcon=0 + tempC=0 + sin tipos potenciados = placeholder, no datos reales.
+  const hasNoWeatherData =
+    city.tempC === 0 && city.boostedTypes.length === 0 && (city.weatherIcon === 0 || city.weatherIcon === undefined)
+
   const handleCardClick = () => {
     setSelectedCity(city)
   }
@@ -74,6 +80,29 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           height: 36px;
           flex-shrink: 0;
           object-fit: contain;
+        }
+
+        .lc-weather-empty {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          opacity: 0.5;
+          background: var(--bg-tertiary);
+          border-radius: 6px;
+        }
+
+        .lc-no-data {
+          font-family: 'Rajdhani', monospace;
+          font-size: 9px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          opacity: 0.6;
+          padding: 2px 6px;
+          border: 1px dashed var(--border-default);
+          border-radius: 3px;
         }
 
         .lc-body {
@@ -165,39 +194,53 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
 
       <div className={`lc-root ${isActive ? 'active' : ''}`} onClick={handleCardClick}>
 
-        {/* Weather icon */}
-        <img
-          className="lc-weather"
-          src={`/weather/${city.condition}.png`}
-          alt={city.condition}
-          loading="lazy"
-          width={36}
-          height={36}
-          onError={(e) => { e.currentTarget.style.display = 'none' }}
-        />
+        {/* Weather icon — placeholder visible si no hay datos sincronizados */}
+        {hasNoWeatherData ? (
+          <div
+            className="lc-weather lc-weather-empty"
+            title="Sin datos sincronizados"
+            aria-label="Sin datos sincronizados"
+          >
+            ⏳
+          </div>
+        ) : (
+          <img
+            className="lc-weather"
+            src={`/weather/${city.condition}.png`}
+            alt={city.condition}
+            loading="lazy"
+            width={36}
+            height={36}
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
+          />
+        )}
 
         <div className="lc-body">
           {/* Row 1: nombre | tipos | ❤️ */}
           <div className="lc-row1">
             <span className="lc-name" title={city.name}>{city.name}</span>
             <div className="lc-types-row">
-              {city.boostedTypes.slice(0, 4).map((type) => {
-                const src = TYPE_ICON[type.toLowerCase()]
-                if (!src) return null
-                return (
-                  <img
-                    key={type}
-                    className="lc-type-icon"
-                    src={src}
-                    alt={type}
-                    title={type}
-                    loading="lazy"
-                    width={22}
-                    height={22}
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
-                  />
-                )
-              })}
+              {hasNoWeatherData ? (
+                <span className="lc-no-data" title="Sin datos sincronizados">sin datos</span>
+              ) : (
+                city.boostedTypes.slice(0, 4).map((type) => {
+                  const src = TYPE_ICON[type.toLowerCase()]
+                  if (!src) return null
+                  return (
+                    <img
+                      key={type}
+                      className="lc-type-icon"
+                      src={src}
+                      alt={type}
+                      title={type}
+                      loading="lazy"
+                      width={22}
+                      height={22}
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  )
+                })
+              )}
             </div>
             <button
               className={`lc-favorite ${isFavorite ? 'active' : ''}`}

@@ -79,19 +79,26 @@ interface PredictionAnalysisDemoProps {
   refreshKey?: number;
 }
 
+type DataSource = 'firestore' | 'mock' | 'empty';
+
 export function PredictionAnalysisDemo({ refreshKey = 0 }: PredictionAnalysisDemoProps) {
   const [rows, setRows] = useState<PredictionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<DataSource>('empty');
 
-  // BUG-008 FIX: Función de refetch para llamar después de reportar clima
+  // BUG-011 FIX: Función de refetch para llamar después de reportar clima
   const handleReportSuccess = async () => {
     try {
       console.log('[PredictionDemo] Refetching after weather report...');
       const realData = await fetchPredictions();
       if (realData.length > 0) {
         setRows(realData);
+        setDataSource('firestore');
         console.log(`[PredictionDemo] ✅ Refetch completado: ${realData.length} predictions`);
+      } else {
+        setRows([]);
+        setDataSource('empty');
       }
     } catch (err) {
       console.warn('[PredictionDemo] Refetch error:', err);
@@ -105,18 +112,29 @@ export function PredictionAnalysisDemo({ refreshKey = 0 }: PredictionAnalysisDem
         setLoading(true);
         setError(null);
 
-        // US-1105: CAPA 1 — Cargar caché local (40ms, inmediato)
-        const cachedMetadata = await getPredictionsCacheMetadata();
+        // BUG-011 FIX: Si refreshKey > 0, asume que vino de cleanup → bypass caché y leer Firestore directo
+        // Esto evita que cache stale enmascare el estado real (Firestore vacío post-cleanup)
+        const fromCleanup = refreshKey > 0;
+
+        // US-1105: CAPA 1 — Cargar caché local (40ms, inmediato), saltar si vino de cleanup
+        const cachedMetadata = fromCleanup ? null : await getPredictionsCacheMetadata();
 
         if (cachedMetadata && isPredictionsCacheValid(cachedMetadata)) {
-          // Caché válido: mostrar inmediato usando los docs del metadata (no getForecastCache)
+          // Caché válido: mostrar inmediato usando los docs del metadata
           try {
             const realData = await fetchPredictions(cachedMetadata.documents);
-            setRows(realData);
-            console.log(`[PredictionDemo] ✅ Cache hit (${cachedMetadata.documents.length} docs)`);
+            if (realData.length > 0) {
+              setRows(realData);
+              setDataSource('firestore');
+              console.log(`[PredictionDemo] ✅ Cache hit (${cachedMetadata.documents.length} docs)`);
+            } else {
+              setRows([]);
+              setDataSource('empty');
+            }
           } catch {
-            console.warn('[PredictionDemo] Cache fetch error, showing mock data');
-            setRows(generateMockData());
+            console.warn('[PredictionDemo] Cache fetch error');
+            setRows([]);
+            setDataSource('empty');
           }
 
           // CAPA 2 — Delta sync en background (no bloquea)
@@ -126,7 +144,6 @@ export function PredictionAnalysisDemo({ refreshKey = 0 }: PredictionAnalysisDem
               const newDocs = await getRecentForecasts('24h', lastSync);
 
               if (newDocs.length > 0) {
-                // Hay nuevos documentos: mergear + actualizar caché
                 const merged = mergeForecastDocs(cachedMetadata.documents, newDocs);
                 await setPredictionsCacheMetadata(merged);
                 console.log(`[PredictionDemo] ✅ Delta sync completado: ${newDocs.length} nuevos docs`);
@@ -135,35 +152,34 @@ export function PredictionAnalysisDemo({ refreshKey = 0 }: PredictionAnalysisDem
               }
             } catch (err) {
               console.warn('[PredictionDemo] Delta sync error (no crítico):', err);
-              // Error no bloqueante, tabla ya visible con caché anterior
             }
           })();
         } else {
-          // FALLBACK — Caché inválido o no existe: cargar TODO desde Firestore
-          console.log('[PredictionDemo] Cache miss or expired, loading from Firestore...');
+          // FALLBACK — Caché inválido, no existe, o post-cleanup: leer TODO desde Firestore
+          console.log(`[PredictionDemo] ${fromCleanup ? 'Post-cleanup' : 'Cache miss'}, loading from Firestore...`);
           const realData = await fetchPredictions();
 
           if (realData.length > 0) {
-            // Éxito: usar datos reales y guardar en caché
             setRows(realData);
-            // Guardar docs en caché para próximas lecturas
+            setDataSource('firestore');
             const allDocs = await getRecentForecasts('24h');
             if (allDocs.length > 0) {
               await setPredictionsCacheMetadata(allDocs);
             }
             console.log(`[PredictionDemo] ✅ Loaded ${realData.length} real predictions`);
           } else {
-            // No hay datos, usar mock
-            console.warn('[PredictionDemo] ⚠️ No predictions in Firestore, using mock data');
-            setRows(generateMockData());
+            // BUG-011 FIX: Sin datos en Firestore → estado vacío explícito (NO mock fallback engañoso)
+            console.warn('[PredictionDemo] ⚠️ No predictions in Firestore — empty state');
+            setRows([]);
+            setDataSource('empty');
           }
         }
       } catch (err) {
-        // Error al cargar: usar mock
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`[PredictionDemo] Error loading predictions:`, msg);
         setError(`Error loading predictions: ${msg}`);
-        setRows(generateMockData());
+        setRows([]);
+        setDataSource('empty');
       } finally {
         setLoading(false);
       }
@@ -171,6 +187,11 @@ export function PredictionAnalysisDemo({ refreshKey = 0 }: PredictionAnalysisDem
 
     loadPredictions();
   }, [refreshKey]);
+
+  const handleLoadMockData = () => {
+    setRows(generateMockData());
+    setDataSource('mock');
+  };
 
   return (
     <div style={{ padding: '20px', background: 'var(--bg-primary)' }}>
@@ -186,10 +207,49 @@ export function PredictionAnalysisDemo({ refreshKey = 0 }: PredictionAnalysisDem
       )}
       {!loading && rows.length > 0 && (
         <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-          {rows.length === generateMockData().length ? '📊 Mock data' : '✅ Real data from Firestore'}
+          {dataSource === 'mock'
+            ? '📊 Mock data (datos simulados — no representan estado real)'
+            : '✅ Real data from Firestore'}
         </div>
       )}
-      <PredictionAnalysisTable rows={rows} title="Análisis de Predicciones" onReportSuccess={handleReportSuccess} />
+      {!loading && rows.length === 0 && dataSource === 'empty' && (
+        <div
+          style={{
+            padding: '40px 20px',
+            textAlign: 'center',
+            background: 'var(--bg-secondary)',
+            border: '1px dashed var(--border-default)',
+            borderRadius: '8px',
+            marginBottom: '12px',
+          }}
+        >
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>📭</div>
+          <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '6px' }}>
+            Sin predicciones disponibles
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+            Firestore no tiene datos de pronóstico.<br />
+            Sincroniza desde la pestaña <strong>Sincronización</strong> o espera a la siguiente HH:00.
+          </div>
+          <button
+            onClick={handleLoadMockData}
+            style={{
+              padding: '6px 14px',
+              fontSize: '12px',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border-default)',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            📊 Cargar datos mock (testing)
+          </button>
+        </div>
+      )}
+      {rows.length > 0 && (
+        <PredictionAnalysisTable rows={rows} title="Análisis de Predicciones" onReportSuccess={handleReportSuccess} />
+      )}
     </div>
   );
 }
