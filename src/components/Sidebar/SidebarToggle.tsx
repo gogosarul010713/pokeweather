@@ -17,7 +17,7 @@ export default function SidebarToggle({ isExpanded, onToggle }: Props) {
           width: 40px;
           height: 40px;
           border: 1px solid var(--border-default);
-          background: var(--bg-secondary);
+          background: var(--bg-tertiary);
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -29,44 +29,37 @@ export default function SidebarToggle({ isExpanded, onToggle }: Props) {
         }
 
         .sidebar-toggle:hover {
-          background: var(--bg-tertiary);
-          border-color: var(--ui-accent);
+          background: var(--bg-overlay);
+          border-color: var(--border-strong);
           box-shadow: 0 2px 12px rgba(0,0,0,0.3);
         }
 
         .sidebar-toggle:active {
-          background: var(--bg-overlay);
+          background: var(--bg-secondary);
         }
 
         .sidebar-toggle svg {
-          width: 28px;
-          height: 28px;
+          width: 24px;
+          height: 24px;
           flex-shrink: 0;
         }
       `}</style>
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="28"
-        height="28"
-        viewBox="0 0 32 32"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
         fill="none"
         style={{
-          transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+          transform: isExpanded ? 'rotate(0deg)' : 'rotate(180deg)',
           transition: 'transform 0.3s ease'
         }}
       >
-        <circle cx="16" cy="16" r="16" fill="var(--ui-accent)" />
+        {/* Línea izquierda (collapsa cuando expandido) */}
         <path
-          d="M12 10 L18 16 L12 22"
-          stroke="var(--bg-secondary)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M17 10 L23 16 L17 22"
-          stroke="var(--bg-secondary)"
-          strokeWidth="2.5"
+          d="M15 6 L9 12 L15 18"
+          stroke="var(--text-secondary)"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />

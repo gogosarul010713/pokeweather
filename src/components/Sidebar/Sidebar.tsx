@@ -73,9 +73,18 @@ export default function Sidebar({ cities }: SidebarProps) {
         /* ── SidebarToggle (fixed, below map zoom controls) ── */
         .sb-toggle-wrapper {
           position: fixed;
-          top: 100px;
+          top: 130px;
           left: 12px;
           z-index: 400;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 300ms ease;
+        }
+
+        /* Solo visible cuando sidebar está expandido */
+        .sb-toggle-wrapper:not(.sb-collapsed) {
+          opacity: 1;
+          pointer-events: auto;
         }
 
         /* ── TABLET: Colapsable sidebar ── */
@@ -102,14 +111,6 @@ export default function Sidebar({ cities }: SidebarProps) {
       `}</style>
 
       <div className="sb-wrapper">
-        {/* ── Toggle Button ── */}
-        <div className={`sb-toggle-wrapper ${sidebarOpen ? 'sb-expanded' : 'sb-collapsed'}`}>
-          <SidebarToggle
-            isExpanded={sidebarOpen}
-            onToggle={() => setSidebarOpen(!sidebarOpen)}
-          />
-        </div>
-
         {/* ── Sidebar Content ── */}
         <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
         {/* ── Content ── */}
@@ -130,6 +131,14 @@ export default function Sidebar({ cities }: SidebarProps) {
           </div>
         </div>
       </aside>
+
+        {/* ── Toggle Button (después del sidebar, en hermano position) ── */}
+        <div className={`sb-toggle-wrapper ${sidebarOpen ? 'sb-expanded' : 'sb-collapsed'}`}>
+          <SidebarToggle
+            isExpanded={sidebarOpen}
+            onToggle={() => setSidebarOpen(!sidebarOpen)}
+          />
+        </div>
       </div>
     </>
   )
