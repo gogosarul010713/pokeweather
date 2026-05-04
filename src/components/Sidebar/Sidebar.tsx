@@ -76,15 +76,14 @@ export default function Sidebar({ cities }: SidebarProps) {
           top: 130px;
           left: 12px;
           z-index: 400;
-          opacity: 0;
-          pointer-events: none;
+          opacity: 1;
+          pointer-events: auto;
           transition: opacity 300ms ease;
         }
 
-        /* Solo visible cuando sidebar está expandido */
-        .sb-toggle-wrapper:not(.sb-collapsed) {
-          opacity: 1;
-          pointer-events: auto;
+        /* Fade out cuando sidebar está colapsado, pero sigue siendo interactivo */
+        .sb-toggle-wrapper.sb-collapsed {
+          opacity: 0.4;
         }
 
         /* ── TABLET: Colapsable sidebar ── */
