@@ -1,6 +1,7 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
 import Overlay from '../UI/Overlay'
+import SidebarToggle from './SidebarToggle'
 
 interface SidebarProps {
   cities: City[]
@@ -9,10 +10,16 @@ interface SidebarProps {
 export default function Sidebar({ cities }: SidebarProps) {
   const activeTab = useStore((s) => s.activeTab)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
+  const setSidebarOpen = useStore((s) => s.setSidebarOpen)
 
   return (
     <>
       <style>{`
+        .sb-wrapper {
+          position: relative;
+          height: 100%;
+        }
+
         .sb-root {
           width: 280px;
           flex-shrink: 0;
@@ -22,6 +29,11 @@ export default function Sidebar({ cities }: SidebarProps) {
           border-right: 1px solid var(--border-default);
           overflow: hidden;
           height: 100%;
+          transition: transform 300ms ease;
+        }
+
+        .sb-root.sb-collapsed {
+          transform: translateX(-100%);
         }
 
         /* ── Content ── */
@@ -58,19 +70,22 @@ export default function Sidebar({ cities }: SidebarProps) {
           margin-bottom: 8px;
         }
 
+        /* ── SidebarToggle (fixed, below map zoom controls) ── */
+        .sb-toggle-wrapper {
+          position: fixed;
+          top: 100px;
+          left: 12px;
+          z-index: 400;
+        }
+
         /* ── TABLET: Colapsable sidebar ── */
         @media (min-width: 768px) and (max-width: 1023px) {
           .sb-root {
             width: 280px;
-            transition: width 300ms ease, transform 300ms ease;
           }
 
           .sb-root.sb-collapsed {
-            width: 44px;
-          }
-
-          .sb-root.sb-collapsed .sb-content {
-            display: none;
+            width: 280px;
           }
         }
 
@@ -79,10 +94,24 @@ export default function Sidebar({ cities }: SidebarProps) {
           .sb-root {
             display: none;
           }
+
+          .sb-toggle-wrapper {
+            display: none;
+          }
         }
       `}</style>
 
-      <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
+      <div className="sb-wrapper">
+        {/* ── Toggle Button ── */}
+        <div className={`sb-toggle-wrapper ${sidebarOpen ? 'sb-expanded' : 'sb-collapsed'}`}>
+          <SidebarToggle
+            isExpanded={sidebarOpen}
+            onToggle={() => setSidebarOpen(!sidebarOpen)}
+          />
+        </div>
+
+        {/* ── Sidebar Content ── */}
+        <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
         {/* ── Content ── */}
         <div className="sb-content" style={{ position: 'relative' }}>
           {/* Content Wrapper — posición relativa para Overlay */}
@@ -101,6 +130,7 @@ export default function Sidebar({ cities }: SidebarProps) {
           </div>
         </div>
       </aside>
+      </div>
     </>
   )
 }
