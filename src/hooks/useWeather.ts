@@ -33,7 +33,10 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
   const result: City[] = []
 
   for (const city of cities) {
-    const locationKey = city.accuLocationKey
+    // FIX: usar city.id como cache key cuando accuLocationKey esta vacio.
+    // En modo prod (sin VITE_ACCUWEATHER_KEY), city.accuLocationKey viene '' del JSON,
+    // lo que causaba que TODAS las ciudades compartieran la misma entrada en IndexedDB.
+    const locationKey = city.accuLocationKey || `cityid-${city.id}`
     const cached = await getCachedWeather(locationKey)
 
     // CAPA 1: Firestore (source of truth — Cloud Function escribe cada hora)
@@ -44,8 +47,8 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
       const firestoreTime = firestoreWeather.updatedAt ?? 0
       const cachedTime = (cached as any)?.updatedAt ?? 0
 
-      // Firestore gana si: no hay cache O Firestore es más reciente
-      if (!cached || firestoreTime > cachedTime) {
+      // Firestore gana si: no hay cache O Firestore es más reciente o igual
+      if (!cached || firestoreTime >= cachedTime) {
         const { weatherImage, ...cacheableData } = firestoreWeather
         await setCachedWeather(locationKey, cacheableData)
 
