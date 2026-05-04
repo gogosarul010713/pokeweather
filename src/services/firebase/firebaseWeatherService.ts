@@ -11,15 +11,20 @@ import type { City } from '../../store/useStore'
 
 export interface ForecastSnapshot {
   hour: number
-  raw_condition_code: number
-  raw_condition_text: string
-  classified: string
-  types: string[]
-  temperature_c: number
+  raw_condition_code?: number
+  raw_condition_text?: string
+  classified?: string
+  types?: string[]
+  temperature_c?: number
   wind_kmh: number
-  precipitation_mm: number
-  humidity_pct: number
-  is_windy_override: boolean
+  precipitation_mm?: number
+  humidity_pct?: number
+  humidity?: number
+  is_windy_override?: boolean
+  icon_code?: number
+  icon_phrase?: string
+  temp_c?: number
+  gust_kmh?: number
 }
 
 export interface ForecastDoc {
@@ -42,6 +47,21 @@ export interface ForecastDoc {
   local_time_user: string
   ttl: Timestamp
   created_at: Timestamp
+}
+
+export interface WeatherData {
+  condition: string
+  boostedTypes: string[]
+  isExtreme: boolean
+  tempC: number
+  feelsLike: number
+  humidity: number
+  windKmh: number
+  gustKmh: number
+  weatherIcon: number
+  timezone: number
+  updatedAt: number
+  weatherImage: string
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -267,7 +287,7 @@ export async function getRecentForecasts(
  * @param cityId ID de ciudad (ej: "tokyo")
  * @returns WeatherData enriquecido o null
  */
-export async function getWeatherFromFirestore(cityId: string): Promise<any | null> {
+export async function getWeatherFromFirestore(cityId: string): Promise<WeatherData | null> {
   const { collection, getDocs, query, orderBy, limit } = await import('firebase/firestore')
   const db = await getDb()
 
@@ -301,22 +321,22 @@ export async function getWeatherFromFirestore(cityId: string): Promise<any | nul
     // Soporta schema nuevo (icon_code) y schema viejo (raw_condition_code)
     const { resolveCondition, CONDITION_TO_TYPES } = await import('../weather/weatherService')
 
-    const iconCode: number = (forecastSnapshot as any).icon_code ?? (forecastSnapshot as any).raw_condition_code ?? 0
-    const windKmh: number = (forecastSnapshot as any).wind_kmh ?? 0
-    const gustKmh: number = (forecastSnapshot as any).gust_kmh ?? windKmh
+    const iconCode: number = forecastSnapshot.icon_code ?? forecastSnapshot.raw_condition_code ?? 0
+    const windKmh: number = forecastSnapshot.wind_kmh ?? 0
+    const gustKmh: number = forecastSnapshot.gust_kmh ?? windKmh
 
     const condition = iconCode > 0
       ? resolveCondition(iconCode, windKmh, gustKmh)
-      : (forecastSnapshot as any).classified || 'cloudy'
+      : forecastSnapshot.classified || 'cloudy'
     const boostedTypes = CONDITION_TO_TYPES[condition as keyof typeof CONDITION_TO_TYPES] || []
 
     return {
       condition,
       boostedTypes,
       isExtreme: false,
-      tempC: (forecastSnapshot as any).temp_c ?? (forecastSnapshot as any).temperature_c ?? 0,
-      feelsLike: (forecastSnapshot as any).temp_c ?? (forecastSnapshot as any).temperature_c ?? 0,
-      humidity: (forecastSnapshot as any).humidity ?? (forecastSnapshot as any).humidity_pct ?? 0,
+      tempC: forecastSnapshot.temp_c ?? forecastSnapshot.temperature_c ?? 0,
+      feelsLike: forecastSnapshot.temp_c ?? forecastSnapshot.temperature_c ?? 0,
+      humidity: forecastSnapshot.humidity ?? forecastSnapshot.humidity_pct ?? 0,
       windKmh,
       gustKmh,
       weatherIcon: iconCode,

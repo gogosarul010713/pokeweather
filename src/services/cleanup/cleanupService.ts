@@ -173,9 +173,9 @@ export const executeCleanup = async (options: CleanupOptions): Promise<CleanupRe
         })
 
         if (!response.ok) {
-          let errorData: any
+          let errorData: Record<string, unknown>
           try {
-            errorData = await response.json()
+            errorData = (await response.json()) as Record<string, unknown>
           } catch {
             errorData = { message: await response.text() }
           }

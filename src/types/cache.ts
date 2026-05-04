@@ -7,7 +7,7 @@ export interface CacheEntry {
   id: string                    // clave única
   type: 'locationKey' | 'weather'
   key: string                   // nombre de la clave
-  value: any                    // valor serializado
+  value: string | number | boolean | Record<string, unknown>  // valor serializado
   savedAt: number               // timestamp guardado (ms)
   expiresAt?: number            // timestamp expiración (ms, solo weather)
   size: number                  // bytes

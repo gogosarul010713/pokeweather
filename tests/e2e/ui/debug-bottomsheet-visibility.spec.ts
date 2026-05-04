@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 test.describe('BottomSheet Visibility Debug (Mobile)', () => {
   test.beforeEach(async ({ page }) => {

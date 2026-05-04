@@ -206,7 +206,7 @@ function generateLookback(
 /**
  * Convertir Firestore Timestamp a Date
  */
-function timestampToDate(ts: any): Date {
+function timestampToDate(ts: unknown): Date {
   // Validación explícita: rechaza null/undefined, acepta 0 válido
   if (ts === null || ts === undefined) return new Date()
 

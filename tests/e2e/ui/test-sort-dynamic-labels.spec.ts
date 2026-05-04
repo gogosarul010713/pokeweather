@@ -251,7 +251,7 @@ test.describe('Sort Direction Dynamic Labels - Comprehensive Validation', () => 
     await sortBtn.click()
     await page.waitForTimeout(500)
 
-    let popup = page.locator('.cs-popup')
+    const popup = page.locator('.cs-popup')
     await expect(popup).toBeVisible()
 
     // Screenshot del popup abierto

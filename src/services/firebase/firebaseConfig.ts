@@ -36,9 +36,9 @@ if (missingVars.length > 0) {
 
 // ─── Lazy Singleton State ────────────────────────────────────────────────
 
-let app: any = null
-let db: any = null
-let auth: any = null
+let app: ReturnType<typeof import('firebase/app').initializeApp> | null = null
+let db: ReturnType<typeof import('firebase/firestore').getFirestore> | null = null
+let auth: ReturnType<typeof import('firebase/auth').getAuth> | null = null
 let initialized = false
 let authReady = false
 let initPromise: Promise<void> | null = null

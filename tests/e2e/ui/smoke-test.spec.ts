@@ -35,7 +35,7 @@ test.describe('Smoke Tests', () => {
 
     // Obtener tema inicial
     const html = page.locator('html')
-    let isDark = !(await html.evaluate(el => el.classList.contains('light')))
+    const isDark = !(await html.evaluate(el => el.classList.contains('light')))
 
     // Click en botón tema
     await page.click('[data-testid="theme-toggle"]')
@@ -44,7 +44,7 @@ test.describe('Smoke Tests', () => {
     await page.waitForTimeout(300)
 
     // Verificar que cambió
-    let isNowLight = await html.evaluate(el => el.classList.contains('light'))
+    const isNowLight = await html.evaluate(el => el.classList.contains('light'))
     expect(isDark === !isNowLight).toBe(true)
   })
 

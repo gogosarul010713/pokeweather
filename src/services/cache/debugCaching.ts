@@ -10,6 +10,7 @@
  */
 
 import { get, keys, del } from 'idb-keyval'
+import type { ForecastDoc } from '../firebase/firebaseWeatherService'
 
 const KEY_PREFIX_WEATHER = 'pwe-weather-'
 const KEY_PREFIX_LOC = 'pwe-loc-'
@@ -259,7 +260,7 @@ export async function showForecastCache(): Promise<void> {
   const KEY_LAST_SYNC = 'pwe-lastSync'
 
   try {
-    const forecastDocs = await get<any[]>(KEY_FORECAST_CACHE)
+    const forecastDocs = await get<ForecastDoc[]>(KEY_FORECAST_CACHE)
     const lastSync = localStorage.getItem(KEY_LAST_SYNC)
 
     console.clear()
@@ -281,7 +282,7 @@ export async function showForecastCache(): Promise<void> {
     console.log(`📦 Total de documentos en caché: ${forecastDocs.length}\n`)
 
     // Agrupar por ciudad
-    const byCityMap = new Map<string, any[]>()
+    const byCityMap = new Map<string, ForecastDoc[]>()
     forecastDocs.forEach((doc) => {
       const city = doc.city_id || 'unknown'
       if (!byCityMap.has(city)) {
@@ -347,7 +348,7 @@ export async function showForecastCache(): Promise<void> {
 export async function exportForecastCacheJSON(): Promise<void> {
   const KEY_FORECAST_CACHE = 'pwe-forecast-cache'
   try {
-    const forecastDocs = await get<any[]>(KEY_FORECAST_CACHE)
+    const forecastDocs = await get<ForecastDoc[]>(KEY_FORECAST_CACHE)
     if (!forecastDocs || forecastDocs.length === 0) {
       console.log('⚠️  Sin datos de predicciones en caché')
       return
@@ -360,7 +361,7 @@ export async function exportForecastCacheJSON(): Promise<void> {
 
 // Auto-export de funciones para fácil acceso en console
 if (typeof window !== 'undefined') {
-  ;(window as any).pweCache = {
+  (window as unknown as Record<string, unknown>).pweCache = {
     checkCacheStatus,
     showCacheTTL,
     showCacheMetrics,

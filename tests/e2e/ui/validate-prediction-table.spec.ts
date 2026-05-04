@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 test('Validation: PredictionAnalysisTable renders with real data', async ({ page }) => {
   // Capturar logs de consola
@@ -14,7 +14,6 @@ test('Validation: PredictionAnalysisTable renders with real data', async ({ page
   // Buscar analytics — puede estar en Testing Tools
   let hasTable = false
   let rows = 0
-  let prediccionCount = 0
 
   try {
     // Intentar encontrar tabla en la página principal

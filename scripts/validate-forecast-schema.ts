@@ -23,7 +23,7 @@ interface ValidationIssue {
 
 const issues: ValidationIssue[] = []
 let totalDocuments = 0
-let citiesChecked = new Set<string>()
+const citiesChecked = new Set<string>()
 
 // ─────────────────────────────────────────────────────────────────────────────
 
