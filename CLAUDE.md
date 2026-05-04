@@ -70,12 +70,23 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 - Limpieza logs diagnostico — commit 8ee4e46
 - Documento arquitectura: `src/docs/architecture/12-data-flow-architecture.md`
 
-### Pendiente proxima sesion (en orden)
-1. **Deploy CF** con nuevo schema raw: `firebase deploy --only functions`
-2. **Verificar** en Firebase Console que `forecasts/{date_hour}` tiene `icon_code` (no `condition`)
-3. **Fix useFirestoreSync**: listener escucha `/city_weather` (raiz), CF escribe en subcoleccion `forecasts`. Real-time update NO llega al frontend. Ver opciones en `12-data-flow-architecture.md`
-4. **Eliminar** `VITE_ACCUWEATHER_KEY` de Vercel si existe (no debe estar en prod)
-5. **Build final + push** `sprint-10` para deploy preview
+### Pendiente Sprint 11 — Auditoría Completada 2026-05-04
+
+📄 **Ver certificación completa:** `sprints/sprint-10/DEUDA-TECNICA-AUDITORIA.md`
+
+**CRÍTICO (1.5 h):**
+1. `firebase deploy --only functions` — CF schema raw icon_code + gust_kmh ✅ Código OK
+2. Validar Firestore recibe docs con `icon_code` (no `condition`)
+3. Test useFirestoreSync real-time en preview (Opcion A implementada) ✅ Código OK
+
+**SEGURIDAD (2 h):**
+4. Implementar `firestore.rules` — App Check o origin validation 🔴 CRÍTICO
+5. Remover `VITE_ACCUWEATHER_KEY` de Vercel Dashboard (verificar no está en preview)
+
+**TECH DEBT (2.5 h):**
+6. Test unitario: `accuLocationKey = ''` regression (BUG-007 fix)
+7. Eliminar `calculated_condition` de ForecastDoc tipo (huérfano post-D-039)
+8. ✅ Limpiar logs diagnostico — YA HECHO (commit 8ee4e46)
 
 ### Arquitectura D-039 (clave)
 - CF (`syncWeatherLogic.ts`) guarda raw: `icon_code`, `gust_kmh`, sin clasificacion
