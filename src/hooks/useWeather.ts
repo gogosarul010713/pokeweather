@@ -93,16 +93,6 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
   return result
 }
 
-const getApiKey = (): string => {
-  const key = import.meta.env.VITE_ACCUWEATHER_KEY
-  if (!key) {
-    console.error('❌ VITE_ACCUWEATHER_KEY not configured in .env.local')
-    console.error('   Create .env.local with: VITE_ACCUWEATHER_KEY=your_api_key')
-    throw new Error('AccuWeather API key is required')
-  }
-  return key
-}
-
 // Transformar datos del JSON a formato City
 function transformCitiesToCityFormat(jsonCities: any[]): City[] {
   return jsonCities.map((c) => ({
@@ -187,8 +177,26 @@ export function useWeather() {
       }
     }
 
-    // ─ Refrescar desde API ─
-    const apiKey = getApiKey() // ⚠️ Throws si no está configurada
+    // ─ Refrescar desde API (solo si hay API key) ─
+    // En produccion sin VITE_ACCUWEATHER_KEY, ir directo a Firestore
+    const apiKey = import.meta.env.VITE_ACCUWEATHER_KEY
+    if (!apiKey) {
+      console.log('ℹ️ Sin VITE_ACCUWEATHER_KEY — modo produccion, leyendo desde Firestore...')
+      setLoadingStatus('loading')
+      const firestoreCities = await loadCitiesFromCache(cities)
+      const percent = Math.round((firestoreCities.length / total) * 100)
+      setLoadingProgress({
+        cityName: `Cargadas ${firestoreCities.length} de ${total} (Firestore)`,
+        current: firestoreCities.length,
+        total,
+        percent,
+      })
+      // Marcar hora de actualizacion para que siguientes recargas usen cache (IndexedDB)
+      // y no vuelvan a Firestore innecesariamente hasta la siguiente hora
+      const hasRealData = firestoreCities.some(c => c.tempC > 0)
+      if (hasRealData) setLastUpdateHour()
+      return firestoreCities
+    }
     const isAutoRefresh = forceRefresh && !shouldRefreshCities()
     console.log(`🌍 Loading ${total} cities from AccuWeather API${isAutoRefresh ? ' (auto-refresh)' : ''}...`)
     setLoadingStatus('loading')

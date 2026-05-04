@@ -268,7 +268,7 @@ export async function getRecentForecasts(
  * @returns WeatherData enriquecido o null
  */
 export async function getWeatherFromFirestore(cityId: string): Promise<any | null> {
-  const { collectionGroup, getDocs } = await import('firebase/firestore')
+  const { collection, getDocs, query, orderBy, limit } = await import('firebase/firestore')
   const db = await getDb()
 
   if (!db) {
@@ -277,57 +277,51 @@ export async function getWeatherFromFirestore(cityId: string): Promise<any | nul
   }
 
   try {
-    // Query: obtener último ForecastDoc para city_id
-    const allSnapshot = await getDocs(collectionGroup(db, 'forecasts'))
+    // Leer directamente de /city_weather/{cityId}/forecasts ordenado por created_at DESC
+    // Mas rapido y confiable que collectionGroup full-scan (no requiere indice global)
+    const forecastsRef = collection(db, 'city_weather', cityId, 'forecasts')
+    const q = query(forecastsRef, orderBy('created_at', 'desc'), limit(1))
+    const snapshot = await getDocs(q)
 
-    const documents: ForecastDoc[] = allSnapshot.docs
-      .map(doc => doc.data() as ForecastDoc)
-      .filter(doc => doc.city_id === cityId)
-      .sort((a, b) => {
-        const timeA = a.created_at?.toMillis?.() ?? 0
-        const timeB = b.created_at?.toMillis?.() ?? 0
-        return timeB - timeA
-      })
-      .slice(0, 1)
-
-    if (documents.length === 0) {
-      console.log(`[Firebase] ℹ️ ${cityId}: No documents found`)
+    if (snapshot.empty) {
+      console.log(`[Firebase] ℹ️ ${cityId}: No forecast documents found`)
       return null
     }
 
-    const doc = documents[0]
+    const docData = snapshot.docs[0].data() as ForecastDoc
 
-    if (!doc.snapshots || doc.snapshots.length === 0) {
+    if (!docData.snapshots || docData.snapshots.length === 0) {
       console.log(`[Firebase] ℹ️ ${cityId}: Document has no snapshots`)
       return null
     }
 
-    const snapshot = doc.snapshots[0]
+    const forecastSnapshot = docData.snapshots[0]
 
-    // D-039: Clasificar con el mismo algoritmo que el frontend (resolveCondition)
-    // Soporta tanto schema nuevo (icon_code/gust_kmh) como viejo (raw_condition_code/wind_kmh)
+    // D-039: Clasificar con resolveCondition (unico lugar de clasificacion)
+    // Soporta schema nuevo (icon_code) y schema viejo (raw_condition_code)
     const { resolveCondition, CONDITION_TO_TYPES } = await import('../weather/weatherService')
 
-    const iconCode: number = (snapshot as any).icon_code ?? (snapshot as any).raw_condition_code ?? 0
-    const windKmh: number = (snapshot as any).wind_kmh ?? 0
-    const gustKmh: number = (snapshot as any).gust_kmh ?? windKmh
+    const iconCode: number = (forecastSnapshot as any).icon_code ?? (forecastSnapshot as any).raw_condition_code ?? 0
+    const windKmh: number = (forecastSnapshot as any).wind_kmh ?? 0
+    const gustKmh: number = (forecastSnapshot as any).gust_kmh ?? windKmh
 
-    const condition = iconCode > 0 ? resolveCondition(iconCode, windKmh, gustKmh) : (snapshot as any).classified || 'cloudy'
+    const condition = iconCode > 0
+      ? resolveCondition(iconCode, windKmh, gustKmh)
+      : (forecastSnapshot as any).classified || 'cloudy'
     const boostedTypes = CONDITION_TO_TYPES[condition as keyof typeof CONDITION_TO_TYPES] || []
 
-    // Retornar en formato WeatherData (compatible con cacheService)
     return {
       condition,
       boostedTypes,
       isExtreme: false,
-      tempC: (snapshot as any).temp_c ?? (snapshot as any).temperature_c ?? 0,
-      feelsLike: (snapshot as any).temp_c ?? (snapshot as any).temperature_c ?? 0,
-      humidity: (snapshot as any).humidity ?? (snapshot as any).humidity_pct ?? 0,
+      tempC: (forecastSnapshot as any).temp_c ?? (forecastSnapshot as any).temperature_c ?? 0,
+      feelsLike: (forecastSnapshot as any).temp_c ?? (forecastSnapshot as any).temperature_c ?? 0,
+      humidity: (forecastSnapshot as any).humidity ?? (forecastSnapshot as any).humidity_pct ?? 0,
       windKmh,
       gustKmh,
       weatherIcon: iconCode,
-      timezone: doc.timezone ?? 0,
-      updatedAt: doc.created_at?.toMillis?.() ?? Date.now(),
+      timezone: docData.timezone ?? 0,
+      updatedAt: docData.created_at?.toMillis?.() ?? Date.now(),
       weatherImage: '',
     }
   } catch (error) {
