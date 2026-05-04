@@ -300,10 +300,11 @@ export async function showForecastCache(): Promise<void> {
     // Mostrar últimos 3 documentos con detalle
     console.log(`\n📋 Últimos 3 documentos cargados:\n`)
     forecastDocs.slice(-3).forEach((doc, i) => {
-      const createdAt = doc.created_at?.toDate?.() ?? new Date(doc.created_at)
-      const dateStr = typeof createdAt === 'number'
-        ? new Date(createdAt).toLocaleString('es-ES')
-        : createdAt.toLocaleString('es-ES')
+      const createdAtMs = typeof doc.created_at === 'number'
+        ? doc.created_at
+        : (doc.created_at as any)?.toMillis?.() ?? Date.now()
+      const createdAt = new Date(createdAtMs)
+      const dateStr = createdAt.toLocaleString('es-ES')
 
       console.log(`[${i + 1}] ${doc.city_name} (${doc.city_id})`)
       console.log(`    date_hour: ${doc.date_hour}`)

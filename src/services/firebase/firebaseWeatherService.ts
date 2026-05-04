@@ -6,6 +6,7 @@
 import { getDb } from './firebaseConfig'
 import type { Timestamp } from 'firebase/firestore'
 import type { City } from '../../store/useStore'
+import type { WeatherCondition } from '../../config/weatherImages'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -50,7 +51,7 @@ export interface ForecastDoc {
 }
 
 export interface WeatherData {
-  condition: string
+  condition: WeatherCondition
   boostedTypes: string[]
   isExtreme: boolean
   tempC: number
@@ -325,9 +326,9 @@ export async function getWeatherFromFirestore(cityId: string): Promise<WeatherDa
     const windKmh: number = forecastSnapshot.wind_kmh ?? 0
     const gustKmh: number = forecastSnapshot.gust_kmh ?? windKmh
 
-    const condition = iconCode > 0
+    const condition: WeatherCondition = (iconCode > 0
       ? resolveCondition(iconCode, windKmh, gustKmh)
-      : forecastSnapshot.classified || 'cloudy'
+      : forecastSnapshot.classified || 'cloudy') as WeatherCondition
     const boostedTypes = CONDITION_TO_TYPES[condition as keyof typeof CONDITION_TO_TYPES] || []
 
     return {

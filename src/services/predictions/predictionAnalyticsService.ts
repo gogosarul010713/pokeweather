@@ -210,9 +210,10 @@ function timestampToDate(ts: unknown): Date {
   // Validación explícita: rechaza null/undefined, acepta 0 válido
   if (ts === null || ts === undefined) return new Date()
 
-  // Si es Timestamp de Firebase
-  if (typeof ts.toDate === 'function') {
-    return ts.toDate()
+  // Si es Timestamp de Firebase (tiene método toDate)
+  const tsObj = ts as Record<string, unknown>
+  if (typeof tsObj.toDate === 'function') {
+    return (tsObj.toDate as () => Date)()
   }
 
   // Si es número (milisegundos)

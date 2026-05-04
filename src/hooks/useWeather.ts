@@ -50,7 +50,7 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
       // Firestore gana si: no hay cache O Firestore es más reciente o igual
       if (!cached || firestoreTime >= cachedTime) {
         const { weatherImage, ...cacheableData } = firestoreWeather
-        await setCachedWeather(locationKey, cacheableData)
+        await setCachedWeather(locationKey, { ...cacheableData, weatherImage: '' })
 
         const merged = {
           ...city,
