@@ -5,9 +5,27 @@
  */
 
 import type { PredictionRow, LookbackItem } from '../../components/Analytics/PredictionAnalysisTable'
-import { getRecentForecasts, type ForecastDoc } from '../firebase/firebaseWeatherService'
+import { getRecentForecasts, type ForecastDoc, type ForecastSnapshot } from '../firebase/firebaseWeatherService'
 import { getRecentClassificationReports, getRecentWeatherReports } from '../firebase/classificationReportService'
 import { getForecastCache } from '../cache/cacheService'
+import { resolveCondition } from '../weather/weatherService'
+
+/**
+ * D-039: Clasifica un snapshot usando resolveCondition (unico lugar de clasificacion).
+ * Soporta schema nuevo (icon_code) y schema viejo (raw_condition_code / classified).
+ */
+function classifySnapshot(snapshot: ForecastSnapshot): string {
+  const iconCode = snapshot.icon_code ?? snapshot.raw_condition_code ?? 0
+  const windKmh = snapshot.wind_kmh ?? 0
+  const gustKmh = snapshot.gust_kmh ?? windKmh
+
+  if (iconCode > 0) {
+    return resolveCondition(iconCode, windKmh, gustKmh)
+  }
+
+  // Fallback: campo classified del schema viejo
+  return snapshot.classified || 'unknown'
+}
 
 /**
  * Obtener predicciones para análisis (últimas 24h)
@@ -81,16 +99,19 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
       // Crear row con campos básicos
       // Nota: prediction = calculated_condition (lo que el algoritmo determinó)
       //       actual = should_be (lo que realmente fue, según reportes manuales)
+      // D-039: clasificar con resolveCondition (schema nuevo) o classified (schema viejo)
+      const predictedCondition = classifySnapshot(snapshot)
+
       const row: PredictionRow = {
         queryTime,
-        hour: snapshot.hour, // Hora para la cual se predice (ej: 9 si consulta a las 8 AM)
+        hour: snapshot.hour,
         cityId: forecast.city_id,
         cityName: forecast.city_name,
-        timezone: forecast.timezone || 0, // ✅ Para calcular hora local de la ciudad
-        localTimeUser: forecast.local_time_user || '', // ✅ Hora local del usuario cuando se obtuvo
-        prediction: forecast.calculated_condition || 'Unknown', // ✅ Lo que el algoritmo mostró
-        actual: report?.should_be ?? null, // null = "Sin datos" (no confirmado aún)
-        correct: report ? forecast.calculated_condition === report.should_be : null,
+        timezone: forecast.timezone || 0,
+        localTimeUser: forecast.local_time_user || '',
+        prediction: predictedCondition,
+        actual: report?.should_be ?? null,
+        correct: report ? predictedCondition === report.should_be : null,
         lookback12h: [], // Se calcula abajo
         lat: forecast.lat,
         lon: forecast.lon,
@@ -185,15 +206,18 @@ function generateLookback(
     const reportKey = `${cityId}|${nearbyForecast.date_hour}`
     const report = reportIndex.get(reportKey)
 
+    // D-039: clasificar con resolveCondition
+    const lookbackCondition = classifySnapshot(targetSnapshot)
+
     // 6. Determinar si habría sido correcto (null = sin reporte todavía)
     const wouldBeCorrect: boolean | null = report
-      ? targetSnapshot.classified === report.should_be
+      ? lookbackCondition === report.should_be
       : null
 
     // 7. Incluir siempre — reporte opcional (null = sin confirmar)
     lookbackItems.push({
       hoursAgo: Math.round(hoursAgo * 10) / 10,
-      condition: targetSnapshot.classified || 'Unknown',
+      condition: lookbackCondition,
       wouldBeCorrect,
       timestamp: timestampToDate(nearbyForecast.created_at).toISOString(),
     })
