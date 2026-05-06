@@ -42,6 +42,17 @@ export const syncWeatherScheduled = functions.pubsub
 // ────────────────────────────────────────────────────────────────────
 export const syncWeatherManual = functions.https.onRequest(
   async (req, res) => {
+    // CORS headers — required for all responses including preflight
+    res.set('Access-Control-Allow-Origin', '*')
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.set('Access-Control-Allow-Headers', 'Content-Type, x-cron-secret')
+
+    // Handle CORS preflight — must respond 204 before auth check
+    if (req.method === 'OPTIONS') {
+      res.status(204).send('')
+      return
+    }
+
     // Verify CRON_SECRET from header
     const secret = req.headers['x-cron-secret']
     const expectedSecret = process.env.CRON_SECRET

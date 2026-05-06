@@ -73,10 +73,10 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 ✅ **Deuda técnica:** 10 items identificados, categorizados, certificados
 
 **Commits últimos:**
+- `2791edf` fix(bug-013): prediction table Unknown — resolveCondition(icon_code)
+- `a8f32e1` fix(bug-012): cleanup deja mock + placeholders engañosos
+- `4de3a74` docs(claude): actualizar estado sprint 10 final + bug cleanup
 - `d381f9c` chore: bump version to v2.1.0 (stable release)
-- `7e3f77e` refactor: fix typescript build errors
-- `93a1cfd` refactor: fix linter errors
-- `b38308c` docs(sprint-10): auditoría deuda técnica
 
 ### Pendiente Sprint 11 — Plan Ejecutable
 
@@ -95,18 +95,17 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 6. Test unitario: `accuLocationKey = ''` regression
 7. Eliminar `calculated_condition` de ForecastDoc tipo
 
-### 🐛 BUG DETECTADO EN PREVIEW (2026-05-04)
+### 🐛 BUGS CORREGIDOS EN PREVIEW (2026-05-04 → 2026-05-05)
 
-**Componente afectado:** `PredictionAnalysisTable`
-**Síntoma:** Al eliminar datos (Cleanup → TODO IndexedDB), tabla NO se actualiza
-**Localización:** `src/components/Analytics/PredictionAnalysisTable.tsx` + `src/services/cleanup/cleanupService.ts`
-**Root cause:** Cache se elimina pero tabla no refetch ni limpian state local
-**Acción:** Crear BUG-008 en Sprint 11 (requiere re-fetch tras cleanup)
+**BUG-012** — Cleanup deja mock data + placeholders engañosos (✅ FIXED `a8f32e1`)
+- PredictionAnalysisDemo: empty state explícito (sin fallback automático a mock)
+- LocationCard: indicador visual cuando no hay datos sincronizados
+- Doc: `bugfixes/bug-012-cleanup-mock-fallback-engagnoso.md`
 
-**Reproducir:**
-1. Cargar app (tabla muestra datos)
-2. Testing Tools → Cleanup → "TODO IndexedDB" → confirmar
-3. Tabla sigue mostrando datos stale (debería vaciar)
+**BUG-013** — Prediction table muestra "Unknown" en todas condiciones (✅ FIXED `2791edf`)
+- predictionAnalyticsService leía calculated_condition (schema viejo), CF escribe icon_code (D-039)
+- Nueva función classifySnapshot() usando resolveCondition(icon_code) como D-039
+- Doc: `bugfixes/bug-013-prediction-table-unknown-condition.md`
 
 ### Arquitectura D-039 (clave)
 - CF (`syncWeatherLogic.ts`) guarda raw: `icon_code`, `gust_kmh`, sin clasificacion
