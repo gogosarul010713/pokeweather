@@ -391,7 +391,11 @@ export const fetchCityWeather = async (
     }
 
     // 4. Crear snapshots para persistencia (US-801)
-    const snapshots = createForecastSnapshots(hourlyForecasts)
+    // BUG-015 FIX: pasar startHour actual para que snapshots tengan horas correctas
+    // Sin esto, todos los snapshots son [0..11] independientemente del momento de creación
+    const now = new Date()
+    const startHour = (now.getHours() + 1) % 24
+    const snapshots = createForecastSnapshots(hourlyForecasts, startHour)
 
     // 5. Calcular condición y tipos (para City)
     const condition = resolveCondition(
