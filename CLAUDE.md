@@ -99,7 +99,14 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ### 🐛 BUGS CORREGIDOS EN PREVIEW (2026-05-04 → 2026-05-07)
 
-**BUG-015** — Lookback duplica climas (snapshots siempre [0..11]) (✅ FIXED `2e57210`, ⏳ PENDING VALIDATION)
+**BUG-016** — Silent sync failure: UI muestra éxito pero listener NO actualiza (✅ FIXED 2026-05-07 23:35, ✅ DEPLOYED CF)
+- Root cause: Firebase 1st Gen functions schema — summary doc faltaba `updatedAt` o versión antigua de CF
+- Impact: Sync manual HTTP 200 success pero onSnapshot nunca detecta cambio (updatedAt no cambia)
+- Fix: npm run build + firebase deploy --only functions (lib/ compilado contiene `updatedAt: now.toMillis()`)
+- Criterio validacion: DevTools Console debe mostrar `[useFirestoreSync] N cities updated by CF...` post-sync
+- Doc: `bugfixes/bug-016-silent-sync-failure.md` ✅
+
+**BUG-015** — Lookback duplica climas (snapshots siempre [0..11]) (✅ FIXED `2e57210`, ✅ VALIDATED)
 - Root cause: createForecastSnapshots nunca recibía startHour, todos docs tenían snapshot_hours=[0..11]
 - Impacto: generateLookback buscaba s.hour===targetHour (siempre 0), encontraba snapshots[0] duplicados
 - Fix: pasar (now.getHours() + 1) % 24 como startHour a createForecastSnapshots
