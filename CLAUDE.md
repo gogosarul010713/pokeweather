@@ -60,9 +60,9 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
-## Estado Sprint 10 — COMPLETADO v2.1.0 (2026-05-04)
+## Estado Sprint 10 — COMPLETADO v2.1.0 (2026-05-04) + Refactors tabla predictiva (2026-05-07)
 
-**Branch activa:** `sprint-10` | Tag: `v2.1.0` (stable) | Ultimo commit: `d381f9c`
+**Branch activa:** `sprint-10` | Ultimo commit: `d0dbf1f` (preview)
 
 ### Sprint 10 — COMPLETADO 100%
 
@@ -73,6 +73,8 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 ✅ **Deuda técnica:** 10 items identificados, categorizados, certificados
 
 **Commits últimos (Sprint 10 → pending validation):**
+- `d0dbf1f` feat(prediction-table): agregar columna tipos potenciados (preview)
+- `0844e05` refactor(prediction-table): mostrar hora Mexico/Central en columna horaLocal (preview)
 - `2e57210` fix(bug-015): snapshot hours deben reflejar hora actual, no [0..11]
 - `0e7c326` fix(bug-014): CORS headers agregados a syncWeatherManual CF
 - `2791edf` fix(bug-013): prediction table Unknown — resolveCondition(icon_code)
@@ -132,3 +134,22 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 - `.env.local` (dev): `VITE_ACCUWEATHER_KEY` + todas `VITE_FIREBASE_*`
 - Vercel (prod): solo `VITE_FIREBASE_*` — SIN `VITE_ACCUWEATHER_KEY`
 - `functions/.env` (CF): `ACCUWEATHER_KEY` + `CLEANUP_SECRET`
+
+---
+
+## Cambios recientes en preview (2026-05-07)
+
+### 1. Refactor: Hora local a Mexico/Central
+**Archivo:** `src/components/Analytics/PredictionAnalysisTable.tsx`
+- Nueva función `getMexicoLocalTime()` usa `Intl.DateTimeFormat` con `America/Mexico_City`
+- Columna "Tu Hora Local" → "Hora MX" — convierte `queryTime` (UTC Firestore) a hora Mexico al renderizar
+- Sin cambios en Firestore, compatible con docs viejos
+- Agrupación por hora usa hora Mexico
+
+### 2. Feature: Columna tipos potenciados en tabla predictiva
+**Archivo:** `src/components/Analytics/PredictionAnalysisTable.tsx`
+- Nueva columna "Tipos" entre "Condición Predicha" y "Real"
+- Renderiza iconos Pokemon (20x20px) via `CONDITION_TO_TYPES` + `TYPE_ICON`
+- Imports: `weatherService.ts`, `typeIcons.ts`
+- Opcion A inline (sin componente reutilizable) — tabla es diagnostic, no reutilizable
+- CSS: clase `.pat-types` con flex layout
