@@ -12,6 +12,8 @@ import {
 } from '@tanstack/react-table';
 import { WEATHER_IMAGES, CONDITION_LABEL } from '../../config/weatherImages';
 import type { WeatherCondition } from '../../config/weatherImages';
+import { CONDITION_TO_TYPES } from '../../services/weather/weatherService';
+import { TYPE_ICON } from '../../config/typeIcons';
 import WeatherReportModal from './WeatherReportModal';
 
 export interface LookbackItem {
@@ -223,6 +225,33 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       filterFn: (row, _id, value) =>
         (CONDITION_LABEL[row.original.prediction.toLowerCase() as WeatherCondition] || row.original.prediction)
           .toLowerCase().includes(value.toLowerCase()),
+    }),
+    columnHelper.display({
+      id: 'tiposPotenciados',
+      header: 'Tipos',
+      cell: ({ row }) => {
+        const types = CONDITION_TO_TYPES[row.original.prediction.toLowerCase() as WeatherCondition] ?? []
+        return (
+          <div className="pat-types">
+            {types.map((type) => {
+              const src = TYPE_ICON[type.toLowerCase()]
+              if (!src) return null
+              return (
+                <img
+                  key={type}
+                  src={src}
+                  alt={type}
+                  title={type}
+                  width={20}
+                  height={20}
+                  loading="lazy"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+              )
+            })}
+          </div>
+        )
+      },
     }),
     columnHelper.accessor('actual', {
       id: 'real',
@@ -876,6 +905,14 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           transition: all 0.3s;
         }
         .pat-toast.show { transform: translateY(0); opacity: 1; }
+
+        /* ── Type badges column ────────────────────────────── */
+        .pat-types {
+          display: flex;
+          gap: 3px;
+          align-items: center;
+          min-width: 72px;
+        }
       `}</style>
 
       {/* ── Header ── */}
