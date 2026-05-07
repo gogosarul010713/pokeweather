@@ -73,6 +73,31 @@ function getCityLocalTime(queryTime: string | Date | number, timezone: number): 
   return `${day}/${month} ${hours}:${mins}`;
 }
 
+function getMexicoLocalTime(queryTime: string | Date | number): string {
+  let date: Date
+  if (typeof queryTime === 'number') {
+    date = new Date(queryTime)
+  } else if (typeof queryTime === 'string') {
+    date = new Date(queryTime)
+  } else {
+    date = queryTime
+  }
+
+  if (isNaN(date.getTime())) return 'N/A'
+
+  const parts = new Intl.DateTimeFormat('es-MX', {
+    timeZone: 'America/Mexico_City',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+
+  const get = (type: string) => parts.find(p => p.type === type)?.value ?? '00'
+  return `${get('day')}/${get('month')} ${get('hour')}:${get('minute')}`
+}
+
 type GroupBy = 'hora' | 'ciudad' | 'clima';
 
 const GROUP_SORTS: Record<GroupBy, SortingState> = {
@@ -81,10 +106,10 @@ const GROUP_SORTS: Record<GroupBy, SortingState> = {
   clima:  [{ id: 'prediccion', desc: false }, { id: 'horaLocal', desc: true }],
 };
 
-function getHourBucket(localTimeUser: string): string {
-  if (!localTimeUser || localTimeUser === 'N/A') return 'Sin fecha';
-  const parts = localTimeUser.split(' ');
-  if (parts.length < 2) return localTimeUser;
+function getHourBucket(mxTime: string): string {
+  if (!mxTime || mxTime === 'N/A') return 'Sin fecha';
+  const parts = mxTime.split(' ');
+  if (parts.length < 2) return mxTime;
   const [date, time] = parts;
   const hour = time.split(':')[0];
   return `${date} ${hour}:00`;
@@ -92,7 +117,7 @@ function getHourBucket(localTimeUser: string): string {
 
 function getGroupKey(row: PredictionRow, groupBy: GroupBy): string {
   switch (groupBy) {
-    case 'hora':   return getHourBucket(row.localTimeUser);
+    case 'hora':   return getHourBucket(getMexicoLocalTime(row.queryTime));
     case 'ciudad': return row.cityName;
     case 'clima':  return row.prediction.toLowerCase();
   }
@@ -131,7 +156,11 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const toggleLookback = (key: string) => {
     setOpenLookbacks(prev => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
       return next;
     });
   };
@@ -151,16 +180,16 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const columnHelper = createColumnHelper<PredictionRow>();
 
   const columns = useMemo(() => [
-    columnHelper.accessor('localTimeUser', {
+    columnHelper.accessor((row) => getMexicoLocalTime(row.queryTime), {
       id: 'horaLocal',
-      header: 'Tu Hora Local',
+      header: 'Hora MX',
       cell: info => (
         <span className="pat-time">{info.getValue()}</span>
       ),
       filterFn: (row, _id, value) =>
-        row.original.localTimeUser.toLowerCase().includes(value.toLowerCase()),
+        getMexicoLocalTime(row.original.queryTime).toLowerCase().includes(value.toLowerCase()),
       sortingFn: (a, b) =>
-        a.original.localTimeUser.localeCompare(b.original.localTimeUser),
+        getMexicoLocalTime(a.original.queryTime).localeCompare(getMexicoLocalTime(b.original.queryTime)),
     }),
     columnHelper.accessor((row) => getCityLocalTime(row.queryTime, row.timezone), {
       id: 'horaCiudad',
@@ -324,13 +353,14 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const totalFiltered = table.getFilteredRowModel().rows.length;
 
   const handleExportCSV = () => {
-    const headers = ['Tu Hora Local', 'Hora Local (Ciudad)', 'Ciudad', 'Condición Predicha', 'Real', 'Resultado'];
+    const headers = ['Hora MX', 'Hora Local (Ciudad)', 'Ciudad', 'Condición Predicha', 'Real', 'Resultado'];
     const lines = [headers.join(',')];
     table.getFilteredRowModel().rows.forEach(({ original: r }) => {
       const real      = r.actual ?? 'Sin datos';
       const resultado = r.correct === null ? 'No confirmado' : r.correct ? 'Acierto' : 'Fallo';
+      const horaMX     = getMexicoLocalTime(r.queryTime);
       const horaCiudad = getCityLocalTime(r.queryTime, r.timezone);
-      lines.push(`"${r.localTimeUser}","${horaCiudad}","${r.cityName}","${r.prediction}","${real}","${resultado}"`);
+      lines.push(`"${horaMX}","${horaCiudad}","${r.cityName}","${r.prediction}","${real}","${resultado}"`);
     });
     const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
