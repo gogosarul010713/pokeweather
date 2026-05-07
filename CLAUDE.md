@@ -72,11 +72,11 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 ✅ **Linter:** 79 → 53 problemas (26 errores menos, tipos TS corregidos)
 ✅ **Deuda técnica:** 10 items identificados, categorizados, certificados
 
-**Commits últimos:**
+**Commits últimos (Sprint 10 → pending validation):**
+- `2e57210` fix(bug-015): snapshot hours deben reflejar hora actual, no [0..11]
+- `0e7c326` fix(bug-014): CORS headers agregados a syncWeatherManual CF
 - `2791edf` fix(bug-013): prediction table Unknown — resolveCondition(icon_code)
 - `a8f32e1` fix(bug-012): cleanup deja mock + placeholders engañosos
-- `4de3a74` docs(claude): actualizar estado sprint 10 final + bug cleanup
-- `d381f9c` chore: bump version to v2.1.0 (stable release)
 
 ### Pendiente Sprint 11 — Plan Ejecutable
 
@@ -95,17 +95,31 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 6. Test unitario: `accuLocationKey = ''` regression
 7. Eliminar `calculated_condition` de ForecastDoc tipo
 
-### 🐛 BUGS CORREGIDOS EN PREVIEW (2026-05-04 → 2026-05-05)
+### 🐛 BUGS CORREGIDOS EN PREVIEW (2026-05-04 → 2026-05-07)
 
-**BUG-012** — Cleanup deja mock data + placeholders engañosos (✅ FIXED `a8f32e1`)
-- PredictionAnalysisDemo: empty state explícito (sin fallback automático a mock)
-- LocationCard: indicador visual cuando no hay datos sincronizados
-- Doc: `bugfixes/bug-012-cleanup-mock-fallback-engagnoso.md`
+**BUG-015** — Lookback duplica climas (snapshots siempre [0..11]) (✅ FIXED `2e57210`, ⏳ PENDING VALIDATION)
+- Root cause: createForecastSnapshots nunca recibía startHour, todos docs tenían snapshot_hours=[0..11]
+- Impacto: generateLookback buscaba s.hour===targetHour (siempre 0), encontraba snapshots[0] duplicados
+- Fix: pasar (now.getHours() + 1) % 24 como startHour a createForecastSnapshots
+- Verificación empírica: query Firestore confirmó todos docs anteriores tenían snapshot_hours=[0..11]
+- Doc: `bugfixes/bug-015-lookback-duplicate-conditions.md` (pending)
+
+**BUG-014** — syncWeatherManual bloqueado por CORS policy (✅ FIXED `0e7c326`, ⏳ DEPLOYED CF)
+- Root cause: Firebase 1st Gen functions deploy desde lib/ (compilado), src/index.ts no compilado
+- Solution: agregar CORS headers antes de auth check en syncWeatherManual
+- Lesson: siempre correr npm build antes de firebase deploy (agregar predeploy a firebase.json)
+- Verificación: curl -X OPTIONS retorna 204 + CORS headers ✅
+- Doc: `bugfixes/bug-014-cors-syncweathermanual.md`
 
 **BUG-013** — Prediction table muestra "Unknown" en todas condiciones (✅ FIXED `2791edf`)
 - predictionAnalyticsService leía calculated_condition (schema viejo), CF escribe icon_code (D-039)
 - Nueva función classifySnapshot() usando resolveCondition(icon_code) como D-039
 - Doc: `bugfixes/bug-013-prediction-table-unknown-condition.md`
+
+**BUG-012** — Cleanup deja mock data + placeholders engañosos (✅ FIXED `a8f32e1`)
+- PredictionAnalysisDemo: empty state explícito (sin fallback automático a mock)
+- LocationCard: indicador visual cuando no hay datos sincronizados
+- Doc: `bugfixes/bug-012-cleanup-mock-fallback-engagnoso.md`
 
 ### Arquitectura D-039 (clave)
 - CF (`syncWeatherLogic.ts`) guarda raw: `icon_code`, `gust_kmh`, sin clasificacion
