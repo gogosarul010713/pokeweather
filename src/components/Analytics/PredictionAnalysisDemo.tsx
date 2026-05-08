@@ -87,23 +87,17 @@ export function PredictionAnalysisDemo({ refreshKey = 0 }: PredictionAnalysisDem
   const [error, setError] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<DataSource>('empty');
 
-  // BUG-011 FIX: Función de refetch para llamar después de reportar clima
-  const handleReportSuccess = async () => {
-    try {
-      console.log('[PredictionDemo] Refetching after weather report...');
-      const realData = await fetchPredictions();
-      if (realData.length > 0) {
-        setRows(realData);
-        setDataSource('firestore');
-        console.log(`[PredictionDemo] ✅ Refetch completado: ${realData.length} predictions`);
-      } else {
-        setRows([]);
-        setDataSource('empty');
-      }
-    } catch (err) {
-      console.warn('[PredictionDemo] Refetch error:', err);
-      // No es crítico, mantiene datos anteriores
-    }
+  // Actualiza solo la fila afectada en state — sin Firebase reads (cache preservado)
+  const handleReportSuccess = (cityId: string, dateHour: string, reportedCondition: string) => {
+    setRows(prev => prev.map(row => {
+      if (row.cityId !== cityId || row.dateHour !== dateHour) return row;
+      return {
+        ...row,
+        actual: reportedCondition,
+        correct: row.prediction === reportedCondition,
+      };
+    }));
+    console.log(`[PredictionDemo] ✅ Row updated inline: ${cityId}|${dateHour} → ${reportedCondition}`);
   };
 
   useEffect(() => {

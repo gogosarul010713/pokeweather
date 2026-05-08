@@ -42,7 +42,7 @@ export interface PredictionRow {
 interface Props {
   rows: PredictionRow[];
   title?: string;
-  onReportSuccess?: () => void | Promise<void>;
+  onReportSuccess?: (cityId: string, dateHour: string, reportedCondition: string) => void | Promise<void>;
 }
 
 
@@ -168,12 +168,11 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
     });
   };
 
-  const handleReportSuccess = async () => {
+  const handleReportSuccess = async (reportedCondition: string) => {
     showToast('✓ Reporte enviado correctamente');
-    // BUG-008 FIX: Refetch datos después de reportar
-    if (onReportSuccess) {
+    if (onReportSuccess && reportingRow) {
       try {
-        await onReportSuccess();
+        await onReportSuccess(reportingRow.cityId, reportingRow.dateHour, reportedCondition);
       } catch (err) {
         console.warn('[PredictionAnalysisTable] Error in onReportSuccess callback:', err);
       }

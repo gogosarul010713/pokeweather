@@ -19,7 +19,7 @@ interface WeatherReportModalProps {
   queryTime: string | Date
   dateHour: string
   onClose: () => void
-  onSuccess?: () => void
+  onSuccess?: (reportedCondition: string) => void
 }
 
 export default function WeatherReportModal({
@@ -58,7 +58,7 @@ export default function WeatherReportModal({
       )
 
       setIsLoading(false)
-      onSuccess?.()
+      onSuccess?.(selectedCondition)
       onClose()
     } catch (err) {
       console.error('Error al guardar reporte:', err)
