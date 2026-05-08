@@ -46,9 +46,6 @@ export function useFirestoreSync(
         unsubscribe = onSnapshot(
           collection(db, 'city_weather'),
           async (snapshot) => {
-            // [DIAG] Log every snapshot event for debugging
-            console.log(`[useFirestoreSync][DIAG] onSnapshot fired — docs: ${snapshot.docs.length}, hasPendingWrites: ${snapshot.metadata.hasPendingWrites}, fromCache: ${snapshot.metadata.fromCache}, isFirst: ${isFirstSnapshotRef.current}`)
-
             // Ignorar writes locales pendientes
             if (snapshot.metadata.hasPendingWrites) return
 
@@ -61,9 +58,6 @@ export function useFirestoreSync(
               const updatedAt = data.updatedAt ?? 0
 
               const lastSeen = lastUpdatedRef.current.get(cityId) ?? 0
-
-              // [DIAG] Log each city comparison
-              console.log(`[useFirestoreSync][DIAG] city=${cityId} updatedAt=${updatedAt} lastSeen=${lastSeen} diff=${updatedAt - lastSeen} isFirst=${isFirstSnapshotRef.current}`)
 
               // En el primer snapshot solo registramos baseline, no fetcheamos
               // (los datos ya vienen via useWeather → loadCitiesFromCache)
@@ -86,10 +80,7 @@ export function useFirestoreSync(
               return
             }
 
-            if (changedCityIds.length === 0) {
-              console.log('[useFirestoreSync][DIAG] No changed cities detected — skipping refetch')
-              return
-            }
+            if (changedCityIds.length === 0) return
 
             console.log(
               `[useFirestoreSync] ${changedCityIds.length} cities updated by CF, refetching classified data...`

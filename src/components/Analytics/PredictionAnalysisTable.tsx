@@ -36,6 +36,7 @@ export interface PredictionRow {
   lookback12h: LookbackItem[];
   lat: number;
   lon: number;
+  dateHour: string;
 }
 
 interface Props {
@@ -1205,6 +1206,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           cityName={reportingRow.cityName}
           prediction={reportingRow.prediction}
           queryTime={reportingRow.queryTime}
+          dateHour={reportingRow.dateHour}
           onClose={() => setReportingRow(null)}
           onSuccess={handleReportSuccess}
         />

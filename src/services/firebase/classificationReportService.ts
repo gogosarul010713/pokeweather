@@ -216,7 +216,8 @@ export async function saveWeatherReport(
   predictedCondition: string,
   reportedCondition: string,
   queryTime: string | Date,
-  source: 'prediction-table' | 'location-detail' = 'prediction-table'
+  source: 'prediction-table' | 'location-detail' = 'prediction-table',
+  knownDateHour?: string
 ): Promise<string> {
   // Dynamic import Firestore functions (lazy)
   const { collection, addDoc, Timestamp } = await import('firebase/firestore')
@@ -242,17 +243,20 @@ export async function saveWeatherReport(
       queryTimeDate = new Date()
     }
 
-    // BUG-018 FIX: date_hour debe usar UTC (coincide con CF que usa getUTCHours)
-    // Antes usaba getHours() (local) causando mismatch con forecast.date_hour (UTC)
-    const nextHourUTC = new Date(queryTimeDate.getTime())
-    nextHourUTC.setUTCMinutes(0, 0, 0)
-    nextHourUTC.setUTCHours(nextHourUTC.getUTCHours() + 1)
-    const yyyy = nextHourUTC.getUTCFullYear()
-    const mm = String(nextHourUTC.getUTCMonth() + 1).padStart(2, '0')
-    const dd = String(nextHourUTC.getUTCDate()).padStart(2, '0')
-    const hh = String(nextHourUTC.getUTCHours()).padStart(2, '0')
-    const dateHour = `${yyyy}-${mm}-${dd}-${hh}`
-
+    // Usar dateHour exacto del forecast si está disponible
+    // Si no, calcular desde queryTime con hora LOCAL (igual que saveCityForecast)
+    let dateHour: string
+    if (knownDateHour) {
+      dateHour = knownDateHour
+    } else {
+      const reportNextHour = new Date(queryTimeDate)
+      reportNextHour.setHours(reportNextHour.getHours() + 1, 0, 0, 0)
+      const yyyy = reportNextHour.getFullYear()
+      const mm = String(reportNextHour.getMonth() + 1).padStart(2, '0')
+      const dd = String(reportNextHour.getDate()).padStart(2, '0')
+      const hh = String(reportNextHour.getHours()).padStart(2, '0')
+      dateHour = `${yyyy}-${mm}-${dd}-${hh}`
+    }
     const report = {
       city_id: cityId,
       city_name: cityName,
@@ -287,7 +291,7 @@ export async function saveWeatherReport(
 export async function getRecentWeatherReports(
   hours: number = 24
 ): Promise<Array<{ city_id: string; date_hour: string; reported_condition: string }>> {
-  const { collection, getDocsFromServer, Timestamp } = await import('firebase/firestore')
+  const { collection, getDocs, Timestamp } = await import('firebase/firestore')
   const db = await getDb()
 
   try {
@@ -301,26 +305,20 @@ export async function getRecentWeatherReports(
       return []
     }
 
-    // BUG-018 FIX: usar getDocsFromServer para evitar cache offline del SDK
-    // El reporte recien guardado debe leerse del servidor, no del cache local
-    const allReports = await getDocsFromServer(collection(db, 'weather_reports'))
+    // Leer desde 'weather_reports' (donde saveWeatherReport() guarda)
+    const allReports = await getDocs(collection(db, 'weather_reports'))
 
     const filtered = allReports.docs
-      .map((doc) => {
-        const data = doc.data()
-        return {
-          city_id: data.city_id,
-          date_hour: data.date_hour,
-          reported_condition: data.reported_condition,
-          timestamp: data.timestamp,
-        }
-      })
-      .filter((report) => report.timestamp >= minDate)
-      .map(({ city_id, date_hour, reported_condition }) => ({
-        city_id,
-        date_hour,
-        reported_condition,
+      .map((doc) => ({
+        city_id: doc.data().city_id,
+        date_hour: doc.data().date_hour,
+        reported_condition: doc.data().reported_condition,
       }))
+      .filter((report) => {
+        // El timestamp está en el documento original
+        const docData = allReports.docs.find((d) => d.data().city_id === report.city_id && d.data().date_hour === report.date_hour)?.data()
+        return docData?.timestamp >= minDate
+      })
 
     console.log(`[Firebase] ✅ Loaded ${filtered.length} weather reports from last ${hours}h`)
     return filtered

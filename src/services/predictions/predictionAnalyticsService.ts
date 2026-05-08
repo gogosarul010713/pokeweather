@@ -92,7 +92,6 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
       const queryTime = timestampToDate(forecast.created_at)
 
       // Buscar reporte de confirmación para esta city+date_hour
-      // El reporte se crea en classification_reports con la fecha_hora del pronóstico
       const reportKey = `${forecast.city_id}|${forecast.date_hour}`
       const report = reportIndex.get(reportKey)
 
@@ -115,6 +114,7 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
         lookback12h: [], // Se calcula abajo
         lat: forecast.lat,
         lon: forecast.lon,
+        dateHour: forecast.date_hour,
       }
 
       // 5. Generar lookback: buscar en forecasts previos de ESTA CIUDAD

@@ -289,7 +289,7 @@ export async function getRecentForecasts(
  * @returns WeatherData enriquecido o null
  */
 export async function getWeatherFromFirestore(cityId: string): Promise<WeatherData | null> {
-  const { collection, getDocsFromServer, query, orderBy, limit } = await import('firebase/firestore')
+  const { collection, getDocs, query, orderBy, limit } = await import('firebase/firestore')
   const db = await getDb()
 
   if (!db) {
@@ -302,8 +302,7 @@ export async function getWeatherFromFirestore(cityId: string): Promise<WeatherDa
     // Mas rapido y confiable que collectionGroup full-scan (no requiere indice global)
     const forecastsRef = collection(db, 'city_weather', cityId, 'forecasts')
     const q = query(forecastsRef, orderBy('created_at', 'desc'), limit(1))
-    const snapshot = await getDocsFromServer(q)
-    console.log(`[Firebase][DIAG] getDocsFromServer for ${cityId} — empty: ${snapshot.empty}, fetched fresh from server`)
+    const snapshot = await getDocs(q)
 
     if (snapshot.empty) {
       console.log(`[Firebase] ℹ️ ${cityId}: No forecast documents found`)

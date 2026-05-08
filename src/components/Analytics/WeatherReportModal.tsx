@@ -17,6 +17,7 @@ interface WeatherReportModalProps {
   cityName: string
   prediction: string
   queryTime: string | Date
+  dateHour: string
   onClose: () => void
   onSuccess?: () => void
 }
@@ -26,6 +27,7 @@ export default function WeatherReportModal({
   cityName,
   prediction,
   queryTime,
+  dateHour,
   onClose,
   onSuccess,
 }: WeatherReportModalProps) {
@@ -51,7 +53,8 @@ export default function WeatherReportModal({
         prediction,
         selectedCondition,
         queryTime,
-        'prediction-table'
+        'prediction-table',
+        dateHour
       )
 
       setIsLoading(false)
