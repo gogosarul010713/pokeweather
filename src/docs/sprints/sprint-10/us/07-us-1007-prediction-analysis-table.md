@@ -22,6 +22,71 @@ Componente React que renderiza tabla detallada de predicciones individuales con 
 
 ## ✅ Historial de cambios
 
+### v4 — Refactors Post-Sprint (2026-05-07)
+
+**Contexto:** Sprint 10 cerrado. Bugs descubiertos en validacion en preview (Vercel).
+
+#### 1. Campo `dateHour` en `PredictionRow`
+
+```typescript
+// ANTES
+export interface PredictionRow {
+  lat: number;
+  lon: number;
+  // sin dateHour
+}
+
+// AHORA — identificador exacto del forecast para matching post-reporte
+export interface PredictionRow {
+  lat: number;
+  lon: number;
+  dateHour: string;  // "YYYY-MM-DD-HH" — viene de forecast.date_hour (LOCAL time + next hour)
+}
+```
+
+**Por que:** Al reportar clima real, necesitamos identificar la fila exacta en el state React
+para actualizarla sin re-fetch. Sin `dateHour` en el row, no habia forma de saber que fila
+corresponde al reporte enviado.
+
+#### 2. Actualizacion Inline del State (BUG-019)
+
+`onReportSuccess` cambio de firma:
+
+```typescript
+// ANTES — sin datos de la fila reportada, tenia que refetch todo
+onReportSuccess?: () => void | Promise<void>
+
+// AHORA — recibe exactamente que fila se reporto y con que condicion
+onReportSuccess?: (cityId: string, dateHour: string, reportedCondition: string) => void | Promise<void>
+```
+
+`PredictionAnalysisDemo` ahora actualiza el state directamente:
+```typescript
+setRows(prev => prev.map(row =>
+  row.cityId === cityId && row.dateHour === dateHour
+    ? { ...row, actual: reportedCondition, correct: row.prediction === reportedCondition }
+    : row
+))
+```
+
+Resultado: 0 Firebase reads post-reporte. Cache intacto. Actualizacion en < 16ms.
+
+#### 3. Columna "Tipos Potenciados"
+
+Nueva columna entre "Condicion Predicha" y "Real":
+- Renderiza iconos Pokemon (20x20px) via `CONDITION_TO_TYPES[condition]` + `TYPE_ICON`
+- CSS: clase `.pat-types` con flex layout
+
+#### 4. Columna "Hora MX"
+
+Columna "Tu Hora Local" renombrada a "Hora MX":
+- Usa `Intl.DateTimeFormat` con `timeZone: 'America/Mexico_City'`
+- Convierte `queryTime` (UTC Firestore) a hora Mexico al renderizar
+- Sin cambios en Firestore, compatible con docs antiguos
+- Agrupacion por hora usa hora Mexico
+
+---
+
 ### v1 — Implementación inicial (2026-04-18)
 1. **Formato hora:** `"DD/MM HH:MM UTC"` con helper `formatQueryTime()`
 2. **Lookback:** siempre disponible (aciertos + fallos), botón rojo/verde según resultado

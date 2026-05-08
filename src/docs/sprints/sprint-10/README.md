@@ -279,6 +279,7 @@ El Sprint 10 está **COMPLETADO** cuando:
 - [02-cleanup-guide.md](02-cleanup-guide.md) — Guía de limpieza granular
 - [03-validacion-bigquery-session2.md](03-validacion-bigquery-session2.md) — Validación autónoma
 - [04-cloud-functions-testing-guia.md](04-cloud-functions-testing-guia.md) — Testing CF
+- [07-handoff-sprint-11.md](07-handoff-sprint-11.md) — Invariantes, deuda técnica y contexto para Sprint 11
 
 **Archive (reutilizable):**
 - [archive/01-decision-looker-vs-metabase.md](archive/01-decision-looker-vs-metabase.md) — Evaluación BI tools
@@ -343,13 +344,45 @@ El Sprint 10 está **COMPLETADO** cuando:
 - 📁 **11 bugs** en [bugfixes/](bugfixes/) + summary
 - 📄 **4 docs sprint** en raíz (01-04, enumerados)
 
-### Próximos Pasos:
-1. ✅ Reorganización completada
+### Proximos Pasos:
+1. ✅ Reorganizacion completada
 2. ⏳ Merge `sprint-10` → `develop`
-3. ⏳ Release v2.1.0 a Vercel
+3. ✅ Release v2.1.0 a Vercel (preview activo en sprint-10)
 4. ⏳ Iniciar Sprint 11
 
 ---
 
-**Última actualización:** 2026-04-26 (Session 18)  
+## 🔄 Post-Sprint — Bugfixes y Refactors (2026-05-04 → 2026-05-07)
+
+Sprint 10 cerrado, pero se realizaron correcciones post-cierre durante validacion en preview.
+
+### Bugs Post-Sprint
+
+| Bug | Descripcion | Status | Commit |
+|-----|-------------|--------|--------|
+| BUG-012 | Cleanup deja mock + placeholders engañosos | ✅ FIXED | `a8f32e1` |
+| BUG-013 | Tabla muestra "Unknown" — schema D-039 (icon_code) | ✅ FIXED | `2791edf` |
+| BUG-014 | syncWeatherManual bloqueado por CORS | ✅ FIXED | `0e7c326` |
+| BUG-015 | Lookback duplica climas (startHour faltante) | ✅ FIXED | `2e57210` |
+| BUG-016 | Silent sync failure (CF sin compilar) | ✅ FIXED | `f515164` |
+| BUG-017 | Cache getDocs previene actualizacion post-sync | ✅ FIXED | `d5d8d52` |
+| BUG-018 | date_hour UTC intento (revertido) | ↩️ REVERTIDO | `f403cc4` |
+| [BUG-019](bugfixes/bug-019-reporte-no-actualiza-tabla-preview.md) | Columna "Real" no actualiza en preview | ✅ FIXED | `be07d13` |
+
+**Ver detalle completo:** [bugfixes/bug-summary.md](bugfixes/bug-summary.md)
+
+### Refactors Post-Sprint (2026-05-07)
+
+| Feature | Descripcion | Commit |
+|---------|-------------|--------|
+| Hora MX | Columna "Tu Hora Local" → "Hora MX" con `Intl.DateTimeFormat` | `0844e05` |
+| Tipos potenciados | Nueva columna con iconos Pokemon en tabla predictiva | `d0dbf1f` |
+| `PredictionRow.dateHour` | Campo nuevo para update inline post-reporte (BUG-019) | `be07d13` |
+| Update inline | `handleReportSuccess` actualiza state React directamente (0 Firebase reads) | `be07d13` |
+
+**Ver detalle:** [us/07-us-1007-prediction-analysis-table.md](us/07-us-1007-prediction-analysis-table.md) — seccion v4
+
+---
+
+**Ultima actualizacion:** 2026-05-07 (Post-Sprint bugfixes + refactors)
 **Estado:** ✅ **COMPLETADO** — Ready para merge

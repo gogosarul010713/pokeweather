@@ -137,7 +137,100 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
-## Cambios recientes en preview (2026-05-07)
+## Cambios recientes en preview (2026-05-07) — BUG-019: Update Inline
+
+### Contexto: Preview Validation (Continuacion de BUG-018)
+
+Sprint 10 cerrado, pero validacion en preview descobrio que tabla predictiva no se actualizaba
+tras reportar clima real. Causa raiz: refetch post-reporte leia del cache IndexedDB sin validar
+que el `date_hour` del reporte coincidiera exactamente con el del forecast.
+
+### Root Cause (BUG-019)
+
+`handleReportSuccess` en `PredictionAnalysisDemo` llamaba a `fetchPredictions()` sin argumentos:
+```typescript
+// ANTES
+const handleReportSuccess = async () => {
+  const realData = await fetchPredictions()  // Lee IndexedDB cache
+  setRows(realData)
+}
+```
+
+Problema:
+1. `saveCityForecast` calcula `date_hour` con LOCAL time + next hour
+2. `fetchPredictions()` lee forecasts desde cache (mismos docs)
+3. `saveWeatherReport` (ANTES BUG-019) recalculaba `date_hour` desde `queryTime` (Timestamp UTC)
+4. En preview (servidor UTC), el recalculo podia diferir 1h del original
+5. `reportIndex.get(city|date_hour)` nunca encontraba el reporte
+
+### Fix (commits `be07d13` + `392c5c7`)
+
+**Idea central:** NO refetch post-reporte. Actualizar state React directamente con la condicion
+reportada. 0 Firebase reads. Cache preservado. UI actualiza en < 16ms.
+
+#### 1. Agregar `dateHour` a `PredictionRow`
+```typescript
+export interface PredictionRow {
+  // ...
+  dateHour: string;  // "YYYY-MM-DD-HH" — clave exacta del forecast
+}
+```
+
+#### 2. Cambiar firma del callback `onReportSuccess`
+**Antes:** `onReportSuccess?: () => void`
+**Ahora:** `onReportSuccess?: (cityId: string, dateHour: string, reportedCondition: string) => void`
+
+#### 3. `WeatherReportModal` pasa condicion al callback
+```typescript
+onSuccess?.(selectedCondition)
+```
+
+#### 4. `PredictionAnalysisTable` captura fila y pasa datos al padre
+```typescript
+const handleReportSuccess = async (reportedCondition: string) => {
+  if (onReportSuccess && reportingRow) {
+    await onReportSuccess(reportingRow.cityId, reportingRow.dateHour, reportedCondition);
+  }
+};
+```
+
+#### 5. `PredictionAnalysisDemo` actualiza state directamente
+```typescript
+const handleReportSuccess = (cityId: string, dateHour: string, reportedCondition: string) => {
+  setRows(prev => prev.map(row =>
+    row.cityId === cityId && row.dateHour === dateHour
+      ? { ...row, actual: reportedCondition, correct: row.prediction === reportedCondition }
+      : row
+  ));
+};
+```
+
+### Leccion Aprendida
+
+**Regla Critica:** NO recalcular claves de matching. Si el writer usa un algoritmo especifico
+para generar `date_hour`, todos los lectores/actualizadores deben pasar la clave por la
+cadena de callbacks/props. Recalcular desde otro timestamp (especialmente Firestore Timestamps UTC)
+causa mismatch por zona horaria.
+
+**Invariante a grabar en Sprint 11:** `date_hour` es LOCAL time + siguiente hora. Nunca calcular
+desde UTC. Siempre pasar `forecast.date_hour` directamente cuando se necesite referenciar un
+forecast por hora.
+
+### Documentacion Creada
+
+- `src/docs/sprints/sprint-10/bugfixes/bug-019-reporte-no-actualiza-tabla-preview.md` — diagnostico completo
+- `src/docs/sprints/sprint-10/07-handoff-sprint-11.md` — invariantes, deuda tecnica, backlog
+- Actualizado `bug-summary.md`, `us/07-us-1007-prediction-analysis-table.md`, `README.md`
+
+### Estado Final (2026-05-07)
+
+✅ **Deploy en preview:** `sprint-10` branch activo
+✅ **Build:** Sin errores TS, Vercel compilando
+✅ **Bugs Post-Sprint:** BUG-012 a BUG-019 resueltos (8 bugs, BUG-018 revertido)
+✅ **Refactors:** Hora MX, Tipos potenciados, Update inline
+✅ **Documentacion:** 3 archivos nuevos, 4 actualizados
+
+### Cambios recientes en preview (2026-05-07)
 
 ### 1. Refactor: Hora local a Mexico/Central
 **Archivo:** `src/components/Analytics/PredictionAnalysisTable.tsx`
@@ -153,3 +246,11 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 - Imports: `weatherService.ts`, `typeIcons.ts`
 - Opcion A inline (sin componente reutilizable) — tabla es diagnostic, no reutilizable
 - CSS: clase `.pat-types` con flex layout
+
+### 3. Update Inline Post-Reporte (BUG-019)
+**Archivos:** `WeatherReportModal.tsx`, `PredictionAnalysisTable.tsx`, `PredictionAnalysisDemo.tsx`
+- `PredictionRow` ahora incluye `dateHour: string` para identificacion exacta
+- `onReportSuccess` callback recibe `(cityId, dateHour, reportedCondition)`
+- `handleReportSuccess` actualiza state React directamente con `setRows(prev => prev.map(...))`
+- 0 Firebase reads post-reporte, cache preservado, UI actualiza < 16ms
+- Funciona igual en localhost y preview

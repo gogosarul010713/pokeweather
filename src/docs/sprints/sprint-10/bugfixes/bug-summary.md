@@ -32,6 +32,21 @@
 
 ---
 
+### Post-Sprint 10 (2026-05-04 → 2026-05-07)
+
+| Bug | Descripción | Causa Raíz | Status | Commit |
+|-----|-------------|-----------|--------|--------|
+| [BUG-012](bug-012-cleanup-mock-fallback-engagnoso.md) | Cleanup deja mock + placeholders engañosos | Empty state sin fallback a mock | ✅ FIXED | `a8f32e1` |
+| [BUG-013](bug-013-prediction-table-unknown-condition.md) | Tabla muestra "Unknown" en todas condiciones | Leía `calculated_condition` (schema viejo) vs `icon_code` (D-039) | ✅ FIXED | `2791edf` |
+| [BUG-014](bug-014-cors-syncweathermanual.md) | syncWeatherManual bloqueado por CORS | Headers CORS faltaban antes del auth check | ✅ FIXED | `0e7c326` |
+| BUG-015 | Lookback duplica climas | `startHour` nunca pasado → snapshots[0..11] fijos | ✅ FIXED | `2e57210` |
+| BUG-016 | Silent sync failure | CF deploy sin compilar functions primero | ✅ FIXED | `f515164` |
+| BUG-017 | Cache Firestore sync | `getDocs` cache previene actualización post-sync | ✅ FIXED | `d5d8d52` |
+| BUG-018 | date_hour UTC vs LOCAL (revertido) | Intento de fix con UTC rompía el matching | ↩️ REVERTIDO | `f403cc4` |
+| [BUG-019](bug-019-reporte-no-actualiza-tabla-preview.md) | Columna "Real" no actualiza en preview | Refetch post-reporte no encontraba fila por date_hour mismatch | ✅ FIXED | `be07d13` |
+
+---
+
 ## Patrones Comunes
 
 ### 1. Auth + Deploy (BUG-001 a 006)
@@ -65,11 +80,16 @@
 ### BUG-005/011 (Cascade)
 → Regla: Query subcolecciones ANTES, delete en orden inverso de dependencia
 
-### BUG-007/008/009 (Data)
+### BUG-007/008/009/019 (Data + Matching)
 → Verificar: `saveCityForecast()` → `getHours()+1` (LOCAL), `created_at` tipo (Timestamp vs number)
+→ Regla critica: NO recalcular `date_hour` desde otro timestamp — usar `forecast.date_hour` directamente
+
+### BUG-012/013 (Schema Migration D-039)
+→ CF escribe `icon_code` (raw), no `classified`. Usar `resolveCondition(icon_code)` para clasificar
+→ Si tabla muestra "Unknown": verificar que `classifySnapshot()` lee `icon_code`, no `calculated_condition`
 
 ---
 
-**Total Bugs Resueltos:** 11 (BUG-001 a BUG-011, sin BUG-010 en primera iteración)  
-**Sprint Duration:** 10 días (2026-04-16 → 2026-04-26)  
+**Total Bugs Resueltos:** 19 (BUG-001 a BUG-019, BUG-018 revertido)
+**Sprint Duration:** 10 dias (2026-04-16 → 2026-04-26) + Post-Sprint (2026-05-04 → 2026-05-07)
 **Resolution Rate:** 100% ✅
