@@ -37,6 +37,8 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
       const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'weather-app-prod-ef50d'
       const cronSecret = import.meta.env.VITE_CRON_SECRET || ''
 
+      console.log('[TestingTools][DIAG] Manual sync iniciado')
+
       if (!cronSecret) {
         setSyncMessage({
           type: 'error',
@@ -48,6 +50,8 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
 
       const url = `https://us-central1-${projectId}.cloudfunctions.net/syncWeatherManual`
 
+      console.log('[TestingTools][DIAG] Llamando CF en:', url)
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -56,7 +60,11 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
         },
       })
 
+      console.log('[TestingTools][DIAG] CF respondió con status:', response.status)
+
       const data = await response.json()
+
+      console.log('[TestingTools][DIAG] CF response data:', data)
 
       if (response.ok && data.success) {
         setSyncMessage({
@@ -74,9 +82,10 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
         type: 'error',
         text: `❌ Error de conexión: ${error instanceof Error ? error.message : 'Fallo desconocido'}`,
       })
-      console.error('[TestingTools] Manual sync error:', error)
+      console.error('[TestingTools][DIAG] Manual sync error:', error)
     } finally {
       setIsSyncing(false)
+      console.log('[TestingTools][DIAG] Manual sync finalizado')
       // Limpiar mensaje después de 4 segundos
       setTimeout(() => setSyncMessage(null), 4000)
     }

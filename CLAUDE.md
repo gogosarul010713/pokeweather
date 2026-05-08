@@ -60,6 +60,15 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
+## Estado Sprint 10 — COMPLETADO v2.1.0 (2026-05-04) + Refactors tabla predictiva (2026-05-07) + BUG-017 Fix (2026-05-08)
+
+### 🔧 BUG-017 EN PROGRESO — Sync Manual Silent Failure (2026-05-08)
+**Status:** Fix implementado, awaiting validation
+- **Problema:** Sync manual muestra "✅ Exitoso" pero UI no actualiza datos
+- **Causa:** `getWeatherFromFirestore` usa `getDocs` que lee del cache local del SDK Firestore
+- **Fix:** Cambiar `getDocs` → `getDocsFromServer` en `firebaseWeatherService.ts:305`
+- **Validación:** Logs [DIAG] en DevTools muestran que `getDocsFromServer` se ejecuta + UI actualiza
+
 ## Estado Sprint 10 — COMPLETADO v2.1.0 (2026-05-04) + Refactors tabla predictiva (2026-05-07)
 
 **Branch activa:** `sprint-10` | Ultimo commit: `d0dbf1f` (preview)
