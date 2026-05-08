@@ -68,6 +68,7 @@ function generateMockData(): PredictionRow[] {
         lookback12h,
         lat: coords.lat,
         lon: coords.lon,
+        dateHour: `2026-04-18-${String(h).padStart(2, '0')}`,
       });
     });
   }
