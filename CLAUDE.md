@@ -60,6 +60,46 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
+## Estado Sprint 11 — 🚀 BACKLOG CREADO (2026-05-08)
+
+**Branch activa:** `sprint-11` (creada desde develop)
+**Documentación:** Backlog centralizado en `src/docs/sprints/BACKLOG.md`
+
+### Sprint 11 Backlog — 10 Items, 22.5 SP
+
+📋 **Matriz de priorización:** [src/docs/sprints/BACKLOG.md](src/docs/sprints/BACKLOG.md)
+
+**CRÍTICA (2.5h):**
+- BL-001: Firestore Rules (App Check) — 2h, bloquea prod real
+- BL-002: Remover VITE_ACCUWEATHER_KEY de Vercel — 0.5h
+
+**IMPORTANTE (7h):**
+- BL-003: Eliminar calculated_condition — 1h, limpia D-039
+- BL-004: Test unitario accuLocationKey = '' — 1.5h, evita regression
+- BL-005: Linter 53 errores — 3h, CI/CD limpio
+- BL-006: Suite E2E tabla predictiva — 4h, automatiza validación
+
+**FEATURES (15h):**
+- BL-007: Dashboard precisión acumulada — 6h
+- BL-008: date_hour consolidado a UTC — 5h, para multi-user futuro
+- BL-009: Historial de reportes UI — 3h
+- BL-010: Agregar más ciudades — 1h
+
+**Estructura escalable:**
+- Items > 300 líneas → archivo separado en `backlog/{tipo}/`
+- Convención: `bl-NNN-titulo-corto.md`
+- Referencias cruzadas a decision-log, handoff, bugfixes
+- README con ciclo de vida y buenas prácticas
+
+**Archivos detallados creados:**
+- `backlog/deuda-tecnica/bl-001-firestore-rules.md` — 2 opciones (App Check recomendado)
+- `backlog/deuda-tecnica/bl-003-eliminar-calculated-condition.md` — cero riesgo
+- `backlog/README.md` — guía de navegación y escalabilidad
+
+**Commit:** `docs: crear BACKLOG.md unificado para Sprint 11+` (7437868)
+
+---
+
 ## Estado Sprint 10 — ✅ MERGED a DEVELOP (2026-05-07)
 
 **Versión Estable:** v2.1.0 (tag actualizado a develop)
