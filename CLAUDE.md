@@ -60,7 +60,11 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
-## Estado Sprint 10 — COMPLETADO v2.1.0 (2026-05-04) + Refactors tabla predictiva (2026-05-07)
+## Estado Sprint 10 — ✅ MERGED a DEVELOP (2026-05-07)
+
+**Versión Estable:** v2.1.0 (tag actualizado a develop)
+**Branch:** sprint-10 merged → develop
+**Commits:** 58 commits, 154 files changed, 28k+ insertions
 
 **Branch activa:** `sprint-10` | Ultimo commit: `d0dbf1f` (preview)
 
@@ -254,3 +258,25 @@ forecast por hora.
 - `handleReportSuccess` actualiza state React directamente con `setRows(prev => prev.map(...))`
 - 0 Firebase reads post-reporte, cache preservado, UI actualiza < 16ms
 - Funciona igual en localhost y preview
+
+---
+
+## Próximo Sprint — Sprint 11
+
+**Estado:** Listo para comenzar
+**Documentación:** Ver `src/docs/sprints/sprint-10/07-handoff-sprint-11.md`
+**Invariantes Críticos:**
+1. `date_hour` = LOCAL time + siguiente hora (NUNCA recalcular desde UTC)
+2. `resolveCondition()` es ÚNICO lugar de clasificacion (D-039)
+3. Cache IndexedDB — no agregar Firebase reads en path critico
+4. `startHour` requerido en `createForecastSnapshots`
+
+**Deuda Técnica (Critica):**
+- Firestore Rules (App Check o origin validation)
+- Remover `VITE_ACCUWEATHER_KEY` de Vercel Dashboard
+- Test unitario `accuLocationKey = ''` regression
+
+**Deuda Técnica (Importante):**
+- Eliminar `calculated_condition` del tipo `ForecastDoc`
+- Suite e2e para tabla predictiva (sin automatización hoy)
+- Linter 53 errores pre-existentes
