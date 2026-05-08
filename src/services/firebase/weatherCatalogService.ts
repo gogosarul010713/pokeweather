@@ -2,9 +2,9 @@
 // US-802: Servicio de lectura del catálogo estático de Firestore
 // Propósito: Leer condiciones, type_mapping, y reglas desde Firestore
 // Fallback: Si Firestore no está disponible, usa valores hardcodeados
+// US-901: Dynamic imports (lazy Firestore SDK)
 
-import { db } from './firebaseConfig'
-import { doc, getDoc } from 'firebase/firestore'
+import { getDb } from './firebaseConfig'
 import { CONDITION_TO_TYPES, CONDITION_LABEL, CONDITION_COLORS } from '../weather/weatherService'
 import type { WeatherCondition } from '../../config/weatherImages'
 
@@ -123,6 +123,12 @@ export async function loadWeatherCatalog(): Promise<WeatherCatalog> {
     return catalogCache
   }
 
+  // Dynamic import Firestore functions (lazy)
+  const { doc: docRef, getDoc } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
   // Validación: Firebase no inicializado
   if (!db) {
     console.warn('[Catalog] ⚠️ Firebase not initialized, using fallback catalog')
@@ -134,9 +140,9 @@ export async function loadWeatherCatalog(): Promise<WeatherCatalog> {
 
     // Cargar los 3 documentos en paralelo
     const [conditionsSnap, typeMappingSnap, rulesSnap] = await Promise.all([
-      getDoc(doc(db, 'weather_catalog', 'conditions')),
-      getDoc(doc(db, 'weather_catalog', 'type_mapping')),
-      getDoc(doc(db, 'weather_catalog', 'rules')),
+      getDoc(docRef(db, 'weather_catalog', 'conditions')),
+      getDoc(docRef(db, 'weather_catalog', 'type_mapping')),
+      getDoc(docRef(db, 'weather_catalog', 'rules')),
     ])
 
     // Validar que existan

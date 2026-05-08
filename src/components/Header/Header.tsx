@@ -8,14 +8,10 @@ import FilterPanel from './FilterPanel'
 import FilterPanelModal from '../UI/FilterPanelModal'
 import TestingButton from './TestingButton'
 import TestingTools from '../TestingTools/TestingTools'
-import type { City } from '../../store/useStore'
 
-interface HeaderProps {
-  cities?: City[]
-  onRefresh?: () => void
-}
+interface HeaderProps {}
 
-export default function Header({ cities = [] }: HeaderProps) {
+export default function Header({}: HeaderProps) {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
 
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
@@ -270,7 +266,7 @@ export default function Header({ cities = [] }: HeaderProps) {
         onClose={() => setIsFilterPanelOpen(false)}
       />
 
-      <TestingTools cities={cities} isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
+      <TestingTools isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
     </>
   )
 }

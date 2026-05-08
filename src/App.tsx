@@ -10,6 +10,9 @@ import { BottomSheetPortal } from './components/BottomSheet/BottomSheetPortal'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
 import { useIsMobile } from './hooks/useIsMobile'
+import { useFirestoreSync } from './hooks/useFirestoreSync'
+import { syncForecastsOnLoad } from './services/firebase/forecastSyncService'
+import { initializeSettings, getAutoSyncSetting } from './services/firebase/settingsService'
 import type { City } from './store/useStore'
 
 export default function App() {
@@ -44,12 +47,6 @@ export default function App() {
 
   // Aplicar filtros a las ciudades cargadas — se recalcula cuando cambian filtros
   const filteredCities = useMemo(() => {
-    console.log('📊 useMemo recalculando filtros:', {
-      sortMode,
-      sortDirection,
-      citiesCount: cities.length,
-      filteredCount: getFilteredCities(cities).length,
-    })
     return getFilteredCities(cities)
   }, [cities, regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection])
 
@@ -58,6 +55,58 @@ export default function App() {
     run(handleCitiesLoaded)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Sincronizar pronósticos al montar la app (background, non-blocking)
+  useEffect(() => {
+    syncForecastsOnLoad()
+  }, [])
+
+  // US-1106: Cargar settings de auto-sync al iniciar la app
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        await initializeSettings()
+        const autoSyncEnabled = await getAutoSyncSetting()
+        useStore.setState({ autoSyncEnabled })
+        console.log(`[App] Settings loaded: autoSyncEnabled=${autoSyncEnabled}`)
+      } catch (error) {
+        console.error('[App] Error loading settings:', error)
+        // Default to true (auto-sync enabled) on error
+        useStore.setState({ autoSyncEnabled: true })
+      }
+    }
+
+    loadSettings()
+  }, [])
+
+  // US-1101 + D-039: Escuchar cambios en Firestore (real-time sync from server HH:00)
+  // Cuando la CF actualiza Firestore, useFirestoreSync detecta el summary doc,
+  // refetcha los datos clasificados y los entrega ya como Partial<City>.
+  const handleFirestoreCitiesUpdate = useCallback((firestoreCities: Partial<City>[]) => {
+    setCities((prevCities) => {
+      let updatedCount = 0
+      const merged = prevCities.map((city) => {
+        const firestoreData = firestoreCities.find((c) => c.id === city.id)
+        if (!firestoreData) return city
+        updatedCount++
+        // Recalcular localTime con timezone de la ciudad (no de Firestore data)
+        const tz = firestoreData.timezone ?? city.timezone
+        const now = new Date()
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000
+        const local = new Date(utcMs + tz * 60 * 60 * 1000)
+        const localTime = `${String(local.getHours()).padStart(2, '0')}:${String(local.getMinutes()).padStart(2, '0')}`
+        return { ...city, ...firestoreData, localTime }
+      })
+      console.log(`[App] Real-time sync: ${updatedCount}/${prevCities.length} cities updated from Firestore`)
+      return merged
+    })
+  }, [])
+
+  const handleFirestoreSyncError = useCallback((error: Error) => {
+    console.error('[App] Firestore sync error:', error)
+  }, [])
+
+  useFirestoreSync(handleFirestoreCitiesUpdate, handleFirestoreSyncError)
 
   // En mobile: Visual feedback en mapa al seleccionar ciudad (sin scroll disruptivo)
   // El highlight visual ocurre en MapPin.tsx, aquí solo aseguramos que el mapa reciba focus
@@ -165,7 +214,7 @@ export default function App() {
         <LoadingScreen mode={isInitialLoadRef.current ? 'initial' : 'refresh'} />
 
         {/* ── HEADER ── */}
-        <Header cities={cities} onRefresh={() => run(handleCitiesLoaded)} />
+        <Header />
 
         {/* ── BODY ── */}
         <div className="app-body">

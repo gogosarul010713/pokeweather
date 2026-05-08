@@ -6,7 +6,7 @@ import App from './App.tsx'
 // Debug tools (solo en desarrollo)
 if (import.meta.env.DEV) {
   // Importar herramientas de debugging de caché
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   import('./services/cache/debugCaching').catch(() => {})
 
   // 🧹 LIMPIEZA DE CACHE VIEJO (primera carga en dev)

@@ -244,11 +244,9 @@ import type { WeatherData } from '../cache/cacheService'
 import { getS2Key } from '../geo/s2Service'
 import type { City } from '../../store/useStore'
 
-// En dev: llamada directa (localhost no tiene CORS)
+// En dev: proxy via Vite a backend Nest (5174) para evitar CORS
 // En prod: proxy via Vercel (evita CORS desde dominio de producción)
-const ACCUWEATHER_BASE = import.meta.env.DEV
-  ? 'https://dataservice.accuweather.com'
-  : '/api/accuweather'
+const ACCUWEATHER_BASE = '/api/accuweather'
 
 interface HourlyForecastData {
   WeatherIcon: number
@@ -393,7 +391,11 @@ export const fetchCityWeather = async (
     }
 
     // 4. Crear snapshots para persistencia (US-801)
-    const snapshots = createForecastSnapshots(hourlyForecasts)
+    // BUG-015 FIX: pasar startHour actual para que snapshots tengan horas correctas
+    // Sin esto, todos los snapshots son [0..11] independientemente del momento de creación
+    const now = new Date()
+    const startHour = (now.getHours() + 1) % 24
+    const snapshots = createForecastSnapshots(hourlyForecasts, startHour)
 
     // 5. Calcular condición y tipos (para City)
     const condition = resolveCondition(

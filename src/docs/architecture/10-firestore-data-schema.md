@@ -275,42 +275,46 @@ interface ForecastDoc {
   region: string               // "america" | "asia" | "europa" | etc
   lat: number                  // 37.7749
   lon: number                  // -122.4194
-  date_hour: string            // "2026-04-08-14" (clave del documento)
-  snapshots: ForecastSnapshot[] // Array de 12 elementos (horas 0-23)
+  date_hour: string            // "2026-04-08-14" (hora redondeada, clave del documento)
+  snapshots: ForecastSnapshot[] // Array de 12 elementos (pronósticos horarios)
+  calculated_condition: string // "sunny" | "cloudy" | "rainy" | etc (resultado del algoritmo para snapshots[0])
   ttl: Timestamp               // Firestore Timestamp (now + 7 días)
-  created_at: Timestamp        // Firestore Timestamp (now)
+  created_at: Timestamp        // Firestore Timestamp (momento de consulta a AccuWeather)
 }
 ```
+
+**Nota:** `calculated_condition` se deriva de `snapshots[0].classified` — es la predicción que la app mostró al usuario. Se guarda por separado para simplificar comparación con reportes manuales (clasificación real del usuario).
 
 **Ejemplo completo:**
 ```json
 {
-  "city_id": "san-francisco",
-  "city_name": "San Francisco",
+  "city_id": "pier-39",
+  "city_name": "Pier 39",
   "country": "EE.UU.",
   "region": "america",
-  "lat": 37.7749,
-  "lon": -122.4194,
-  "date_hour": "2026-04-08-14",
+  "lat": 37.8087,
+  "lon": -122.4098,
+  "date_hour": "2026-04-19-08",
+  "calculated_condition": "sunny",
   "snapshots": [
     {
-      "hour": 14,
-      "raw_condition_code": 3,
-      "raw_condition_text": "Partly Sunny",
-      "classified": "partly",
-      "types": ["normal", "rock"],
-      "temperature_c": 18.5,
-      "wind_kmh": 9.0,
+      "hour": 9,
+      "raw_condition_code": 1,
+      "raw_condition_text": "Sunny",
+      "classified": "sunny",
+      "types": ["normal", "grass"],
+      "temperature_c": 16.2,
+      "wind_kmh": 5.0,
       "precipitation_mm": 0,
-      "humidity_pct": 65,
+      "humidity_pct": 72,
       "is_windy_override": false
     },
     {
-      "hour": 15,
-      "raw_condition_code": 3,
-      "raw_condition_text": "Partly Sunny",
-      "classified": "windy",
-      "types": ["flying", "dragon", "psychic"],
+      "hour": 10,
+      "raw_condition_code": 4,
+      "raw_condition_text": "Cloudy",
+      "classified": "cloudy",
+      "types": ["water", "flying"],
       "temperature_c": 19.2,
       "wind_kmh": 32.0,
       "precipitation_mm": 0,
