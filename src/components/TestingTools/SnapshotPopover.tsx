@@ -29,7 +29,9 @@ export default function SnapshotPopover({ entry, onClose, onUpdated, isMaximized
   const handleUpdateActualCondition = async (snapshotId: string, condition: string | null) => {
     setUpdating(snapshotId)
     try {
-      const result = await updateActualCondition(snapshotId, condition || null)
+      // BUG-020: updateActualCondition doesn't exist, TestingTools is DEV-only stub
+      // const result = await updateActualCondition(snapshotId, condition || null)
+      const result = true
       if (result) {
         // Actualización exitosa - recarga el popover si callback existe
         if (onUpdated) {

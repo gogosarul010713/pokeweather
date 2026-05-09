@@ -34,7 +34,9 @@ export default function HistoryGrid({ cities, retentionDays, onRetentionChange }
   const loadSnapshots = async () => {
     setLoading(true)
     try {
-      const data = await getSnapshots({ retentionDays })
+      // BUG-020: getSnapshots doesn't exist, TestingTools is DEV-only stub
+      // const data = await getSnapshots({ retentionDays })
+      const data: any[] = []
       setSnapshots(data)
 
       // Crear entradas: [fecha + ciudad] = snapshots para ese día

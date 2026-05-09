@@ -81,10 +81,12 @@ export default function PrecisionMetrics({ retentionDays = 7 }: PrecisionMetrics
         })
       } else {
         // Cargar desde IndexedDB
-        const days = retentionDays || (getRetentionDays() as 7 | 14 | 30) || 7
-        const snapshots = await getSnapshots({ retentionDays: days })
-        const precisionReport = calculatePrecisionMetrics(snapshots)
-        setReport(precisionReport)
+        // BUG-020: getSnapshots doesn't exist, TestingTools is DEV-only stub
+        // const days = retentionDays || (getRetentionDays() as 7 | 14 | 30) || 7
+        // const snapshots = await getSnapshots({ retentionDays: days })
+        // const precisionReport = calculatePrecisionMetrics(snapshots)
+        // setReport(precisionReport)
+        setReport({ byCondition: {}, correctCount: 0, totalCount: 0, accuracy: 0 })
       }
     } catch (err) {
       console.error('Error loading metrics:', err)
