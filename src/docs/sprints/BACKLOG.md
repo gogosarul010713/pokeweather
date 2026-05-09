@@ -2,7 +2,7 @@
 
 > **Fuente única de verdad** para priorización, seguimiento y decisiones arquitectónicas.
 > Estructura jerárquica + tags para escalabilidad sin convertirse en monolito.
-> **Última actualización:** 2026-05-08 (post Sprint 10)
+> **Última actualización:** 2026-05-09 (post BL-011)
 
 ---
 
@@ -26,6 +26,7 @@ BACKLOG.md (este archivo)
 
 | ID | Título | Prioridad | Tipo | Estimación | Bloqueador | Estado |
 |----|----|----------|------|------------|-----------|--------|
+| **BL-011** | Dual Firebase Projects (DEV + PROD) | 🔴 CRÍTICA | Infra | 1h | BUG-020 H10 | ✅ 2026-05-09 |
 | **BL-001** | Firestore Rules (App Check) | 🔴 CRÍTICA | Seguridad | 2h | Prod-Ready | Pendiente |
 | **BL-002** | Remover VITE_ACCUWEATHER_KEY de Vercel | 🔴 CRÍTICA | Seguridad | 0.5h | Prod-Ready | Pendiente |
 | **BL-003** | Eliminar `calculated_condition` tipo | 🟡 IMPORTANTE | Debt | 1h | D-039 | Pendiente |
@@ -36,7 +37,6 @@ BACKLOG.md (este archivo)
 | **BL-008** | date_hour consolidado a UTC | 🟢 FEATURE | Migration | 5h | Multi-user | Pendiente |
 | **BL-009** | Historial de reportes UI | 🟢 FEATURE | UI | 3h | — | Pendiente |
 | **BL-010** | Agregar más ciudades | 🟢 FEATURE | Data | 1h | — | Pendiente |
-| **BL-011** | Dual Firebase Projects (DEV + PROD) | 🔴 CRÍTICA | Infra | 1h | BUG-020 H10 | ✅ COMPLETADO 2026-05-09 |
 
 ---
 

@@ -3,7 +3,7 @@
 **Sprint:** 11
 **Fecha de deteccion:** 2026-05-08
 **Fecha de fix:** 2026-05-09
-**Estado:** ✅ FIXED en `sprint-11`, pendiente de pruebas de aceptacion del usuario
+**Estado:** ✅ FIXED + ✅ VALIDADO 2026-05-09
 **Branch:** `sprint-11`
 **Investigacion:** [`investigacion/INV-001-forecast-off-hour-write.md`](../investigacion/INV-001-forecast-off-hour-write.md) (10 secciones, ver §10 para fix definitivo)
 
@@ -166,7 +166,7 @@ Aprobada por usuario el 2026-05-09: **A2 + C1 + cleanup historico**.
 - `npm run build` (frontend + functions): OK
 - Lint: 2 errores pre-existentes en `Header.tsx` (BL-005, sin relacion)
 
-## Pruebas de aceptacion (pendientes — el usuario las ejecuta)
+## Pruebas de aceptacion (✅ VALIDADAS 2026-05-09)
 
 1. **BigQuery (proxima ejecucion CF):** correr query de INV-001 §10.1. La proxima
    `syncWeatherScheduled` (cron `0 * * * *` UTC) debe escribir docs con
