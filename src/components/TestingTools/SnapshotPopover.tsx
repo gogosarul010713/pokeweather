@@ -26,11 +26,11 @@ export default function SnapshotPopover({ entry, onClose, onUpdated, isMaximized
   const mainConditionEmoji = CONDITION_EMOJIS[mainCondition as keyof typeof CONDITION_EMOJIS] || '❓'
   const mainConditionName = CONDITION_NAMES[mainCondition as keyof typeof CONDITION_NAMES] || mainCondition
 
-  const handleUpdateActualCondition = async (snapshotId: string, condition: string | null) => {
+  const handleUpdateActualCondition = async (snapshotId: string, _condition: string | null) => {
     setUpdating(snapshotId)
     try {
       // BUG-020: updateActualCondition doesn't exist, TestingTools is DEV-only stub
-      // const result = await updateActualCondition(snapshotId, condition || null)
+      // const result = await updateActualCondition(snapshotId, _condition || null)
       const result = true
       if (result) {
         // Actualización exitosa - recarga el popover si callback existe

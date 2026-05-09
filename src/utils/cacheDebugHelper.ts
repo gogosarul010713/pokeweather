@@ -221,7 +221,7 @@ export function extractCityNameFromEntry(entry: CacheEntry): string {
   }
 
   // Weather: intenta extraer del objeto
-  const value = entry.value
+  const value = entry.value as { cityName?: string; city?: string } | null
   if (value && typeof value === 'object') {
     return value.cityName || value.city || 'Unknown'
   }

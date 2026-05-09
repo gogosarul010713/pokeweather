@@ -5,16 +5,11 @@
  */
 
 import { useEffect, useState } from 'react'
-import {
-  // BUG-020: getSnapshots removed (fn doesn't exist). TestingTools is DEV-only anyway.
-  // getSnapshots,
-  getRetentionDays,
-} from '../../services/history/weatherHistoryService'
+// BUG-020: getSnapshots/getRetentionDays removed (fns don't exist). TestingTools is DEV-only anyway.
 import {
   getRecentForecasts,
 } from '../../services/firebase/firebaseWeatherService'
 import {
-  calculatePrecisionMetrics,
   getStatusEmoji,
   getPrecisionColor,
   type PrecisionReport,
@@ -80,13 +75,18 @@ export default function PrecisionMetrics({ retentionDays = 7 }: PrecisionMetrics
           conditionCounts,
         })
       } else {
-        // Cargar desde IndexedDB
         // BUG-020: getSnapshots doesn't exist, TestingTools is DEV-only stub
-        // const days = retentionDays || (getRetentionDays() as 7 | 14 | 30) || 7
-        // const snapshots = await getSnapshots({ retentionDays: days })
-        // const precisionReport = calculatePrecisionMetrics(snapshots)
-        // setReport(precisionReport)
-        setReport({ byCondition: {}, correctCount: 0, totalCount: 0, accuracy: 0 })
+        setReport({
+          totalSnapshots: 0,
+          totalVerified: 0,
+          totalCorrect: 0,
+          overallPrecision: 0,
+          byCondition: [],
+          byRegion: [],
+          target: 98,
+          gap: -98,
+          isReliable: false,
+        })
       }
     } catch (err) {
       console.error('Error loading metrics:', err)
