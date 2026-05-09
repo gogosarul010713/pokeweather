@@ -48,6 +48,8 @@ export interface ForecastDoc {
   local_time_user: string
   ttl: Timestamp
   created_at: Timestamp
+  // BUG-020: momento real del último write (created_at queda fijo al inicio del slot)
+  last_written_at?: Timestamp
 }
 
 export interface WeatherData {
@@ -142,6 +144,13 @@ export async function saveCityForecast(
       ? (snapshots[0].classified || 'Unknown')
       : 'Unknown'
 
+    // BUG-020: created_at = inicio del slot horario (UTC) en lugar de Timestamp.now()
+    // Razón: el campo identifica el SLOT del forecast, no el momento del write.
+    // Sin esto, cualquier rewrite (frontend dev, syncWeatherManual, retry) corrompe
+    // la columna "Hora MX" mostrando minutos arbitrarios. last_written_at preserva
+    // el momento real del write para auditoría futura.
+    const slotStartUtc = startOfHourUtcFromDateHour(dateHour)
+
     const forecastDoc: ForecastDoc = {
       city_id: city.id,
       city_name: city.name,
@@ -155,7 +164,8 @@ export async function saveCityForecast(
       timezone: city.timezone,
       local_time_user: getLocalTimeUser(),
       ttl: Timestamp.fromDate(ttl),
-      created_at: Timestamp.now(),
+      created_at: Timestamp.fromDate(slotStartUtc),
+      last_written_at: Timestamp.now(),
     }
 
     // Firestore path: /city_weather/{city_id}/forecasts/{date_hour}
@@ -363,4 +373,20 @@ function formatDateHour(date: Date): string {
   const hour = String(date.getHours()).padStart(2, '0')
 
   return `${year}-${month}-${day}-${hour}`
+}
+
+/**
+ * BUG-020: Devuelve el inicio del slot horario representado por dateHour.
+ *
+ * dateHour fue generado con LOCAL time (formatDateHour usa getHours()), así que
+ * lo reconstruimos con new Date(y,m,d,h,0,0,0) — ese constructor interpreta los
+ * componentes como hora local y produce el instante absoluto correcto. La CF
+ * usa UTC en su getDateHourKey, por lo que su versión hace UTC start-of-hour.
+ *
+ * Ambas variantes (frontend LOCAL, CF UTC) devuelven Timestamp en el segundo
+ * exacto del slot, sin minutos arbitrarios.
+ */
+function startOfHourUtcFromDateHour(dateHour: string): Date {
+  const [year, month, day, hour] = dateHour.split('-').map(Number)
+  return new Date(year, month - 1, day, hour, 0, 0, 0)
 }

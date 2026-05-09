@@ -156,6 +156,15 @@ function getDateHourKey(): string {
 }
 
 /**
+ * BUG-020: Devuelve el inicio (UTC) del slot horario representado por dateHour.
+ * Permite que `created_at` quede pegado al slot, no al momento del write.
+ */
+function startOfSlotUtc(dateHour: string): Date {
+  const [year, month, day, hour] = dateHour.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day, hour, 0, 0, 0))
+}
+
+/**
  * Save city forecast to Firestore
  *
  * D-039 + Opcion A real-time:
@@ -171,6 +180,11 @@ async function saveCityForecast(
 ): Promise<void> {
   const dateHour = getDateHourKey()
   const now = admin.firestore.Timestamp.now()
+
+  // BUG-020: created_at = inicio del slot, no momento del write.
+  // Garantiza que la columna "Hora MX" muestra siempre HH:00, sin importar
+  // si la CF corre con latencia o si el slot se reescribe.
+  const slotStart = admin.firestore.Timestamp.fromDate(startOfSlotUtc(dateHour))
 
   const forecastRef = db
     .collection('city_weather')
@@ -191,7 +205,8 @@ async function saveCityForecast(
     snapshots: snapshots,
     timezone: city.timezone,
     local_time_user: getLocalTimeUser(),
-    created_at: now,
+    created_at: slotStart,
+    last_written_at: now,
     ttl: admin.firestore.Timestamp.fromDate(
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     ),

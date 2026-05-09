@@ -249,7 +249,11 @@ export default function Header({}: HeaderProps) {
               {sidebarOpen ? '☰' : '›'}
             </button>
 
-            <TestingButton onClick={() => setIsTestingOpen(true)} />
+            {/* BUG-020 (C1): TestingTools solo en dev. Cierra el camino accidental
+                de "Sincronizar ahora" en preview/prod que escribia forecasts off-hour. */}
+            {import.meta.env.DEV && (
+              <TestingButton onClick={() => setIsTestingOpen(true)} />
+            )}
             <SyncBadge />
             <ThemeToggle />
           </div>
@@ -266,7 +270,9 @@ export default function Header({}: HeaderProps) {
         onClose={() => setIsFilterPanelOpen(false)}
       />
 
-      <TestingTools isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
+      {import.meta.env.DEV && (
+        <TestingTools isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
+      )}
     </>
   )
 }
