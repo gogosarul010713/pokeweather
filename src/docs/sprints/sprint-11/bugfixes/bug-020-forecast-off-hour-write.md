@@ -198,3 +198,63 @@ Aprobada por usuario el 2026-05-09: **A2 + C1 + cleanup historico**.
   H4 (UTC vs LOCAL). Renombrar `BL-008` para incluir esta tarea.
 - **`autoSyncEnabled: false`** durante 5h (08/05 19-23 UTC) fue intencional
   (testing). Sin relacion con BUG-020 — solo contexto.
+
+---
+
+## Hotfix post-deploy (2026-05-09 — commit `e1f6cd5`)
+
+### Sintoma
+
+Tres deploys consecutivos en Vercel fallaron tras el push del fix principal
+(commits `2cf5ff1`, `41a1392`, `802828c`). Cada deploy cortaba con `tsc --build`
+en errores TS6133 / TS2740 / TS2322 que `npx tsc --noEmit` local no detectaba
+porque Vercel usa `tsc -b` (project references mode) que aplica reglas estrictas
+adicionales sobre incremental builds.
+
+### Errores TypeScript bloqueantes (9 totales)
+
+| Archivo | Error | Tipo |
+|---------|-------|------|
+| `LocationDetail.tsx:5` | `'ClassificationReportModal' is declared but its value is never read` | TS6133 |
+| `LocationDetail.tsx:46` | `'showReportModal' is declared but its value is never read` | TS6133 |
+| `LocationDetail.tsx:47` | `'showReportToast' is declared but its value is never read` | TS6133 |
+| `LocationDetail.tsx:55` | `'handleReportSuccess' is declared but its value is never read` | TS6133 |
+| `PrecisionMetrics.tsx:8` | `'getRetentionDays' is declared but its value is never read` | TS6133 |
+| `PrecisionMetrics.tsx:17` | `'calculatePrecisionMetrics' is declared but its value is never read` | TS6133 |
+| `PrecisionMetrics.tsx:89` | Stub `report` no cumple shape `PrecisionReport` (faltan 35+ props) | TS2740 |
+| `SnapshotPopover.tsx:29` | parametro `condition` declarado pero no usado | TS6133 |
+| `cacheDebugHelper.ts:226` | `Type '{}' is not assignable to type 'string'` (cityName/city access) | TS2322 |
+
+### Fix aplicado (`e1f6cd5`)
+
+1. **`LocationDetail.tsx`** — remover import de `ClassificationReportModal` mas
+   estado vestigial (`showReportModal`, `showReportToast`, `handleReportSuccess`).
+   El boton ⚠️ que disparaba el modal tambien se elimina (modal ya no existe en
+   codebase). Esto era deuda viva desde refactor anterior.
+
+2. **`PrecisionMetrics.tsx`** — remover imports `getRetentionDays` y
+   `calculatePrecisionMetrics` (no usados tras stub BUG-020). Completar shape
+   stub de `PrecisionReport` con todas las props requeridas:
+   `{ totalSnapshots: 0, totalVerified: 0, totalCorrect: 0, overallPrecision: 0,
+   byCondition: [], byRegion: [], target: 98, gap: -98, isReliable: false }`.
+
+3. **`SnapshotPopover.tsx`** — prefijo `_` al parametro `condition` no usado
+   (`_condition`). Convencion TS estandar para silenciar TS6133 en parametros
+   intencionalmente no usados.
+
+4. **`cacheDebugHelper.ts:217`** — cast explicito:
+   `const value = entry.value as { cityName?: string; city?: string } | null`.
+   Resuelve TS2322 sobre acceso a props opcionales en union `unknown`.
+
+### Validacion
+
+- Build local: `npm run build` (tsc -b + vite build) -> OK, 0 errores TS.
+- Bundle size: 734.21 kB / gzip 214.83 kB (igual al deploy estable previo).
+- Push: `e1f6cd5` -> origin/sprint-11 -> Vercel deploy `pokeweather-1lt8rj8z0`.
+
+### Leccion aprendida
+
+`tsc -b` en CI Vercel es mas estricto que `tsc --noEmit` local. **Nuevo
+invariante para Sprint 12 (BL-005 ampliado):** correr `npm run build` (no solo
+`tsc --noEmit`) antes de cualquier push para detectar errores incrementales que
+solo aparecen con project references.
