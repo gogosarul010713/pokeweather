@@ -58,7 +58,7 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 **Completado:**
 - BUG-020 ✅ — `created_at` off-hour (Fix A2 + C1 + cleanup 35 docs)
-- BL-011 ✅ — Dual Firebase: DEV (`weather-app-dev-f28ce`) / PROD (`weather-app-prod-ef50d`)
+- BL-011 ✅ — Dual Firebase: DEV (`weather-app-dev-f28ce`) / PROD (`weather-app-prod-ef50d`) — pruebas de aceptacion pasadas
 
 **Backlog pendiente:** ver [BACKLOG.md](src/docs/sprints/BACKLOG.md)
 Proximos items criticos: BL-001 (Firestore Rules), BL-002 (remover AccuWeather key de Vercel)
