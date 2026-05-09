@@ -11,7 +11,7 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 **Stack:** React 18 + Vite 5 + Leaflet + Zustand 4 + AccuWeather API + idb-keyval + s2-geometry
 **Dev server:** port 5173
-**Variables de entorno:** `VITE_ACCUWEATHER_KEY` (requerida)
+**Variables de entorno:** ver `.env.local.example` — DEV apunta a `weather-app-dev-f28ce`, PROD a `weather-app-prod-ef50d`
 
 **Documentacion:**
 - [src/docs/ROADMAP.md](src/docs/ROADMAP.md) - Vision Sprints 8-12
@@ -57,6 +57,16 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 | Iniciar una US nueva | `us-start` |
 | Analizar una US | `us-analyze` |
 | Validar una US completada | `us-validate` |
+
+---
+
+## BL-011 — Dual Firebase Projects (✅ COMPLETADO 2026-05-09)
+
+Aisla DEV (localhost → `weather-app-dev-f28ce`) de PROD (Vercel → `weather-app-prod-ef50d`).
+Resuelve causa estructural BUG-020 H10. TestingTools libre en localhost sin contaminar prod.
+
+Detalles: `src/docs/sprints/backlog/deuda-tecnica/bl-011-dual-firebase-projects.md`
+
 
 ---
 

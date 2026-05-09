@@ -36,6 +36,7 @@ BACKLOG.md (este archivo)
 | **BL-008** | date_hour consolidado a UTC | 🟢 FEATURE | Migration | 5h | Multi-user | Pendiente |
 | **BL-009** | Historial de reportes UI | 🟢 FEATURE | UI | 3h | — | Pendiente |
 | **BL-010** | Agregar más ciudades | 🟢 FEATURE | Data | 1h | — | Pendiente |
+| **BL-011** | Dual Firebase Projects (DEV + PROD) | 🔴 CRÍTICA | Infra | 1h | BUG-020 H10 | ✅ COMPLETADO 2026-05-09 |
 
 ---
 

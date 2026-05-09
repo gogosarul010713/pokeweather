@@ -34,7 +34,7 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
 
     try {
       // Obtener la URL de la Cloud Function
-      const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'weather-app-prod-ef50d'
+      const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID
       const cronSecret = import.meta.env.VITE_CRON_SECRET || ''
 
       console.log('[TestingTools][DIAG] Manual sync iniciado')
