@@ -60,9 +60,43 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
-## Estado Sprint 11 — 🚀 BACKLOG CREADO (2026-05-08)
+## Estado Sprint 11 — 🔧 BUG-020 COMPLETADO (2026-05-09)
 
 **Branch activa:** `sprint-11` (creada desde develop)
+**Status:** BUG-020 ✅ FIXED + HOTFIX ✅ DEPLOYED
+**Commits:** `2cf5ff1`, `41a1392`, `802828c` (fix A2+C1+cleanup), `e1f6cd5` (hotfix TS strict), `9b43e05` (doc)
+**Preview deploy:** [`pokeweather-1lt8rj8z0`](https://pokeweather-1lt8rj8z0-gogosarul010713-7327s-projects.vercel.app) ✅ Ready
+
+### BUG-020 — Forecast con `created_at` off-hour (COMPLETADO)
+
+**Root Cause H10 (validada):** Localhost dev + VITE_ACCUWEATHER_KEY escribía a Firestore prod. 
+Heurística: `accuLocationKey = NULL` → origen frontend dev; CF siempre lo escribe.
+35 docs corruptos encontrados en 5 ciudades.
+
+**Fixes aplicadas:**
+- **A2:** `created_at = startOfHour(date_hour)` (no `Timestamp.now()`) en CF + frontend
+- **C1:** TestingTools gateado en `import.meta.env.DEV` (previene sync accidental en preview/prod)
+- **Cleanup:** 35 docs corrompidos borrados via Firebase Admin + BigQuery heurística
+
+**Hotfix TS Strict (2026-05-09):**
+Vercel `tsc -b` fue más estricto que local. 9 errores TS6133/TS2740/TS2322 bloquearon 3 deploys.
+- `LocationDetail.tsx`: remover import vestigial + state de modal inexistente
+- `PrecisionMetrics.tsx`: completar shape PrecisionReport en stub
+- `SnapshotPopover.tsx`/`cacheDebugHelper.ts`: cast + prefijo _ a vars no usadas
+
+**Lección:** `npm run build` (tsc -b) detecta más que `tsc --noEmit`. Nuevo invariante para BL-005.
+
+**Documentación:** 
+- [bug-020-forecast-off-hour-write.md](src/docs/sprints/sprint-11/bugfixes/bug-020-forecast-off-hour-write.md) — análisis + investigación §10 + hotfix §11
+- [INV-001-forecast-off-hour-write.md](src/docs/sprints/sprint-11/investigacion/INV-001-forecast-off-hour-write.md) — 10 secciones, H10 validada
+
+**Pruebas de aceptación pendientes (usuario):**
+1. TestingTools NO visible en preview (sí en localhost dev)
+2. Tabla predictiva "Hora MX" = HH:00 para docs nuevos
+3. BigQuery próxima CF (cron UTC): `created_at_utc_hms = HH:00:00` + `accuLocationKey != NULL`
+4. Audit trail: 1 doc tiene `created_at` (HH:00 UTC) + `last_written_at` (real)
+5. `npm run dev` local funciona
+
 **Documentación:** Backlog centralizado en `src/docs/sprints/BACKLOG.md`
 
 ### Sprint 11 Backlog — 10 Items, 22.5 SP
