@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { updateActualCondition } from '../../services/history/weatherHistoryService'
+// BUG-020: updateActualCondition removed (fn doesn't exist). TestingTools is DEV-only anyway.
+// import { updateActualCondition } from '../../services/history/weatherHistoryService'
 import { CONDITION_EMOJIS, CONDITION_NAMES, CONDITIONS } from '../../config/conditionEmojis'
 import type { WeatherSnapshot } from '../../services/history/weatherHistoryService'
 

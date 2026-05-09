@@ -7,6 +7,7 @@ import SyncBadge from '../UI/SyncBadge'
 import FilterPanel from './FilterPanel'
 import FilterPanelModal from '../UI/FilterPanelModal'
 import TestingButton from './TestingButton'
+// BUG-020 (C1): TestingTools solo en DEV
 import TestingTools from '../TestingTools/TestingTools'
 
 interface HeaderProps {}

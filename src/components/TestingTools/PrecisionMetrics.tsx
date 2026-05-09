@@ -6,7 +6,8 @@
 
 import { useEffect, useState } from 'react'
 import {
-  getSnapshots,
+  // BUG-020: getSnapshots removed (fn doesn't exist). TestingTools is DEV-only anyway.
+  // getSnapshots,
   getRetentionDays,
 } from '../../services/history/weatherHistoryService'
 import {

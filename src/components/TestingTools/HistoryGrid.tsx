@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getSnapshots } from '../../services/history/weatherHistoryService'
+// BUG-020: getSnapshots import removed (fn doesn't exist). TestingTools is DEV-only anyway.
+// import { getSnapshots } from '../../services/history/weatherHistoryService'
 import SnapshotPopover from './SnapshotPopover'
 import { exportHistoryToExcel } from '../../utils/exportHistory'
 import type { City } from '../../store/useStore'
