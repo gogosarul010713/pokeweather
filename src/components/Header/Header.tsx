@@ -250,9 +250,8 @@ export default function Header({}: HeaderProps) {
               {sidebarOpen ? '☰' : '›'}
             </button>
 
-            {/* BUG-020 (C1): TestingTools solo en dev. Cierra el camino accidental
-                de "Sincronizar ahora" en preview/prod que escribia forecasts off-hour. */}
-            {import.meta.env.DEV && (
+            {/* US-1114: DEV local siempre; Vercel preview/prod via VITE_ENABLE_TESTING_TOOLS=true */}
+            {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TESTING_TOOLS === 'true') && (
               <TestingButton onClick={() => setIsTestingOpen(true)} />
             )}
             <SyncBadge />
@@ -271,7 +270,7 @@ export default function Header({}: HeaderProps) {
         onClose={() => setIsFilterPanelOpen(false)}
       />
 
-      {import.meta.env.DEV && (
+      {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TESTING_TOOLS === 'true') && (
         <TestingTools isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
       )}
     </>
