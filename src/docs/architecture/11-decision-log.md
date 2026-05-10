@@ -5,6 +5,59 @@
 
 ---
 
+### 2026-05-10 D-040 — TestingTools habilitado en Preview/Prod via VITE_ENABLE_TESTING_TOOLS (US-1114)
+
+**Contexto:** BUG-020 Fix C1 gateó TestingTools con `import.meta.env.DEV` para evitar
+sincronizaciones accidentales desde preview a Firestore prod. BL-011 resolvió la causa
+estructural: localhost ahora apunta a `weather-app-dev-f28ce` y Vercel a `weather-app-prod-ef50d`.
+Con proyectos Firebase aislados, ya no hay riesgo de contaminacion cruzada.
+
+**Problema:** TestingTools (panel de sync manual + auto-sync) es necesario en preview/prod
+para forzar sincronizaciones y validar el algoritmo de clasificacion. Con el gate `DEV` queda
+inaccesible en todos los builds de Vercel.
+
+**Decision:** Gate extendido a `import.meta.env.DEV || import.meta.env.VITE_ENABLE_TESTING_TOOLS === 'true'`.
+
+La variable `VITE_ENABLE_TESTING_TOOLS=true` se setea en Vercel Dashboard para entornos activos
+de prueba. Se omite en `main` cuando se llegue a version estable.
+
+**Alternativas descartadas:**
+- `!import.meta.env.PROD` — no distingue preview de main (ambos son PROD=true en Vite)
+- Hardcodear visible en todos los builds — no deja puerta para ocultarlo en main futuro
+
+**Consecuencias:**
+- TestingTools visible en Vercel preview/prod cuando `VITE_ENABLE_TESTING_TOOLS=true`
+- Sin cambios en localhost (sigue usando `import.meta.env.DEV`)
+- En main estable: omitir la variable es suficiente para ocultarlo, sin cambio de codigo
+- Unico archivo de codigo modificado: `Header.tsx` (2 lineas)
+
+**Archivos:** `src/components/Header/Header.tsx`, `.env.local.example`
+**US:** US-1114
+
+---
+
+### 2026-05-09 D-041 — Dual Firebase Projects: DEV (`weather-app-dev-f28ce`) / PROD (`weather-app-prod-ef50d`) (BL-011)
+
+**Contexto:** BUG-020 H10 identificó que localhost dev escribía a Firestore prod en cada
+`npm run dev` + refresh, generando docs con `created_at` off-hour. Fix A2 mitigó el síntoma
+pero la causa estructural (un solo Firebase para todos los entornos) permanecía.
+
+**Decision:** Dos Firebase projects independientes. `.env.local` apunta a `weather-app-dev-f28ce`.
+Vercel Dashboard sigue apuntando a `weather-app-prod-ef50d` sin cambios en codigo.
+
+**CF (Decision 4A):** Cloud Functions NO se despliegan en `weather-app-dev-f28ce`. Localhost
+escribe directo a Firestore dev via frontend. CF cron solo corre en prod.
+
+**Consecuencias:**
+- TestingTools en localhost escribe a dev, no a prod — testing libre sin riesgo
+- Prerequisito estructural para D-040 (US-1114)
+- `.firebaserc` default sigue apuntando a prod (necesario para `firebase deploy`)
+
+**Archivos:** `.env.local`, `.env.local.example`, `src/components/TestingTools/TestingTools.tsx`
+**BL:** BL-011
+
+---
+
 ### 2026-04-26 D-038 — Organización de Tests: unit/ + e2e/ui/ + Documentación (Session 21)
 
 **Contexto:** Proyecto acumuló tests dispersos en múltiples ubicaciones (tests/, tests/unit/, src/services/, tests/e2e/) sin estructura clara. Documentación de testing inexistente.

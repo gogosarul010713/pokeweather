@@ -2,7 +2,7 @@
 
 > **Fuente única de verdad** para priorización, seguimiento y decisiones arquitectónicas.
 > Estructura jerárquica + tags para escalabilidad sin convertirse en monolito.
-> **Última actualización:** 2026-05-09 (post BL-011)
+> **Última actualización:** 2026-05-10 (US-1114 agregada)
 
 ---
 
@@ -27,6 +27,7 @@ BACKLOG.md (este archivo)
 | ID | Título | Prioridad | Tipo | Estimación | Bloqueador | Estado |
 |----|----|----------|------|------------|-----------|--------|
 | **BL-011** | Dual Firebase Projects (DEV + PROD) | 🔴 CRÍTICA | Infra | 1h | BUG-020 H10 | ✅ 2026-05-09 |
+| **US-1114** | TestingTools en Preview/Prod | 🔴 CRÍTICA | Feature | 0.5h | BL-011 | Pendiente |
 | **BL-001** | Firestore Rules (App Check) | 🔴 CRÍTICA | Seguridad | 2h | Prod-Ready | Pendiente |
 | **BL-002** | Remover VITE_ACCUWEATHER_KEY de Vercel | 🔴 CRÍTICA | Seguridad | 0.5h | Prod-Ready | Pendiente |
 | **BL-003** | Eliminar `calculated_condition` tipo | 🟡 IMPORTANTE | Debt | 1h | D-039 | Pendiente |
