@@ -54,9 +54,14 @@ function computeOffset(dateHour: string, targetHour: number, timezone: number): 
   if (isNaN(execHourUtc)) return -1
 
   const localExecHour = ((execHourUtc + timezone) % 24 + 24) % 24
-  const offset = targetHour - (localExecHour + 1)
 
-  if (offset < 0 || offset > 11) return -1
+  // snapshots[i] predice la hora (localExecHour + 1 + i) % 24.
+  // Para encontrar el indice que predice targetHour:
+  //   offset = (targetHour - localExecHour - 1 + 24) % 24
+  // Valido solo si 0 <= offset <= 11
+  const offset = ((targetHour - localExecHour - 1) + 24) % 24
+
+  if (offset > 11) return -1
   return offset
 }
 
