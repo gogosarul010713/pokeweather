@@ -7,10 +7,7 @@ export default function SyncBadge() {
   const [timeago, setTimeago] = useState<string>('')
 
   useEffect(() => {
-    if (!lastUpdated) {
-      setTimeago('')
-      return
-    }
+    if (!lastUpdated) return
 
     const updateTimeago = () => {
       const minutes = Math.floor((Date.now() - lastUpdated) / 1000 / 60)
@@ -24,7 +21,7 @@ export default function SyncBadge() {
     }
 
     updateTimeago()
-    const interval = setInterval(updateTimeago, 60000) // Update every minute
+    const interval = setInterval(updateTimeago, 60000)
 
     return () => clearInterval(interval)
   }, [lastUpdated])

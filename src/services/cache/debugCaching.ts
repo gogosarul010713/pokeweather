@@ -302,7 +302,7 @@ export async function showForecastCache(): Promise<void> {
     forecastDocs.slice(-3).forEach((doc, i) => {
       const createdAtMs = typeof doc.created_at === 'number'
         ? doc.created_at
-        : (doc.created_at as any)?.toMillis?.() ?? Date.now()
+        : (doc.created_at as { toMillis?: () => number })?.toMillis?.() ?? Date.now()
       const createdAt = new Date(createdAtMs)
       const dateStr = createdAt.toLocaleString('es-ES')
 

@@ -48,14 +48,14 @@ export async function getAllWeatherEntries(): Promise<CacheEntry[]> {
       if (typeof key !== 'string' || !key.startsWith(CACHE_PREFIX_WEATHER)) continue
 
       // Los weather entries tienen estructura: { data, expiresAt }
-      const weatherData = value as any
+      const weatherData = value as Record<string, unknown>
       const entry: CacheEntry = {
         id: key,
         type: 'weather',
         key,
-        value: weatherData?.data || weatherData,
-        savedAt: weatherData?.savedAt || Date.now(),
-        expiresAt: weatherData?.expiresAt,
+        value: (weatherData?.data || weatherData) as CacheEntry['value'],
+        savedAt: (weatherData?.savedAt as number) || Date.now(),
+        expiresAt: weatherData?.expiresAt as number | undefined,
         size: new Blob([JSON.stringify(weatherData)]).size,
       }
       entries.push(entry)

@@ -22,7 +22,7 @@ interface ValidationResult {
   section: string
   status: 'PASS' | 'FAIL' | 'WARN'
   message: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 }
 
 const results: ValidationResult[] = []
@@ -93,7 +93,7 @@ async function validateUS801(db: admin.firestore.Firestore) {
       region: string
       snapshot_count: number
       forecast_docs: number
-      samples: any[]
+      samples: unknown[]
     }>()
 
     let totalSnapshots = 0
@@ -159,7 +159,7 @@ async function validateUS801(db: admin.firestore.Firestore) {
         }
         return acc
       },
-      {} as Record<string, any>
+      {} as Record<string, unknown>
     )
 
     results.push({
@@ -182,7 +182,7 @@ async function validateUS801(db: admin.firestore.Firestore) {
     if (totalIncompleteDocs > 0) {
       console.log(`   ⚠️  ${totalIncompleteDocs} documents with incomplete snapshots`)
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Fallback si hay error con índices (FAILED_PRECONDITION)
     if (error?.code === 9 || error?.details?.includes('FAILED_PRECONDITION')) {
       console.log('   ⚠️  Index not available, retrying without orderBy...')
@@ -201,7 +201,7 @@ async function validateUS801(db: admin.firestore.Firestore) {
         }
 
         const forecastCount = forecastsSnap.size
-        const cityMap = new Map<string, any>()
+        const cityMap = new Map<string, unknown>()
         let totalSnapshots = 0
 
         for (const forecastDoc of forecastsSnap.docs) {
@@ -272,7 +272,7 @@ async function validateUS802(db: admin.firestore.Firestore) {
   try {
     const EXPECTED_CONDITIONS = ['sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy']
     let catalogStatus = 'PASS'
-    const catalogDetails: Record<string, any> = {}
+    const catalogDetails: Record<string, unknown> = {}
 
     // ─ Validar Condiciones
     console.log('   Checking conditions...')
@@ -320,7 +320,7 @@ async function validateUS802(db: admin.firestore.Firestore) {
     } else {
       const typeMapping = typeMappingDoc.data() || {}
       const mappedConditions = Object.keys(typeMapping)
-      const allTypesFlat = Object.values(typeMapping).flatMap((types: any) =>
+      const allTypesFlat = Object.values(typeMapping).flatMap((types: unknown) =>
         Array.isArray(types) ? types : []
       )
       const uniqueTypes = [...new Set(allTypesFlat)]

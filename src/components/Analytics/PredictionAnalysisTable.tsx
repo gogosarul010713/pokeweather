@@ -1,4 +1,4 @@
-import React, { useState, useMemo, Fragment } from 'react';
+import React, { useState, useMemo, useCallback, Fragment } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -15,13 +15,8 @@ import type { WeatherCondition } from '../../config/weatherImages';
 import { CONDITION_TO_TYPES } from '../../services/weather/weatherService';
 import { TYPE_ICON } from '../../config/typeIcons';
 import WeatherReportModal from './WeatherReportModal';
-
-export interface LookbackItem {
-  hoursAgo: number;
-  condition: string;
-  wouldBeCorrect: boolean | null; // null = sin reporte manual todavía
-  timestamp?: string;
-}
+import { LookbackPanel } from './LookbackPanel';
+import { fetchLookback, type LookbackEntry } from '../../services/lookback/lookbackService';
 
 export interface PredictionRow {
   queryTime: string | Date;
@@ -33,7 +28,6 @@ export interface PredictionRow {
   prediction: string;
   actual: string | null;
   correct: boolean | null;
-  lookback12h: LookbackItem[];
   lat: number;
   lon: number;
   dateHour: string;
@@ -151,22 +145,54 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const [sorting, setSorting]             = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter]   = useState('');
-  const [openLookbacks, setOpenLookbacks] = useState<Set<string>>(new Set());
   const [reportingRow, setReportingRow]   = useState<PredictionRow | null>(null);
   const [copiedCoords, setCopiedCoords]   = useState<string | null>(null);
   const [groupBy, setGroupBy]             = useState<GroupBy>('hora');
 
-  const toggleLookback = (key: string) => {
-    setOpenLookbacks(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+  type LookbackState = { open: boolean; loading: boolean; entries: LookbackEntry[] };
+  const [lookbackMap, setLookbackMap] = useState<Map<string, LookbackState>>(new Map());
+
+  const toggleLookback = useCallback(async (key: string, row: PredictionRow) => {
+    const current = lookbackMap.get(key);
+
+    if (current?.open) {
+      setLookbackMap(prev => {
+        const next = new Map(prev);
+        next.set(key, { ...current, open: false });
+        return next;
+      });
+      return;
+    }
+
+    // Abrir con skeleton
+    setLookbackMap(prev => {
+      const next = new Map(prev);
+      next.set(key, { open: true, loading: true, entries: current?.entries ?? [] });
       return next;
     });
-  };
+
+    // Solo fetchear si no hay datos cacheados
+    if (!current?.entries.length) {
+      const entries = await fetchLookback(
+        row.cityId,
+        row.dateHour,
+        row.hour,
+        row.timezone,
+        row.actual
+      );
+      setLookbackMap(prev => {
+        const next = new Map(prev);
+        next.set(key, { open: true, loading: false, entries });
+        return next;
+      });
+    } else {
+      setLookbackMap(prev => {
+        const next = new Map(prev);
+        next.set(key, { ...current, open: true, loading: false });
+        return next;
+      });
+    }
+  }, [lookbackMap]);
 
   const handleReportSuccess = async (reportedCondition: string) => {
     showToast('✓ Reporte enviado correctamente');
@@ -299,16 +325,17 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       cell: info => {
         const row = info.row.original;
         const key    = info.row.id;
-        const isOpen = openLookbacks.has(key);
-        const hasData = row.lookback12h.length > 0;
+        const state  = lookbackMap.get(key);
+        const isOpen = state?.open ?? false;
+        const isLoading = state?.loading ?? false;
         return (
           <button
             className={`pat-btn-lookback ${row.correct === true ? 'success' : ''}`}
-            onClick={() => toggleLookback(key)}
-            disabled={!hasData}
-            title={hasData ? 'Ver histórico de 12h' : 'Sin datos de histórico'}
+            onClick={() => toggleLookback(key, row)}
+            disabled={isLoading}
+            title="Ver histórico de 12h"
           >
-            {!hasData ? 'SIN DATOS' : isOpen ? 'CERRAR' : 'LOOKBACK'}
+            {isLoading ? '...' : isOpen ? 'CERRAR' : 'LOOKBACK'}
           </button>
         );
       },
@@ -356,7 +383,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       enableSorting: false,
       enableColumnFilter: false,
     }),
-  ], [openLookbacks, reportingRow, copiedCoords]);
+  ], [lookbackMap, reportingRow, copiedCoords]);
 
   const table = useReactTable({
     data: rows,
@@ -1060,8 +1087,8 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                   }
 
                   const original = row.original;
-                  const isOpen   = openLookbacks.has(row.id);
-                  const hasLb    = original.lookback12h.length > 0;
+                  const lbState  = lookbackMap.get(row.id);
+                  const isOpen   = lbState?.open ?? false;
 
                   result.push(
                     <Fragment key={row.id}>
@@ -1073,43 +1100,14 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
                         ))}
                       </tr>
 
-                      {isOpen && hasLb && (
-                        <tr
+                      {isOpen && (
+                        <LookbackPanel
                           key={`lb-${row.id}`}
-                          className={`pat-lookback-row ${original.correct === true ? 'success' : ''}`}
-                        >
-                          <td colSpan={columns.length}>
-                            <div className="pat-lookback-panel">
-                              <div className={`pat-lookback-title ${original.correct === true ? 'success' : 'error'}`}>
-                                🔍 Lookback 12h — {original.lookback12h.length} predicciones anteriores{(() => { const confirmed = original.lookback12h.filter(x => x.wouldBeCorrect !== null); return confirmed.length > 0 ? ` · ${confirmed.filter(x => x.wouldBeCorrect).length}/${confirmed.length} confirmados acertaron` : ''; })()}
-                              </div>
-                              <div className="pat-lookback-grid">
-                                {original.lookback12h.map((item, i) => {
-                                  const cond  = item.condition.toLowerCase() as WeatherCondition;
-                                  const itemTime = item.timestamp ? getCityLocalTime(item.timestamp, original.timezone) : 'N/A';
-                                  return (
-                                    <div
-                                      key={`${row.id}-lb-${i}`}
-                                      className={`pat-lookback-item ${item.wouldBeCorrect ? 'hit' : ''}`}
-                                    >
-                                      <div className="pat-lookback-hours">{itemTime}</div>
-                                      <div className="pat-lookback-ago">-{item.hoursAgo}h</div>
-                                      <div className="pat-lookback-condition">
-                                        <img
-                                          src={WEATHER_IMAGES[cond] || '/weather/cloudy.png'}
-                                          alt={item.condition}
-                                          style={{ width: '16px', height: '16px' }}
-                                        />
-                                        <span>{CONDITION_LABEL[cond] || item.condition}</span>
-                                      </div>
-                                      {item.wouldBeCorrect && <div className="pat-lookback-check">✓</div>}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
+                          entries={lbState?.entries ?? []}
+                          loading={lbState?.loading ?? false}
+                          isSuccess={original.correct}
+                          colSpan={columns.length}
+                        />
                       )}
                     </Fragment>
                   );

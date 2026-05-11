@@ -10,9 +10,7 @@ import TestingButton from './TestingButton'
 // BUG-020 (C1): TestingTools solo en DEV
 import TestingTools from '../TestingTools/TestingTools'
 
-interface HeaderProps {}
-
-export default function Header({}: HeaderProps) {
+export default function Header() {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
 
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)

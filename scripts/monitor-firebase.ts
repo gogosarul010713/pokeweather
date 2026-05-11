@@ -72,7 +72,7 @@ async function checkFirebase(db: admin.firestore.Firestore): Promise<MonitorResu
 
     forecastSnapshot.docs.forEach(doc => {
       const data = doc.data()
-      const snapshots = data.snapshots as any[] || []
+      const snapshots = (data.snapshots as unknown[]) || []
       totalSnapshots += snapshots.length
 
       // Validar snapshots
@@ -106,7 +106,6 @@ async function checkFirebase(db: admin.firestore.Firestore): Promise<MonitorResu
 
   // 3. Validación de volumen
   const expectedDocs = cities.length * 24 // Idealmente 1 doc por ciudad por hora en 24h
-  const expectedSnapshots = expectedDocs * 12
 
   if (totalDocs === 0) {
     warnings.push('Aún sin datos (app acaba de iniciar)')

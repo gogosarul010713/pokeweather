@@ -13,7 +13,7 @@ const db = admin.firestore()
 export const syncWeatherScheduled = functions.pubsub
   .schedule('0 * * * *')
   .timeZone('UTC')
-  .onRun(async (context) => {
+  .onRun(async () => {
     try {
       // Check if auto-sync is enabled (D-029: configurable toggle)
       const settingsRef = db.collection('settings').doc('app-config')
@@ -144,7 +144,7 @@ export const clearFirestoreData = functions.https.onRequest(
 
     try {
       // Batch delete con chunking (máx 500 ops por batch)
-      const executeBatchDelete = async (docs: any[]) => {
+      const executeBatchDelete = async (docs: FirebaseFirestore.QueryDocumentSnapshot[]) => {
         let batch = db.batch()
         let batchCount = 0
 

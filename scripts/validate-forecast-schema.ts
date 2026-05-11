@@ -48,15 +48,15 @@ interface ForecastSnapshot {
   classified_condition?: string
   confidence?: number
   // otros campos que puedan existir
-  [key: string]: any
+  [key: string]: unknown
 }
 
 interface ForecastDoc {
   snapshots?: ForecastSnapshot[]
-  created_at?: any
-  expires_at?: any
-  ttl?: any
-  [key: string]: any
+  created_at?: unknown
+  expires_at?: unknown
+  ttl?: unknown
+  [key: string]: unknown
 }
 
 async function validateCityForecasts(

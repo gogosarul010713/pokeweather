@@ -44,16 +44,6 @@ function generateMockData(): PredictionRow[] {
         actual = isCorrect ? prediction : conditions[Math.floor(Math.random() * conditions.length)];
       }
 
-      // Generar lookback 12h con condiciones climáticas
-      const lookback12h = hasReport && isCorrect === false
-        ? Array.from({ length: 6 }, (_, i) => ({
-            hoursAgo: 6 - i,
-            condition: conditions[Math.floor(Math.random() * conditions.length)],
-            wouldBeCorrect: i === 1 || i === 4, // Simular 2 que habrían acertado
-            timestamp: `${String((h - 6 + i) % 24).padStart(2, '0')}:00`,
-          }))
-        : [];
-
       const coords = cityCoords[cityId] || { lat: 0, lon: 0 };
       rows.push({
         queryTime: new Date(`2026-04-18T${String(h).padStart(2, '0')}:30:00Z`),
@@ -65,7 +55,6 @@ function generateMockData(): PredictionRow[] {
         prediction,
         actual,
         correct: hasReport ? isCorrect : null,
-        lookback12h,
         lat: coords.lat,
         lon: coords.lon,
         dateHour: `2026-04-18-${String(h).padStart(2, '0')}`,

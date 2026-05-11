@@ -108,6 +108,7 @@ async function ensureInitialized(): Promise<void> {
  * Get Firestore instance (triggers lazy initialization if needed)
  * @returns Firestore instance or null if initialization failed
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getDb(): Promise<any> {
   await ensureInitialized()
   return db
@@ -117,6 +118,7 @@ export async function getDb(): Promise<any> {
  * Get Firebase app instance (triggers lazy initialization if needed)
  * @returns Firebase app instance or null if initialization failed
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getApp(): Promise<any> {
   await ensureInitialized()
   return app
@@ -126,6 +128,7 @@ export async function getApp(): Promise<any> {
  * Get Auth instance (triggers lazy initialization if needed)
  * @returns Auth instance or null if initialization failed
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getAuth_Instance(): Promise<any> {
   await ensureInitialized()
   return auth

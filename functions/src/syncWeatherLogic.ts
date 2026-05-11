@@ -105,8 +105,15 @@ async function fetchAccuWeatherForecast(
     })
 
     // Map AccuWeather response to raw WeatherSnapshot (sin clasificacion)
+    type AccuWeatherHour = {
+      WeatherIcon: number; IconPhrase: string; HasPrecipitation: boolean
+      RelativeHumidity: number
+      Temperature: { Value: number }
+      Wind: { Speed: { Value: number } }
+      WindGust?: { Speed?: { Value?: number } }
+    }
     const snapshots: WeatherSnapshot[] = response.data.map(
-      (item: any, index: number) => ({
+      (item: AccuWeatherHour, index: number) => ({
         hour: index,
         icon_code: item.WeatherIcon,
         icon_phrase: item.IconPhrase || '',

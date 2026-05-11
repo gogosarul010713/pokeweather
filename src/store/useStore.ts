@@ -40,9 +40,9 @@ export interface City {
   weatherImage: string
 }
 
-type Region = 'todas' | 'asia' | 'europa' | 'america' | 'oceania' | 'africa'
-type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin ordenar
-type SortDirection = 'asc' | 'desc'
+export type Region = 'todas' | 'asia' | 'europa' | 'america' | 'oceania' | 'africa'
+export type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin ordenar
+export type SortDirection = 'asc' | 'desc'
 type LoadingStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 interface LoadingProgress {

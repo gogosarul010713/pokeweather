@@ -4,7 +4,7 @@
  * US-1007: PredictionAnalysisTable
  */
 
-import type { PredictionRow, LookbackItem } from '../../components/Analytics/PredictionAnalysisTable'
+import type { PredictionRow } from '../../components/Analytics/PredictionAnalysisTable'
 import { getRecentForecasts, type ForecastDoc, type ForecastSnapshot } from '../firebase/firebaseWeatherService'
 import { getRecentClassificationReports, getRecentWeatherReports } from '../firebase/classificationReportService'
 import { getForecastCache } from '../cache/cacheService'
@@ -111,21 +111,10 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
         prediction: predictedCondition,
         actual: report?.should_be ?? null,
         correct: report ? predictedCondition === report.should_be : null,
-        lookback12h: [], // Se calcula abajo
         lat: forecast.lat,
         lon: forecast.lon,
         dateHour: forecast.date_hour,
       }
-
-      // 5. Generar lookback: buscar en forecasts previos de ESTA CIUDAD
-      // Lookback es: "¿en las últimas 12h, qué condición habría sido correcta para esta hora?"
-      row.lookback12h = generateLookback(
-        forecast.city_id,
-        snapshot.hour, // Buscamos predicciones para ESTA HORA en forecasts anteriores
-        queryTime,
-        forecasts,
-        reportIndex
-      )
 
       rows.push(row)
     })
@@ -137,94 +126,6 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
     console.error('[PredictionAnalytics] Error fetching predictions:', errorMsg)
     return []
   }
-}
-
-/**
- * Nota: Confianza por row individual no es significativa
- * La confianza real es acumulada (ej: 88/100 aciertos en Auckland)
- * Future work: Agregar dashboard de confianza acumulada por ciudad/hora
- * Para ahora: No se usa en tabla individual (columna removida)
- */
-
-/**
- * US-1107: Generar lookback 12h — predicciones anteriores que predijeron la misma hora
- *
- * Para cada hora en las últimas 12h, busca qué condición se predijo para targetHour
- * y compara con lo real (reportIndex).
- *
- * Ej: Si targetHour=4 y targetTime=04:00, busca:
- *   - 03:00: ¿qué se predijo para 04:00?
- *   - 02:00: ¿qué se predijo para 04:00?
- *   - ... (hasta 16:00 del día anterior)
- *
- * Retorna array ordenado DESC por hoursAgo (1h atrás, 2h atrás, ... 12h atrás)
- */
-function generateLookback(
-  cityId: string,
-  targetHour: number,
-  targetTime: Date,
-  allForecasts: ForecastDoc[],
-  reportIndex: Map<string, { should_be?: string }>
-): LookbackItem[] {
-  const lookbackItems: LookbackItem[] = []
-
-  // 1. Filtrar forecasts de esta ciudad solamente
-  const citySamples = allForecasts.filter(f => f.city_id === cityId)
-
-  if (!citySamples.length) {
-    return lookbackItems
-  }
-
-  // 2. Ordenar DESC por created_at (para búsqueda eficiente)
-  const sortedByTime = citySamples.sort((a, b) => {
-    const timeA = timestampToDate(a.created_at).getTime()
-    const timeB = timestampToDate(b.created_at).getTime()
-    return timeB - timeA
-  })
-
-  // 3. Para cada hora en las últimas 12h antes de targetTime
-  for (let hoursAgo = 0.5; hoursAgo <= 12; hoursAgo += 0.5) {
-    const checkTime = new Date(targetTime.getTime() - hoursAgo * 60 * 60 * 1000)
-
-    // Buscar forecast más cercano en el tiempo (dentro de ±15 min)
-    const nearbyForecast = sortedByTime.find(f => {
-      const forecastTime = timestampToDate(f.created_at)
-      const diff = Math.abs(forecastTime.getTime() - checkTime.getTime())
-      return diff < 15 * 60 * 1000 // ±15 minutos
-    })
-
-    if (!nearbyForecast) continue
-
-    // 4. Encontrar snapshot que predice para targetHour
-    const targetSnapshot = nearbyForecast.snapshots.find(
-      s => s.hour === targetHour
-    )
-
-    if (!targetSnapshot) continue
-
-    // 5. Buscar reporte de confirmación para esta fecha_hora (opcional)
-    const reportKey = `${cityId}|${nearbyForecast.date_hour}`
-    const report = reportIndex.get(reportKey)
-
-    // D-039: clasificar con resolveCondition
-    const lookbackCondition = classifySnapshot(targetSnapshot)
-
-    // 6. Determinar si habría sido correcto (null = sin reporte todavía)
-    const wouldBeCorrect: boolean | null = report
-      ? lookbackCondition === report.should_be
-      : null
-
-    // 7. Incluir siempre — reporte opcional (null = sin confirmar)
-    lookbackItems.push({
-      hoursAgo: Math.round(hoursAgo * 10) / 10,
-      condition: lookbackCondition,
-      wouldBeCorrect,
-      timestamp: timestampToDate(nearbyForecast.created_at).toISOString(),
-    })
-  }
-
-  // 8. Ordenar DESC por hoursAgo (recientes primero: 0.5h, 1.5h, 2.5h, ...)
-  return lookbackItems.sort((a, b) => b.hoursAgo - a.hoursAgo)
 }
 
 /**

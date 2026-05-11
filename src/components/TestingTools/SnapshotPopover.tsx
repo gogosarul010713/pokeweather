@@ -26,6 +26,7 @@ export default function SnapshotPopover({ entry, onClose, onUpdated, isMaximized
   const mainConditionEmoji = CONDITION_EMOJIS[mainCondition as keyof typeof CONDITION_EMOJIS] || '❓'
   const mainConditionName = CONDITION_NAMES[mainCondition as keyof typeof CONDITION_NAMES] || mainCondition
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleUpdateActualCondition = async (snapshotId: string, _condition: string | null) => {
     setUpdating(snapshotId)
     try {

@@ -45,16 +45,17 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
 
     if (firestoreWeather) {
       const firestoreTime = firestoreWeather.updatedAt ?? 0
-      const cachedTime = (cached as any)?.updatedAt ?? 0
+      const cachedTime = cached?.updatedAt ?? 0
 
       // Firestore gana si: no hay cache O Firestore es más reciente o igual
       if (!cached || firestoreTime >= cachedTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { weatherImage, ...cacheableData } = firestoreWeather
         await setCachedWeather(locationKey, { ...cacheableData, weatherImage: '' })
 
         const merged = {
           ...city,
-          condition: firestoreWeather.condition as any,
+          condition: firestoreWeather.condition as City['condition'],
           boostedTypes: firestoreWeather.boostedTypes,
           tempC: firestoreWeather.tempC,
           feelsLike: firestoreWeather.feelsLike,
@@ -82,7 +83,7 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
         lat: city.lat,
         lon: city.lon,
         s2Key: city.s2Key,
-        localTime: calculateLocalTime((cached as any).timezone ?? 0),
+        localTime: calculateLocalTime(cached?.timezone ?? 0),
       } as City
       result.push(merged)
       continue
@@ -96,8 +97,14 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
   return result
 }
 
+type RawCityJson = {
+  name: string; country: string; flag: string; region: string
+  lat: number; lng: number; density: number; stops: number; gyms: number; rating: number
+  tags?: string[]; tips?: string; best?: string; evento?: string; transporte?: string
+}
+
 // Transformar datos del JSON a formato City
-function transformCitiesToCityFormat(jsonCities: any[]): City[] {
+function transformCitiesToCityFormat(jsonCities: RawCityJson[]): City[] {
   return jsonCities.map((c) => ({
     id: c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     name: c.name,
@@ -132,7 +139,7 @@ function transformCitiesToCityFormat(jsonCities: any[]): City[] {
     timezone: 0,
     updatedAt: Date.now(),
     weatherImage: '',
-  }))
+  })) as City[]
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -150,7 +157,7 @@ export function useWeather() {
 
   const loadCities = useCallback(async (forceRefresh: boolean = false): Promise<City[]> => {
     // Cargar ciudades del JSON (siempre)
-    const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+    const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
     const cities = transformCitiesToCityFormat(rawCities)
     const total = cities.length
 
@@ -280,7 +287,7 @@ export function useWeather() {
 
       // Fallback: cargar desde IndexedDB/Firestore para no dejar sidebar vacío
       try {
-        const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+        const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
         const cities = transformCitiesToCityFormat(rawCities)
         const fallbackCities = await loadCitiesFromCache(cities)
         if (fallbackCities.length > 0) {
@@ -383,7 +390,7 @@ export function useWeather() {
           } catch (forceErr) {
             console.error('❌ Force refresh API falló:', forceErr)
             // Último intento: Firestore directo
-            const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+            const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
             const baseCities = transformCitiesToCityFormat(rawCities)
             const firestoreCities = await loadCitiesFromCache(baseCities)
             if (firestoreCities.some(c => c.tempC > 0 || c.boostedTypes.length > 0)) {
@@ -420,7 +427,7 @@ export function useWeather() {
         console.error('❌ run() falló, intentando Firestore como último fallback:', err)
         // Último recurso: cargar desde Firestore para no dejar sidebar vacío
         try {
-          const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+          const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
           const baseCities = transformCitiesToCityFormat(rawCities)
           const fallback = await loadCitiesFromCache(baseCities)
           if (fallback.length > 0) {

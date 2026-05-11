@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useStore } from '../../store/useStore'
+import { useStore, type SortMode, type SortDirection, type Region } from '../../store/useStore'
 import CustomSelect from '../UI/CustomSelect'
 import type { SelectOption } from '../UI/CustomSelect'
 import SortDropdown from './SortDropdown'
@@ -72,8 +72,8 @@ export default function FilterPanel() {
 
   // Handler para cambios de ordenamiento (criterio + dirección)
   const handleSortChange = useCallback((mode: string, direction: string) => {
-    setSortMode(mode as any)
-    setSortDirection(direction as any)
+    setSortMode(mode as SortMode)
+    setSortDirection(direction as SortDirection)
   }, [setSortMode, setSortDirection])
 
   const activeFilterCount =
@@ -88,7 +88,7 @@ export default function FilterPanel() {
     setRegionFilter('todas')
     setConditionFilter([])
     setTypeFilter([])
-    setSortMode('' as any)
+    setSortMode('')
     setSortDirection('asc')
   }
 
@@ -184,7 +184,7 @@ export default function FilterPanel() {
           label="Continente"
           value={regionFilter}
           options={REGION_OPTIONS}
-          onChange={(v) => setRegionFilter(v as any)}
+          onChange={(v) => setRegionFilter(v as Region)}
           isMulti={false}
         />
 
