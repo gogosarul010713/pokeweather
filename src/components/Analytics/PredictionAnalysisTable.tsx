@@ -173,10 +173,15 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
 
     // Solo fetchear si no hay datos cacheados
     if (!current?.entries.length) {
+      // row.hour es el indice del snapshot (0-11), no la hora local real.
+      // La hora local real predicha por snapshots[0] = (execHourUtc + timezone + 1) % 24.
+      const execHourUtc = parseInt(row.dateHour.split('-')[3], 10)
+      const targetHour = ((execHourUtc + row.timezone + 1) % 24 + 24) % 24
+
       const entries = await fetchLookback(
         row.cityId,
         row.dateHour,
-        row.hour,
+        targetHour,
         row.timezone,
         row.actual
       );
