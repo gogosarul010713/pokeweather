@@ -1,6 +1,6 @@
 import axios from 'axios'
 import admin from 'firebase-admin'
-import { resolveCondition } from './shared/weatherClassify'
+import { resolveCondition } from './shared/weatherClassify.js'
 
 // Tipos
 interface CityData {
