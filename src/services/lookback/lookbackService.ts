@@ -20,11 +20,13 @@ export interface LookbackEntry {
 }
 
 /**
- * Clasifica un snapshot usando icon_code (schema Cloud Function).
- * Fallback a classified para schema viejo del cliente React.
+ * Obtiene la condicion PGO de un snapshot.
+ * Prioridad: pgo_condition (guardado por CF) > recalculo con resolveCondition > classified legacy.
  */
-function classifyFromSnapshot(s: ForecastSnapshot | undefined): string {
+function getConditionFromSnapshot(s: ForecastSnapshot | undefined): string {
   if (!s) return 'Unknown'
+
+  if (s.pgo_condition) return s.pgo_condition
 
   const iconCode = s.icon_code ?? s.raw_condition_code ?? 0
   const windKmh = s.wind_kmh ?? 0
@@ -142,7 +144,7 @@ export async function fetchLookback(
 
         if (!snapshot) return
 
-        const condition = classifyFromSnapshot(snapshot)
+        const condition = getConditionFromSnapshot(snapshot)
         const isMatch = actualCondition ? condition === actualCondition : null
 
         entries.push({

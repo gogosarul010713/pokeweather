@@ -1,5 +1,6 @@
 import axios from 'axios'
 import admin from 'firebase-admin'
+import { resolveCondition } from './shared/weatherClassify'
 
 // Tipos
 interface CityData {
@@ -13,16 +14,16 @@ interface CityData {
   timezone: number
 }
 
-// Raw snapshot — clasificacion ocurre en el frontend via resolveCondition()
 interface WeatherSnapshot {
   hour: number
-  icon_code: number       // AccuWeather WeatherIcon (1-44)
-  icon_phrase: string     // Texto crudo AccuWeather ("Mostly Sunny", etc.)
+  icon_code: number
+  icon_phrase: string
   temp_c: number
   wind_kmh: number
   gust_kmh: number
   humidity: number
   has_precipitation: boolean
+  pgo_condition: string
 }
 
 // Ciudades sincronizadas con src/data/pokedensity-cities.json
@@ -113,16 +114,21 @@ async function fetchAccuWeatherForecast(
       WindGust?: { Speed?: { Value?: number } }
     }
     const snapshots: WeatherSnapshot[] = response.data.map(
-      (item: AccuWeatherHour, index: number) => ({
-        hour: index,
-        icon_code: item.WeatherIcon,
-        icon_phrase: item.IconPhrase || '',
-        temp_c: item.Temperature.Value,
-        wind_kmh: item.Wind.Speed.Value,
-        gust_kmh: item.WindGust?.Speed?.Value ?? item.Wind.Speed.Value,
-        humidity: item.RelativeHumidity || 0,
-        has_precipitation: item.HasPrecipitation ?? false,
-      })
+      (item: AccuWeatherHour, index: number) => {
+        const windKmh = item.Wind.Speed.Value
+        const gustKmh = item.WindGust?.Speed?.Value ?? windKmh
+        return {
+          hour: index,
+          icon_code: item.WeatherIcon,
+          icon_phrase: item.IconPhrase || '',
+          temp_c: item.Temperature.Value,
+          wind_kmh: windKmh,
+          gust_kmh: gustKmh,
+          humidity: item.RelativeHumidity || 0,
+          has_precipitation: item.HasPrecipitation ?? false,
+          pgo_condition: resolveCondition(item.WeatherIcon, windKmh, gustKmh),
+        }
+      }
     )
 
     return snapshots
@@ -131,10 +137,6 @@ async function fetchAccuWeatherForecast(
     throw error
   }
 }
-
-// ELIMINADO: mapAccuWeatherCondition() y calculateCondition()
-// Clasificacion ocurre SOLO en el frontend via weatherService.ts:resolveCondition()
-// La CF guarda datos raw (icon_code, wind_kmh, gust_kmh) para que el frontend clasifique
 
 /**
  * Get local time for user's machine (for persistency in Firestore)

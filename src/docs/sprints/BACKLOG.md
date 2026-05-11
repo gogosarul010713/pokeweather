@@ -30,6 +30,7 @@ BACKLOG.md (este archivo)
 | **US-1114** | TestingTools en Preview/Prod | 🔴 CRÍTICA | Feature | 0.5h | BL-011 | Pendiente |
 | **BL-001** | Firestore Rules (App Check) | 🔴 CRÍTICA | Seguridad | 2h | Prod-Ready | Pendiente |
 | **BL-002** | Remover VITE_ACCUWEATHER_KEY de Vercel | 🔴 CRÍTICA | Seguridad | 0.5h | Prod-Ready | Pendiente |
+| **BL-012** | Extraer algoritmo a modulo puro compartido (D-042) | 🔴 CRÍTICA | Arch+Debt | 4h | Drift CF↔Frontend | PLAN LISTO |
 | **BL-003** | Eliminar `calculated_condition` tipo | 🟡 IMPORTANTE | Debt | 1h | D-039 | Pendiente |
 | **BL-004** | Test unitario accuLocationKey='' | 🟡 IMPORTANTE | Quality | 1.5h | Regression | Pendiente |
 | **BL-005** | Linter: 53 errores pre-existentes | 🟡 IMPORTANTE | Quality | 3h | CI/CD | Pendiente |

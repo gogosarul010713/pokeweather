@@ -12,20 +12,23 @@ import type { WeatherCondition } from '../../config/weatherImages'
 
 export interface ForecastSnapshot {
   hour: number
+  icon_code?: number
+  icon_phrase?: string
+  temp_c?: number
+  wind_kmh: number
+  gust_kmh?: number
+  humidity?: number
+  has_precipitation?: boolean
+  pgo_condition?: string        // Calculado por CF (docs nuevos)
+  // Campos legacy (docs anteriores al schema nuevo)
   raw_condition_code?: number
   raw_condition_text?: string
   classified?: string
   types?: string[]
   temperature_c?: number
-  wind_kmh: number
   precipitation_mm?: number
   humidity_pct?: number
-  humidity?: number
   is_windy_override?: boolean
-  icon_code?: number
-  icon_phrase?: string
-  temp_c?: number
-  gust_kmh?: number
 }
 
 export interface ForecastDoc {

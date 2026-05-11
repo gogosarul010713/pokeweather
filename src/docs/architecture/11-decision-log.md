@@ -5,6 +5,97 @@
 
 ---
 
+### 2026-05-11 D-042 — Algoritmo de clasificacion en modulo puro compartido entre frontend y CF (BL-012)
+
+**Contexto:** D-039 (2026-05-03) establecio que la CF guarda raw y el frontend clasifica.
+La logica del algoritmo (`resolveCondition`, `WEATHER_TRANSLATIONS`, umbrales Windy) vive
+unicamente en `src/services/weather/weatherService.ts`. Sin embargo, dos casos de uso
+recurrentes requieren que la CF clasifique:
+
+1. Persistir `pgo_condition` ya calculado en Firestore (evita recalculo en cada lectura)
+2. Logs/analytics server-side donde sea util saber la condicion PGO antes del frontend
+
+En sesion 2026-05-11 se intento duplicar `resolveCondition` en la CF (tablas separadas
+`CAN_WINDY` + `BASE_CONDITION`). Este intento confirmo lo que D-039 ya advertia: una
+segunda copia diverge inmediatamente del original y rompe la garantia de
+"un solo cambio del algoritmo afecta todos los lados".
+
+**Problema:**
+- D-039 mantiene la pureza arquitectonica pero obliga al frontend a recalcular
+  `resolveCondition` en cada `getWeatherFromFirestore`, `lookbackService`,
+  `predictionAnalyticsService`. Tres llamadas separadas al mismo algoritmo en cada lectura.
+- Duplicar la logica en la CF (lo que se intento hoy) reintroduce el drift que D-039
+  habia eliminado. No es opcion.
+- Firebase CLI solo empaqueta el directorio `functions/`. Cualquier `import` desde la CF
+  hacia `../../src/...` falla en runtime — el archivo no existe en el servidor desplegado.
+- Compartir el archivo `weatherService.ts` completo desde la CF arrastra dependencias del
+  frontend (Zustand, idb-keyval, s2-geometry) incompatibles con Node.js.
+
+**Decision:** Extraer el algoritmo PURO a `src/services/weather/weatherClassify.ts`.
+Frontend re-exporta desde `weatherService.ts` (consumidores no cambian). CF importa una
+copia en `functions/src/shared/weatherClassify.ts` que se genera automaticamente por
+script `prebuild` antes de `tsc`.
+
+**Archivo `weatherClassify.ts` contiene SOLO:**
+- `WEATHER_TRANSLATIONS` (mapa de 40 iconos AccuWeather → condicion PGO + flag canWindy)
+- `WINDY_WIND_KMH` = 29, `WINDY_GUST_KMH` = 31 (umbrales)
+- `WeatherCondition` (tipo)
+- `getBaseCondition(iconId)` (funcion pura)
+- `resolveCondition(iconId, windKmh, gustKmh)` (funcion pura)
+- Cero imports de Zustand, idb-keyval, s2-geometry, react, firestore
+
+**Script de sincronizacion (en `functions/package.json`):**
+```
+"prebuild": "node ../scripts/sync-classify.mjs"
+"build":    "tsc"
+```
+`scripts/sync-classify.mjs` copia `src/services/weather/weatherClassify.ts` a
+`functions/src/shared/weatherClassify.ts` con un header generado:
+`// AUTOGENERADO desde src/services/weather/weatherClassify.ts — NO EDITAR`
+
+**Garantias:**
+1. **Source of truth unico:** modificar `src/services/weather/weatherClassify.ts` cambia
+   automaticamente el algoritmo en frontend y CF en el siguiente build/deploy.
+2. **Type safety preservada:** ambos lados consumen TypeScript con tipos completos.
+3. **Tests existentes vigentes:** `tests/unit/services/weatherService.test.ts` cubre los
+   44 iconos + Windy override; sigue cubriendo via re-export.
+4. **CI/CD compatible:** `firebase deploy --only functions` ejecuta `npm run build` que
+   dispara `prebuild` que dispara `sync-classify.mjs`. Sin pasos manuales.
+5. **Verificable en CI:** test que compara byte-a-byte source vs copia generada. Si alguien
+   edita la copia directamente, el test falla.
+
+**Schema Firestore con pgo_condition:**
+- CF guarda `pgo_condition` en cada snapshot (calculado al momento del fetch AccuWeather)
+- Frontend lee `pgo_condition` directo cuando esta presente (docs nuevos)
+- Frontend recalcula con `resolveCondition` cuando el campo no existe (docs legacy + dev path)
+
+**Refutaciones documentadas:**
+- ❌ Test de paridad sin extraccion: detecta drift pero no lo elimina. No cumple "un solo lugar".
+- ❌ Importar `weatherService.ts` desde CF: arrastra deps de frontend incompatibles con Node.
+- ❌ Import `../../src/...` desde CF deployada: Firebase CLI no sube el padre, falla en runtime.
+- ❌ JS puro con JSDoc: pierde `strict: true` del proyecto.
+- ❌ npm workspaces / monorepo: overhead innecesario para un solo archivo compartido.
+
+**Consecuencias en codigo existente:**
+- `firebaseWeatherService.ts:343` — sin cambio (sigue importando de weatherService.ts)
+- `predictionAnalyticsService.ts:11` — sin cambio
+- `lookbackService.ts:12` — sin cambio
+- `weatherService.ts` — agrega `export * from './weatherClassify'` y elimina su copia local
+- `syncWeatherLogic.ts` — importa de `./shared/weatherClassify`, elimina su copia local
+  agregada hoy
+
+**Plan de implementacion:** `src/docs/sprints/backlog/arch-decisions/bl-012-shared-classifier.md`
+
+**Reglas para futuro:**
+- Cualquier cambio al algoritmo se hace EN `src/services/weather/weatherClassify.ts`
+- NUNCA editar `functions/src/shared/weatherClassify.ts` (es autogenerado)
+- NUNCA agregar logica de clasificacion local en CF, frontend services, scripts, etc.
+- Si necesitas un nuevo helper de clasificacion: agregarlo a `weatherClassify.ts`
+
+**Decisiones relacionadas:** D-039 (CF raw → ampliada por esta), D-002 (Firebase backend)
+
+---
+
 ### 2026-05-10 D-040 — TestingTools habilitado en Preview/Prod via VITE_ENABLE_TESTING_TOOLS (US-1114)
 
 **Contexto:** BUG-020 Fix C1 gateó TestingTools con `import.meta.env.DEV` para evitar
