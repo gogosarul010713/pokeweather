@@ -61,6 +61,8 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 - BL-011 ✅ — Dual Firebase: DEV (`weather-app-dev-f28ce`) / PROD (`weather-app-prod-ef50d`)
 - US-1114 ✅ — TestingTools en Vercel via `VITE_ENABLE_TESTING_TOOLS=true` (commit `5272442`)
   - Pendiente: agregar var en Vercel Dashboard → Preview + Production
+- BL-012 ✅ — Algoritmo compartido frontend/CF via `weatherClassify.ts` (D-042, commit `1192ad5`)
+  - Pendiente: `cd functions && npm run deploy` (deploy a Firebase)
 - BUG-021 📋 — Lookback muestra datos incorrectos (doc creado, pendiente implementacion)
   - Bug A: Cloud Function guarda `hour` como indice (0-11), no hora local → busqueda `s.hour===targetHour` siempre falla
   - Bug B: busqueda por `created_at` ±15min en lugar de query directa por `date_hour` ID
@@ -68,5 +70,10 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
   - Solucion documentada: `src/docs/sprints/sprint-11/bugfixes/bug-021-lookback-wrong-data.md`
   - Requiere: nuevo `lookbackService.ts` + `LookbackPanel.tsx` + refactor `PredictionAnalysisTable.tsx`
 
+---
+
 **Backlog pendiente:** ver [BACKLOG.md](src/docs/sprints/BACKLOG.md)
-Proximos items criticos: BL-001 (Firestore Rules), BL-002 (remover AccuWeather key de Vercel)
+Proximos items criticos:
+- BL-012 (D-042 — algoritmo compartido, plan listo)
+- BL-001 (Firestore Rules)
+- BL-002 (remover AccuWeather key de Vercel)
