@@ -9,8 +9,12 @@
     "prebuild": "node ../scripts/sync-classify.mjs",
     "build": "tsc",
     "serve": "firebase emulators:start --only functions,firestore",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "deploy": "firebase deploy --only functions --project prod",
+    "deploy:dev": "firebase deploy --only functions --project dev",
+    "deploy:prod": "firebase deploy --only functions --project prod",
+    "logs": "firebase functions:log",
+    "logs:dev": "firebase functions:log --project dev",
+    "logs:prod": "firebase functions:log --project prod"
   },
   "main": "lib/index.js",
   "dependencies": {
