@@ -103,6 +103,7 @@ import type { City } from '../../store/useStore'
 const ACCUWEATHER_BASE = '/api/accuweather'
 
 interface HourlyForecastData {
+  EpochDateTime: number
   WeatherIcon: number
   Temperature: { Value: number }
   RealFeelTemperature: { Value: number }
@@ -116,6 +117,29 @@ interface HourlyForecastData {
 export interface LocationData {
   locationKey: string
   timezone: number  // offset en segundos desde UTC
+}
+
+/**
+ * Selecciona el slot horario activo de AccuWeather.
+ * AccuWeather actualiza cada 30min — data[0] NO siempre es la hora actual.
+ * Busca el slot con EpochDateTime mas reciente que sea <= ahora.
+ * Fallback a slots[0] si todos son futuros (rotacion anticipada de AccuWeather).
+ */
+export function findCurrentSlot<T extends { EpochDateTime: number }>(
+  slots: T[],
+  nowMs: number = Date.now()
+): T {
+  if (slots.length === 0) throw new Error('No slots available')
+
+  const nowSec = Math.floor(nowMs / 1000)
+  let best = slots[0]
+  for (const slot of slots) {
+    if (slot.EpochDateTime <= nowSec && slot.EpochDateTime > best.EpochDateTime) {
+      best = slot
+    }
+  }
+  const anyPast = slots.some(s => s.EpochDateTime <= nowSec)
+  return anyPast ? best : slots[0]
 }
 
 export const getAccuWeatherLocationKey = async (
@@ -175,7 +199,7 @@ export const getHourlyForecast = async (
   }
 
   const data = await response.json()
-  return data[0] // primer slot = hora actual
+  return findCurrentSlot(data)
 }
 
 /**
@@ -238,7 +262,7 @@ export const fetchCityWeather = async (
       alertsPromise,
     ])
 
-    const forecast = hourlyForecasts[0]
+    const forecast = findCurrentSlot(hourlyForecasts)
     if (!forecast) {
       throw new Error('No hourly forecast data returned')
     }
