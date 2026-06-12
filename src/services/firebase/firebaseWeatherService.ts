@@ -13,6 +13,7 @@ import type { WeatherCondition } from '../../config/weatherImages'
 
 export interface ForecastSnapshot {
   hour: number
+  epoch_dt: number
   icon_code: number
   icon_phrase: string
   temp_c: number
