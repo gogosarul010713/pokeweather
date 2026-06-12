@@ -9,7 +9,6 @@
  */
 
 import { getDb } from '../firebase/firebaseConfig'
-import { resolveCondition } from '../weather/weatherService'
 import type { ForecastSnapshot } from '../firebase/firebaseWeatherService'
 
 export interface LookbackEntry {
@@ -19,24 +18,11 @@ export interface LookbackEntry {
   isMatch: boolean | null
 }
 
-/**
- * Obtiene la condicion PGO de un snapshot.
- * Prioridad: pgo_condition (guardado por CF) > recalculo con resolveCondition > classified legacy.
- */
+// REF-001 (sprint-11): fallbacks a raw_condition_code/classified eliminados.
+// pgo_condition es la unica fuente — calculado por la CF al momento del sync.
 function getConditionFromSnapshot(s: ForecastSnapshot | undefined): string {
   if (!s) return 'Unknown'
-
-  if (s.pgo_condition) return s.pgo_condition
-
-  const iconCode = s.icon_code ?? s.raw_condition_code ?? 0
-  const windKmh = s.wind_kmh ?? 0
-  const gustKmh = s.gust_kmh ?? windKmh
-
-  if (iconCode > 0) {
-    return resolveCondition(iconCode, windKmh, gustKmh)
-  }
-
-  return s.classified || 'Unknown'
+  return s.pgo_condition
 }
 
 /**

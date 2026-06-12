@@ -1344,7 +1344,49 @@ const dateHour = formatDateHour(nextHour)
 
 ---
 
-### 2026-05-03 D-039 — CF guarda raw, frontend clasifica (US-1113)
+### 2026-06-12 D-040 — CF clasifica y persiste `pgo_condition`, frontend es read-only (REF-001)
+
+**Contexto:** D-039 definia que la CF guardaba raw y el frontend clasificaba. Con BL-012
+(2026-05-11) se extrajo `resolveCondition` a modulo compartido y la CF empezo a persistir
+`pgo_condition` en cada snapshot. Sin embargo el frontend nunca se limpio, generando dos
+fuentes de docs en Firestore con schemas distintos (root cause de BUG-026).
+
+**Decision:** La CF es la unica fuente de escritura en Firestore. El frontend es read-only.
+
+**Schema actual de `snapshots[]` (post REF-001):**
+```
+hour: number
+icon_code: number           // WeatherIcon AccuWeather (1-44)
+icon_phrase: string         // Texto crudo ("Mostly Sunny")
+temp_c: number
+wind_kmh: number
+gust_kmh: number
+humidity: number
+has_precipitation: boolean
+pgo_condition: string       // calculado por CF via resolveCondition (modulo compartido)
+```
+
+**Clasificacion:** `getWeatherFromFirestore()` lee `pgo_condition` directamente. No recalcula.
+
+**Motivo:**
+1. Un solo lugar de escritura = schema consistente en todos los entornos
+2. CF controla timing (HH:00 UTC) y atomicidad (batch con summary doc)
+3. Windy override se calcula en CF con los mismos datos (wind_kmh + gust_kmh)
+4. Frontend escribiendo en paralelo sobreescribia docs CF con schema inferior (BUG-026)
+
+**Implementacion:**
+- `firebaseWeatherService.ts`: `saveCityForecast` eliminada, `ForecastSnapshot`/`ForecastDoc` saneados
+- `batchWeatherService.ts`: ya no llama a `saveCityForecast`
+- `weatherService.ts`: `createForecastSnapshots` eliminada
+- `lookbackService.ts`, `predictionAnalyticsService.ts`, `PrecisionMetrics.tsx`: fallbacks eliminados
+- Tests: `tests/unit/services/schemaLegacy.test.ts` (14 tests)
+- Documento completo: `src/docs/sprints/sprint-11/refactoring/ref-001-limpieza-schema-legacy.md`
+
+**Supersede:** D-039 (abajo) — queda como referencia historica
+
+---
+
+### 2026-05-03 D-039 — CF guarda raw, frontend clasifica (US-1113) — SUPERSEDIDO por D-040
 
 **Contexto:** La Cloud Function `syncWeatherLogic.ts` tenia su propio algoritmo de clasificacion (`mapAccuWeatherCondition` via texto libre de `IconPhrase`) duplicando la logica de `weatherService.ts:resolveCondition()` (que usa numeros `WeatherIcon` + Windy override). Resultado: preview/prod mostraba climas distintos a localhost.
 

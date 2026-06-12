@@ -7,6 +7,7 @@
 // Algoritmo puro de clasificacion clima → PGO. Fuente de verdad: weatherClassify.ts (D-042)
 export * from './weatherClassify'
 
+import { resolveCondition } from './weatherClassify'
 import type { WeatherCondition } from './weatherClassify'
 
 // ─── Mapeo condición → tipos Pokémon potenciados ──────────────────────────────
@@ -86,62 +87,9 @@ export const BADGE_ICONS: Record<BadgeType, string> = {
 export const isExtremeWeather = (alerts: unknown[]): boolean =>
   Array.isArray(alerts) && alerts.length > 0
 
-// ─── US-801: Crear snapshots para Firestore ────────────────────────────────────
-// Convierte array de HourlyForecastData en array de ForecastSnapshot clasificados
-
-export interface ForecastSnapshot {
-  hour: number
-  raw_condition_code: number
-  raw_condition_text: string
-  classified: string
-  types: string[]
-  temperature_c: number
-  wind_kmh: number
-  precipitation_mm: number
-  humidity_pct: number
-  is_windy_override: boolean
-}
-
-/**
- * Crear array de 12 ForecastSnapshot desde datos horarios de AccuWeather
- * Cada snapshot es una hora completa con condición clasificada a PGO
- *
- * @param hourlyData Array de HourlyForecastData (máximo 12 elementos)
- * @param startHour Hora inicial para calcular 'hour' de cada snapshot (default 0)
- * @returns Array de ForecastSnapshot (0-12 elementos, típicamente 12)
- */
-export function createForecastSnapshots(
-  hourlyData: HourlyForecastData[],
-  startHour: number = 0
-): ForecastSnapshot[] {
-  return hourlyData.map((data, index) => {
-    const hour = (startHour + index) % 24
-
-    const iconId = data.WeatherIcon
-    const windKmh = data.Wind.Speed.Value
-    const gustKmh = data.WindGust.Speed.Value
-    const precip = data.HasPrecipitation ? 2.5 : 0 // placeholder: 2.5mm si hay lluvia
-
-    // Clasificar condición y obtener tipos Pokémon
-    const classified = resolveCondition(iconId, windKmh, gustKmh)
-    const types = CONDITION_TO_TYPES[classified]
-    const baseCondition = getBaseCondition(iconId)
-    const isWindyOverride = classified === 'windy' && baseCondition !== 'windy'
-
-    return {
-      hour,
-      raw_condition_code: iconId,
-      raw_condition_text: WEATHER_TRANSLATIONS[iconId]?.iconText ?? 'Unknown',
-      classified,
-      types,
-      temperature_c: data.Temperature.Value,
-      wind_kmh: windKmh,
-      precipitation_mm: precip,
-      humidity_pct: data.RelativeHumidity,
-      is_windy_override: isWindyOverride,
-    }
-  })
-}
+// REF-001 (sprint-11): ForecastSnapshot y createForecastSnapshots eliminados.
+// La CF es la unica fuente de escritura en Firestore — genera sus propios snapshots
+// con pgo_condition incluido. El frontend ya no clasifica ni persiste snapshots.
 
 // ─── AccuWeather API Functions (Sprint 6) ─────────────────────────────────────
 
@@ -271,17 +219,17 @@ export const getAlerts = async (
   }
 }
 
+// REF-001 (sprint-11): retorna solo City — snapshots eliminados (la CF los genera).
 export const fetchCityWeather = async (
   city: City,
   apiKey: string,
   enableAlerts: boolean = false
-): Promise<{ city: City; snapshots: ForecastSnapshot[] }> => {
+): Promise<{ city: City }> => {
   try {
     // 1. Obtener location key y timezone
     const { locationKey, timezone } = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
 
-    // 2. Fetch forecast (12 horas) + alerts (opcional, si plan lo soporta)
-    // US-801: Obtener array completo de 12 horas para Firestore
+    // 2. Fetch primer slot del forecast + alerts (opcional)
     const hourlyForecastsPromise = getHourlyForecasts(locationKey, apiKey)
     const alertsPromise = enableAlerts ? getAlerts(locationKey, apiKey) : Promise.resolve([])
 
@@ -290,20 +238,12 @@ export const fetchCityWeather = async (
       alertsPromise,
     ])
 
-    // 3. Usar primer elemento para datos de UI (actual behavior)
     const forecast = hourlyForecasts[0]
     if (!forecast) {
       throw new Error('No hourly forecast data returned')
     }
 
-    // 4. Crear snapshots para persistencia (US-801)
-    // BUG-015 FIX: pasar startHour actual para que snapshots tengan horas correctas
-    // Sin esto, todos los snapshots son [0..11] independientemente del momento de creación
-    const now = new Date()
-    const startHour = (now.getHours() + 1) % 24
-    const snapshots = createForecastSnapshots(hourlyForecasts, startHour)
-
-    // 5. Calcular condición y tipos (para City)
+    // 3. Clasificar condicion para la UI (sidebar, mapa)
     const condition = resolveCondition(
       forecast.WeatherIcon,
       forecast.Wind.Speed.Value,
@@ -312,7 +252,7 @@ export const fetchCityWeather = async (
     const boostedTypes = CONDITION_TO_TYPES[condition]
     const isExtreme = isExtremeWeather(alerts)
 
-    // 6. Construir objeto City actualizado
+    // 4. Construir City enriquecida para la UI
     const weatherData: City = {
       ...city,
       condition,
@@ -323,18 +263,16 @@ export const fetchCityWeather = async (
       humidity: forecast.RelativeHumidity,
       windKmh: forecast.Wind.Speed.Value,
       gustKmh: forecast.WindGust.Speed.Value,
-      visibilityKm: forecast.Visibility?.Value ?? 10,  // ← Default 10km si no viene
+      visibilityKm: forecast.Visibility?.Value ?? 10,
       weatherIcon: forecast.WeatherIcon,
       accuLocationKey: locationKey,
-      timezone,  // ← Ahora se asigna correctamente
+      timezone,
       updatedAt: Date.now(),
       weatherImage: `/weather/${condition}.png`,
-      // localTime será calculado en useWeather con timezone
     }
 
-    return { city: weatherData, snapshots }
+    return { city: weatherData }
   } catch (error) {
-    // Lanzar error para que useWeather lo maneje y muestre estado informativo
     throw new Error(`Failed to fetch weather for ${city.name}: ${error instanceof Error ? error.message : String(error)}`)
   }
 }

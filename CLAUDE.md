@@ -44,36 +44,21 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
-## Skills disponibles
-
-| Cuando | Skill |
-|--------|-------|
-| Iniciar una US nueva | `us-start` |
-| Analizar una US | `us-analyze` |
-| Validar una US completada | `us-validate` |
-
----
-
 ## Estado Sprint 11 (branch: `sprint-11`)
 
 **Completado:**
-- BUG-020 ✅ — `created_at` off-hour (Fix A2 + C1 + cleanup 35 docs)
-- BL-011 ✅ — Dual Firebase: DEV (`weather-app-dev-f28ce`) / PROD (`weather-app-prod-ef50d`)
-- US-1114 ✅ — TestingTools en Vercel via `VITE_ENABLE_TESTING_TOOLS=true` (commit `5272442`)
-  - Pendiente: agregar var en Vercel Dashboard → Preview + Production
-- BL-012 ✅ — Algoritmo compartido frontend/CF via `weatherClassify.ts` (D-042, commit `1192ad5`)
-  - Pendiente: `cd functions && npm run deploy` (deploy a Firebase)
-- BUG-021 📋 — Lookback muestra datos incorrectos (doc creado, pendiente implementacion)
-  - Bug A: Cloud Function guarda `hour` como indice (0-11), no hora local → busqueda `s.hour===targetHour` siempre falla
-  - Bug B: busqueda por `created_at` ±15min en lugar de query directa por `date_hour` ID
-  - Bug C: ventana 24h de `getRecentForecasts` deja sin datos el lookback de filas al borde
-  - Solucion documentada: `src/docs/sprints/sprint-11/bugfixes/bug-021-lookback-wrong-data.md`
-  - Requiere: nuevo `lookbackService.ts` + `LookbackPanel.tsx` + refactor `PredictionAnalysisTable.tsx`
+- BL-012 ✅ — Algoritmo compartido frontend/CF (D-042)
+- BUG-021 ✅ — Lookback lazy on-demand con getDoc por ID directo
+- BUG-022 ✅ — CF DEV: URL hardcodeada a PROD + IAM allUsers faltante
+- BUG-023 ✅ — `resolveCondition is not defined` en dev post BL-012
+- BUG-024 ✅ — `target_hour` persistido en CF, elimina calculo timezone en frontend — CF desplegada DEV
+- BUG-025 ✅ — Docs sin `target_hour` descartados en `getRecentForecasts`
+- BUG-026 ✅ — `classifySnapshot` ignoraba `pgo_condition`, divergencia sidebar/tabla corregida
+- REF-001 ✅ — Limpieza schema legacy post-BL-012: `saveCityForecast` eliminada, `ForecastSnapshot`/`ForecastDoc` saneados, 6 archivos actualizados, 14 tests nuevos. Ver `src/docs/sprints/sprint-11/refactoring/ref-001-limpieza-schema-legacy.md`
 
----
+**Siguiente:**
+- BUG-028 — Tabla predictiva no muestra datos: diagnosticar `getRecentForecasts` + flujo completo desde Firestore hasta `PredictionAnalysisTable`. Arrancar con logs en consola del dev server.
 
-**Backlog pendiente:** ver [BACKLOG.md](src/docs/sprints/BACKLOG.md)
-Proximos items criticos:
-- BL-012 (D-042 — algoritmo compartido, plan listo)
-- BL-001 (Firestore Rules)
-- BL-002 (remover AccuWeather key de Vercel)
+**Backlog critico:**
+- BL-001 — Firestore Security Rules (App Check) — 2h
+- BL-002 — Remover VITE_ACCUWEATHER_KEY de Vercel — 0.5h

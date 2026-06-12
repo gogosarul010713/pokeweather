@@ -31,7 +31,7 @@ BACKLOG.md (este archivo)
 | **BL-001** | Firestore Rules (App Check) | 🔴 CRÍTICA | Seguridad | 2h | Prod-Ready | Pendiente |
 | **BL-002** | Remover VITE_ACCUWEATHER_KEY de Vercel | 🔴 CRÍTICA | Seguridad | 0.5h | Prod-Ready | Pendiente |
 | **BL-012** | Extraer algoritmo a modulo puro compartido (D-042) | 🔴 CRÍTICA | Arch+Debt | 4h | Drift CF↔Frontend | PLAN LISTO |
-| **BL-003** | Eliminar `calculated_condition` tipo | 🟡 IMPORTANTE | Debt | 1h | D-039 | Pendiente |
+| **BL-003** | Eliminar `calculated_condition` tipo | 🟡 IMPORTANTE | Debt | 1h | D-039 | ✅ REF-001 2026-06-12 |
 | **BL-004** | Test unitario accuLocationKey='' | 🟡 IMPORTANTE | Quality | 1.5h | Regression | Pendiente |
 | **BL-005** | Linter: 53 errores pre-existentes | 🟡 IMPORTANTE | Quality | 3h | CI/CD | Pendiente |
 | **BL-006** | Suite E2E tabla predictiva | 🟡 IMPORTANTE | Testing | 4h | Manual | Pendiente |
@@ -74,16 +74,19 @@ BACKLOG.md (este archivo)
 
 ### [BL-003] Eliminar `calculated_condition` del tipo ForecastDoc
 
-**Ubicación:** `src/services/firebase/firebaseWeatherService.ts:42`
+**Estado: COMPLETADO en REF-001 (2026-06-12)**
 
-**Problema:** Campo obsoleto. D-039 define que CF escribe RAW (`icon_code`), frontend clasifica.
+`calculated_condition` eliminado de `ForecastDoc`. `ForecastSnapshot` saneado (8 campos legacy
+eliminados, todos los campos restantes obligatorios). `saveCityForecast` eliminada completa.
+La CF es ahora la unica fuente de escritura en Firestore.
 
-**Impacto:** Confusión entre `calculated_condition` (viejo) vs `classifySnapshot()` (nuevo).
+Ver detalle completo: `src/docs/sprints/sprint-11/refactoring/ref-001-limpieza-schema-legacy.md`
 
-**Pasos:**
-1. Grep: `calculated_condition` en src/ (61 matches encontrados)
-2. Eliminar de tipo `ForecastDoc`
-3. Actualizar documentación D-039 en `src/docs/architecture/11-decision-log.md`
+~~**Ubicación:** `src/services/firebase/firebaseWeatherService.ts:42`~~
+
+~~**Problema:** Campo obsoleto. D-039 define que CF escribe RAW (`icon_code`), frontend clasifica.~~
+
+~~**Pasos:** Grep + eliminar de tipo + actualizar D-039~~
 
 ---
 

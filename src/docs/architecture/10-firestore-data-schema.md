@@ -47,18 +47,18 @@
                     │        │ - wind, etc    │
                     │        └────────────────┘
                     │               │
-                    │    ┌──────────▼──────────────┐
-                    │    │   weatherService.ts    │
-                    │    │ - resolveCondition()   │
-                    │    │ - getBaseCondition()   │
-                    │    │ - CONDITION_TO_TYPES[] │
-                    │    └────────────────────────┘
-                    │               │
+                    │    ┌──────────▼──────────────────────┐
+                    │    │   Cloud Function (syncWeather)  │
+                    │    │ - resolveCondition() (shared)   │
+                    │    │ - CONDITION_TO_TYPES[]          │
+                    │    │ - pgo_condition por snapshot    │
+                    │    └─────────────────────────────────┘
+                    │               │ (unica escritura en Firestore — REF-001)
                     │        ┌──────▼──────────┐
                     │        │ ForecastSnapshot│
-                    │        │ - classified    │
-                    │        │ - types[]       │
-                    │        │ - wind_override │
+                    │        │ - pgo_condition │  <- calculado por CF
+                    │        │ - icon_code     │
+                    │        │ - temp_c, etc   │
                     │        └────────────────┘
                     │               │
                     │        ┌──────▼──────────┐
@@ -66,6 +66,7 @@
                     │        │ (Firestore)     │
                     │        │ - city_id       │
                     │        │ - snapshots[]   │
+                    │        │ - target_hour   │
                     │        │ - ttl           │
                     │        └────────────────┘
                     │               │
@@ -218,72 +219,89 @@ Ejemplo:
 
 ---
 
-### 4. **ForecastSnapshot** (Nuestro modelo clasificado)
-**Fuente:** Derivado de `ForecastData` + clasificación en `weatherService.ts`  
+### 4. **ForecastSnapshot** (Schema actual — post REF-001, 2026-06-12)
+**Fuente:** Generado por Cloud Function `syncWeatherLogic.ts`  
 **Ubicación:** Array de 12 elementos en `ForecastDoc.snapshots`  
-**Propósito:** Serializar un pronóstico de 1 hora con clasificación Pokémon GO
+**Propósito:** Serializar un pronostico de 1 hora con clasificacion calculada por CF
 
 ```typescript
+// Schema CF (post BL-012 + REF-001): la Cloud Function es la unica fuente de escritura.
+// pgo_condition calculado via resolveCondition() (modulo compartido weatherClassify.ts)
 interface ForecastSnapshot {
-  hour: number                 // 0-23 (hora del día)
-  raw_condition_code: number   // AccuWeather IconCode (1-44)
-  raw_condition_text: string   // "Partly Sunny" (literal de API)
-  classified: string           // "partly" | "sunny" | "windy" | etc
-  types: string[]              // ["normal", "rock"] (tipos boosteados)
-  temperature_c: number        // 18.5
+  hour: number                 // indice 0-11 (posicion en array, no hora del dia)
+  icon_code: number            // AccuWeather WeatherIcon (1-44)
+  icon_phrase: string          // "Partly Sunny" (texto crudo de API)
+  temp_c: number               // 18.5
   wind_kmh: number             // 9.0 (viento sostenido)
-  precipitation_mm: number     // 0 | 2.5 | etc
-  humidity_pct: number         // 65
-  is_windy_override: boolean   // true si "classified" cambió por viento
+  gust_kmh: number             // 12.5 (rafaga — requerido para Windy override)
+  humidity: number             // 65
+  has_precipitation: boolean   // false | true
+  pgo_condition: string        // "sunny" | "partly" | "cloudy" | "windy" | "rain" | "snow" | "fog"
 }
 ```
 
 **Ejemplo:**
 ```json
 {
-  "hour": 14,
-  "raw_condition_code": 3,
-  "raw_condition_text": "Partly Sunny",
-  "classified": "partly",
-  "types": ["normal", "rock"],
-  "temperature_c": 18.5,
+  "hour": 0,
+  "icon_code": 3,
+  "icon_phrase": "Partly Sunny",
+  "temp_c": 18.5,
   "wind_kmh": 9.0,
-  "precipitation_mm": 0,
-  "humidity_pct": 65,
-  "is_windy_override": false
+  "gust_kmh": 12.5,
+  "humidity": 65,
+  "has_precipitation": false,
+  "pgo_condition": "partly"
 }
 ```
 
 **Diferencia con `ForecastData`:**
-- `ForecastData`: Raw API response (44 campos)
-- `ForecastSnapshot`: Simplificado + clasificado (12 campos)
-- `ForecastSnapshot[]`: Array de 12 horas para una ciudad
+- `ForecastData`: Raw API response (44 campos, AccuWeather format)
+- `ForecastSnapshot`: Simplificado + clasificado por CF (9 campos)
+- `ForecastSnapshot[]`: Array de 12 horas para una ciudad (snapshots[0] = prediccion actual)
+
+> **Historial de schema:**
+> - US-801 (2026-04-08): Schema viejo con `classified`, `raw_condition_code`, `types[]`, `is_windy_override` — frontend clasificaba
+> - US-1113 (2026-05-03): CF guardaba raw, frontend clasificaba al leer (D-039)
+> - BL-012 (2026-05-11): CF empieza a persistir `pgo_condition` — schema de transicion
+> - REF-001 (2026-06-12): Campos legacy eliminados, schema actual definitivo (ver D-040 en decision-log)
 
 ---
 
-### 5. **ForecastDoc** (Documento Firestore)
-**Fuente:** Generado en `firebaseWeatherService.ts` a partir de `City + ForecastSnapshot[]`  
+### 5. **ForecastDoc** (Documento Firestore — post REF-001, 2026-06-12)
+**Fuente:** Generado exclusivamente por Cloud Function `syncWeatherLogic.ts`  
 **Path:** `/city_weather/{city_id}/forecasts/{YYYY-MM-DD-HH}`  
-**Creado:** Al terminar el ciclo de carga de cada ciudad (async/background)  
-**TTL:** 7 días (se elimina automáticamente)
+**Creado:** CF ejecuta sync horario (cron) o trigger manual  
+**TTL:** 7 dias (se elimina automaticamente via campo `ttl`)
 
 ```typescript
+// REF-001 (sprint-11): saveCityForecast eliminada del frontend.
+// CF es la unica fuente de escritura. Todos los campos son obligatorios.
 interface ForecastDoc {
-  city_id: string              // "san-francisco" (ID único de ciudad)
+  city_id: string              // "san-francisco" (ID unico de ciudad)
   city_name: string            // "San Francisco" (display)
   country: string              // "EE.UU."
   region: string               // "america" | "asia" | "europa" | etc
   lat: number                  // 37.7749
   lon: number                  // -122.4194
-  date_hour: string            // "2026-04-08-14" (hora redondeada, clave del documento)
-  snapshots: ForecastSnapshot[] // Array de 12 elementos (pronósticos horarios)
-  calculated_condition: string // "sunny" | "cloudy" | "rainy" | etc (resultado del algoritmo para snapshots[0])
-  ttl: Timestamp               // Firestore Timestamp (now + 7 días)
-  created_at: Timestamp        // Firestore Timestamp (momento de consulta a AccuWeather)
+  date_hour: string            // "2026-04-08-14" (hora UTC de ejecucion de CF, clave del doc)
+  snapshots: ForecastSnapshot[] // Array de 12 elementos — snapshots[0] = prediccion actual
+  timezone: number             // Offset en horas de la ciudad (ej: -6 para Mexico)
+  target_hour: number          // Hora local de la ciudad que predice snapshots[0] (0-23)
+  local_time_user: string      // Display "11/06 08:00" (fecha/hora local formateada)
+  ttl: Timestamp               // Firestore Timestamp (now + 7 dias)
+  created_at: Timestamp        // Firestore Timestamp (momento de ejecucion de CF)
+  last_written_at?: Timestamp  // Opcional — ultima escritura (para diagnostico)
 }
 ```
 
-**Nota:** `calculated_condition` se deriva de `snapshots[0].classified` — es la predicción que la app mostró al usuario. Se guarda por separado para simplificar comparación con reportes manuales (clasificación real del usuario).
+> **Nota `target_hour`:** Calculado por CF al momento del sync. Reemplaza el calculo de
+> timezone que hacia el frontend (eliminado en BUG-024). Docs sin `target_hour` son obsoletos
+> y se descartan en `getRecentForecasts` (BUG-025).
+
+> **Nota `calculated_condition` (eliminado):** En el schema viejo (US-801) existia este campo
+> como copia de `snapshots[0].classified`. Eliminado en REF-001 (2026-06-12) — `pgo_condition`
+> dentro de cada snapshot es la fuente de verdad.
 
 **Ejemplo completo:**
 ```json
@@ -294,43 +312,36 @@ interface ForecastDoc {
   "region": "america",
   "lat": 37.8087,
   "lon": -122.4098,
-  "date_hour": "2026-04-19-08",
-  "calculated_condition": "sunny",
+  "date_hour": "2026-06-12-08",
+  "timezone": -7,
+  "target_hour": 1,
+  "local_time_user": "12/06 01:00",
   "snapshots": [
     {
-      "hour": 9,
-      "raw_condition_code": 1,
-      "raw_condition_text": "Sunny",
-      "classified": "sunny",
-      "types": ["normal", "grass"],
-      "temperature_c": 16.2,
+      "hour": 0,
+      "icon_code": 1,
+      "icon_phrase": "Sunny",
+      "temp_c": 16.2,
       "wind_kmh": 5.0,
-      "precipitation_mm": 0,
-      "humidity_pct": 72,
-      "is_windy_override": false
+      "gust_kmh": 7.0,
+      "humidity": 72,
+      "has_precipitation": false,
+      "pgo_condition": "sunny"
     },
     {
-      "hour": 10,
-      "raw_condition_code": 4,
-      "raw_condition_text": "Cloudy",
-      "classified": "cloudy",
-      "types": ["water", "flying"],
-      "temperature_c": 19.2,
+      "hour": 1,
+      "icon_code": 4,
+      "icon_phrase": "Intermittent Clouds",
+      "temp_c": 19.2,
       "wind_kmh": 32.0,
-      "precipitation_mm": 0,
-      "humidity_pct": 62,
-      "is_windy_override": true
+      "gust_kmh": 41.0,
+      "humidity": 62,
+      "has_precipitation": false,
+      "pgo_condition": "windy"
     }
-    // ... 10 snapshots más (hasta hora 23)
   ],
-  "ttl": {
-    "_seconds": 1712954400,
-    "_nanoseconds": 0
-  },
-  "created_at": {
-    "_seconds": 1712606400,
-    "_nanoseconds": 0
-  }
+  "ttl": { "_seconds": 1749600000, "_nanoseconds": 0 },
+  "created_at": { "_seconds": 1749542400, "_nanoseconds": 0 }
 }
 ```
 

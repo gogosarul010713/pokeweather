@@ -5,30 +5,22 @@
 
 import { getDb } from './firebaseConfig'
 import type { Timestamp } from 'firebase/firestore'
-import type { City } from '../../store/useStore'
 import type { WeatherCondition } from '../../config/weatherImages'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+// Schema CF (post BL-012): la Cloud Function es la unica fuente de escritura en Firestore.
+// El frontend solo lee — saveCityForecast fue eliminado en sprint-11 (limpieza legacy).
 
 export interface ForecastSnapshot {
   hour: number
-  icon_code?: number
-  icon_phrase?: string
-  temp_c?: number
+  icon_code: number
+  icon_phrase: string
+  temp_c: number
   wind_kmh: number
-  gust_kmh?: number
-  humidity?: number
-  has_precipitation?: boolean
-  pgo_condition?: string        // Calculado por CF (docs nuevos)
-  // Campos legacy (docs anteriores al schema nuevo)
-  raw_condition_code?: number
-  raw_condition_text?: string
-  classified?: string
-  types?: string[]
-  temperature_c?: number
-  precipitation_mm?: number
-  humidity_pct?: number
-  is_windy_override?: boolean
+  gust_kmh: number
+  humidity: number
+  has_precipitation: boolean
+  pgo_condition: string
 }
 
 export interface ForecastDoc {
@@ -40,18 +32,11 @@ export interface ForecastDoc {
   lon: number
   date_hour: string
   snapshots: ForecastSnapshot[]
-  // ✅ NEW: Clima calculado por el algoritmo (snapshots[0] procesado)
-  // Se usa para comparar: calculated vs actual (en reportes manuales)
-  calculated_condition: string
-  // ✅ NEW: Timezone de la ciudad (offset en horas, ej: -5, +1, +9)
-  // Se usa para calcular hora local de la ciudad en análisis de predicciones
   timezone: number
-  // ✅ NEW: Hora local del usuario (DD/MM HH:MM) cuando se obtuvo el dato
-  // Persiste en Firebase para análisis histórico
+  target_hour: number
   local_time_user: string
   ttl: Timestamp
   created_at: Timestamp
-  // BUG-020: momento real del último write (created_at queda fijo al inicio del slot)
   last_written_at?: Timestamp
 }
 
@@ -70,126 +55,7 @@ export interface WeatherData {
   weatherImage: string
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Obtener hora local del usuario (máquina local)
- * Formato: DD/MM HH:MM
- */
-function getLocalTimeUser(): string {
-  const now = new Date()
-  const day = String(now.getDate()).padStart(2, '0')
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const hours = String(now.getHours()).padStart(2, '0')
-  const mins = String(now.getMinutes()).padStart(2, '0')
-  return `${day}/${month} ${hours}:${mins}`
-}
-
 // ─── Functions ────────────────────────────────────────────────────────────────
-
-/**
- * Guardar pronóstico de 12 horas en Firestore
- * Path: /city_weather/{city_id}/forecasts/{YYYY-MM-DD-HH}
- *
- * @param city - Ciudad con datos estáticos y actuales
- * @param snapshots - Array de ForecastSnapshot (1 por hora). Puede estar vacío (caché geoespacial hit).
- *
- * @returns Promise<void>
- *   - Resolve: sin errores (exitoso o falla silenciosa)
- *   - Nunca rechaza (falla silenciosa si no está inicializado)
- *
- * @throws Never — try-catch interno, no rethrow
- */
-export async function saveCityForecast(
-  city: City,
-  snapshots: ForecastSnapshot[] = []
-): Promise<void> {
-  // Dynamic import Firestore functions (lazy)
-  const { doc, setDoc, Timestamp } = await import('firebase/firestore')
-
-  // Lazy initialize Firebase if needed
-  const db = await getDb()
-
-  // Validación: Firebase no inicializado
-  if (!db) {
-    console.error('[Firebase] ❌ CRITICAL: Firestore not initialized (db is null), skipping save for', city.id)
-    return
-  }
-
-  // Validación: array incompleto (pero no rechazamos si está vacío — caché geoespacial hit)
-  if (snapshots.length > 0 && snapshots.length < 12) {
-    console.warn(
-      `[Firebase] Warning: ${city.id} has ${snapshots.length} snapshots (expected 12)`
-    )
-  }
-  // D-018: No guardar documentos sin snapshots
-  // Snapshots vacío = cache-hit geoespacial (múltiples ciudades, mismo locationKey)
-  // Sin snapshots = sin predicción válida → documento sin valor
-  if (snapshots.length === 0) {
-    console.log(`[Firebase] ℹ️ ${city.id}: No snapshots (cache-hit), skipping save`)
-    return
-  }
-
-  try {
-    const now = new Date()
-
-    // FIX US-1007: Redondear a la SIGUIENTE hora completa
-    // Razón: AccuWeather pronósticos son para "las siguientes 12 horas" desde esa hora
-    // Si consultamos a las 9:34 PM, guardamos como si fuera 10:00 PM para coherencia
-    const nextHour = new Date(now)
-    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0)
-    const dateHour = formatDateHour(nextHour) // "2026-04-08-22" (siguiente hora)
-
-    const ttl = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // now + 7 días
-
-    // ✅ Calcular condición: tomar snapshots[0] (la predicción "ahora")
-    const calculatedCondition = snapshots.length > 0
-      ? (snapshots[0].classified || 'Unknown')
-      : 'Unknown'
-
-    // BUG-020: created_at = inicio del slot horario (UTC) en lugar de Timestamp.now()
-    // Razón: el campo identifica el SLOT del forecast, no el momento del write.
-    // Sin esto, cualquier rewrite (frontend dev, syncWeatherManual, retry) corrompe
-    // la columna "Hora MX" mostrando minutos arbitrarios. last_written_at preserva
-    // el momento real del write para auditoría futura.
-    const slotStartUtc = startOfHourUtcFromDateHour(dateHour)
-
-    const forecastDoc: ForecastDoc = {
-      city_id: city.id,
-      city_name: city.name,
-      country: city.country,
-      region: city.region,
-      lat: city.lat,
-      lon: city.lon,
-      date_hour: dateHour,
-      snapshots,
-      calculated_condition: calculatedCondition,
-      timezone: city.timezone,
-      local_time_user: getLocalTimeUser(),
-      ttl: Timestamp.fromDate(ttl),
-      created_at: Timestamp.fromDate(slotStartUtc),
-      last_written_at: Timestamp.now(),
-    }
-
-    // Firestore path: /city_weather/{city_id}/forecasts/{date_hour}
-    const docRef = doc(db, 'city_weather', city.id, 'forecasts', dateHour)
-
-    // Escribir documento (sin merge = overwrite si existe)
-    await setDoc(docRef, forecastDoc, { merge: false })
-
-    console.log(`[Firebase] ✅ Saved forecast for ${city.id} at ${dateHour}`)
-  } catch (error) {
-    // Falla silenciosa: log pero no rethrow
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.warn(
-      `[Firebase] ⚠️ Error saving forecast for ${city.id}:`,
-      errorMessage
-    )
-    // No rethrow — no bloquea ciclo de carga
-  }
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
  * Obtener pronósticos recientes desde Firestore (últimas N horas)
@@ -264,12 +130,15 @@ export async function getRecentForecasts(
           snapshots: data.snapshots || [],
           calculated_condition: data.calculated_condition || 'Unknown',
           timezone: data.timezone ?? 0,
+          target_hour: data.target_hour,
           local_time_user: data.local_time_user || '',
           ttl: data.ttl,
           created_at: data.created_at,
         }
       })
       .filter(doc => {
+        // Descartar docs sin target_hour — son obsoletos (pre-CF actualizada)
+        if (doc.target_hour === undefined || doc.target_hour === null) return false
         // Filtrar por minDate o since
         const docTime = doc.created_at?.toMillis?.() ?? 0
         const minTime = minDate.toMillis?.() ?? 0
@@ -331,30 +200,22 @@ export async function getWeatherFromFirestore(cityId: string): Promise<WeatherDa
 
     const forecastSnapshot = docData.snapshots[0]
 
-    // D-039: Clasificar con resolveCondition (unico lugar de clasificacion)
-    // Soporta schema nuevo (icon_code) y schema viejo (raw_condition_code)
-    const { resolveCondition, CONDITION_TO_TYPES } = await import('../weather/weatherService')
+    const { CONDITION_TO_TYPES } = await import('../weather/weatherService')
 
-    const iconCode: number = forecastSnapshot.icon_code ?? forecastSnapshot.raw_condition_code ?? 0
-    const windKmh: number = forecastSnapshot.wind_kmh ?? 0
-    const gustKmh: number = forecastSnapshot.gust_kmh ?? windKmh
-
-    const condition: WeatherCondition = (iconCode > 0
-      ? resolveCondition(iconCode, windKmh, gustKmh)
-      : forecastSnapshot.classified || 'cloudy') as WeatherCondition
-    const boostedTypes = CONDITION_TO_TYPES[condition as keyof typeof CONDITION_TO_TYPES] || []
+    const condition = forecastSnapshot.pgo_condition as WeatherCondition
+    const boostedTypes = CONDITION_TO_TYPES[condition] || []
 
     return {
       condition,
       boostedTypes,
       isExtreme: false,
-      tempC: forecastSnapshot.temp_c ?? forecastSnapshot.temperature_c ?? 0,
-      feelsLike: forecastSnapshot.temp_c ?? forecastSnapshot.temperature_c ?? 0,
-      humidity: forecastSnapshot.humidity ?? forecastSnapshot.humidity_pct ?? 0,
-      windKmh,
-      gustKmh,
-      weatherIcon: iconCode,
-      timezone: docData.timezone ?? 0,
+      tempC: forecastSnapshot.temp_c,
+      feelsLike: forecastSnapshot.temp_c,
+      humidity: forecastSnapshot.humidity,
+      windKmh: forecastSnapshot.wind_kmh,
+      gustKmh: forecastSnapshot.gust_kmh,
+      weatherIcon: forecastSnapshot.icon_code,
+      timezone: docData.timezone,
       updatedAt: docData.created_at?.toMillis?.() ?? Date.now(),
       weatherImage: '',
     }
@@ -365,31 +226,3 @@ export async function getWeatherFromFirestore(cityId: string): Promise<WeatherDa
   }
 }
 
-/**
- * Formatear Date a YYYY-MM-DD-HH (ISO con hora)
- * @example formatDateHour(new Date(2026,3,8,14,0,0)) → "2026-04-08-14"
- */
-function formatDateHour(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hour = String(date.getHours()).padStart(2, '0')
-
-  return `${year}-${month}-${day}-${hour}`
-}
-
-/**
- * BUG-020: Devuelve el inicio del slot horario representado por dateHour.
- *
- * dateHour fue generado con LOCAL time (formatDateHour usa getHours()), así que
- * lo reconstruimos con new Date(y,m,d,h,0,0,0) — ese constructor interpreta los
- * componentes como hora local y produce el instante absoluto correcto. La CF
- * usa UTC en su getDateHourKey, por lo que su versión hace UTC start-of-hour.
- *
- * Ambas variantes (frontend LOCAL, CF UTC) devuelven Timestamp en el segundo
- * exacto del slot, sin minutos arbitrarios.
- */
-function startOfHourUtcFromDateHour(dateHour: string): Date {
-  const [year, month, day, hour] = dateHour.split('-').map(Number)
-  return new Date(year, month - 1, day, hour, 0, 0, 0)
-}

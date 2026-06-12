@@ -213,6 +213,7 @@ async function saveCityForecast(
     date_hour: dateHour,
     snapshots: snapshots,
     timezone: city.timezone,
+    target_hour: ((parseInt(dateHour.split('-')[3], 10) + city.timezone + 1) % 24 + 24) % 24,
     local_time_user: getLocalTimeUser(),
     created_at: slotStart,
     last_written_at: now,

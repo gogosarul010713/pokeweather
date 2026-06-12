@@ -64,7 +64,8 @@ export default function PrecisionMetrics({ retentionDays = 7 }: PrecisionMetrics
           uniqueCities.add(doc.city_id)
           doc.snapshots.forEach(snap => {
             totalSnapshots++
-            const cond = snap.classified || 'unknown'
+            // REF-001 (sprint-11): pgo_condition es la fuente de verdad (calculado por CF)
+            const cond = snap.pgo_condition || 'unknown'
             conditionCounts[cond] = (conditionCounts[cond] || 0) + 1
           })
         })

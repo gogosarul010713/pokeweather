@@ -150,7 +150,8 @@ export const executeCleanup = async (options: CleanupOptions): Promise<CleanupRe
         }
 
         // Call HTTP endpoint directly with API Key header
-        const cloudFunctionUrl = 'https://us-central1-weather-app-prod-ef50d.cloudfunctions.net/clearFirestoreData'
+        const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID
+        const cloudFunctionUrl = `https://us-central1-${projectId}.cloudfunctions.net/clearFirestoreData`
 
         const payload = {
           nullSnapshots: options.nullSnapshots,

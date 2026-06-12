@@ -8,23 +8,11 @@ import type { PredictionRow } from '../../components/Analytics/PredictionAnalysi
 import { getRecentForecasts, type ForecastDoc, type ForecastSnapshot } from '../firebase/firebaseWeatherService'
 import { getRecentClassificationReports, getRecentWeatherReports } from '../firebase/classificationReportService'
 import { getForecastCache } from '../cache/cacheService'
-import { resolveCondition } from '../weather/weatherService'
 
-/**
- * D-039: Clasifica un snapshot usando resolveCondition (unico lugar de clasificacion).
- * Soporta schema nuevo (icon_code) y schema viejo (raw_condition_code / classified).
- */
+// REF-001 (sprint-11): fallbacks a raw_condition_code/classified eliminados.
+// pgo_condition es la unica fuente — calculado por la CF al momento del sync.
 function classifySnapshot(snapshot: ForecastSnapshot): string {
-  const iconCode = snapshot.icon_code ?? snapshot.raw_condition_code ?? 0
-  const windKmh = snapshot.wind_kmh ?? 0
-  const gustKmh = snapshot.gust_kmh ?? windKmh
-
-  if (iconCode > 0) {
-    return resolveCondition(iconCode, windKmh, gustKmh)
-  }
-
-  // Fallback: campo classified del schema viejo
-  return snapshot.classified || 'unknown'
+  return snapshot.pgo_condition
 }
 
 /**
@@ -95,10 +83,8 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
       const reportKey = `${forecast.city_id}|${forecast.date_hour}`
       const report = reportIndex.get(reportKey)
 
-      // Crear row con campos básicos
-      // Nota: prediction = calculated_condition (lo que el algoritmo determinó)
-      //       actual = should_be (lo que realmente fue, según reportes manuales)
-      // D-039: clasificar con resolveCondition (schema nuevo) o classified (schema viejo)
+      // prediction = pgo_condition del snapshot (calculado por CF)
+      // actual = should_be del reporte manual (confirmacion del usuario)
       const predictedCondition = classifySnapshot(snapshot)
 
       const row: PredictionRow = {
@@ -107,6 +93,7 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
         cityId: forecast.city_id,
         cityName: forecast.city_name,
         timezone: forecast.timezone || 0,
+        targetHour: forecast.target_hour,
         localTimeUser: forecast.local_time_user || '',
         prediction: predictedCondition,
         actual: report?.should_be ?? null,
