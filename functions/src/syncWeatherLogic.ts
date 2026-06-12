@@ -16,6 +16,7 @@ interface CityData {
 
 interface WeatherSnapshot {
   hour: number
+  epoch_dt: number
   icon_code: number
   icon_phrase: string
   temp_c: number
@@ -107,6 +108,7 @@ async function fetchAccuWeatherForecast(
 
     // Map AccuWeather response to raw WeatherSnapshot (sin clasificacion)
     type AccuWeatherHour = {
+      EpochDateTime: number
       WeatherIcon: number; IconPhrase: string; HasPrecipitation: boolean
       RelativeHumidity: number
       Temperature: { Value: number }
@@ -119,6 +121,7 @@ async function fetchAccuWeatherForecast(
         const gustKmh = item.WindGust?.Speed?.Value ?? windKmh
         return {
           hour: index,
+          epoch_dt: item.EpochDateTime,
           icon_code: item.WeatherIcon,
           icon_phrase: item.IconPhrase || '',
           temp_c: item.Temperature.Value,
