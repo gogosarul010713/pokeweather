@@ -272,60 +272,54 @@ export function useWeather() {
   // Ref para quebrar la circular dependency entre doRefresh y scheduleNextRefresh
   const scheduleNextRefreshRef = useRef<() => void>(() => {})
 
-  // Helper para ejecutar refresh y reprogramar siguiente
+  // D-043 (2026-06-12): doRefresh ya no llama AccuWeather directamente.
+  // El refresh horario real viene de useFirestoreSync (onSnapshot) — cuando la CF escribe,
+  // Firestore notifica al frontend sin race condition ni timer duplicado.
+  // Este doRefresh se mantiene solo como fallback de emergencia (visibilitychange con cache expirado).
   const doRefresh = useCallback(async () => {
     setLoadingStatus('loading')
 
     try {
-      const refreshed = await loadCities(true)
+      // D-043: leer desde Firestore (via loadCitiesFromCache) en lugar de AccuWeather.
+      // loadCities(true) con apiKey ausente ya toma el path Firestore — pero si la key
+      // existe en .env.local (dev), tambien tomaria el path AccuWeather. Forzamos Firestore
+      // cargando directamente desde cache/Firestore sin pasar por AccuWeather.
+      const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+      const cities = transformCitiesToCityFormat(rawCities)
+      const refreshed = await loadCitiesFromCache(cities)
       setLoadingStatus('ready')
       setLastUpdated(Date.now())
       onReadyRef.current(refreshed)
       setTimeout(() => scheduleNextRefreshRef.current(), 400)
     } catch (error) {
-      console.error('❌ Auto-refresh AccuWeather error, falling back to cache/Firestore:', error)
-
-      // Fallback: cargar desde IndexedDB/Firestore para no dejar sidebar vacío
-      try {
-        const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
-        const cities = transformCitiesToCityFormat(rawCities)
-        const fallbackCities = await loadCitiesFromCache(cities)
-        if (fallbackCities.length > 0) {
-          setLoadingStatus('ready')
-          setLastUpdated(Date.now())
-          onReadyRef.current(fallbackCities)
-          console.log(`✅ Fallback: ${fallbackCities.length} ciudades desde caché/Firestore`)
-        } else {
-          setLoadingStatus('error')
-        }
-      } catch {
-        setLoadingStatus('error')
-      }
-
-      // Reintentar AccuWeather en 5 minutos
+      console.error('❌ Auto-refresh Firestore error:', error)
+      setLoadingStatus('error')
       refreshRef.current = setTimeout(() => scheduleNextRefreshRef.current(), 5 * 60 * 1000)
     }
-  }, [loadCities, setLoadingStatus, setLastUpdated])
+  }, [setLoadingStatus, setLastUpdated])
 
-  // Reprogramar siguiente refresh a HH:00
+  // D-043: scheduleNextRefresh ya no programa un refresh AccuWeather a HH:00.
+  // El timer se mantiene como heartbeat de visibilidad (Visibility API) pero el
+  // update real del clima viene de useFirestoreSync. Ver useFirestoreSync.ts.
   const scheduleNextRefresh = useCallback(() => {
-    // Limpiar timer anterior si existe
     if (refreshRef.current) {
       clearTimeout(refreshRef.current)
       refreshRef.current = null
     }
 
-    // No programar si app está oculta
     if (document.hidden) {
       console.log('⏸️ No se programa refresh (app oculta)')
       return
     }
 
     const msUntilNext = msUntilNextHour()
-    console.log(`⏰ Próximo auto-refresh en ${Math.round(msUntilNext / 1000)}s (${new Date(Date.now() + msUntilNext).toLocaleTimeString()})`)
+    console.log(`⏰ Heartbeat Firestore programado en ${Math.round(msUntilNext / 1000)}s (${new Date(Date.now() + msUntilNext).toLocaleTimeString()})`)
 
+    // D-043: el timeout es solo un heartbeat de seguridad. El update real ya ocurrio
+    // via useFirestoreSync cuando la CF escribio. Este timer cubre el caso edge donde
+    // el onSnapshot fallo o la app estaba en background durante el write de la CF.
     refreshRef.current = setTimeout(() => {
-      console.log('🔄 Trigger auto-refresh HH:00')
+      console.log('🔄 Heartbeat Firestore HH:00 (D-043)')
       doRefresh()
     }, msUntilNext)
   }, [doRefresh])
@@ -335,24 +329,23 @@ export function useWeather() {
     scheduleNextRefreshRef.current = scheduleNextRefresh
   }, [scheduleNextRefresh])
 
-  // Visibility API: pausa/reschedule refresh según visibilidad
+  // Visibility API: pausa/reschedule heartbeat segun visibilidad.
+  // D-043: ya no dispara AccuWeather — si el cache expiro, lee Firestore via doRefresh.
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
-      // App en background: pausar auto-refresh
       if (refreshRef.current) {
         clearTimeout(refreshRef.current)
         refreshRef.current = null
-        console.log('⏸️ Auto-refresh pausado (app en background)')
+        console.log('⏸️ Heartbeat pausado (app en background)')
       }
     } else {
-      // App visible nuevamente: reschedule y ejecutar si está expirada
-      console.log('▶️ App visible — rescheduleando timer...')
+      console.log('▶️ App visible — rescheduleando heartbeat Firestore...')
       if (shouldRefreshCities()) {
-        console.log('⚡ Caché expirado, refrescando inmediatamente...')
+        // D-043: cache expirado = leer Firestore (no AccuWeather)
+        console.log('⚡ Cache expirado, leyendo Firestore...')
         doRefresh()
       } else {
-        // Timer no expiró: simplemente reprogramar
-        console.log('✓ Caché vigente, reprogramando timer')
+        console.log('✓ Cache vigente, reprogramando heartbeat')
         scheduleNextRefresh()
       }
     }
@@ -420,7 +413,8 @@ export function useWeather() {
         setLastUpdated(Date.now())
         onReady(cities)
 
-        // Programar auto-refresh + Visibility listener
+        // D-043: programar heartbeat Firestore + Visibility listener.
+        // El update real del clima viene de useFirestoreSync (onSnapshot).
         scheduleNextRefresh()
         document.addEventListener('visibilitychange', handleVisibilityChange)
       } catch (err) {

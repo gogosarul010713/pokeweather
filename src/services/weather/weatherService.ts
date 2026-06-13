@@ -266,7 +266,6 @@ export const fetchCityWeather = async (
     if (!forecast) {
       throw new Error('No hourly forecast data returned')
     }
-
     // 3. Clasificar condicion para la UI (sidebar, mapa)
     const condition = resolveCondition(
       forecast.WeatherIcon,
