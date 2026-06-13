@@ -5,6 +5,67 @@
 
 ---
 
+### 2026-06-12 D-043 — Firestore como unica fuente de verdad del sidebar (BUG-028)
+
+**Contexto:** El sidebar y la tabla predictiva mostraban condiciones distintas para la misma ciudad y hora.
+La tabla usaba `pgo_condition` ya persistido por la CF en Firestore. El sidebar llamaba AccuWeather
+directamente, clasificaba el resultado con `resolveCondition`, y actualizaba el store. Dos llamadas
+independientes a AccuWeather en momentos distintos producian slots distintos y por tanto condiciones
+distintas.
+
+**Causa raiz investigada en sprint-11 (BUG-028):**
+- La CF corre a HH:00 UTC via cron GCP. El frontend tenia su propio timer a HH:00 hora local.
+  Son HH:00 distintas — nunca coinciden.
+- AccuWeather actualiza sus datos cada ~30 minutos (rotation). Si el frontend pide a AccuWeather
+  a las HH:23, puede recibir ya el slot de HH+1 (rotacion anticipada). La CF que corrio a HH:00
+  guardo el slot de HH. Son horas distintas, condiciones distintas.
+- `findCurrentSlot` (implementado en BUG-028) resuelve el caso de "cual slot tomar" pero no
+  resuelve la divergencia de fondo: dos llamadas independientes a AccuWeather son dos fuentes
+  de verdad distintas.
+
+**Investigacion de AccuWeather API (2026-06-12):**
+- La API no acepta parametro de hora — siempre devuelve las proximas N horas desde el momento
+  de la llamada. No hay forma de pedir "el clima de Pier 39 a las 8pm especificamente".
+- El campo `EpochDateTime` en cada slot identifica la hora del pronostico. Es el unico mecanismo
+  para saber a que hora corresponde cada slot.
+- Los datos se actualizan ~30 min antes del inicio del slot siguiente (rotation anticipada).
+
+**Decision:** Firestore es la unica fuente de verdad del clima para el sidebar y el mapa.
+El frontend no llama AccuWeather para clasificar ni para actualizar el store en el refresh horario.
+
+**Arquitectura resultante:**
+- **CF (GCP cron):** unica que llama AccuWeather + clasifica + escribe Firestore. No cambia.
+- **`useFirestoreSync`:** escucha `onSnapshot` en `/city_weather` summary docs. Cuando la CF
+  termina de escribir, Firestore notifica en tiempo real. El hook refetcha `getWeatherFromFirestore`
+  y actualiza el store. Cero race condition — el frontend no corre a HH:00, espera la notificacion.
+- **`useWeather.ts`:** el timer de auto-refresh AccuWeather (HH:00) se desactiva para el flujo
+  normal. La carga inicial y los refrescos horarios vienen de Firestore via `useFirestoreSync`.
+  AccuWeather se mantiene solo como fallback de emergencia (Firestore vacio o sin conexion).
+- **`batchWeatherService`:** pasa a rol de fallback exclusivo. No se llama en flujo normal.
+
+**Race condition eliminado:**
+- Antes: frontend timer HH:00 + CF cron HH:00 → ambos llaman AccuWeather en paralelo,
+  AccuWeather puede responder distinto a cada uno.
+- Ahora: CF escribe → Firestore notifica → frontend lee lo que CF escribio. Siempre el mismo dato.
+
+**Impacto en deployments:**
+- Frontend (Vercel): si — cambios en `useWeather.ts`
+- CF (GCP): no — sin cambios
+- Firestore schema: no — sin cambios
+
+**Fallback de emergencia (primer uso / ciudad nueva / Firestore offline):**
+- Si `getWeatherFromFirestore` retorna null → AccuWeather como respaldo
+- Si AccuWeather falla → valores por defecto (`condition: 'cloudy'`, tipos vacios)
+
+**Consecuencias en codigo:**
+- `useWeather.ts` — desactiva timer AccuWeather para refresh horario; carga inicial usa Firestore
+- `weatherService.ts` — remueve log temporal `[BUG-028]`
+- `batchWeatherService.ts` — sin cambios en logica, solo cambia quien lo llama (fallback only)
+
+**Decisiones relacionadas:** D-039 (CF raw), D-042 (algoritmo compartido), BUG-028 (epoch_dt + findCurrentSlot)
+
+---
+
 ### 2026-05-11 D-042 — Algoritmo de clasificacion en modulo puro compartido entre frontend y CF (BL-012)
 
 **Contexto:** D-039 (2026-05-03) establecio que la CF guarda raw y el frontend clasifica.

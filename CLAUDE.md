@@ -55,9 +55,10 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 - BUG-025 ✅ — Docs sin `target_hour` descartados en `getRecentForecasts`
 - BUG-026 ✅ — `classifySnapshot` ignoraba `pgo_condition`, divergencia sidebar/tabla corregida
 - REF-001 ✅ — Limpieza schema legacy post-BL-012: `saveCityForecast` eliminada, `ForecastSnapshot`/`ForecastDoc` saneados, 6 archivos actualizados, 14 tests nuevos. Ver `src/docs/sprints/sprint-11/refactoring/ref-001-limpieza-schema-legacy.md`
+- BUG-028 ✅ — Sidebar/tabla divergia: dos llamadas independientes a AccuWeather. Decision D-043: Firestore es fuente de verdad del sidebar. Frontend deja de llamar AccuWeather en refresh horario — usa `useFirestoreSync` (onSnapshot) que notifica cuando CF escribe. Pendiente: implementar cambio en `useWeather.ts`.
 
 **Siguiente:**
-- BUG-028 — Tabla predictiva no muestra datos: diagnosticar `getRecentForecasts` + flujo completo desde Firestore hasta `PredictionAnalysisTable`. Arrancar con logs en consola del dev server.
+- BUG-028 impl — Implementar D-043 en `useWeather.ts`: desactivar timer AccuWeather, sidebar lee Firestore via `useFirestoreSync`. Deploy Vercel requerido.
 
 **Backlog critico:**
 - BL-001 — Firestore Security Rules (App Check) — 2h
