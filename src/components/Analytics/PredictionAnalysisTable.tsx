@@ -143,7 +143,8 @@ function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
 const PAGE_SIZES = [10, 20, 50, 100];
 
 export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas', onReportSuccess }: Props) {
-  const [sorting, setSorting]             = useState<SortingState>([]);
+  // D-043: arrancar con sort DESC por hora — la mas reciente primero (pagina 1)
+  const [sorting, setSorting]             = useState<SortingState>([{ id: 'horaLocal', desc: true }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter]   = useState('');
   const [reportingRow, setReportingRow]   = useState<PredictionRow | null>(null);
