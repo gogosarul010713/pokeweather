@@ -2,7 +2,7 @@
 
 > **Fuente única de verdad** para priorización, seguimiento y decisiones arquitectónicas.
 > Estructura jerárquica + tags para escalabilidad sin convertirse en monolito.
-> **Última actualización:** 2026-06-12 (BUG-028 + D-043 agregados)
+> **Última actualización:** 2026-06-14 (US-1106 documentada — feedback visual toggle auto-sync)
 
 ---
 
@@ -31,7 +31,7 @@ BACKLOG.md (este archivo)
 | **BL-001** | Firestore Rules (App Check) | 🔴 CRÍTICA | Seguridad | 2h | Prod-Ready | Pendiente |
 | **BL-002** | Remover VITE_ACCUWEATHER_KEY de Vercel | 🔴 CRÍTICA | Seguridad | 0.5h | Prod-Ready | Pendiente |
 | **BL-012** | Extraer algoritmo a modulo puro compartido (D-042) | 🔴 CRÍTICA | Arch+Debt | 4h | Drift CF↔Frontend | PLAN LISTO |
-| **BUG-028** | Sidebar/tabla divergencia — Firestore fuente de verdad (D-043) | 🔴 CRÍTICA | Bug+Arch | 2h | Precision | ✅ D-043 2026-06-12 |
+| **BUG-028** | Sidebar/tabla divergencia — Firestore fuente de verdad (D-043) | 🔴 CRÍTICA | Bug+Arch | 2h | Precision | ✅ Verificado 2026-06-13 |
 | **BL-003** | Eliminar `calculated_condition` tipo | 🟡 IMPORTANTE | Debt | 1h | D-039 | ✅ REF-001 2026-06-12 |
 | **BL-004** | Test unitario accuLocationKey='' | 🟡 IMPORTANTE | Quality | 1.5h | Regression | Pendiente |
 | **BL-005** | Linter: 53 errores pre-existentes | 🟡 IMPORTANTE | Quality | 3h | CI/CD | Pendiente |
@@ -40,6 +40,9 @@ BACKLOG.md (este archivo)
 | **BL-008** | date_hour consolidado a UTC | 🟢 FEATURE | Migration | 5h | Multi-user | Pendiente |
 | **BL-009** | Historial de reportes UI | 🟢 FEATURE | UI | 3h | — | Pendiente |
 | **BL-010** | Agregar más ciudades | 🟢 FEATURE | Data | 1h | — | Pendiente |
+| **REF-002** | Eliminar `saveSnapshots`/`pwe-hist-*` (obsoleto post-D-043) | 🟢 DEUDA | Cleanup | 1h | — | ✅ 2026-06-13 |
+| **REF-003** | Eliminar tab Reportes + sistema `classification_reports` huerfano | 🟢 DEUDA | Cleanup | 1h | — | ✅ 2026-06-14 |
+| **US-1106b** | Feedback visual al togglear auto-sync | 🟡 IMPORTANTE | Feature | 0.5h | — | ✅ 2026-06-14 |
 
 ---
 
@@ -209,7 +212,48 @@ Ver detalle completo: `src/docs/sprints/sprint-11/refactoring/ref-001-limpieza-s
 
 ---
 
-**Estado global:** 10 items → 22.5 SP estimado → ~2 sprints (si todos se hacen)
+---
+
+### [REF-002] Eliminar `saveSnapshots` / `pwe-hist-*` — Limpieza post-D-043
+
+**Estado: COMPLETADO 2026-06-13**
+
+**Contexto:** Con D-043 (2026-06-12), Firestore es la unica fuente de verdad del clima. El sistema `pwe-hist-*` (IndexedDB local) era el mecanismo pre-Firestore para almacenar historial de precision. Con Firestore como primario (Cambio 1 de BUG-028), `saveSnapshots` quedo efectivamente muerta en operacion normal.
+
+**Que se elimino:**
+- `weatherHistoryService.ts` completo — eliminado del filesystem
+- Import `{ saveSnapshots, clearOldSnapshots }` en [src/hooks/useWeather.ts](../../../hooks/useWeather.ts)
+- Llamada `await saveSnapshots(resultWithTime)` (ex linea 265)
+- Llamada `await clearOldSnapshots()` (ex linea 369)
+
+**Segunda fase (2026-06-13 — D-045):** Verificado que los componentes y utils consumidores eran huerfanos (ningun archivo activo los importaba). Eliminados tambien:
+- `src/components/TestingTools/HistoryGrid.tsx`
+- `src/components/TestingTools/SnapshotPopover.tsx`
+- `src/components/TestingTools/PrecisionMetrics.tsx`
+- `src/utils/metricsCalculator.ts`
+- `src/utils/exportHistory.ts`
+- `src/types/weatherSnapshot.ts`
+
+**Impacto en produccion:** Ninguno. Sidebar, mapa y tabla de predicciones no dependen de `pwe-hist-*`. TypeScript: sin errores post-eliminacion.
+
+---
+
+### [BUG-028] Cierre — Verificacion empirica 2026-06-13
+
+**Estado: CERRADO. No hay bug residual.**
+
+Inspeccion con browser MCP (Testing Tools > Predicciones) confirmo:
+
+- **Sidebar** (`getWeatherFromFirestore`): lee el doc mas reciente de `/city_weather/{id}/forecasts` con `orderBy created_at DESC, limit(1)`. Pier 39 = doc 20:00 local, condicion `partly`.
+- **Tabla** (`getRecentForecasts`): lee todos los docs de las ultimas 24h via `collectionGroup('forecasts')` sin orderBy, filtra en memoria. Pagina 1 = doc 19:00 local de Pier 39.
+- **Conclusion:** Son documentos de Firestore distintos (hora distinta). La divergencia es por diseno: el sidebar siempre muestra la hora mas reciente disponible; la tabla agrupa por `created_at` MX y puede mostrar una hora anterior si la ciudad no fue actualizada en el ultimo ciclo.
+- **Ambos leen `snapshots[0].pgo_condition` correctamente** segun D-040.
+
+Ver nota tecnica completa en D-043 del decision-log.
+
+---
+
+**Estado global:** 11 items → 23 SP estimado → ~2 sprints (si todos se hacen)
 
 **Hot path (urgente):** BL-001 + BL-002 antes de prod real (2.5 h)
 

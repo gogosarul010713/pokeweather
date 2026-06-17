@@ -1,6 +1,6 @@
 // useWeather.ts
-// Hook principal de carga de datos climáticos desde AccuWeather API.
-// ⚠️ REQUIERE VITE_ACCUWEATHER_KEY configurada en .env.local
+// Hook principal de carga de datos climaticos. Fuente de verdad: Firestore (D-043).
+// AccuWeather solo en dev con VITE_ACCUWEATHER_KEY — fallback de emergencia en prod.
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useStore } from '../store/useStore'
@@ -8,7 +8,6 @@ import { loadCitiesInBatch } from '../services/weather/batchWeatherService'
 import { getS2Key } from '../services/geo/s2Service'
 import { shouldRefreshCities, setLastUpdateHour, getCachedWeather, setCachedWeather } from '../services/cache/cacheService'
 import { msUntilNextHour } from '../utils/timeUtils'
-import { saveSnapshots, clearOldSnapshots } from '../services/history/weatherHistoryService'
 import { getWeatherFromFirestore } from '../services/firebase/firebaseWeatherService'
 import type { City } from '../store/useStore'
 
@@ -187,13 +186,13 @@ export function useWeather() {
       }
     }
 
-    // ─ Refrescar desde API (solo si hay API key) ─
-    // En produccion sin VITE_ACCUWEATHER_KEY, ir directo a Firestore
-    const apiKey = import.meta.env.VITE_ACCUWEATHER_KEY
-    if (!apiKey) {
-      console.log('ℹ️ Sin VITE_ACCUWEATHER_KEY — modo produccion, leyendo desde Firestore...')
-      setLoadingStatus('loading')
-      const firestoreCities = await loadCitiesFromCache(cities)
+    // ─ D-043: Firestore es siempre la fuente de verdad primaria ─
+    // AccuWeather solo como fallback si Firestore devuelve datos vacios
+    console.log('ℹ️ D-043: leyendo desde Firestore (fuente de verdad)...')
+    setLoadingStatus('loading')
+    const firestoreCities = await loadCitiesFromCache(cities)
+    const hasRealData = firestoreCities.some(c => c.tempC > 0)
+    if (hasRealData) {
       const percent = Math.round((firestoreCities.length / total) * 100)
       setLoadingProgress({
         cityName: `Cargadas ${firestoreCities.length} de ${total} (Firestore)`,
@@ -201,12 +200,17 @@ export function useWeather() {
         total,
         percent,
       })
-      // Marcar hora de actualizacion para que siguientes recargas usen cache (IndexedDB)
-      // y no vuelvan a Firestore innecesariamente hasta la siguiente hora
-      const hasRealData = firestoreCities.some(c => c.tempC > 0)
-      if (hasRealData) setLastUpdateHour()
+      setLastUpdateHour()
       return firestoreCities
     }
+
+    // Fallback AccuWeather: solo si Firestore esta vacio Y hay API key
+    const apiKey = import.meta.env.VITE_ACCUWEATHER_KEY
+    if (!apiKey) {
+      console.warn('⚠️ Firestore vacio y sin VITE_ACCUWEATHER_KEY — sin datos')
+      return firestoreCities
+    }
+    console.log('ℹ️ Firestore vacio — fallback AccuWeather...')
     const isAutoRefresh = forceRefresh && !shouldRefreshCities()
     console.log(`🌍 Loading ${total} cities from AccuWeather API${isAutoRefresh ? ' (auto-refresh)' : ''}...`)
     setLoadingStatus('loading')
@@ -255,9 +259,6 @@ export function useWeather() {
 
       // Guardar timestamp de actualización (Lazy Load)
       setLastUpdateHour()
-
-      // US-607: Guardar snapshots históricos para análisis de precisión
-      await saveSnapshots(resultWithTime)
 
       // US-801: Firebase persistence ya se ejecuta en loadCitiesInBatch
       // (no duplicar aquí — evita writes duplicados a Firestore)
@@ -364,9 +365,6 @@ export function useWeather() {
       onReadyRef.current = onReady
 
       try {
-        // US-607: Limpiar snapshots antiguos (> N días)
-        await clearOldSnapshots()
-
         let cities = await loadCities()
 
         // Detectar ciudades sin datos reales y forzar refresh API

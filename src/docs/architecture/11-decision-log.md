@@ -5,6 +5,62 @@
 
 ---
 
+### 2026-06-14 D-046 — Eliminacion tab Reportes y sistema classification_reports (REF-003)
+
+**Contexto:** La tab "Reportes" en TestingTools mostraba siempre "No hay reportes en las ultimas 24 horas". Investigacion revelo que:
+- `ReportsPanel` leia de coleccion Firestore `classification_reports`
+- El unico escritor era `ClassificationReportModal` (sidebar) — pero ese componente **nunca estuvo montado** en ningun archivo activo (grep confirmado: 0 imports externos)
+- Por tanto `classification_reports` en Firestore siempre estuvo vacia
+- El sistema `classification_reports` es distinto de `weather_reports` (usado por el boton ⚠️ de la tabla, que SI funciona)
+
+**Decision:** Eliminar la tab Reportes, `ReportsPanel.tsx`, `ClassificationReportModal.tsx`, y las funciones muertas del servicio (`saveClassificationReport`, `isDuplicateReport`, `getCityClassificationReports`, tipo `ClassificationReport`).
+
+**Que se conservo en `classificationReportService.ts`:**
+- `saveWeatherReport` — escribe `weather_reports`, usado por `WeatherReportModal` (boton ⚠️ tabla)
+- `getRecentWeatherReports` — lee `weather_reports`, usado por `predictionAnalyticsService`
+- `getRecentClassificationReports` — mantiene compatibilidad con `predictionAnalyticsService` (retorna array vacio en practica)
+
+**Tab inicial de TestingTools:** cambiada de `reportes` a `predicciones`.
+
+**Consecuencias:** Ninguna en funcionalidad activa. Los reportes del boton ⚠️ siguen funcionando y aparecen en la columna REAL de la tabla predictiva.
+
+---
+
+### 2026-06-13 D-045 — Eliminacion de capa UI legacy del sistema pwe-hist-* (REF-002 continuacion)
+
+**Contexto:** Tras eliminar `weatherHistoryService.ts` en D-044, los componentes y utils que lo consumian quedaron huerfanos — ningun archivo activo los importaba ni montaba:
+
+- `src/components/TestingTools/HistoryGrid.tsx` — tabla de historial local, leia `pwe-hist-*` via `getSnapshots` (ya eliminada en sprint-9)
+- `src/components/TestingTools/SnapshotPopover.tsx` — popover de detalle, solo usado por `HistoryGrid`
+- `src/components/TestingTools/PrecisionMetrics.tsx` — metricas de aciertos, leia `pwe-hist-*` via `getSnapshots`
+- `src/utils/metricsCalculator.ts` — calculador de precision, solo usado por `PrecisionMetrics`
+- `src/utils/exportHistory.ts` — exportador Excel, solo usado por `HistoryGrid`
+- `src/types/weatherSnapshot.ts` — tipo `WeatherSnapshot` extraido en D-044, solo necesario por los anteriores
+
+**Decision:** Eliminar los 6 archivos. Verificado con grep que ningun archivo activo los importa. `TestingTools.tsx` (punto de entrada) no los monta.
+
+**Consecuencias:** Ninguna en produccion. La funcionalidad de historial de precision queda completamente removida del frontend — la CF ya es responsable de persistir `pgo_condition` en Firestore. Si en el futuro se necesita analisis de precision, se construira sobre Firestore directamente (no IndexedDB local).
+
+**Alternativa descartada:** Mantener los componentes vacios como placeholders — descartado por acumulacion de deuda sin valor.
+
+---
+
+### 2026-06-13 D-044 — Eliminacion de weatherHistoryService (REF-002)
+
+**Contexto:** Con D-043, Firestore paso a ser la fuente de verdad del clima. El sistema de historial local (`weatherHistoryService.ts` + IndexedDB `pwe-hist-*`) era el mecanismo pre-Firestore para almacenar snapshots de precision. Al hacer Firestore primario en `useWeather.ts`, `saveSnapshots` quedo muerta en operacion normal — solo corria en el fallback de AccuWeather que D-043 prohibe activar.
+
+**Decision:** Eliminar `weatherHistoryService.ts` completo y sus llamadas en `useWeather.ts`. El tipo `WeatherSnapshot` se preservo en `src/types/weatherSnapshot.ts` porque `HistoryGrid` y componentes relacionados de TestingTools aun lo necesitan para tipar datos historicos existentes en IndexedDB de usuarios.
+
+**Consecuencias:**
+- `HistoryGrid` y `PrecisionMetrics` (TestingTools) no reciben datos nuevos — muestran historial pre-D-043 mientras exista en IndexedDB local
+- Sidebar, mapa y tabla predictiva: sin impacto
+- Bundle reducido (~160 lineas menos)
+- `snapshots[0]` es el criterio unico para sidebar Y tabla (consistencia garantizada)
+
+**Alternativa descartada:** Mantener `saveSnapshots` activo en el path de Firestore — descartado porque duplicaria logica ya manejada por la CF. La CF ya persiste `pgo_condition` por snapshot; el frontend no debe recalcular ni re-persistir.
+
+---
+
 ### 2026-06-12 D-043 — Firestore como unica fuente de verdad del sidebar (BUG-028)
 
 **Contexto:** El sidebar y la tabla predictiva mostraban condiciones distintas para la misma ciudad y hora.
@@ -61,6 +117,13 @@ El frontend no llama AccuWeather para clasificar ni para actualizar el store en 
 - `useWeather.ts` — desactiva timer AccuWeather para refresh horario; carga inicial usa Firestore
 - `weatherService.ts` — remueve log temporal `[BUG-028]`
 - `batchWeatherService.ts` — sin cambios en logica, solo cambia quien lo llama (fallback only)
+
+**Verificacion empirica (2026-06-13):** Inspeccion con browser MCP confirmo que sidebar y tabla
+muestran documentos de Firestore distintos por diseno, no por bug:
+- Sidebar (`getWeatherFromFirestore`): `orderBy('created_at', 'desc'), limit(1)` — doc mas reciente de la ciudad.
+- Tabla predictiva (`getRecentForecasts`): `collectionGroup('forecasts')` sin orderBy — todos los docs de 24h, filtrados en memoria.
+- Pier 39 ejemplo: sidebar mostraba doc 20:00 local, tabla mostraba doc 19:00 local (el anterior en la coleccion).
+- Conclusion: divergencia esperada cuando la tabla esta en pagina historica vs la hora actual del sidebar. No hay bug residual.
 
 **Decisiones relacionadas:** D-039 (CF raw), D-042 (algoritmo compartido), BUG-028 (epoch_dt + findCurrentSlot)
 

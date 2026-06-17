@@ -1,13 +1,14 @@
 /**
  * useFirestoreSync — Real-time listener para cambios en Firestore
- * US-1101 + D-039: Escucha summary docs en /city_weather y refetch clasificado al detectar cambios
+ * US-1101 + D-043: Escucha summary docs en /city_weather y refetch al detectar cambios de la CF
  *
- * ARQUITECTURA (D-039 + Opcion A real-time):
- * - CF escribe RAW en /city_weather/{id}/forecasts/{date_hour} (subcoleccion)
+ * ARQUITECTURA (D-040 + D-043 — vigente desde 2026-06-12):
+ * - CF clasifica y persiste `pgo_condition` en cada snapshot (D-040). No escribe RAW.
  * - CF escribe SUMMARY en /city_weather/{id} con `updatedAt` (trigger doc)
  * - Este hook escucha el summary doc. Cuando cambia (cron HH:00), por cada doc
- *   modificado llama a getWeatherFromFirestore(cityId) que clasifica con resolveCondition.
- * - El payload entregado al callback son ciudades ya clasificadas (Partial<City>).
+ *   modificado llama a getWeatherFromFirestore(cityId) que lee pgo_condition directamente
+ *   desde snapshots[0] — sin recalcular con resolveCondition.
+ * - El payload entregado al callback son ciudades ya listas (Partial<City>).
  */
 
 import { useEffect, useRef } from 'react'

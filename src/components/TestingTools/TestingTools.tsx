@@ -1,24 +1,33 @@
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
-import ReportsPanel from './ReportsPanel'
 import { CleanupPanel } from './CleanupPanel'
 import { PredictionAnalysisDemo } from '../Analytics/PredictionAnalysisDemo'
 import { updateAutoSyncSetting } from '../../services/firebase/settingsService'
+
+const AUTOSYNC_MSG_KEY = 'pwe-autosync-msg'
 
 interface TestingToolsProps {
   isOpen: boolean
   onClose: () => void
 }
 
-type TabType = 'reportes' | 'limpiar' | 'predicciones' | 'sincronizacion'
+type TabType = 'limpiar' | 'predicciones' | 'sincronizacion'
 
 export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('reportes')
+  const [activeTab, setActiveTab] = useState<TabType>('predicciones')
   const [isMaximized, setIsMaximized] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [predictionRefreshKey, setPredictionRefreshKey] = useState(0)
   const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [isSyncSaving, setIsSyncSaving] = useState(false)
+  const [toggleMessage, setToggleMessage] = useState<{ type: 'success' | 'info'; text: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem(AUTOSYNC_MSG_KEY)
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
 
   const autoSyncEnabled = useStore((s) => s.autoSyncEnabled)
   const setAutoSyncEnabled = useStore((s) => s.setAutoSyncEnabled)
@@ -91,13 +100,32 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
     }
   }
 
-  // US-1106: Toggle auto-sync setting
+  // US-1106b: Toggle auto-sync con feedback visual persistente en localStorage
   const handleToggleAutoSync = async () => {
     setIsSyncSaving(true)
     try {
       const newState = !autoSyncEnabled
       await updateAutoSyncSetting(newState)
       setAutoSyncEnabled(newState)
+
+      const now = new Date()
+      let msg: { type: 'success' | 'info'; text: string }
+
+      if (newState) {
+        const next = new Date(now)
+        next.setMinutes(0, 0, 0)
+        next.setHours(next.getHours() + 1)
+        const nextStr = next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        msg = { type: 'success', text: `Auto-sync activado. Proxima ejecucion: ${nextStr}.` }
+      } else {
+        const lastRun = new Date(now)
+        lastRun.setMinutes(0, 0, 0)
+        const lastStr = lastRun.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        msg = { type: 'info', text: `Auto-sync desactivado. Ultima ejecucion: ${lastStr}. La CF no correra hasta que lo reactives.` }
+      }
+
+      localStorage.setItem(AUTOSYNC_MSG_KEY, JSON.stringify(msg))
+      setToggleMessage(msg)
     } catch (error) {
       console.error('[TestingTools] Error toggling auto-sync:', error)
     } finally {
@@ -373,12 +401,6 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
           {/* Tab Navigation */}
           <div className="tt-tabs">
             <button
-              className={`tt-tab ${activeTab === 'reportes' ? 'active' : ''}`}
-              onClick={() => setActiveTab('reportes')}
-            >
-              ⚠️ Reportes
-            </button>
-            <button
               className={`tt-tab ${activeTab === 'limpiar' ? 'active' : ''}`}
               onClick={() => setActiveTab('limpiar')}
             >
@@ -400,8 +422,6 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
 
           {/* Content */}
           <div className="tt-content">
-            {/* Tab: Reportes */}
-            {activeTab === 'reportes' && <ReportsPanel />}
             {/* Tab: Limpiar */}
             {activeTab === 'limpiar' && <CleanupPanel onCleanupComplete={() => setPredictionRefreshKey(k => k + 1)} />}
             {/* Tab: Predicciones */}
@@ -443,6 +463,18 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
                       </div>
                     </div>
                   </div>
+                  {toggleMessage && (
+                    <div
+                      className="tt-info"
+                      style={{
+                        backgroundColor: toggleMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(99, 179, 237, 0.1)',
+                        borderColor: toggleMessage.type === 'success' ? '#22c55e' : '#63b3ed',
+                        color: toggleMessage.type === 'success' ? '#22c55e' : '#63b3ed',
+                      }}
+                    >
+                      {toggleMessage.text}
+                    </div>
+                  )}
                 </div>
 
                 <hr style={{ margin: '16px 0', borderColor: 'var(--border-default)' }} />

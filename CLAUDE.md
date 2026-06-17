@@ -47,20 +47,16 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 ## Estado Sprint 11 (branch: `sprint-11`)
 
 **Completado:**
-- BL-012 ✅ — Algoritmo compartido frontend/CF (D-042)
-- BUG-021 ✅ — Lookback lazy on-demand con getDoc por ID directo
-- BUG-022 ✅ — CF DEV: URL hardcodeada a PROD + IAM allUsers faltante
-- BUG-023 ✅ — `resolveCondition is not defined` en dev post BL-012
-- BUG-024 ✅ — `target_hour` persistido en CF — CF desplegada DEV
-- BUG-025 ✅ — Docs sin `target_hour` descartados en `getRecentForecasts`
-- BUG-026 ✅ — `classifySnapshot` ignoraba `pgo_condition`
+- BUG-028 ✅ — Firestore primario en sidebar (D-043). 5/5 ciudades verificadas empiricamente
 - REF-001 ✅ — Limpieza schema legacy post-BL-012
-- BUG-028 ✅ — D-043 implementado: `useWeather.ts` ya no llama AccuWeather en refresh horario, usa Firestore via `loadCitiesFromCache`. Timer pasa a heartbeat de seguridad. Commits: `cf579f5`, `d546fb5`
-- FIX ✅ — Tabla predictiva ahora ordena DESC (hora mas reciente en pagina 1) — commit `d546fb5`
+- REF-002 ✅ — Eliminado sistema `pwe-hist-*` completo: servicio, UI y tipos (D-044, D-045)
+- REF-003 ✅ — Eliminada tab Reportes + `classification_reports` huerfano (D-046)
+- US-1106b ✅ — Feedback visual persistente al togglear auto-sync (localStorage, hora HH:00 calculada localmente)
 
 **Siguiente:**
-- BUG-028 verificacion — Abrir browser MCP limpio, obtener evidencia empirica de que sidebar y tabla muestran la misma condicion para la misma hora. Hipotesis pendiente de confirmar: `getWeatherFromFirestore` toma `snapshots[0]` que puede no ser la hora actual del dia.
+- Cierre Sprint 11 — verificar build TS sin errores, revisar items pendientes de BACKLOG.md, commit y cerrar rama
 
-**Backlog critico:**
+**Backlog critico pendiente:**
 - BL-001 — Firestore Security Rules (App Check) — 2h
 - BL-002 — Remover VITE_ACCUWEATHER_KEY de Vercel — 0.5h
+- US-1114 — TestingTools visible en Preview/Prod (VITE_ENABLE_TESTING_TOOLS) — 0.5h

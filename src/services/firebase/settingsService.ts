@@ -40,7 +40,6 @@ export async function initializeSettings(): Promise<void> {
 /**
  * Get auto-sync setting from Firestore
  * Returns default true if document doesn't exist (backward compatibility)
- * Implements Risk #1 mitigation: graceful default handling
  */
 export async function getAutoSyncSetting(): Promise<boolean> {
   try {
@@ -50,7 +49,6 @@ export async function getAutoSyncSetting(): Promise<boolean> {
 
     if (!snapshot.exists()) {
       console.log('[settingsService] Settings doc not found, using default: true')
-      // Initialize on first read (backward compatibility)
       await initializeSettings()
       return true
     }
@@ -60,7 +58,6 @@ export async function getAutoSyncSetting(): Promise<boolean> {
     return value
   } catch (error) {
     console.error('[settingsService] Error getting auto-sync setting:', error)
-    // Safe default: return true (auto-sync enabled)
     return true
   }
 }
@@ -75,7 +72,6 @@ export async function updateAutoSyncSetting(enabled: boolean): Promise<void> {
     const db = await getDb()
     const settingsRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC)
 
-    // Ensure doc exists before updating (handles edge case where doc was deleted)
     await setDoc(
       settingsRef,
       {
