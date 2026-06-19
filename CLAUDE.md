@@ -44,19 +44,22 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ---
 
-## Estado Sprint 11 (branch: `sprint-11`)
+## Estado Sprint 11 (branch: `sprint-11`) — CERRADO ✅
 
-**Completado:**
-- BUG-028 ✅ — Firestore primario en sidebar (D-043). 5/5 ciudades verificadas empiricamente
-- REF-001 ✅ — Limpieza schema legacy post-BL-012
-- REF-002 ✅ — Eliminado sistema `pwe-hist-*` completo: servicio, UI y tipos (D-044, D-045)
-- REF-003 ✅ — Eliminada tab Reportes + `classification_reports` huerfano (D-046)
-- US-1106b ✅ — Feedback visual persistente al togglear auto-sync (localStorage, hora HH:00 calculada localmente)
+- BUG-028, REF-001/002/003, US-1106b completados. Build TS limpio. Commit: 613d299
 
-**Siguiente:**
-- Cierre Sprint 11 — verificar build TS sin errores, revisar items pendientes de BACKLOG.md, commit y cerrar rama
+---
+
+## Estado Sprint 12 (branch: `sprint-12`)
+
+**Objetivo:** Analisis de reportes weather_reports en Firestore + deuda tecnica critica
+
+**En curso:**
+- (por definir)
 
 **Backlog critico pendiente:**
 - BL-001 — Firestore Security Rules (App Check) — 2h
 - BL-002 — Remover VITE_ACCUWEATHER_KEY de Vercel — 0.5h
 - US-1114 — TestingTools visible en Preview/Prod (VITE_ENABLE_TESTING_TOOLS) — 0.5h
+- BL-004 — Test unitario accuLocationKey='' — 1.5h
+- BL-005 — Linter: 53 errores pre-existentes — 3h
