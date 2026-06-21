@@ -71,7 +71,7 @@ interface MapViewProps {
 }
 
 export default function MapView({ cities }: MapViewProps) {
-  const activeTab = useStore((s) => s.activeTab)
+  const activeLayers = useStore((s) => s.activeLayers)
   const badgeFilter = useStore((s) => s.badgeFilter)
   const nests = useStore((s) => s.nests)
   const setNests = useStore((s) => s.setNests)
@@ -166,8 +166,8 @@ export default function MapView({ cities }: MapViewProps) {
           <TileSwitcher />
           <FlyToCity />
 
-          {/* MapPin (Clima) — renderizar si tab = clima o todo */}
-          {(activeTab === 'clima' || activeTab === 'todo') &&
+          {/* MapPin (Clima) */}
+          {activeLayers.clima &&
             filteredCities.map((city) => (
               <MapPin
                 key={city.id}
@@ -177,8 +177,8 @@ export default function MapView({ cities }: MapViewProps) {
             ))
           }
 
-          {/* NestPin (Nidos) — renderizar si tab = nidos o todo */}
-          {(activeTab === 'nidos' || activeTab === 'todo') &&
+          {/* NestPin (Nidos) */}
+          {activeLayers.nidos &&
             nests.map((nest) => (
               <NestPin key={nest.id} nest={nest} />
             ))

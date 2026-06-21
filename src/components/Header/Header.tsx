@@ -4,7 +4,6 @@ import Brand from './Brand'
 import SearchInput from './SearchInput'
 import ThemeToggle from './ThemeToggle'
 import SyncBadge from '../UI/SyncBadge'
-import FilterPanel from './FilterPanel'
 import FilterPanelModal from '../UI/FilterPanelModal'
 import TestingButton from './TestingButton'
 import TestingTools from '../TestingTools/TestingTools'
@@ -18,7 +17,6 @@ interface HeaderProps {
 export default function Header({ cities = [] }: HeaderProps) {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
 
-  const activeTab = useStore((s) => s.activeTab)
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
@@ -247,12 +245,6 @@ export default function Header({ cities = [] }: HeaderProps) {
         <div className="hd-row1">
           <Brand />
 
-          {/* Desktop/Tablet: filtros + búsqueda — oculto en modo Todo */}
-          {activeTab !== 'todo' && (
-            <div className="hd-filter-panel">
-              <FilterPanel />
-            </div>
-          )}
 
           {/* Iconos derecha */}
           <div className="hd-right">
