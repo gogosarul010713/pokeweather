@@ -8,6 +8,7 @@ import FilterPanelModal from '../UI/FilterPanelModal'
 import TestingButton from './TestingButton'
 import TestingTools from '../TestingTools/TestingTools'
 import type { City } from '../../store/useStore'
+import LayerToggles from './LayerToggles'
 
 interface HeaderProps {
   cities?: City[]
@@ -245,6 +246,9 @@ export default function Header({ cities = [] }: HeaderProps) {
         <div className="hd-row1">
           <Brand />
 
+          <div className="hd-filter-panel">
+            <LayerToggles />
+          </div>
 
           {/* Iconos derecha */}
           <div className="hd-right">
