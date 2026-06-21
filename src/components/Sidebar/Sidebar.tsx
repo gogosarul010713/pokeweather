@@ -1,13 +1,14 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
+import Overlay from '../UI/Overlay'
 import SidebarToggle from './SidebarToggle'
-import SidebarFilterPanel from './SidebarFilterPanel'
 
 interface SidebarProps {
   cities: City[]
 }
 
 export default function Sidebar({ cities }: SidebarProps) {
+  const activeTab = useStore((s) => s.activeTab)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
   const setSidebarOpen = useStore((s) => s.setSidebarOpen)
 
@@ -21,7 +22,6 @@ export default function Sidebar({ cities }: SidebarProps) {
 
         .sb-root {
           width: 280px;
-          min-width: 280px;
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
@@ -29,14 +29,11 @@ export default function Sidebar({ cities }: SidebarProps) {
           border-right: 1px solid var(--border-default);
           overflow: hidden;
           height: 100%;
-          transition: width 300ms ease, min-width 300ms ease;
-          position: relative;
-          z-index: 20;
+          transition: transform 300ms ease;
         }
 
         .sb-root.sb-collapsed {
-          width: 0;
-          min-width: 0;
+          transform: translateX(-100%);
         }
 
         /* ── Content ── */
@@ -89,6 +86,17 @@ export default function Sidebar({ cities }: SidebarProps) {
           opacity: 0.4;
         }
 
+        /* ── TABLET: Colapsable sidebar ── */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .sb-root {
+            width: 280px;
+          }
+
+          .sb-root.sb-collapsed {
+            width: 280px;
+          }
+        }
+
         /* ── MOBILE ── */
         @media (max-width: 767px) {
           .sb-root {
@@ -106,9 +114,19 @@ export default function Sidebar({ cities }: SidebarProps) {
         <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
         {/* ── Content ── */}
         <div className="sb-content" style={{ position: 'relative' }}>
+          {/* Content Wrapper — posición relativa para Overlay */}
           <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <SidebarFilterPanel />
-            <LocationFeed cities={cities} />
+            {/* Overlay cuando activeTab = 'todo' — bloquea solo contenido (bajo TabControl) */}
+            <Overlay
+              isActive={activeTab === 'todo'}
+              message="Activa Clima o Nidos para explorar la lista y mostrar los filtros"
+              zIndex={100}
+            />
+
+            {/* LocationFeed — lista de ciudades */}
+            {activeTab === 'clima' && (
+              <LocationFeed cities={cities} />
+            )}
           </div>
         </div>
       </aside>

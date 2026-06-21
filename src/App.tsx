@@ -14,8 +14,11 @@ import type { City } from './store/useStore'
 
 export default function App() {
   const [cities, setCities] = useState<City[]>([])
+  const [showTodoToast, setShowTodoToast] = useState(false)
+  const [previousTab, setPreviousTab] = useState<'clima' | 'nidos' | 'todo'>('clima')
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
+  const activeTab = useStore((s) => s.activeTab)
   const isMobile = useIsMobile()
   const getFilteredCities = useStore((s) => s.getFilteredCities)
   // Dependencias para recalcular filtro cuando cambian
@@ -58,6 +61,14 @@ export default function App() {
     run(handleCitiesLoaded)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Mostrar toast cuando activeTab cambia a 'todo'
+  useEffect(() => {
+    if (activeTab === 'todo' && previousTab !== 'todo') {
+      setShowTodoToast(true)
+    }
+    setPreviousTab(activeTab)
+  }, [activeTab, previousTab])
 
   // En mobile: Visual feedback en mapa al seleccionar ciudad (sin scroll disruptivo)
   // El highlight visual ocurre en MapPin.tsx, aquí solo aseguramos que el mapa reciba focus
@@ -104,7 +115,6 @@ export default function App() {
           position: relative;
           overflow: hidden;
           background: var(--bg-primary);
-          z-index: 0;
         }
 
         /* ──────────────────────────────────────────────
@@ -125,6 +135,11 @@ export default function App() {
             flex: 1;
             overflow: hidden;  /* Map container, no internal scroll */
           }
+
+          /* LocationFeed now inside BottomSheet component */
+          .app-list-area {
+            display: none;  /* Hidden — moved to BottomSheet */
+          }
         }
 
         /* TABLET (768px - 1023px): Sidebar colapsable, map expands */
@@ -140,6 +155,17 @@ export default function App() {
             flex: 1;
             position: relative;
             transition: flex 300ms ease;
+          }
+
+          .app-list-area {
+            display: none;
+          }
+        }
+
+        /* DESKTOP (1024px+): Default layout */
+        @media (min-width: 1024px) {
+          .app-list-area {
+            display: none;
           }
         }
 
@@ -162,6 +188,10 @@ export default function App() {
             <MapView cities={filteredCities} />
           </main>
 
+          {/* LIST AREA — Mobile only (LocationFeed extracted from Sidebar) */}
+          <div className="app-list-area">
+            <LocationFeed cities={filteredCities} />
+          </div>
         </div>
 
         {/* BOTTOM SHEET — Mobile only, rendered via portal outside #root */}
@@ -181,7 +211,14 @@ export default function App() {
           <Toast message={toastMessage} type="info" duration={3000} />
         )}
 
-
+        {/* TOAST NOTIFICATIONS — Modo Todo */}
+        {showTodoToast && (
+          <Toast
+            message="Mostrando Clima y Nidos simultáneamente en el mapa"
+            duration={4000}
+            onDismiss={() => setShowTodoToast(false)}
+          />
+        )}
       </div>
     </>
   )
