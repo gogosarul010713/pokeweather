@@ -1,14 +1,13 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
-import Overlay from '../UI/Overlay'
 import SidebarToggle from './SidebarToggle'
+import SidebarFilterPanel from './SidebarFilterPanel'
 
 interface SidebarProps {
   cities: City[]
 }
 
 export default function Sidebar({ cities }: SidebarProps) {
-  const activeTab = useStore((s) => s.activeTab)
   const sidebarOpen = useStore((s) => s.sidebarOpen)
   const setSidebarOpen = useStore((s) => s.setSidebarOpen)
 
@@ -107,19 +106,9 @@ export default function Sidebar({ cities }: SidebarProps) {
         <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
         {/* ── Content ── */}
         <div className="sb-content" style={{ position: 'relative' }}>
-          {/* Content Wrapper — posición relativa para Overlay */}
           <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            {/* Overlay cuando activeTab = 'todo' — bloquea solo contenido (bajo TabControl) */}
-            <Overlay
-              isActive={activeTab === 'todo'}
-              message="Activa Clima o Nidos para explorar la lista y mostrar los filtros"
-              zIndex={100}
-            />
-
-            {/* LocationFeed — lista de ciudades */}
-            {activeTab === 'clima' && (
-              <LocationFeed cities={cities} />
-            )}
+            <SidebarFilterPanel />
+            <LocationFeed cities={cities} />
           </div>
         </div>
       </aside>
