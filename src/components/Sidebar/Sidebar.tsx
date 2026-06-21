@@ -22,6 +22,7 @@ export default function Sidebar({ cities }: SidebarProps) {
 
         .sb-root {
           width: 280px;
+          min-width: 280px;
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
@@ -29,11 +30,14 @@ export default function Sidebar({ cities }: SidebarProps) {
           border-right: 1px solid var(--border-default);
           overflow: hidden;
           height: 100%;
-          transition: transform 300ms ease;
+          transition: width 300ms ease, min-width 300ms ease;
+          position: relative;
+          z-index: 20;
         }
 
         .sb-root.sb-collapsed {
-          transform: translateX(-100%);
+          width: 0;
+          min-width: 0;
         }
 
         /* ── Content ── */
@@ -84,17 +88,6 @@ export default function Sidebar({ cities }: SidebarProps) {
         /* Fade out cuando sidebar está colapsado, pero sigue siendo interactivo */
         .sb-toggle-wrapper.sb-collapsed {
           opacity: 0.4;
-        }
-
-        /* ── TABLET: Colapsable sidebar ── */
-        @media (min-width: 768px) and (max-width: 1023px) {
-          .sb-root {
-            width: 280px;
-          }
-
-          .sb-root.sb-collapsed {
-            width: 280px;
-          }
         }
 
         /* ── MOBILE ── */

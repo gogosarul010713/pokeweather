@@ -110,6 +110,7 @@ export default function MapView({ cities }: MapViewProps) {
           width: 100%;
           height: 100%;
           position: relative;
+          z-index: 0;
         }
 
         /* Compactar atribución */

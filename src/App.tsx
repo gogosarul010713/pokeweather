@@ -104,6 +104,7 @@ export default function App() {
           position: relative;
           overflow: hidden;
           background: var(--bg-primary);
+          z-index: 0;
         }
 
         /* ──────────────────────────────────────────────
@@ -177,10 +178,6 @@ export default function App() {
             <MapView cities={filteredCities} />
           </main>
 
-          {/* LIST AREA — Mobile only (LocationFeed extracted from Sidebar) */}
-          <div className="app-list-area">
-            <LocationFeed cities={filteredCities} />
-          </div>
         </div>
 
         {/* BOTTOM SHEET — Mobile only, rendered via portal outside #root */}
