@@ -125,11 +125,6 @@ export default function App() {
             flex: 1;
             overflow: hidden;  /* Map container, no internal scroll */
           }
-
-          /* LocationFeed now inside BottomSheet component */
-          .app-list-area {
-            display: none;  /* Hidden — moved to BottomSheet */
-          }
         }
 
         /* TABLET (768px - 1023px): Sidebar colapsable, map expands */
@@ -145,17 +140,6 @@ export default function App() {
             flex: 1;
             position: relative;
             transition: flex 300ms ease;
-          }
-
-          .app-list-area {
-            display: none;
-          }
-        }
-
-        /* DESKTOP (1024px+): Default layout */
-        @media (min-width: 1024px) {
-          .app-list-area {
-            display: none;
           }
         }
 
