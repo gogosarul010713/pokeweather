@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import type { Nest } from '../types/nest'
+import type { ActiveLayers, LayerKey } from '../types/layers'
+import { DEFAULT_LAYERS } from '../types/layers'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,7 +76,7 @@ interface AppStore {
   lastUpdated: number | null
   isFilterPanelOpen: boolean
   typeFilter: string[]
-  activeTab: 'clima' | 'nidos' | 'todo'
+  activeLayers: ActiveLayers
   nests: Nest[]
   selectedNest: Nest | null
   nestTypeFilter: string[]
@@ -104,7 +106,8 @@ interface AppStore {
   setTypeFilter: (types: string[]) => void
   toggleType: (type: string) => void
   resetToHome: () => void
-  setActiveTab: (tab: 'clima' | 'nidos' | 'todo') => void
+  toggleLayer: (layer: LayerKey) => void
+  setLayer: (layer: LayerKey, value: boolean) => void
   setNests: (nests: Nest[]) => void
   setSelectedNest: (nest: Nest | null) => void
   setNestTypeFilter: (types: string[]) => void
@@ -158,7 +161,16 @@ export const useStore = create<AppStore>((set, get) => ({
   lastUpdated: null,
   isFilterPanelOpen: false,
   typeFilter: [],
-  activeTab: (localStorage.getItem('pwe-activeTab') as 'clima' | 'nidos' | 'todo') || 'clima',
+  activeLayers: (() => {
+    try {
+      const stored = localStorage.getItem('pwe-activeLayers')
+      if (!stored) return DEFAULT_LAYERS
+      const parsed = JSON.parse(stored)
+      return { ...DEFAULT_LAYERS, ...parsed }
+    } catch {
+      return DEFAULT_LAYERS
+    }
+  })(),
   nests: [],
   selectedNest: null,
   nestTypeFilter: [],
@@ -255,10 +267,19 @@ export const useStore = create<AppStore>((set, get) => ({
         : [...state.typeFilter, type],
     })),
 
-  setActiveTab: (tab) => {
-    localStorage.setItem('pwe-activeTab', tab)
-    set({ activeTab: tab })
-  },
+  toggleLayer: (layer) =>
+    set((state) => {
+      const next = { ...state.activeLayers, [layer]: !state.activeLayers[layer] }
+      localStorage.setItem('pwe-activeLayers', JSON.stringify(next))
+      return { activeLayers: next }
+    }),
+
+  setLayer: (layer, value) =>
+    set((state) => {
+      const next = { ...state.activeLayers, [layer]: value }
+      localStorage.setItem('pwe-activeLayers', JSON.stringify(next))
+      return { activeLayers: next }
+    }),
 
   setNests: (nests) => set({ nests }),
 
