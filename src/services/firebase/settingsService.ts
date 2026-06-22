@@ -18,22 +18,22 @@ export async function initializeSettings(): Promise<void> {
   try {
     const db = await getDb()
     const settingsRef = doc(db, SETTINGS_COLLECTION, SETTINGS_DOC)
+    const snapshot = await getDoc(settingsRef)
 
-    // Use merge: true to preserve existing fields if doc already exists
-    await setDoc(
-      settingsRef,
-      {
-        autoSyncEnabled: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      { merge: true }
-    )
+    if (snapshot.exists()) {
+      console.log('[settingsService] Settings already exist, skipping initialization')
+      return
+    }
 
-    console.log('[settingsService] Settings initialized with merge strategy')
+    await setDoc(settingsRef, {
+      autoSyncEnabled: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    console.log('[settingsService] Settings initialized with defaults')
   } catch (error) {
     console.error('[settingsService] Error initializing settings:', error)
-    // Non-fatal: if this fails, app still works with defaults
   }
 }
 
