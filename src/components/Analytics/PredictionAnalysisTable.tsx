@@ -17,6 +17,8 @@ import { TYPE_ICON } from '../../config/typeIcons';
 import WeatherReportModal from './WeatherReportModal';
 import { LookbackPanel } from './LookbackPanel';
 import { fetchLookback, type LookbackEntry } from '../../services/lookback/lookbackService';
+import { PrecisionPanel } from './PrecisionPanel';
+import { usePrecisionStats } from '../../hooks/usePrecisionStats';
 
 export interface PredictionRow {
   queryTime: string | Date;
@@ -150,6 +152,9 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const [reportingRow, setReportingRow]   = useState<PredictionRow | null>(null);
   const [copiedCoords, setCopiedCoords]   = useState<string | null>(null);
   const [groupBy, setGroupBy]             = useState<GroupBy>('hora');
+  const [precisionOpen, setPrecisionOpen] = useState(false);
+  const precisionStats = usePrecisionStats(rows);
+  const totalReports   = rows.filter((r) => r.correct !== null).length;
 
   type LookbackState = { open: boolean; loading: boolean; entries: LookbackEntry[] };
   const [lookbackMap, setLookbackMap] = useState<Map<string, LookbackState>>(new Map());
@@ -451,6 +456,32 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           display: flex;
           flex-direction: column;
           gap: 0;
+        }
+
+        /* ── Precision toggle ───────────────────────────── */
+        .pat-precision-toggle {
+          padding: 6px 16px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          border-bottom: 1px solid var(--border-subtle);
+          background: var(--bg-secondary);
+        }
+        .pat-precision-btn {
+          background: none;
+          border: 1px solid var(--border-subtle);
+          color: var(--text-secondary);
+          padding: 3px 10px;
+          border-radius: 5px;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .pat-precision-btn:hover { background: var(--bg-tertiary); }
+        .pat-precision-hint {
+          font-size: 11px;
+          color: var(--text-muted);
         }
 
         /* ── Header ─────────────────────────────────────── */
@@ -972,6 +1003,26 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
           <button className="pat-btn" onClick={handleCopyJSON}>📋 JSON</button>
         </div>
       </div>
+
+      {/* ── Precision toggle ── */}
+      <div className="pat-precision-toggle">
+        <button
+          className="pat-precision-btn"
+          onClick={() => setPrecisionOpen((v) => !v)}
+        >
+          {precisionOpen ? '▲' : '▼'} Ver precision del algoritmo
+        </button>
+        {!precisionOpen && totalReports > 0 && (
+          <span className="pat-precision-hint">
+            {Math.round(precisionStats.globalRate * 100)}% global · {totalReports} reportes
+          </span>
+        )}
+      </div>
+
+      {/* ── Precision panel ── */}
+      {precisionOpen && (
+        <PrecisionPanel stats={precisionStats} totalReports={totalReports} />
+      )}
 
       {/* ── Toolbar búsqueda global ── */}
       <div className="pat-toolbar">

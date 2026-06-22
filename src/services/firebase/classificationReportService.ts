@@ -72,12 +72,22 @@ export async function saveWeatherReport(
   }
 }
 
+export interface WeatherReport {
+  city_id: string
+  city_name: string
+  date_hour: string
+  predicted_condition: string
+  reported_condition: string
+  timestamp: { seconds: number; nanoseconds: number }
+}
+
 /**
  * Obtener reportes de clima real (weather_reports) para columna REAL de tabla predictiva
+ * y para calculo de metricas de precision (US-1201).
  */
 export async function getRecentWeatherReports(
   hours: number = 24
-): Promise<Array<{ city_id: string; date_hour: string; reported_condition: string }>> {
+): Promise<WeatherReport[]> {
   const { collection, getDocs, Timestamp } = await import('firebase/firestore')
   const db = await getDb()
 
@@ -95,17 +105,18 @@ export async function getRecentWeatherReports(
     const allReports = await getDocs(collection(db, 'weather_reports'))
 
     const filtered = allReports.docs
-      .map((doc) => ({
-        city_id: doc.data().city_id,
-        date_hour: doc.data().date_hour,
-        reported_condition: doc.data().reported_condition,
-      }))
-      .filter((report) => {
-        const docData = allReports.docs.find(
-          (d) => d.data().city_id === report.city_id && d.data().date_hour === report.date_hour
-        )?.data()
-        return docData?.timestamp >= minDate
+      .map((doc) => {
+        const d = doc.data()
+        return {
+          city_id: d.city_id,
+          city_name: d.city_name ?? '',
+          date_hour: d.date_hour,
+          predicted_condition: d.predicted_condition ?? '',
+          reported_condition: d.reported_condition,
+          timestamp: d.timestamp,
+        }
       })
+      .filter((report) => report.timestamp >= minDate)
 
     console.log(`[Firebase] ✅ Loaded ${filtered.length} weather reports from last ${hours}h`)
     return filtered

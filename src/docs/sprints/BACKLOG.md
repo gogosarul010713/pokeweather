@@ -2,7 +2,7 @@
 
 > **Fuente única de verdad** para priorización, seguimiento y decisiones arquitectónicas.
 > Estructura jerárquica + tags para escalabilidad sin convertirse en monolito.
-> **Última actualización:** 2026-06-14 (US-1106 documentada — feedback visual toggle auto-sync)
+> **Última actualización:** 2026-06-21 (US-1201 documentada — panel de precision del algoritmo)
 
 ---
 
@@ -36,6 +36,7 @@ BACKLOG.md (este archivo)
 | **BL-004** | Test unitario accuLocationKey='' | 🟡 IMPORTANTE | Quality | 1.5h | Regression | Pendiente |
 | **BL-005** | Linter: 53 errores pre-existentes | 🟡 IMPORTANTE | Quality | 3h | CI/CD | Pendiente |
 | **BL-006** | Suite E2E tabla predictiva | 🟡 IMPORTANTE | Testing | 4h | Manual | Pendiente |
+| **US-1201** | Panel de precision del algoritmo (Alcance 1) | 🟡 IMPORTANTE | Analytics | 2-3h | — | Pendiente Sprint-12 |
 | **BL-007** | Dashboard de precisión acumulada | 🟢 FEATURE | Analytics | 6h | — | Pendiente |
 | **BL-008** | date_hour consolidado a UTC | 🟢 FEATURE | Migration | 5h | Multi-user | Pendiente |
 | **BL-009** | Historial de reportes UI | 🟢 FEATURE | UI | 3h | — | Pendiente |
