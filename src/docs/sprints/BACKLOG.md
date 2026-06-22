@@ -32,6 +32,7 @@ BACKLOG.md (este archivo)
 | **BL-002** | Remover VITE_ACCUWEATHER_KEY de Vercel | 🔴 CRÍTICA | Seguridad | 0.5h | Prod-Ready | Pendiente |
 | **BL-012** | Extraer algoritmo a modulo puro compartido (D-042) | 🔴 CRÍTICA | Arch+Debt | 4h | Drift CF↔Frontend | PLAN LISTO |
 | **BUG-028** | Sidebar/tabla divergencia — Firestore fuente de verdad (D-043) | 🔴 CRÍTICA | Bug+Arch | 2h | Precision | ✅ Verificado 2026-06-13 |
+| **BUG-029** | Auto-sync desactivado no persiste entre sesiones | 🟡 IMPORTANTE | Bug | 0.5h | — | Pendiente Sprint-12 |
 | **BL-003** | Eliminar `calculated_condition` tipo | 🟡 IMPORTANTE | Debt | 1h | D-039 | ✅ REF-001 2026-06-12 |
 | **BL-004** | Test unitario accuLocationKey='' | 🟡 IMPORTANTE | Quality | 1.5h | Regression | Pendiente |
 | **BL-005** | Linter: 53 errores pre-existentes | 🟡 IMPORTANTE | Quality | 3h | CI/CD | Pendiente |

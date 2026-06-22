@@ -9,6 +9,8 @@
 ```
 backlog/
 ├── README.md                          ← Estás aquí
+├── bugs/
+│   └── bug-029-autosync-no-persiste.md  (0.5h, IMPORTANTE)
 ├── deuda-tecnica/
 │   ├── bl-001-firestore-rules.md      (2h, CRÍTICA)
 │   ├── bl-002-vite-key-removal.md     (0.5h, CRÍTICA)
