@@ -1,11 +1,9 @@
-import type { PrecisionStats } from '../../hooks/usePrecisionStats'
+import { useState, useEffect } from 'react'
+import { usePrecisionStats } from '../../hooks/usePrecisionStats'
+import { getRecentWeatherReports } from '../../services/firebase/classificationReportService'
+import type { WeatherReport } from '../../services/firebase/classificationReportService'
 import { CONDITION_LABEL, WEATHER_IMAGES } from '../../config/weatherImages'
 import type { WeatherCondition } from '../../config/weatherImages'
-
-interface Props {
-  stats: PrecisionStats
-  totalReports: number
-}
 
 function rateColor(rate: number): string {
   if (rate >= 0.75) return 'var(--ui-success)'
@@ -17,7 +15,29 @@ function pct(rate: number): string {
   return `${Math.round(rate * 100)}%`
 }
 
-export function PrecisionPanel({ stats, totalReports }: Props) {
+export function PrecisionPanel() {
+  const [reports, setReports] = useState<WeatherReport[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    getRecentWeatherReports(720).then((data) => {
+      if (!cancelled) {
+        setReports(data)
+        setLoading(false)
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  const stats = usePrecisionStats(reports)
+
+  if (loading) {
+    return (
+      <div className="pp-empty">Cargando estadisticas...</div>
+    )
+  }
+
   if (stats.total === 0) {
     return (
       <div className="pp-empty">
@@ -33,7 +53,7 @@ export function PrecisionPanel({ stats, totalReports }: Props) {
       {/* Header */}
       <div className="pp-header">
         <span className="pp-header-title">Precision del algoritmo</span>
-        <span className="pp-header-sub">Ultimos 30 dias · {totalReports} reportes</span>
+        <span className="pp-header-sub">Ultimos 30 dias · {stats.total} reportes</span>
       </div>
 
       {stats.total < 10 && (

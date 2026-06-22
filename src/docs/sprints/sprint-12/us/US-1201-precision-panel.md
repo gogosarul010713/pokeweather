@@ -1,7 +1,7 @@
 # US-1201 — Panel de precision del algoritmo de clima
 
 **Sprint:** 12
-**Estado:** En progreso — CA-01 a CA-05 implementados, CA-06 pendiente
+**Estado:** COMPLETADO — CA-01 a CA-06 implementados ✅
 **Prioridad:** Media
 **Estimacion:** 2-3h
 **Investigacion base:** INV-001-precision-weather-reports.md
@@ -60,7 +60,7 @@ Columnas: Condicion | Aciertos | Fallos | Total | Precision (barra + %)
 - Si hay entre 1 y 9 reportes, mostrar advertencia sutil:
   `"Estadisticas preliminares — menos de 10 reportes"`
 
-### CA-06 — Ventana de tiempo ⏳ PENDIENTE
+### CA-06 — Ventana de tiempo ✅ IMPLEMENTADO
 **Decision tomada (2026-06-22):** dos consultas independientes.
 - La tabla sigue usando `getRecentWeatherReports(24)` — sin cambio
 - El panel hace su propia consulta `getRecentWeatherReports(720)` desde `PrecisionPanel`
@@ -96,13 +96,13 @@ src/
 | `classificationReportService.ts` | `WeatherReport` interface + `getRecentWeatherReports` retorna `predicted_condition`, `city_name`, `timestamp` |
 | `PredictionAnalysisTable.tsx` | Toggle `precisionOpen` + imports + render `<PrecisionPanel>` encima de toolbar |
 
-### Cambios pendientes (CA-06)
+### Cambios CA-06 (implementados 2026-06-22)
 
 | Archivo | Cambio |
 |---------|--------|
-| `classificationReportService.ts` | Agregar `where('timestamp', '>=', minDate)` a la query — filtrar en Firestore, no en memoria |
-| `PrecisionPanel.tsx` | Agregar `useEffect` que llama `getRecentWeatherReports(720)` propio, independiente de `rows` |
-| `usePrecisionStats.ts` | Cambiar entrada de `PredictionRow[]` a `WeatherReport[]` — recibe los reportes de 30 dias |
+| `classificationReportService.ts` | `query()` + `where('timestamp', '>=', minDate)` — filtra en Firestore, no en memoria |
+| `PrecisionPanel.tsx` | Autocontenido — `useEffect` propio llama `getRecentWeatherReports(720)`, sin props externos |
+| `usePrecisionStats.ts` | Acepta `WeatherReport[]` — calcula `correct` comparando `predicted_condition vs reported_condition` |
 
 ### Interface de `usePrecisionStats` (estado actual)
 
@@ -150,6 +150,6 @@ interface PrecisionStats {
 - [x] Grafico de barras por hora funcional
 - [x] Estado sin datos manejado
 - [x] Build TypeScript limpio (0 errores)
-- [ ] Panel hace consulta propia de 30 dias (CA-06)
-- [ ] Query usa `where` para filtrar en Firestore (CA-06)
-- [ ] Probado manualmente con datos reales en dev
+- [x] Panel hace consulta propia de 30 dias (CA-06)
+- [x] Query usa `where` para filtrar en Firestore (CA-06)
+- [x] Probado manualmente con datos reales en dev

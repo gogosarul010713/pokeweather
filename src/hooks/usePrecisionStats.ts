@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { PredictionRow } from '../components/Analytics/PredictionAnalysisTable'
+import type { WeatherReport } from '../services/firebase/classificationReportService'
 
 export interface ConditionStat {
   condition: string
@@ -20,11 +20,9 @@ export interface PrecisionStats {
   worstHourRange: string
 }
 
-export function usePrecisionStats(rows: PredictionRow[]): PrecisionStats {
+export function usePrecisionStats(reports: WeatherReport[]): PrecisionStats {
   return useMemo(() => {
-    const reported = rows.filter((r) => r.correct !== null)
-
-    if (reported.length === 0) {
+    if (reports.length === 0) {
       return {
         total: 0,
         hits: 0,
@@ -37,17 +35,19 @@ export function usePrecisionStats(rows: PredictionRow[]): PrecisionStats {
       }
     }
 
-    const hits = reported.filter((r) => r.correct === true).length
-    const globalRate = hits / reported.length
+    const hits = reports.filter(
+      (r) => r.predicted_condition === r.reported_condition
+    ).length
+    const globalRate = hits / reports.length
 
     // Agrupar por condicion predicha
     const condMap = new Map<string, { hits: number; misses: number }>()
-    reported.forEach((r) => {
-      const cond = r.prediction
-      const entry = condMap.get(cond) ?? { hits: 0, misses: 0 }
-      if (r.correct === true) entry.hits++
+    reports.forEach((r) => {
+      const isHit = r.predicted_condition === r.reported_condition
+      const entry = condMap.get(r.predicted_condition) ?? { hits: 0, misses: 0 }
+      if (isHit) entry.hits++
       else entry.misses++
-      condMap.set(cond, entry)
+      condMap.set(r.predicted_condition, entry)
     })
 
     const byCondition: ConditionStat[] = Array.from(condMap.entries())
@@ -63,12 +63,12 @@ export function usePrecisionStats(rows: PredictionRow[]): PrecisionStats {
     const worstCondition = byCondition.find((c) => c.misses > 0) ?? null
     const perfectConditions = byCondition.filter((c) => c.misses === 0)
 
-    // Agrupar fallos por hora extraida de dateHour ("YYYY-MM-DD-HH")
+    // Agrupar fallos por hora extraida de date_hour ("YYYY-MM-DD-HH")
     const failsByHour: Record<number, number> = {}
-    reported
-      .filter((r) => r.correct === false)
+    reports
+      .filter((r) => r.predicted_condition !== r.reported_condition)
       .forEach((r) => {
-        const parts = r.dateHour.split('-')
+        const parts = r.date_hour.split('-')
         const hour = parts.length === 4 ? parseInt(parts[3], 10) : -1
         if (hour >= 0 && hour <= 23) {
           failsByHour[hour] = (failsByHour[hour] ?? 0) + 1
@@ -91,7 +91,7 @@ export function usePrecisionStats(rows: PredictionRow[]): PrecisionStats {
     }
 
     return {
-      total: reported.length,
+      total: reports.length,
       hits,
       globalRate,
       byCondition,
@@ -100,5 +100,5 @@ export function usePrecisionStats(rows: PredictionRow[]): PrecisionStats {
       failsByHour,
       worstHourRange,
     }
-  }, [rows])
+  }, [reports])
 }

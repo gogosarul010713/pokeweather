@@ -88,38 +88,40 @@ export interface WeatherReport {
 export async function getRecentWeatherReports(
   hours: number = 24
 ): Promise<WeatherReport[]> {
-  const { collection, getDocs, Timestamp } = await import('firebase/firestore')
+  const { collection, getDocs, query, where, Timestamp } = await import('firebase/firestore')
   const db = await getDb()
 
   try {
-    const minDate = new Timestamp(
-      Math.floor((Date.now() - hours * 60 * 60 * 1000) / 1000),
-      0
-    )
-
     if (!db) {
       console.warn('[Firebase] Firestore not initialized, returning empty weather reports')
       return []
     }
 
-    const allReports = await getDocs(collection(db, 'weather_reports'))
+    const minDate = new Timestamp(
+      Math.floor((Date.now() - hours * 60 * 60 * 1000) / 1000),
+      0
+    )
 
-    const filtered = allReports.docs
-      .map((doc) => {
-        const d = doc.data()
-        return {
-          city_id: d.city_id,
-          city_name: d.city_name ?? '',
-          date_hour: d.date_hour,
-          predicted_condition: d.predicted_condition ?? '',
-          reported_condition: d.reported_condition,
-          timestamp: d.timestamp,
-        }
-      })
-      .filter((report) => report.timestamp >= minDate)
+    const q = query(
+      collection(db, 'weather_reports'),
+      where('timestamp', '>=', minDate)
+    )
+    const snap = await getDocs(q)
 
-    console.log(`[Firebase] ✅ Loaded ${filtered.length} weather reports from last ${hours}h`)
-    return filtered
+    const reports = snap.docs.map((doc) => {
+      const d = doc.data()
+      return {
+        city_id: d.city_id,
+        city_name: d.city_name ?? '',
+        date_hour: d.date_hour,
+        predicted_condition: d.predicted_condition ?? '',
+        reported_condition: d.reported_condition,
+        timestamp: d.timestamp,
+      }
+    })
+
+    console.log(`[Firebase] ✅ Loaded ${reports.length} weather reports from last ${hours}h`)
+    return reports
   } catch (err) {
     console.error('[Firebase] ⚠️ Error al leer weather reports:', err)
     return []

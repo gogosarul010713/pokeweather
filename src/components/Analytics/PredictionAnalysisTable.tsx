@@ -18,7 +18,6 @@ import WeatherReportModal from './WeatherReportModal';
 import { LookbackPanel } from './LookbackPanel';
 import { fetchLookback, type LookbackEntry } from '../../services/lookback/lookbackService';
 import { PrecisionPanel } from './PrecisionPanel';
-import { usePrecisionStats } from '../../hooks/usePrecisionStats';
 
 export interface PredictionRow {
   queryTime: string | Date;
@@ -153,8 +152,6 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
   const [copiedCoords, setCopiedCoords]   = useState<string | null>(null);
   const [groupBy, setGroupBy]             = useState<GroupBy>('hora');
   const [precisionOpen, setPrecisionOpen] = useState(false);
-  const precisionStats = usePrecisionStats(rows);
-  const totalReports   = rows.filter((r) => r.correct !== null).length;
 
   type LookbackState = { open: boolean; loading: boolean; entries: LookbackEntry[] };
   const [lookbackMap, setLookbackMap] = useState<Map<string, LookbackState>>(new Map());
@@ -1012,16 +1009,11 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
         >
           {precisionOpen ? '▲' : '▼'} Ver precision del algoritmo
         </button>
-        {!precisionOpen && totalReports > 0 && (
-          <span className="pat-precision-hint">
-            {Math.round(precisionStats.globalRate * 100)}% global · {totalReports} reportes
-          </span>
-        )}
       </div>
 
       {/* ── Precision panel ── */}
       {precisionOpen && (
-        <PrecisionPanel stats={precisionStats} totalReports={totalReports} />
+        <PrecisionPanel />
       )}
 
       {/* ── Toolbar búsqueda global ── */}
