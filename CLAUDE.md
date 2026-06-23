@@ -52,14 +52,17 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 
 ## Estado Sprint 12 (branch: `sprint-12`)
 
-**Objetivo:** Analisis de reportes weather_reports en Firestore + deuda tecnica critica
+**Completado:**
+- US-1201 ✅ — Panel de precision del algoritmo completo (CA-01 a CA-06), commits 8a99aa7 + 85965fb
+- BUG-029 ✅ — Auto-sync no persistia: initializeSettings sobreescribia con merge:true, commit 4fa335f
 
-**En curso:**
-- (por definir)
+**Siguiente:**
+- Verificar precision del algoritmo con datos reales de reportes + dashboards
+- Contexto: PrecisionPanel ya consume 30 dias de weather_reports — llenar con datos y analizar
 
 **Backlog critico pendiente:**
 - BL-001 — Firestore Security Rules (App Check) — 2h
 - BL-002 — Remover VITE_ACCUWEATHER_KEY de Vercel — 0.5h
-- US-1114 — TestingTools visible en Preview/Prod (VITE_ENABLE_TESTING_TOOLS) — 0.5h
+- US-1114 — TestingTools visible en Preview/Prod — 0.5h
 - BL-004 — Test unitario accuLocationKey='' — 1.5h
 - BL-005 — Linter: 53 errores pre-existentes — 3h
