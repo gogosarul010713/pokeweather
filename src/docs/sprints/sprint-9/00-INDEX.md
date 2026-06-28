@@ -50,7 +50,7 @@
 |---|---|---|---|---|
 | **US-826** | Migración `activeTab` → `activeLayers` en Zustand | 3 | ⏳ Pendiente | — |
 | **US-823** | Layer toggles en Header | 2 | ⏳ Pendiente | US-826 |
-| **US-824** | Layout general: mapa como protagonista | 2 | ⏳ Pendiente | US-826 |
+| **US-824** | Layout general: mapa como protagonista | 1 (reducido, ver DEC-904) | ✅ Done | US-826 |
 | **US-821** | Filtros adaptativos en sidebar por capa | 3 | ⏳ Pendiente | US-826, US-823 |
 | **US-818** | Feed unificado en sidebar (clima + nidos) | 5 | ⏳ Pendiente | US-826, US-821, US-823 |
 | **US-815** | Leyenda dinámica por capas activas | 2 | ⏳ Pendiente | US-826, US-823 |

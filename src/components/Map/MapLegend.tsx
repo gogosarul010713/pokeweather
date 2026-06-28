@@ -7,6 +7,7 @@ import { useStore } from '../../store/useStore'
 import { CONDITION_COLORS, CONDITION_LABEL, BADGE_ICONS } from '../../services/weather/weatherService'
 import type { WeatherCondition } from '../../config/weatherImages'
 import type { BadgeType } from '../../services/weather/weatherService'
+import { Z } from '../../config/zIndex'
 
 const CONDITIONS: WeatherCondition[] = [
   'sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy',
@@ -51,7 +52,7 @@ export default function MapLegend() {
           position: absolute;
           bottom: 28px;
           right: 12px;
-          z-index: 450;
+          z-index: ${Z.mapOverlay};
           background: var(--bg-secondary);
           border: 1px solid var(--border-default);
           border-radius: 8px;

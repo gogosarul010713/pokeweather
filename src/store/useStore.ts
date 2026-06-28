@@ -1,6 +1,26 @@
 import { create } from 'zustand'
 import type { Nest } from '../types/nest'
 
+// ─── Layer Types ──────────────────────────────────────────────────────────────
+
+export type LayerKey = 'clima' | 'nidos' | 'gyms' | 'stops' | 'rutas'
+
+export interface ActiveLayers {
+  clima: boolean
+  nidos: boolean
+  gyms: boolean
+  stops: boolean
+  rutas: boolean
+}
+
+const DEFAULT_LAYERS: ActiveLayers = {
+  clima: true,
+  nidos: false,
+  gyms: false,
+  stops: false,
+  rutas: false,
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface City {
@@ -64,7 +84,6 @@ interface AppStore {
   sortDirection: SortDirection
   selectedCity: City | null
   theme: 'dark' | 'light'
-  sidebarOpen: boolean
   loadingStatus: LoadingStatus
   loadingProgress: LoadingProgress
   sidebarMode: 'list' | 'detail' | 'favorites'
@@ -74,7 +93,7 @@ interface AppStore {
   lastUpdated: number | null
   isFilterPanelOpen: boolean
   typeFilter: string[]
-  activeTab: 'clima' | 'nidos' | 'todo'
+  activeLayers: ActiveLayers
   nests: Nest[]
   selectedNest: Nest | null
   nestTypeFilter: string[]
@@ -91,7 +110,6 @@ interface AppStore {
   setSortDirection: (direction: SortDirection) => void
   setSelectedCity: (city: City | null) => void
   toggleTheme: () => void
-  setSidebarOpen: (open: boolean) => void
   setLoadingStatus: (status: LoadingStatus) => void
   setLoadingProgress: (progress: LoadingProgress) => void
   setSidebarMode: (mode: 'list' | 'detail' | 'favorites') => void
@@ -104,7 +122,8 @@ interface AppStore {
   setTypeFilter: (types: string[]) => void
   toggleType: (type: string) => void
   resetToHome: () => void
-  setActiveTab: (tab: 'clima' | 'nidos' | 'todo') => void
+  toggleLayer: (layer: LayerKey) => void
+  setLayer: (layer: LayerKey, value: boolean) => void
   setNests: (nests: Nest[]) => void
   setSelectedNest: (nest: Nest | null) => void
   setNestTypeFilter: (types: string[]) => void
@@ -127,14 +146,6 @@ export const useStore = create<AppStore>((set, get) => ({
   sortDirection: 'asc',  // Default: ascendente (como solicitó el usuario)
   selectedCity: null,
   theme: (localStorage.getItem('pwe-theme') as 'dark' | 'light') || 'dark',
-  sidebarOpen: (() => {
-    try {
-      const saved = localStorage.getItem('pwe-sidebar-open')
-      return saved ? JSON.parse(saved) : true
-    } catch {
-      return true
-    }
-  })(),
   loadingStatus: 'idle',
   loadingProgress: { cityName: '', current: 0, total: 0, percent: 0 },
   sidebarMode: 'list',
@@ -158,7 +169,15 @@ export const useStore = create<AppStore>((set, get) => ({
   lastUpdated: null,
   isFilterPanelOpen: false,
   typeFilter: [],
-  activeTab: (localStorage.getItem('pwe-activeTab') as 'clima' | 'nidos' | 'todo') || 'clima',
+  activeLayers: (() => {
+    try {
+      const stored = localStorage.getItem('pwe-activeLayers')
+      if (!stored) return DEFAULT_LAYERS
+      return { ...DEFAULT_LAYERS, ...JSON.parse(stored) }
+    } catch {
+      return DEFAULT_LAYERS
+    }
+  })(),
   nests: [],
   selectedNest: null,
   nestTypeFilter: [],
@@ -195,11 +214,6 @@ export const useStore = create<AppStore>((set, get) => ({
     document.documentElement.classList.toggle('light', next === 'light')
     localStorage.setItem('pwe-theme', next)
     set({ theme: next })
-  },
-
-  setSidebarOpen: (open) => {
-    localStorage.setItem('pwe-sidebar-open', JSON.stringify(open))
-    set({ sidebarOpen: open })
   },
 
   setSidebarMode: (mode) => set({ sidebarMode: mode }),
@@ -255,10 +269,19 @@ export const useStore = create<AppStore>((set, get) => ({
         : [...state.typeFilter, type],
     })),
 
-  setActiveTab: (tab) => {
-    localStorage.setItem('pwe-activeTab', tab)
-    set({ activeTab: tab })
-  },
+  toggleLayer: (layer) =>
+    set((state) => {
+      const next = { ...state.activeLayers, [layer]: !state.activeLayers[layer] }
+      localStorage.setItem('pwe-activeLayers', JSON.stringify(next))
+      return { activeLayers: next }
+    }),
+
+  setLayer: (layer, value) =>
+    set((state) => {
+      const next = { ...state.activeLayers, [layer]: value }
+      localStorage.setItem('pwe-activeLayers', JSON.stringify(next))
+      return { activeLayers: next }
+    }),
 
   setNests: (nests) => set({ nests }),
 

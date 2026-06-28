@@ -215,3 +215,41 @@ El código de ejemplo original de US-824 sugería separar `MapView` en `ClimateM
 US-824 cubre solo el layout general (sidebar fixed + MapView flex:1 + transiciones). El código de ejemplo de MapView en la US original se ignora. `MapView.tsx` permanece como archivo único — la separación de responsabilidades se hace con condicionales internos por `activeLayers`, no con componentes separados.
 
 Si en el futuro `MapView.tsx` supera las 400 líneas, se evalúa extracción en ese momento.
+
+---
+
+## DEC-904 — Descartar el toggle de colapso del sidebar en desktop/tablet
+
+**Fecha:** Sprint 9 — Sesión 3 (2026-06-28)  
+**Estado:** Aprobada  
+**Afecta:** `US-824.md`, `Sidebar.tsx`, `SidebarToggle.tsx`, `useStore.ts` (flag `sidebarOpen`)
+
+### Contexto
+
+US-824 (versión original) pedía que el sidebar pudiera colapsarse en desktop/tablet vía un toggle existente en el Header, con el mapa expandiéndose al colapsar (`width` + `transition` 300ms). Al revisar la implementación revertida en `c6df8e5`, se encontraron dos problemas:
+
+1. **Bug de implementación:** el colapso usaba `transform: translateX(-100%)` sobre un `width: 280px` fijo. El espacio reservado en el flex layout nunca se liberaba, así que el mapa no expandía — contradice el criterio de aceptación original.
+2. **Bug de diseño, no solo de código:** al preguntarnos *para qué* sirve ocultar el sidebar en desktop, no hay un problema real de uso que resuelva.
+
+### Análisis UX (vía skill `ui-ux-pro-max`)
+
+- Con sidebar de 280-300px en una pantalla de 1280px+, el mapa ya ocupa ~78% del ancho. Ganar el ~22% restante ocultando el sidebar entero no compensa el costo de interacción que introduce (un click extra para volver a ver la lista o los filtros, pérdida de contexto de qué ciudad/nido está seleccionado).
+- Clima, nidos y mapa se consultan **en simultáneo**, no de forma alternada — es un patrón master-detail (como Google Maps, Citymapper, herramientas GIS), donde ambos paneles coexisten. Ocultar uno rompe ese flujo en vez de mejorarlo.
+- El caso real donde ocultar contenido SÍ es necesario es mobile: la pantalla no tiene espacio para mapa + sidebar simultáneos. Ese caso ya está resuelto por `BottomSheetPortal` (sesión 2), que es mutuamente excluyente con el mapa a pantalla completa — un patrón distinto y correcto para esa restricción.
+- La guía UX general (`ux-guidelines.csv`) no contradice esto: no hay regla que pida colapso de sidebar como default; sí marca como alta severidad la falta de una escala de z-index formal, que es la parte de US-824 que sí permanece.
+
+### Decisión
+
+El sidebar permanece **siempre visible** en desktop (1024px+) y tablet (768-1023px), con ancho fijo (300px / 280px respectivamente) y sin toggle de colapso. El mecanismo de mostrar/ocultar contenido se mantiene únicamente en mobile vía `BottomSheetPortal`, sin cambios.
+
+US-824 se reduce a: layout flex raíz con Header dentro del flow (sin `margin-top` hardcodeado) + escala de z-index formal. Story points bajan de 2 a 1.
+
+### Consecuencias
+
+- `SidebarToggle.tsx` y el flag `sidebarOpen` en `useStore.ts` quedan sin propósito en desktop/tablet. No se eliminan en esta US — se evalúa en limpieza posterior si no tienen otro consumidor (ej. mobile).
+- `US-824.md` actualizado: criterios de colapso tachados y marcados como descartados, criterios de z-index y header-en-flex-flow se mantienen.
+
+### Alternativas descartadas
+
+- **Arreglar el bug (cambiar `transform` por `width`) y mantener el toggle** — descartado. Arreglar la implementación no resuelve que la feature no tiene un caso de uso real en desktop/tablet; sería mantener complejidad (estado, animación, botón) sin beneficio medible.
+- **Colapso automático en tablet (768-1023px) pero no en desktop** — considerado, pero el mismo argumento de DEC-904 aplica a tablet: a 768px el sidebar de 280px sigue dejando suficiente espacio al mapa, y el patrón master-detail sigue siendo válido. Se descarta por consistencia.

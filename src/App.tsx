@@ -10,15 +10,13 @@ import { BottomSheetPortal } from './components/BottomSheet/BottomSheetPortal'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
 import { useIsMobile } from './hooks/useIsMobile'
+import { Z } from './config/zIndex'
 import type { City } from './store/useStore'
 
 export default function App() {
   const [cities, setCities] = useState<City[]>([])
-  const [showTodoToast, setShowTodoToast] = useState(false)
-  const [previousTab, setPreviousTab] = useState<'clima' | 'nidos' | 'todo'>('clima')
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
-  const activeTab = useStore((s) => s.activeTab)
   const isMobile = useIsMobile()
   const getFilteredCities = useStore((s) => s.getFilteredCities)
   // Dependencias para recalcular filtro cuando cambian
@@ -62,14 +60,6 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Mostrar toast cuando activeTab cambia a 'todo'
-  useEffect(() => {
-    if (activeTab === 'todo' && previousTab !== 'todo') {
-      setShowTodoToast(true)
-    }
-    setPreviousTab(activeTab)
-  }, [activeTab, previousTab])
-
   // En mobile: Visual feedback en mapa al seleccionar ciudad (sin scroll disruptivo)
   // El highlight visual ocurre en MapPin.tsx, aquí solo aseguramos que el mapa reciba focus
   useEffect(() => {
@@ -100,12 +90,12 @@ export default function App() {
           overflow: hidden;
         }
 
-        /* BODY = sidebar + map, debajo del header */
+        /* BODY = sidebar + map, debajo del header. Header ocupa su espacio real
+           en el flex flow (flex-shrink: 0 en .hd-root) — sin margin-top fijo. */
         .app-body {
           display: flex;
           flex-direction: row;
-          margin-top: 80px;
-          height: calc(100vh - 80px);
+          flex: 1;
           overflow: hidden;
         }
 
@@ -115,6 +105,7 @@ export default function App() {
           position: relative;
           overflow: hidden;
           background: var(--bg-primary);
+          z-index: ${Z.mapBase};
         }
 
         /* ──────────────────────────────────────────────
@@ -125,8 +116,6 @@ export default function App() {
         @media (max-width: 767px) {
           .app-body {
             flex-direction: column;
-            margin-top: 96px;
-            height: calc(100vh - 96px);
             overflow: hidden;  /* BottomSheet is fixed, no body scroll */
             position: relative;  /* Positioning context for absolute children (Sidebar wrapper) */
           }
@@ -142,19 +131,15 @@ export default function App() {
           }
         }
 
-        /* TABLET (768px - 1023px): Sidebar colapsable, map expands */
+        /* TABLET (768px - 1023px) */
         @media (min-width: 768px) and (max-width: 1023px) {
           .app-body {
             flex-direction: row;
-            height: calc(100vh - 80px);
-            overflow: hidden;
-            transition: all 300ms ease;
           }
 
           .app-map-area {
             flex: 1;
             position: relative;
-            transition: flex 300ms ease;
           }
 
           .app-list-area {
@@ -211,14 +196,6 @@ export default function App() {
           <Toast message={toastMessage} type="info" duration={3000} />
         )}
 
-        {/* TOAST NOTIFICATIONS — Modo Todo */}
-        {showTodoToast && (
-          <Toast
-            message="Mostrando Clima y Nidos simultáneamente en el mapa"
-            duration={4000}
-            onDismiss={() => setShowTodoToast(false)}
-          />
-        )}
       </div>
     </>
   )

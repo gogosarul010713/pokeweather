@@ -1,16 +1,14 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
 import Overlay from '../UI/Overlay'
-import SidebarToggle from './SidebarToggle'
+import { Z } from '../../config/zIndex'
 
 interface SidebarProps {
   cities: City[]
 }
 
 export default function Sidebar({ cities }: SidebarProps) {
-  const activeTab = useStore((s) => s.activeTab)
-  const sidebarOpen = useStore((s) => s.sidebarOpen)
-  const setSidebarOpen = useStore((s) => s.setSidebarOpen)
+  const activeLayers = useStore((s) => s.activeLayers)
 
   return (
     <>
@@ -20,8 +18,9 @@ export default function Sidebar({ cities }: SidebarProps) {
           height: 100%;
         }
 
+        /* Sidebar siempre visible en desktop/tablet — ver DEC-904 */
         .sb-root {
-          width: 280px;
+          width: 300px;
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
@@ -29,11 +28,8 @@ export default function Sidebar({ cities }: SidebarProps) {
           border-right: 1px solid var(--border-default);
           overflow: hidden;
           height: 100%;
-          transition: transform 300ms ease;
-        }
-
-        .sb-root.sb-collapsed {
-          transform: translateX(-100%);
+          z-index: ${Z.sidebar};
+          position: relative;
         }
 
         /* ── Content ── */
@@ -70,74 +66,40 @@ export default function Sidebar({ cities }: SidebarProps) {
           margin-bottom: 8px;
         }
 
-        /* ── SidebarToggle (fixed, below map zoom controls) ── */
-        .sb-toggle-wrapper {
-          position: fixed;
-          top: 130px;
-          left: 12px;
-          z-index: 400;
-          opacity: 1;
-          pointer-events: auto;
-          transition: opacity 300ms ease;
-        }
-
-        /* Fade out cuando sidebar está colapsado, pero sigue siendo interactivo */
-        .sb-toggle-wrapper.sb-collapsed {
-          opacity: 0.4;
-        }
-
-        /* ── TABLET: Colapsable sidebar ── */
+        /* ── TABLET ── */
         @media (min-width: 768px) and (max-width: 1023px) {
           .sb-root {
             width: 280px;
           }
-
-          .sb-root.sb-collapsed {
-            width: 280px;
-          }
         }
 
-        /* ── MOBILE ── */
+        /* ── MOBILE: sidebar reemplazado por BottomSheet ── */
         @media (max-width: 767px) {
           .sb-root {
-            display: none;
-          }
-
-          .sb-toggle-wrapper {
             display: none;
           }
         }
       `}</style>
 
       <div className="sb-wrapper">
-        {/* ── Sidebar Content ── */}
-        <aside className={`sb-root ${!sidebarOpen ? 'sb-collapsed' : ''}`}>
-        {/* ── Content ── */}
-        <div className="sb-content" style={{ position: 'relative' }}>
-          {/* Content Wrapper — posición relativa para Overlay */}
-          <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            {/* Overlay cuando activeTab = 'todo' — bloquea solo contenido (bajo TabControl) */}
-            <Overlay
-              isActive={activeTab === 'todo'}
-              message="Activa Clima o Nidos para explorar la lista y mostrar los filtros"
-              zIndex={100}
-            />
+        <aside className="sb-root">
+          <div className="sb-content" style={{ position: 'relative' }}>
+            {/* Content Wrapper — posición relativa para Overlay */}
+            <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              {/* Overlay cuando ninguna capa activa */}
+              <Overlay
+                isActive={!activeLayers.clima && !activeLayers.nidos}
+                message="Activa Clima o Nidos para explorar la lista y mostrar los filtros"
+                zIndex={Z.mapOverlay}
+              />
 
-            {/* LocationFeed — lista de ciudades */}
-            {activeTab === 'clima' && (
-              <LocationFeed cities={cities} />
-            )}
+              {/* LocationFeed — lista de ciudades (solo cuando capa clima activa) */}
+              {activeLayers.clima && (
+                <LocationFeed cities={cities} />
+              )}
+            </div>
           </div>
-        </div>
-      </aside>
-
-        {/* ── Toggle Button (después del sidebar, en hermano position) ── */}
-        <div className={`sb-toggle-wrapper ${sidebarOpen ? 'sb-expanded' : 'sb-collapsed'}`}>
-          <SidebarToggle
-            isExpanded={sidebarOpen}
-            onToggle={() => setSidebarOpen(!sidebarOpen)}
-          />
-        </div>
+        </aside>
       </div>
     </>
   )
