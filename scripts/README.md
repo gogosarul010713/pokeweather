@@ -33,6 +33,29 @@ bash scripts/validate-code.sh
 
 ---
 
+### `clean-unreported-forecasts.ts`
+**Propósito:** Eliminar forecasts sin reporte de clima real asociado (US-1202).
+
+**Qué hace:**
+- Por cada `city_id + date_hour`, si no existe reporte en `weather_reports` ni en
+  `classification_reports`, el forecast se considera elegible para borrar
+- Si existe reporte, se conserva siempre — nunca se tocan `weather_reports` ni `classification_reports`
+
+**Uso:**
+```bash
+npx tsx scripts/clean-unreported-forecasts.ts --dry-run     # simula, sin cambios
+npx tsx scripts/clean-unreported-forecasts.ts               # borra en real
+npx tsx scripts/clean-unreported-forecasts.ts --hours=48    # ventana custom (default 24h)
+```
+
+**Requiere:** `.env.serviceAccountKey.json` en la raíz del proyecto.
+
+**Cuándo usar:**
+- Antes de iniciar una nueva ronda de pruebas de precisión del algoritmo
+- Para limpiar filas "Sin Datos" acumuladas en la tabla predictiva
+
+---
+
 ## 🔄 Agregar nuevos scripts
 
 Cuando agregues nuevas herramientas de validación:
