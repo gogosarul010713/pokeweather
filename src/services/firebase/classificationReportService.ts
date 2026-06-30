@@ -85,6 +85,29 @@ export interface WeatherReport {
  * Obtener reportes de clima real (weather_reports) para columna REAL de tabla predictiva
  * y para calculo de metricas de precision (US-1201).
  */
+export async function getAllWeatherReports(): Promise<WeatherReport[]> {
+  const { collection, getDocs } = await import('firebase/firestore')
+  const db = await getDb()
+  if (!db) return []
+  try {
+    const snap = await getDocs(collection(db, 'weather_reports'))
+    return snap.docs.map(doc => {
+      const d = doc.data()
+      return {
+        city_id: d.city_id,
+        city_name: d.city_name ?? '',
+        date_hour: d.date_hour,
+        predicted_condition: d.predicted_condition ?? '',
+        reported_condition: d.reported_condition,
+        timestamp: d.timestamp,
+      }
+    })
+  } catch (err) {
+    console.error('[Firebase] Error al leer todos los weather reports:', err)
+    return []
+  }
+}
+
 export async function getRecentWeatherReports(
   hours: number = 24
 ): Promise<WeatherReport[]> {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { fetchCleanupCounts, executeCleanup, type CleanupOptions, type CleanupCounts, type CleanupResults } from '../../services/cleanup/cleanupService'
+import { fetchCleanupCounts, executeCleanup, countUnreportedForecasts, deleteUnreportedForecasts, type CleanupOptions, type CleanupCounts, type CleanupResults } from '../../services/cleanup/cleanupService'
+import { invalidateForecastCaches } from '../../services/cache/cacheService'
 
 interface CleanupPanelProps {
   onCleanupComplete?: () => void
@@ -22,6 +23,11 @@ export const CleanupPanel: React.FC<CleanupPanelProps> = ({ onCleanupComplete })
   })
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // US-1203: estado para limpieza de forecasts huerfanos
+  const [orphanPreview, setOrphanPreview] = useState<{ total: number; unreported: number } | null>(null)
+  const [orphanLoading, setOrphanLoading] = useState(false)
+  const [orphanMessage, setOrphanMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // Cargar counts al montar
   useEffect(() => {
@@ -128,6 +134,40 @@ export const CleanupPanel: React.FC<CleanupPanelProps> = ({ onCleanupComplete })
     } finally {
       setIsLoading(false)
       setTimeout(() => setMessage(null), 6000)
+    }
+  }
+
+  const handleOrphanPreview = async () => {
+    setOrphanLoading(true)
+    setOrphanMessage(null)
+    try {
+      const result = await countUnreportedForecasts()
+      setOrphanPreview(result)
+      // Si Firestore no tiene forecasts, invalida cache local para que la tabla se sincronice
+      if (result.total === 0) {
+        await invalidateForecastCaches()
+        onCleanupComplete?.()
+      }
+    } catch (err) {
+      setOrphanMessage({ type: 'error', text: `Error: ${(err as Error).message}` })
+    } finally {
+      setOrphanLoading(false)
+    }
+  }
+
+  const handleOrphanDelete = async () => {
+    setOrphanLoading(true)
+    setOrphanMessage(null)
+    try {
+      const deleted = await deleteUnreportedForecasts()
+      setOrphanPreview(null)
+      setOrphanMessage({ type: 'success', text: `✅ ${deleted} predicciones eliminadas` })
+      onCleanupComplete?.()
+    } catch (err) {
+      setOrphanMessage({ type: 'error', text: `❌ Error: ${(err as Error).message}` })
+    } finally {
+      setOrphanLoading(false)
+      setTimeout(() => setOrphanMessage(null), 6000)
     }
   }
 
@@ -262,6 +302,68 @@ export const CleanupPanel: React.FC<CleanupPanelProps> = ({ onCleanupComplete })
       >
         {isLoading ? '🔄 Limpiando...' : '🗑️ Confirmar limpieza'}
       </button>
+
+      <hr style={styles.separator} />
+
+      {/* US-1203: Forecasts sin reporte */}
+      <div style={styles.optionBox}>
+        <span style={{ ...styles.labelText, fontWeight: 600 }}>
+          Predicciones sin reporte
+        </span>
+        <p style={styles.description}>
+          Elimina forecasts que no tienen reporte confirmado en weather_reports.
+          Solo afecta las ultimas 24h. Los reportes nunca se borran.
+        </p>
+
+        {orphanPreview && (
+          <div style={styles.orphanPreview}>
+            {orphanPreview.unreported} sin reporte de {orphanPreview.total} totales
+          </div>
+        )}
+
+        {orphanMessage && (
+          <div
+            style={{
+              padding: '10px 12px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              backgroundColor: orphanMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              borderLeft: `3px solid ${orphanMessage.type === 'success' ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'}`,
+              color: orphanMessage.type === 'success' ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)',
+            }}
+          >
+            {orphanMessage.text}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+          <button
+            style={{
+              ...styles.button,
+              ...styles.buttonSecondary,
+              flex: 1,
+            }}
+            onClick={handleOrphanPreview}
+            disabled={orphanLoading}
+          >
+            {orphanLoading && !orphanPreview ? '🔄 Revisando...' : '🔍 Revisar'}
+          </button>
+
+          {orphanPreview && orphanPreview.unreported > 0 && (
+            <button
+              style={{
+                ...styles.button,
+                ...styles.buttonDanger,
+                flex: 1,
+              }}
+              onClick={handleOrphanDelete}
+              disabled={orphanLoading}
+            >
+              {orphanLoading ? '🔄 Eliminando...' : `🗑️ Eliminar (${orphanPreview.unreported})`}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -341,5 +443,18 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--text-secondary)',
     cursor: 'not-allowed',
     opacity: 0.5,
+  },
+  buttonSecondary: {
+    background: 'var(--bg-tertiary)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-color)',
+  },
+  orphanPreview: {
+    padding: '8px 12px',
+    borderRadius: '6px',
+    fontSize: '13px',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderLeft: '3px solid rgb(59, 130, 246)',
+    color: 'rgb(59, 130, 246)',
   },
 }

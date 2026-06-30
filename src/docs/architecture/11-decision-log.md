@@ -5,6 +5,20 @@
 
 ---
 
+### 2026-06-30 D-048 — Ventana temporal de reportes en limpieza de forecasts huerfanos (US-1203)
+
+**Contexto:** US-1203 necesita determinar si un forecast de las ultimas 24h tiene reporte en `weather_reports`. La funcion `getRecentWeatherReports(hours)` filtra por timestamp, lo que genera una ventana asimetrica: un reporte puede haberse creado hace 48h o mas, y un forecast de hace 20h puede matchear con ese reporte. Filtrar reportes a 24h o incluso 48h da falsos positivos (forecasts con reporte marcados como huerfanos).
+
+**Decision:** usar `getAllWeatherReports()` (sin filtro temporal) para construir el indice de reportes al comparar contra forecasts. El TTL de `weather_reports` es 30 dias — Firestore los expira automaticamente, sin necesidad de filtro manual en la query.
+
+**Por que no `getRecentWeatherReports(720)`:** seria equivalente en la practica (TTL = 30 dias = 720h), pero depende de que el TTL no cambie y de que ningun reporte llegue tarde. `getAllWeatherReports()` es la expresion correcta de la intencion: "todos los reportes que existen", sin acoplar la logica al TTL.
+
+**Alcance:** nueva funcion `getAllWeatherReports()` en `classificationReportService.ts`. Usada exclusivamente por `cleanupService.ts` (US-1203). `predictionAnalyticsService` conserva `getRecentWeatherReports(24)` por diseno intencional de US-1201 (tabla predictiva muestra solo 24h).
+
+**Nota:** `PrecisionPanel` (US-1201) usa correctamente `getRecentWeatherReports(720)` para su propia consulta — ese flujo no se toca.
+
+---
+
 ### 2026-06-28 D-047 — Eliminacion definitiva de classification_reports (REF-004, continuacion de D-046)
 
 **Estado: COMPLETADO 2026-06-29 (codigo + deploy DEV). PROD pendiente, decision separada.**

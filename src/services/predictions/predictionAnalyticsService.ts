@@ -6,8 +6,18 @@
 
 import type { PredictionRow } from '../../components/Analytics/PredictionAnalysisTable'
 import { getRecentForecasts, type ForecastDoc, type ForecastSnapshot } from '../firebase/firebaseWeatherService'
-import { getRecentWeatherReports } from '../firebase/classificationReportService'
+import { getRecentWeatherReports, type WeatherReport } from '../firebase/classificationReportService'
 import { getForecastCache } from '../cache/cacheService'
+
+/**
+ * Construye indice city_id|date_hour → reporte para busqueda O(1).
+ * Compartido entre fetchPredictions y cleanupService (evita duplicar regla de negocio).
+ */
+export function buildReportIndex(reports: WeatherReport[]): Map<string, { should_be?: string }> {
+  const index = new Map<string, { should_be?: string }>()
+  reports.forEach(r => index.set(`${r.city_id}|${r.date_hour}`, { should_be: r.reported_condition }))
+  return index
+}
 
 // REF-001 (sprint-11): fallbacks a raw_condition_code/classified eliminados.
 // pgo_condition es la unica fuente — calculado por la CF al momento del sync.
@@ -46,12 +56,7 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
     const weatherReports = await getRecentWeatherReports(24)
 
     // 3. Crear índice por city|date_hour para búsqueda O(1)
-    const reportIndex = new Map<string, { should_be?: string }>()
-
-    weatherReports.forEach(report => {
-      const key = `${report.city_id}|${report.date_hour}`
-      reportIndex.set(key, { should_be: report.reported_condition })
-    })
+    const reportIndex = buildReportIndex(weatherReports)
 
     // 4. Transformar a PredictionRow[]
     const rows: PredictionRow[] = []

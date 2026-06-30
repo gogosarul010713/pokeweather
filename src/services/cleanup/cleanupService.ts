@@ -1,5 +1,9 @@
 import * as cacheService from '../cache/cacheService'
+import { invalidateForecastCaches } from '../cache/cacheService'
 import { getDb } from '../firebase/firebaseConfig'
+import { getRecentForecasts } from '../firebase/firebaseWeatherService'
+import { getAllWeatherReports } from '../firebase/classificationReportService'
+import { buildReportIndex } from '../predictions/predictionAnalyticsService'
 
 export interface CleanupOptions {
   nullSnapshots: boolean
@@ -217,4 +221,64 @@ export const executeCleanup = async (options: CleanupOptions): Promise<CleanupRe
   } catch (error) {
     throw new Error(`Cleanup failed: ${(error as Error).message}`)
   }
+}
+
+/**
+ * Cuenta forecasts de las ultimas 24h que no tienen reporte en weather_reports.
+ * Compara contra TODOS los reportes existentes (sin filtro temporal) — un reporte
+ * puede tener cualquier edad dentro del TTL de 30 dias.
+ * US-1203: preview antes de borrar (CA-01)
+ */
+export async function countUnreportedForecasts(): Promise<{ total: number; unreported: number }> {
+  const [forecasts, reports] = await Promise.all([
+    getRecentForecasts('24h'),
+    getAllWeatherReports(),
+  ])
+
+  const reportIndex = buildReportIndex(reports)
+  const unreported = forecasts.filter(f => !reportIndex.has(`${f.city_id}|${f.date_hour}`))
+
+  return { total: forecasts.length, unreported: unreported.length }
+}
+
+/**
+ * Borra los forecasts de las ultimas 24h que no tienen reporte en weather_reports.
+ * Compara contra TODOS los reportes existentes (sin filtro temporal).
+ * Usa Client SDK — no requiere service account.
+ * US-1203: ejecucion tras confirmacion (CA-02/CA-03)
+ * @returns numero de documentos borrados
+ */
+export async function deleteUnreportedForecasts(): Promise<number> {
+  const [forecasts, reports] = await Promise.all([
+    getRecentForecasts('24h'),
+    getAllWeatherReports(),
+  ])
+
+  const reportIndex = buildReportIndex(reports)
+  const toDelete = forecasts.filter(f => !reportIndex.has(`${f.city_id}|${f.date_hour}`))
+
+  if (toDelete.length === 0) return 0
+
+  const { collection, query, where, getDocs, deleteDoc } = await import('firebase/firestore')
+  const db = await getDb()
+
+  if (!db) throw new Error('Firestore no inicializado')
+
+  let deleted = 0
+  for (const forecast of toDelete) {
+    try {
+      const forecastsRef = collection(db, 'city_weather', forecast.city_id, 'forecasts')
+      const q = query(forecastsRef, where('date_hour', '==', forecast.date_hour))
+      const snap = await getDocs(q)
+      for (const docSnap of snap.docs) {
+        await deleteDoc(docSnap.ref)
+        deleted++
+      }
+    } catch (err) {
+      console.warn(`[Cleanup] Error borrando ${forecast.city_id}|${forecast.date_hour}:`, err)
+    }
+  }
+
+  await invalidateForecastCaches()
+  return deleted
 }

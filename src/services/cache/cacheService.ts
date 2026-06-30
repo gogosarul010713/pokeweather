@@ -167,6 +167,11 @@ export const mergeForecastDocs = (
   return Array.from(map.values())
 }
 
+/** Invalida ambas caches de forecasts post-cleanup (US-1203). */
+export const invalidateForecastCaches = async (): Promise<void> => {
+  await Promise.all([del(KEY_FORECAST_CACHE), del(KEY_PREDICTIONS_CACHE)])
+}
+
 export const cleanExpiredForecastDocs = (docs: ForecastDoc[]): ForecastDoc[] => {
   const cutoff = Date.now() - FORECAST_TTL_MS
   return docs.filter(doc => {

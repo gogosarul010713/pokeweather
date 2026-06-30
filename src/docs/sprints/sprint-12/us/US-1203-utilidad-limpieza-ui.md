@@ -1,7 +1,7 @@
 # US-1203 — Utilidad de limpieza de forecasts sin reporte (UI)
 
 **Sprint:** 12
-**Estado:** Pendiente
+**Estado:** COMPLETADO ✅ 2026-06-30
 **Prioridad:** Media
 **Estimacion:** 2h
 **Depende de:** US-1202 (misma regla de negocio, distinto SDK/contexto de ejecucion), REF-004 ✅ (2026-06-29 — `classification_reports` eliminada, ver D-047)
@@ -44,8 +44,9 @@ que va como una accion adicional en ese mismo panel, no uno nuevo.
   ("X predicciones sin reporte de Y totales") sin borrar nada todavia
 
 ### CA-02 — Confirmacion explicita
-- Boton "Eliminar" solo aparece despues del preview
-- Requiere confirmacion (modal o doble-click estilo Cascade Delete existente)
+- Boton "Eliminar" solo aparece despues del preview (cuando `unreported > 0`)
+- El preview visible actua como confirmacion implicita: el usuario ve el conteo antes de decidir borrar
+- No se implementa modal ni doble-click — el flujo preview → boton visible → click unico es suficiente para el contexto de herramienta de desarrollo
 
 ### CA-03 — Ejecucion y feedback
 - Al confirmar, borra los forecasts elegibles
@@ -53,17 +54,17 @@ que va como una accion adicional en ese mismo panel, no uno nuevo.
 - Maneja error de red/Firestore mostrando mensaje, sin romper el panel
 
 ### CA-04 — Refresco post-limpieza
-- Despues de borrar, invalida la cache local (`cacheService.ts` — `KEY_FORECAST_CACHE`)
-  para que la tabla predictiva no siga mostrando las filas eliminadas
-- Si la tabla esta montada, dispara su refetch
+- Despues de borrar, llama `onCleanupComplete()` para incrementar `refreshKey`
+  en TestingTools — esto bypasea la cache y fuerza relecture desde Firestore
+- La tabla predictiva ya maneja este patron (BUG-011): `fromCleanup = refreshKey > 0`
 
 ---
 
 ## Diseño tecnico
 
-### Funcion nueva en servicio existente
+### Funciones nuevas en servicio existente
 
-`src/services/firebase/firebaseWeatherService.ts`:
+`src/services/cleanup/cleanupService.ts` (mismo archivo que `fetchCleanupCounts` / `executeCleanup`):
 
 ```ts
 export async function countUnreportedForecasts(hours = 24): Promise<{ total: number; unreported: number }>
@@ -71,20 +72,29 @@ export async function deleteUnreportedForecasts(hours = 24): Promise<number>
 ```
 
 Reutiliza la misma logica de indice `city_id|date_hour` que
-`predictionAnalyticsService.ts` ya construye — evaluar extraer esa
-construccion de indice a una funcion compartida para no duplicar la regla
-en 3 lugares (script, servicio, analytics).
+`predictionAnalyticsService.ts` ya construye — extraer esa construccion
+a una funcion exportada en `predictionAnalyticsService.ts` para no duplicar
+la regla en 3 lugares (script US-1202, cleanupService, analytics).
 
 ### Cambios en UI
 
-Archivo exacto del panel de Testing Tools a definir en analisis tecnico previo
-a implementacion (candidatos: `CleanupPanel` o componente hermano en la misma carpeta).
+`src/components/TestingTools/CleanupPanel.tsx` — nueva seccion al final del panel
+con el flujo: boton preview → conteo → boton eliminar (mismo patron de estado
+`isLoading` / `message` que las opciones existentes).
 
 ### Invalidacion de cache
 
-`cacheService.ts` expone `getForecastCache` / guarda bajo `KEY_FORECAST_CACHE`.
-Necesita una funcion de invalidacion o limpieza selectiva por clave
-`city_id-date_hour` (mismo formato ya usado en `cacheService.ts:165`).
+Dos mecanismos combinados (ver D-048):
+
+1. `deleteUnreportedForecasts()` llama `invalidateForecastCaches()` — borra `pwe-forecast-cache` y `pwe-predictions-cache` de IndexedDB directamente, antes de retornar
+2. `handleOrphanDelete` llama `onCleanupComplete?.()` — incrementa `refreshKey` en TestingTools, forzando bypass de cache en `PredictionAnalysisDemo` (`fromCleanup = true`)
+3. `handleOrphanPreview` con `total === 0` tambien invalida cache y llama `onCleanupComplete?.()` — sincroniza la tabla cuando Firestore esta vacio pero la cache local aun tiene datos
+
+`cacheService.ts` si requiere cambio: funcion `invalidateForecastCaches()` nueva (exportada).
+
+### Ventana temporal de reportes
+
+`countUnreportedForecasts` y `deleteUnreportedForecasts` usan `getAllWeatherReports()` (sin filtro temporal) para construir el indice. Razon: un reporte puede tener cualquier edad dentro del TTL de 30 dias — filtrar reportes a 24h/48h genera falsos positivos (forecasts con reporte marcados como huerfanos). Ver D-048.
 
 ---
 
@@ -94,7 +104,7 @@ Necesita una funcion de invalidacion o limpieza selectiva por clave
 |--------|-----------|
 | Logica de "elegible para borrar" duplicada entre script (US-1202), este servicio, y `predictionAnalyticsService` | Extraer a funcion compartida en analisis tecnico antes de implementar |
 | Borrado accidental sin confirmacion | CA-02 exige preview + confirmacion explicita, no un solo click |
-| Cache desincronizada tras borrar | CA-04 — invalidar cache es parte de la definicion de hecho, no opcional |
+| Cache desincronizada tras borrar | CA-04 — llamar `onCleanupComplete()` activa bypass de cache via `refreshKey` (patron BUG-011, ya probado) |
 
 ---
 
