@@ -6,6 +6,8 @@
 **Estimacion:** 1.5h
 **Validado:** 2026-06-28 — 5 forecasts sin reporte eliminados en ejecucion real (auckland-waterfront, itaewon-jung-gu-se-l, pier-39-san-francisco, times-square-midtown-nyc, zaragoza-centro)
 
+**Nota post-cierre (2026-06-29, REF-004/D-047):** `classification_reports` fue eliminada definitivamente del codigo (siempre estuvo vacia, ver D-047). Las menciones a esa coleccion en este documento (CA-01, diseño tecnico) reflejan el estado del codigo al momento de implementar y validar esta US — se conservan como registro historico, no se actualizan retroactivamente. El script `clean-unreported-forecasts.ts` sigue funcionando igual porque la coleccion nunca aporto datos.
+
 ---
 
 ## Historia de usuario

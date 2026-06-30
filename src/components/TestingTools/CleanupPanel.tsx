@@ -224,7 +224,7 @@ export const CleanupPanel: React.FC<CleanupPanelProps> = ({ onCleanupComplete })
           </span>
         </label>
         <p style={styles.description}>
-          Elimina TODOS los documentos de city_weather, weather_reports y classification_reports
+          Elimina TODOS los documentos de city_weather y weather_reports
           (nuclear reset). Sin ForecastDoc, los reportes son datos huerfanos (D-035). No se puede combinar con limpieza selectiva.
         </p>
       </div>

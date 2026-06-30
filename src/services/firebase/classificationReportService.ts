@@ -1,8 +1,8 @@
 import { getDb } from './firebaseConfig'
 
-// saveClassificationReport, isDuplicateReport, getCityClassificationReports y ClassificationReport
-// eliminados en REF-003 (2026-06-14): ClassificationReportModal era huerfano (no montado),
-// classification_reports en Firestore nunca se escribia. Ver D-046 en decision-log.
+// saveClassificationReport, isDuplicateReport, getCityClassificationReports, ClassificationReport
+// y getRecentClassificationReports eliminados en REF-003/REF-004: ClassificationReportModal era
+// huerfano (no montado), classification_reports en Firestore nunca se escribia. Ver D-046/D-047.
 
 /**
  * Guardar reporte de clima real observado en tabla predictiva
@@ -128,38 +128,3 @@ export async function getRecentWeatherReports(
   }
 }
 
-/**
- * Leer classification_reports (coleccion legacy — siempre vacia, clasificaciones
- * nunca se escribieron porque ClassificationReportModal estaba sin montar).
- * Se mantiene para compatibilidad con predictionAnalyticsService hasta REF-003 completo.
- */
-export async function getRecentClassificationReports(
-  hours: number = 24
-): Promise<Array<{ city_id: string; date_hour: string; classified_as: string; should_be: string }>> {
-  const { collection, getDocs, Timestamp } = await import('firebase/firestore')
-  const db = await getDb()
-
-  try {
-    const minDate = new Timestamp(
-      Math.floor((Date.now() - hours * 60 * 60 * 1000) / 1000),
-      0
-    )
-
-    if (!db) return []
-
-    const allReports = await getDocs(collection(db, 'classification_reports'))
-
-    return allReports.docs
-      .map((doc) => ({
-        city_id: doc.data().city_id,
-        date_hour: doc.data().date_hour,
-        classified_as: doc.data().classified_as,
-        should_be: doc.data().should_be,
-        timestamp: doc.data().timestamp,
-      }))
-      .filter((r) => r.timestamp >= minDate)
-  } catch (err) {
-    console.error('[Firebase] ⚠️ Error al leer classification reports:', err)
-    return []
-  }
-}

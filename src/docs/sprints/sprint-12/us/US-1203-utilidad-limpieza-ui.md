@@ -4,7 +4,7 @@
 **Estado:** Pendiente
 **Prioridad:** Media
 **Estimacion:** 2h
-**Depende de:** US-1202 (misma regla de negocio, distinto SDK/contexto de ejecucion)
+**Depende de:** US-1202 (misma regla de negocio, distinto SDK/contexto de ejecucion), REF-004 ✅ (2026-06-29 — `classification_reports` eliminada, ver D-047)
 
 ---
 
@@ -19,8 +19,11 @@ para poder limpiar datos entre rondas de prueba de forma comoda.
 ## Contexto tecnico
 
 Misma regla de negocio que US-1202: un forecast es elegible para borrar si
-su combinacion `city_id + date_hour` no tiene reporte en `weather_reports`
-ni en `classification_reports`.
+su combinacion `city_id + date_hour` no tiene reporte en `weather_reports`.
+
+**Nota (REF-004/D-047, 2026-06-29):** `classification_reports` fue eliminada
+definitivamente — siempre estuvo vacia (coleccion huerfana desde REF-003).
+La regla de negocio depende solo de `weather_reports`.
 
 **Esta US NO llama al script de US-1202.** El script usa Firebase Admin SDK
 (Node, requiere service account) — no puede ejecutarse desde el browser.

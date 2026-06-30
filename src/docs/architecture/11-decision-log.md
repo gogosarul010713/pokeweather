@@ -5,6 +5,34 @@
 
 ---
 
+### 2026-06-28 D-047 — Eliminacion definitiva de classification_reports (REF-004, continuacion de D-046)
+
+**Estado: COMPLETADO 2026-06-29 (codigo + deploy DEV). PROD pendiente, decision separada.**
+
+**Contexto:** D-046 elimino la UI y los writers de `classification_reports`, pero conservo `getRecentClassificationReports()` "por compatibilidad", documentando que en la practica retorna array vacio. Al analizar US-1203 (utilidad UI de limpieza de forecasts) se identifico que esa lectura muerta obliga a la futura funcion de indice compartido (`buildReportIndex`, usada por el script de US-1202, `predictionAnalyticsService`, y la nueva US-1203) a sostener una logica de merge/precedencia entre dos colecciones cuando solo una (`weather_reports`) tiene datos reales.
+
+**Decision:** Cerrar la deuda dejada por D-046 antes de construir US-1203 sobre ella. Eliminar todo el codigo que aun lee o borra `classification_reports`.
+
+**Por que ahora y no despues:** Construir la abstraccion compartida de US-1203 sobre una coleccion que sabemos vacia habria significado disenar para un caso que no existe, y habria que volver a tocar esos mismos archivos en cuanto se notara. Mas barato resolverlo una vez, antes.
+
+**Alcance (ver detalle completo en BACKLOG.md → REF-004):**
+- Eliminar `getRecentClassificationReports()` de `classificationReportService.ts`
+- Simplificar `predictionAnalyticsService.ts` para depender solo de `weather_reports`
+- Quitar conteo de `classification_reports` en `cleanupService.ts`
+- Quitar borrado de `classification_reports` en la Cloud Function `clearFirestoreData`
+- Redeploy de la Cloud Function a **DEV unicamente** — PROD queda pendiente como decision separada, requiere confirmacion explicita antes de tocarse
+
+**Impacto:** Ninguno en funcionalidad observable — la coleccion siempre estuvo vacia desde D-046. PROD no se modifica en este item.
+
+**Evidencia de cierre:**
+- Build limpio: `functions/` (`npm run build`, incluye prebuild sync-classify) y frontend (`tsc --noEmit`), sin errores
+- Deploy a DEV (`weather-app-dev-f28ce`) confirmado 2026-06-29: `firebase deploy --only functions:clearFirestoreData` → `Successful update operation`
+- CLI de Firebase restaurado a `weather-app-prod-ef50d` al finalizar (estado original de la sesion)
+- Deploy a PROD: no ejecutado, queda como decision y paso separado
+- Pendiente: verificacion funcional en DEV (tabla predictiva y Cleanup Panel sin cambios de comportamiento)
+
+---
+
 ### 2026-06-14 D-046 — Eliminacion tab Reportes y sistema classification_reports (REF-003)
 
 **Contexto:** La tab "Reportes" en TestingTools mostraba siempre "No hay reportes en las ultimas 24 horas". Investigacion revelo que:

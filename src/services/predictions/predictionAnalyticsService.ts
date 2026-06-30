@@ -6,7 +6,7 @@
 
 import type { PredictionRow } from '../../components/Analytics/PredictionAnalysisTable'
 import { getRecentForecasts, type ForecastDoc, type ForecastSnapshot } from '../firebase/firebaseWeatherService'
-import { getRecentClassificationReports, getRecentWeatherReports } from '../firebase/classificationReportService'
+import { getRecentWeatherReports } from '../firebase/classificationReportService'
 import { getForecastCache } from '../cache/cacheService'
 
 // REF-001 (sprint-11): fallbacks a raw_condition_code/classified eliminados.
@@ -41,28 +41,16 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
       return []
     }
 
-    // 2. Cargar reportes de clasificación + clima real (para obtener el "actual" confirmado)
-    // BUG-008 FIX: Leer ambas colecciones (classification_reports + weather_reports)
-    const classificationReports = await getRecentClassificationReports(24)
+    // 2. Cargar reportes de clima real (para obtener el "actual" confirmado)
+    // REF-004: classification_reports eliminada (D-047) — siempre estuvo vacia, ver decision-log
     const weatherReports = await getRecentWeatherReports(24)
 
-    // 3. Crear índice unificado por city|date_hour para búsqueda O(1)
-    // Soporta tanto ClassificationReport como WeatherReport (ambos con campo should_be/reported_condition)
+    // 3. Crear índice por city|date_hour para búsqueda O(1)
     const reportIndex = new Map<string, { should_be?: string }>()
 
-    // Agregar reportes de clasificación
-    classificationReports.forEach(report => {
-      const key = `${report.city_id}|${report.date_hour}`
-      reportIndex.set(key, { should_be: report.should_be })
-    })
-
-    // Agregar reportes de clima real (weather_reports)
-    // Si hay conflicto (ambas colecciones tienen reporte), usa classification_reports (ya está en índice)
     weatherReports.forEach(report => {
       const key = `${report.city_id}|${report.date_hour}`
-      if (!reportIndex.has(key)) {
-        reportIndex.set(key, { should_be: report.reported_condition })
-      }
+      reportIndex.set(key, { should_be: report.reported_condition })
     })
 
     // 4. Transformar a PredictionRow[]
@@ -106,7 +94,7 @@ export async function fetchPredictions(preloadedDocs?: ForecastDoc[]): Promise<P
       rows.push(row)
     })
 
-    console.log(`[PredictionAnalytics] ✅ Generated ${rows.length} prediction rows (${classificationReports.length} + ${weatherReports.length} reports loaded)`)
+    console.log(`[PredictionAnalytics] ✅ Generated ${rows.length} prediction rows (${weatherReports.length} reports loaded)`)
     return rows
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)

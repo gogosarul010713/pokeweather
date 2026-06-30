@@ -39,7 +39,8 @@ BACKLOG.md (este archivo)
 | **BL-006** | Suite E2E tabla predictiva | 🟡 IMPORTANTE | Testing | 4h | Manual | Pendiente |
 | **US-1201** | Panel de precision del algoritmo (Alcance 1) | 🟡 IMPORTANTE | Analytics | 2-3h | — | ✅ 2026-06-22 |
 | **US-1202** | Script limpieza forecasts sin reporte | 🟡 IMPORTANTE | Tooling | 1.5h | — | ✅ 2026-06-28 |
-| **US-1203** | Utilidad UI limpieza forecasts sin reporte | 🟡 IMPORTANTE | Feature | 2h | US-1202 | Pendiente |
+| **REF-004** | Eliminar `classification_reports` definitivamente (post D-046) | 🟢 DEUDA | Cleanup | 1h | US-1203 | Pendiente Sprint-12 |
+| **US-1203** | Utilidad UI limpieza forecasts sin reporte | 🟡 IMPORTANTE | Feature | 2h | US-1202, REF-004 | Pendiente |
 | **BL-007** | Dashboard de precisión acumulada | 🟢 FEATURE | Analytics | 6h | — | Pendiente |
 | **BL-008** | date_hour consolidado a UTC | 🟢 FEATURE | Migration | 5h | Multi-user | Pendiente |
 | **BL-009** | Historial de reportes UI | 🟢 FEATURE | UI | 3h | — | Pendiente |
@@ -215,6 +216,39 @@ Ver detalle completo: `src/docs/sprints/sprint-11/refactoring/ref-001-limpieza-s
 3. **Actualiza:** Última actualización (arriba) + versionado en git
 
 ---
+
+---
+
+### [REF-004] Eliminar `classification_reports` definitivamente — continuacion de D-046
+
+**Estado: COMPLETADO 2026-06-29 (codigo + deploy DEV). PROD pendiente, decision separada.**
+
+**Contexto:** D-046 (2026-06-14, REF-003) elimino la UI (`ReportsPanel`, `ClassificationReportModal`) y los writers de `classification_reports` porque el componente que la escribia nunca estuvo montado — la coleccion en Firestore siempre estuvo vacia. D-046 conservo deliberadamente `getRecentClassificationReports()` "por compatibilidad con predictionAnalyticsService", asumiendo que retornaria array vacio sin romper nada.
+
+**Por que ahora:** Al diseñar US-1203 (utilidad UI de limpieza de forecasts), se detecto que la logica de "indice de reportes por city_id+date_hour" esta duplicada en 3 lugares (script US-1202, `predictionAnalyticsService.ts`, y la futura US-1203), y dos de ellos cargan `classification_reports` solo para mezclarla con un resultado que sabemos vacio. Mantener esa lectura muerta complica innecesariamente la funcion compartida que se va a extraer para US-1203. Se decide cerrar la deuda ahora, antes de construir sobre ella.
+
+**Para que:** Que la funcion de indice compartida (US-1203) dependa solo de `weather_reports` (la unica coleccion real), sin logica de precedencia ni merge entre dos fuentes, una de las cuales nunca tiene datos.
+
+**Alcance:**
+1. `src/services/firebase/classificationReportService.ts` — eliminar `getRecentClassificationReports()` completa
+2. `src/services/predictions/predictionAnalyticsService.ts` — quitar import, llamada y merge de `classificationReports`; queda solo `weatherReports`
+3. `src/services/cleanup/cleanupService.ts` — `fetchCleanupCounts()` deja de contar `classification_reports` (Query 4 solo cuenta `weather_reports`)
+4. `functions/src/index.ts` (`clearFirestoreData`) — quitar el borrado de `classification_reports` del cascade delete
+5. Redeploy de la Cloud Function **a DEV únicamente** (`weather-app-dev-f28ce`). **Producción (`weather-app-prod-ef50d`) no se toca en este item** — queda pendiente como paso explícito y separado, requiere confirmación previa antes de ejecutarse
+6. `scripts/clean-firestore.ts` — fuera de alcance, es tooling standalone de mantenimiento, no bloquea el cierre de este item
+
+**Riesgos:**
+- Cloud Function 1st gen lee `lib/` compilado, no `src/` — requiere `npm run build` antes de deploy (gotcha ya documentado del proyecto)
+- Redeploy afecta el proyecto Firebase de DEV — accion con efecto en servicio compartido, requiere confirmacion explicita antes de ejecutar `firebase deploy`
+
+**Impacto en produccion:** Ninguno. `classification_reports` en PROD queda intacta (vacia). El paso 5 (deploy a PROD) sigue pendiente como decision separada — no ejecutado en este item.
+
+**Evidencia de cierre:**
+- Codigo: items 1-4 del alcance completados (`classificationReportService.ts`, `predictionAnalyticsService.ts`, `cleanupService.ts`, `functions/src/index.ts`, ademas de `CleanupPanel.tsx` por texto descriptivo desactualizado)
+- Build: `npm run build` en `functions/` limpio. `npx tsc --noEmit` en frontend limpio.
+- Deploy DEV: `firebase deploy --only functions:clearFirestoreData` contra `weather-app-dev-f28ce` — `Successful update operation` confirmado 2026-06-29. CLI restaurado a `weather-app-prod-ef50d` (proyecto activo original) al finalizar.
+- Deploy PROD: NO ejecutado. Pendiente como item separado, requiere nueva confirmacion explicita.
+- Verificacion funcional pendiente: validar en DEV que `predictionAnalyticsService` y el cascade delete de `CleanupPanel` siguen funcionando igual (columna REAL sin cambios, counts correctos).
 
 ---
 

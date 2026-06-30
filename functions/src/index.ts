@@ -181,20 +181,16 @@ export const clearFirestoreData = functions.https.onRequest(
         const cityDocsDeleted = await executeBatchDelete(allCityDocs.docs)
 
         // Eliminar weather_reports (D-035: reportes son datos huerfanos sin ForecastDoc)
+        // classification_reports eliminada en REF-004/D-047 — coleccion siempre estuvo vacia
         const allWeatherReports = await db.collection('weather_reports').get()
         const weatherReportsDeleted = await executeBatchDelete(allWeatherReports.docs)
 
-        // Eliminar classification_reports (D-035: mismo motivo)
-        const allClassReports = await db.collection('classification_reports').get()
-        const classReportsDeleted = await executeBatchDelete(allClassReports.docs)
-
-        reportsDeleted = weatherReportsDeleted + classReportsDeleted
+        reportsDeleted = weatherReportsDeleted
         totalDeleted = forecastsDeleted + cityDocsDeleted + reportsDeleted
         console.log('[clearFirestoreData] cascade:', {
           forecastsDeleted,
           cityDocsDeleted,
           weatherReportsDeleted,
-          classReportsDeleted,
         })
       }
 

@@ -53,16 +53,18 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 ## Estado Sprint 12 (branch: `sprint-12`)
 
 **Completado:**
-- US-1201 ✅ — Panel de precision del algoritmo completo (CA-01 a CA-06), commits 8a99aa7 + 85965fb
-- BUG-029 ✅ — Auto-sync no persistia: initializeSettings sobreescribia con merge:true, commit 4fa335f
+- US-1201 ✅ — Panel de precision del algoritmo (CA-01 a CA-06), commits 8a99aa7 + 85965fb
+- BUG-029 ✅ — Auto-sync no persistia, commit 4fa335f
+- US-1202 ✅ — Script limpieza forecasts sin reporte, commit bb59316
+- REF-004 ✅ — Eliminacion definitiva `classification_reports` (D-047): 4 archivos + docs + deploy CF a DEV. **Sin commit — pendiente al arrancar la proxima sesion**
 
 **Siguiente:**
-- Verificar precision del algoritmo con datos reales de reportes + dashboards
-- Contexto: PrecisionPanel ya consume 30 dias de weather_reports — llenar con datos y analizar
+- Commit de REF-004 antes de arrancar US-1203
+- US-1203 — Utilidad UI de limpieza de forecasts sin reporte (boton en CleanupPanel, Client SDK)
+- Doc: `src/docs/sprints/sprint-12/us/US-1203-utilidad-limpieza-ui.md`
+- Con REF-004 cerrado, el indice `city_id|date_hour` depende solo de `weather_reports` (sin merge ni precedencia)
 
 **Backlog critico pendiente:**
 - BL-001 — Firestore Security Rules (App Check) — 2h
 - BL-002 — Remover VITE_ACCUWEATHER_KEY de Vercel — 0.5h
 - US-1114 — TestingTools visible en Preview/Prod — 0.5h
-- BL-004 — Test unitario accuLocationKey='' — 1.5h
-- BL-005 — Linter: 53 errores pre-existentes — 3h

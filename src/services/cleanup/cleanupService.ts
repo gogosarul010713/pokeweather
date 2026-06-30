@@ -75,14 +75,11 @@ export const fetchCleanupCounts = async (): Promise<CleanupCounts> => {
     // Tamaño de caché local
     const cacheSize = await cacheService.getIndexedDbSize()
 
-    // Query 4: Count de weather_reports + classification_reports (D-035)
+    // Query 4: Count de weather_reports (D-035). classification_reports eliminada en REF-004/D-047.
     let reportsCount = 0
     try {
-      const [wrDocs, crDocs] = await Promise.all([
-        getDocs(collection(db, 'weather_reports')),
-        getDocs(collection(db, 'classification_reports')),
-      ])
-      reportsCount = wrDocs.size + crDocs.size
+      const wrDocs = await getDocs(collection(db, 'weather_reports'))
+      reportsCount = wrDocs.size
     } catch {
       reportsCount = 0
     }
