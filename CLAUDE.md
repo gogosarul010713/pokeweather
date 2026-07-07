@@ -6,18 +6,19 @@
 
 ## ESTADO ACTUAL (2026-07-07)
 
-**Sprint 9 — Sesion 4 — US-821 homologacion completa (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 5 — ENH-001 Filter Panel visual (branch: `sprint-9-nests`)**
 
 **Completado:**
 - US-811 a US-826 ✅ — base sesiones 1-3
-- US-821 estructura ✅ — store slice + subcomponentes + panel overlay slide animation
-- US-821 homologacion ✅ — labels ES, imgs `/weather/*.png` y `/types/ico_*.webp`, pills "Todos", badge descriptivo, iconos por seccion, sort asc/desc, subtitulo GroupHeader — sin commitear
+- US-821 ✅ — commiteado (8b602dd)
+- ENH-001 items 1-8 ✅ — homologacion visual boton/badge/footer/search/header ciudades (92ef1f7)
+- ENH-001 items 9-15 ✅ — sticky headers, colapso grupo, chevron, badge grupo, animacion, toast (04b180d)
 
 **Siguiente:**
-- Commit US-821 completo y cierre formal (ver `src/docs/sprints/sprint-9/us/US-821.md`)
+- ENH-001 OBS-1 + OBS-2 — corregir GroupHeader: eliminar barra interna redundante + fondo solido en sticky (ver `src/docs/sprints/sprint-9/enhancements/ENH-001-filter-panel-visual.md`)
 
 **Backlog critico pendiente (en orden):**
-- US-818 — Feed unificado clima+nidos (depende US-821)
+- US-818 — Feed unificado clima+nidos
 - US-815 — Leyenda dinamica por capas
 
 ---
