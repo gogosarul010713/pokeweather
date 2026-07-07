@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react'
 import { useStore } from '../../store/useStore'
 import { POKEMON_TYPES, TYPE_IMAGES } from '../../config/pokemonTypes'
 import GroupHeader from './filters/GroupHeader'
@@ -83,6 +84,10 @@ const CLEAR_ICON = (
 )
 
 export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
+  const [groupClima, setGroupClima] = useState(true)
+  const [groupNidos, setGroupNidos] = useState(true)
+  const [showToast, setShowToast] = useState(false)
+
   const activeLayers = useStore((s) => s.activeLayers)
   const filterPanelOpen = useStore((s) => s.filterPanelOpen)
   const accordionState = useStore((s) => s.accordionState)
@@ -146,6 +151,22 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
         : [...draftFilters.nestType, v]
     )
   }
+
+  const climaBadgeCount =
+    conditionFilter.length +
+    (regionFilter !== 'todas' ? 1 : 0) +
+    typeFilter.length +
+    (sortMode !== '' ? 1 : 0)
+
+  const nidosBadgeCount =
+    nestTypeFilter.length +
+    (nestSortBy !== 'name' ? 1 : 0)
+
+  const handleClearWithToast = useCallback(() => {
+    clearDraftFilters()
+    setShowToast(true)
+    setTimeout(() => setShowToast(false), 2200)
+  }, [clearDraftFilters])
 
   const noLayers = !activeLayers.clima && !activeLayers.nidos
 
@@ -391,6 +412,57 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           text-decoration: underline;
         }
         .fsp-footer-clear-all:hover { opacity: 1; }
+
+        /* ── Grupos con barra lateral de color ── */
+        .fsp-group {
+          border-left: 3px solid transparent;
+        }
+        .fsp-group-clima {
+          border-left-color: #58a6ff;
+        }
+        .fsp-group-nidos {
+          border-left-color: #22c55e;
+        }
+
+        /* ── Animacion de colapso de grupo ── */
+        .fsp-group-content {
+          overflow: hidden;
+          max-height: 2000px;
+          transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .fsp-group-content.collapsed {
+          max-height: 0;
+        }
+
+        /* ── Toast ── */
+        .fsp-toast {
+          position: absolute;
+          bottom: 72px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: var(--bg-elevated, #1c2333);
+          border: 1px solid var(--border-default);
+          border-radius: 8px;
+          padding: 8px 14px;
+          font: 500 12px 'Exo 2', sans-serif;
+          color: var(--text-primary);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+          white-space: nowrap;
+          z-index: 20;
+          animation: fsp-toast-in 0.15s ease forwards;
+          pointer-events: none;
+        }
+        .fsp-toast.hiding {
+          animation: fsp-toast-out 0.3s ease forwards;
+        }
+        @keyframes fsp-toast-in {
+          from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes fsp-toast-out {
+          from { opacity: 1; transform: translateX(-50%) translateY(0); }
+          to   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+        }
       `}</style>
 
       {/* Search */}
@@ -440,7 +512,7 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
             &#8249; Volver
           </button>
           <span className="fsp-panel-title">Filtros</span>
-          <button className="fsp-panel-clear-header" onClick={clearDraftFilters} type="button">
+          <button className="fsp-panel-clear-header" onClick={handleClearWithToast} type="button">
             Limpiar
           </button>
         </div>
@@ -451,100 +523,118 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           )}
 
           {activeLayers.clima && (
-            <>
-              <GroupHeader color="#58a6ff" title="Clima" subtitle="Condicion · Region · Tipo · Orden" />
-              <AccordionSection
-                label="Condicion"
-                icon="⛅"
-                isOpen={accordionState.condicion}
-                onToggle={() => toggleAccordion('condicion')}
-                badgeText={badgeForMulti(draftFilters.condition, CONDITION_ITEMS)}
-              >
-                <PillsGrid
-                  items={CONDITION_ITEMS}
-                  selected={draftFilters.condition}
-                  cols={4}
-                  onToggle={toggleDraftCondition}
-                />
-              </AccordionSection>
+            <div className="fsp-group fsp-group-clima">
+              <GroupHeader
+                color="#58a6ff"
+                title="Filtros de Clima"
+                subtitle="Condicion · Region · Tipo · Orden"
+                isOpen={groupClima}
+                onToggle={() => setGroupClima((v) => !v)}
+                badgeCount={climaBadgeCount}
+              />
+              <div className={`fsp-group-content${groupClima ? '' : ' collapsed'}`}>
+                <AccordionSection
+                  label="Condicion"
+                  icon="⛅"
+                  isOpen={accordionState.condicion}
+                  onToggle={() => toggleAccordion('condicion')}
+                  badgeText={badgeForMulti(draftFilters.condition, CONDITION_ITEMS)}
+                >
+                  <PillsGrid
+                    items={CONDITION_ITEMS}
+                    selected={draftFilters.condition}
+                    cols={4}
+                    onToggle={toggleDraftCondition}
+                  />
+                </AccordionSection>
 
-              <AccordionSection
-                label="Region"
-                icon="🌐"
-                isOpen={accordionState.region}
-                onToggle={() => toggleAccordion('region')}
-                badgeText={badgeForRegion(draftFilters.region, REGION_ITEMS)}
-              >
-                <PillsWrap
-                  items={REGION_ITEMS}
-                  selected={draftFilters.region}
-                  onSelect={(v) => setDraftRegion(v as any)}
-                />
-              </AccordionSection>
+                <AccordionSection
+                  label="Region"
+                  icon="🌐"
+                  isOpen={accordionState.region}
+                  onToggle={() => toggleAccordion('region')}
+                  badgeText={badgeForRegion(draftFilters.region, REGION_ITEMS)}
+                >
+                  <PillsWrap
+                    items={REGION_ITEMS}
+                    selected={draftFilters.region}
+                    onSelect={(v) => setDraftRegion(v as any)}
+                  />
+                </AccordionSection>
 
-              <AccordionSection
-                label="Tipo Clima"
-                icon="🌡️"
-                isOpen={accordionState.tipoClima}
-                onToggle={() => toggleAccordion('tipoClima')}
-                badgeText={badgeForMulti(draftFilters.type, TYPE_ITEMS_ALL)}
-              >
-                <PillsGrid
-                  items={TYPE_ITEMS_ALL}
-                  selected={draftFilters.type}
-                  cols={3}
-                  onToggle={toggleDraftType}
-                />
-              </AccordionSection>
+                <AccordionSection
+                  label="Tipo Clima"
+                  icon="🌡️"
+                  isOpen={accordionState.tipoClima}
+                  onToggle={() => toggleAccordion('tipoClima')}
+                  badgeText={badgeForMulti(draftFilters.type, TYPE_ITEMS_ALL)}
+                >
+                  <PillsGrid
+                    items={TYPE_ITEMS_ALL}
+                    selected={draftFilters.type}
+                    cols={3}
+                    onToggle={toggleDraftType}
+                  />
+                </AccordionSection>
 
-              <AccordionSection
-                label="Ordenar"
-                icon="↕️"
-                isOpen={accordionState.orden}
-                onToggle={() => toggleAccordion('orden')}
-                badgeText={badgeForSort(draftFilters.sortMode, SORT_CLIMA_ITEMS)}
-              >
-                <RadioList
-                  items={SORT_CLIMA_ITEMS}
-                  selected={draftFilters.sortMode}
-                  onSelect={(v) => setDraftSortMode(v as any)}
-                />
-              </AccordionSection>
-            </>
+                <AccordionSection
+                  label="Ordenar"
+                  icon="↕️"
+                  isOpen={accordionState.orden}
+                  onToggle={() => toggleAccordion('orden')}
+                  badgeText={badgeForSort(draftFilters.sortMode, SORT_CLIMA_ITEMS)}
+                >
+                  <RadioList
+                    items={SORT_CLIMA_ITEMS}
+                    selected={draftFilters.sortMode}
+                    onSelect={(v) => setDraftSortMode(v as any)}
+                  />
+                </AccordionSection>
+              </div>
+            </div>
           )}
 
           {activeLayers.nidos && (
-            <>
-              <GroupHeader color="#22c55e" title="Nidos" subtitle="Tipo Pokemon · Orden" />
-              <AccordionSection
-                label="Tipo Pokemon"
-                icon="⚡"
-                isOpen={accordionState.tipoPoke}
-                onToggle={() => toggleAccordion('tipoPoke')}
-                badgeText={badgeForMulti(draftFilters.nestType, TYPE_ITEMS_ALL)}
-              >
-                <PillsGrid
-                  items={TYPE_ITEMS_ALL}
-                  selected={draftFilters.nestType}
-                  cols={3}
-                  onToggle={toggleDraftNestType}
-                />
-              </AccordionSection>
+            <div className="fsp-group fsp-group-nidos">
+              <GroupHeader
+                color="#22c55e"
+                title="Filtros de Nidos"
+                subtitle="Tipo Pokemon · Orden"
+                isOpen={groupNidos}
+                onToggle={() => setGroupNidos((v) => !v)}
+                badgeCount={nidosBadgeCount}
+              />
+              <div className={`fsp-group-content${groupNidos ? '' : ' collapsed'}`}>
+                <AccordionSection
+                  label="Tipo Pokemon"
+                  icon="⚡"
+                  isOpen={accordionState.tipoPoke}
+                  onToggle={() => toggleAccordion('tipoPoke')}
+                  badgeText={badgeForMulti(draftFilters.nestType, TYPE_ITEMS_ALL)}
+                >
+                  <PillsGrid
+                    items={TYPE_ITEMS_ALL}
+                    selected={draftFilters.nestType}
+                    cols={3}
+                    onToggle={toggleDraftNestType}
+                  />
+                </AccordionSection>
 
-              <AccordionSection
-                label="Ordenar"
-                icon="↕️"
-                isOpen={accordionState.ordenNidos}
-                onToggle={() => toggleAccordion('ordenNidos')}
-                badgeText={badgeForSort(draftFilters.nestSortBy, SORT_NIDOS_ITEMS)}
-              >
-                <RadioList
-                  items={SORT_NIDOS_ITEMS}
-                  selected={draftFilters.nestSortBy}
-                  onSelect={(v) => setDraftNestSortBy(v as any)}
-                />
-              </AccordionSection>
-            </>
+                <AccordionSection
+                  label="Ordenar"
+                  icon="↕️"
+                  isOpen={accordionState.ordenNidos}
+                  onToggle={() => toggleAccordion('ordenNidos')}
+                  badgeText={badgeForSort(draftFilters.nestSortBy, SORT_NIDOS_ITEMS)}
+                >
+                  <RadioList
+                    items={SORT_NIDOS_ITEMS}
+                    selected={draftFilters.nestSortBy}
+                    onSelect={(v) => setDraftNestSortBy(v as any)}
+                  />
+                </AccordionSection>
+              </div>
+            </div>
           )}
         </div>
 
@@ -557,10 +647,14 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
               &#10005; Cancelar
             </button>
           </div>
-          <button className="fsp-footer-clear-all" onClick={clearDraftFilters} type="button">
+          <button className="fsp-footer-clear-all" onClick={handleClearWithToast} type="button">
             &#10005; Limpiar todos los filtros
           </button>
         </div>
+
+        {showToast && (
+          <div className="fsp-toast">Filtros eliminados</div>
+        )}
       </div>
     </>
   )
