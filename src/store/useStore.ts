@@ -61,10 +61,30 @@ export interface City {
   weatherImage: string
 }
 
-type Region = 'todas' | 'asia' | 'europa' | 'america' | 'oceania' | 'africa'
-type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin ordenar
+export type Region = 'todas' | 'asia' | 'europa' | 'america' | 'oceania' | 'africa'
+export type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin ordenar
 type SortDirection = 'asc' | 'desc'
 type LoadingStatus = 'idle' | 'loading' | 'ready' | 'error'
+
+export type AccordionKey = 'condicion' | 'region' | 'tipoClima' | 'orden' | 'tipoPoke' | 'ordenNidos'
+
+export interface DraftFilters {
+  region: Region
+  condition: string[]
+  type: string[]
+  sortMode: SortMode
+  nestType: string[]
+  nestSortBy: 'name' | 'type' | 'spawnRate'
+}
+
+const DEFAULT_DRAFT: DraftFilters = {
+  region: 'todas',
+  condition: [],
+  type: [],
+  sortMode: '',
+  nestType: [],
+  nestSortBy: 'name',
+}
 
 interface LoadingProgress {
   cityName: string
@@ -100,6 +120,11 @@ interface AppStore {
   nestSortBy: 'name' | 'type' | 'spawnRate'
   nestSortDirection: 'asc' | 'desc'
 
+  // Filter panel
+  filterPanelOpen: boolean
+  accordionState: Record<AccordionKey, boolean>
+  draftFilters: DraftFilters
+
   // Actions
   setRegionFilter: (region: Region) => void
   toggleCondition: (condition: string) => void
@@ -130,6 +155,20 @@ interface AppStore {
   toggleNestType: (type: string) => void
   setNestSortBy: (mode: 'name' | 'type' | 'spawnRate') => void
   setNestSortDirection: (direction: 'asc' | 'desc') => void
+
+  // Filter panel actions
+  openFilterPanel: () => void
+  applyFilterPanel: () => void
+  cancelFilterPanel: () => void
+  clearDraftFilters: () => void
+  clearAppliedFilters: () => void
+  setDraftRegion: (region: Region) => void
+  setDraftCondition: (conditions: string[]) => void
+  setDraftType: (types: string[]) => void
+  setDraftSortMode: (mode: SortMode) => void
+  setDraftNestType: (types: string[]) => void
+  setDraftNestSortBy: (mode: 'name' | 'type' | 'spawnRate') => void
+  toggleAccordion: (section: AccordionKey) => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -183,6 +222,16 @@ export const useStore = create<AppStore>((set, get) => ({
   nestTypeFilter: [],
   nestSortBy: 'name',
   nestSortDirection: 'asc',
+  filterPanelOpen: false,
+  accordionState: {
+    condicion: true,
+    region: false,
+    tipoClima: false,
+    orden: false,
+    tipoPoke: true,
+    ordenNidos: false,
+  },
+  draftFilters: DEFAULT_DRAFT,
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -299,6 +348,57 @@ export const useStore = create<AppStore>((set, get) => ({
   setNestSortBy: (mode) => set({ nestSortBy: mode }),
 
   setNestSortDirection: (direction) => set({ nestSortDirection: direction }),
+
+  openFilterPanel: () => {
+    const { regionFilter, conditionFilter, typeFilter, sortMode, nestTypeFilter, nestSortBy } = get()
+    set({
+      filterPanelOpen: true,
+      draftFilters: {
+        region: regionFilter,
+        condition: [...conditionFilter],
+        type: [...typeFilter],
+        sortMode,
+        nestType: [...nestTypeFilter],
+        nestSortBy,
+      },
+    })
+  },
+
+  applyFilterPanel: () => {
+    const { draftFilters } = get()
+    set({
+      filterPanelOpen: false,
+      regionFilter: draftFilters.region,
+      conditionFilter: draftFilters.condition,
+      typeFilter: draftFilters.type,
+      sortMode: draftFilters.sortMode,
+      nestTypeFilter: draftFilters.nestType,
+      nestSortBy: draftFilters.nestSortBy,
+    })
+  },
+
+  cancelFilterPanel: () => set({ filterPanelOpen: false, draftFilters: DEFAULT_DRAFT }),
+
+  clearDraftFilters: () => set({ draftFilters: DEFAULT_DRAFT }),
+
+  clearAppliedFilters: () => set({
+    regionFilter: 'todas',
+    conditionFilter: [],
+    typeFilter: [],
+    sortMode: '',
+    nestTypeFilter: [],
+    nestSortBy: 'name',
+  }),
+
+  setDraftRegion: (region) => set((s) => ({ draftFilters: { ...s.draftFilters, region } })),
+  setDraftCondition: (condition) => set((s) => ({ draftFilters: { ...s.draftFilters, condition } })),
+  setDraftType: (type) => set((s) => ({ draftFilters: { ...s.draftFilters, type } })),
+  setDraftSortMode: (sortMode) => set((s) => ({ draftFilters: { ...s.draftFilters, sortMode } })),
+  setDraftNestType: (nestType) => set((s) => ({ draftFilters: { ...s.draftFilters, nestType } })),
+  setDraftNestSortBy: (nestSortBy) => set((s) => ({ draftFilters: { ...s.draftFilters, nestSortBy } })),
+
+  toggleAccordion: (section) =>
+    set((s) => ({ accordionState: { ...s.accordionState, [section]: !s.accordionState[section] } })),
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {

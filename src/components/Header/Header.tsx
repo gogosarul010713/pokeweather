@@ -4,7 +4,6 @@ import Brand from './Brand'
 import SearchInput from './SearchInput'
 import ThemeToggle from './ThemeToggle'
 import SyncBadge from '../UI/SyncBadge'
-import FilterPanel from './FilterPanel'
 import FilterPanelModal from '../UI/FilterPanelModal'
 import { LayerToggles } from './LayerToggles'
 import TestingButton from './TestingButton'
@@ -20,7 +19,6 @@ interface HeaderProps {
 export default function Header({ cities = [] }: HeaderProps) {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
 
-  const activeLayers = useStore((s) => s.activeLayers)
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
 
@@ -53,14 +51,6 @@ export default function Header({ cities = [] }: HeaderProps) {
         /* Fila de búsqueda (solo mobile) — oculta por defecto */
         .hd-center {
           display: none;
-        }
-
-        .hd-filter-panel {
-          display: flex;
-          flex: 1;
-          height: 100%;
-          align-items: center;
-          min-width: 0;
         }
 
         .hd-right {
@@ -118,11 +108,6 @@ export default function Header({ cities = [] }: HeaderProps) {
             flex: 0 0 52px;
             padding: 0 12px;
             gap: 8px;
-          }
-
-          /* Spacer entre Brand y hd-right */
-          .hd-filter-panel {
-            display: none;
           }
 
           .hd-right {
@@ -215,11 +200,6 @@ export default function Header({ cities = [] }: HeaderProps) {
 
           {/* Layer toggles — Clima, Nidos y capas futuras */}
           <LayerToggles />
-
-          {/* Desktop/Tablet: filtros + busqueda */}
-          <div className="hd-filter-panel">
-            <FilterPanel />
-          </div>
 
           {/* Iconos derecha */}
           <div className="hd-right">

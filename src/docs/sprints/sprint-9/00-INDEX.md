@@ -48,16 +48,18 @@
 
 | US | Título | SP | Status | Dependencias |
 |---|---|---|---|---|
-| **US-826** | Migración `activeTab` → `activeLayers` en Zustand | 3 | ⏳ Pendiente | — |
-| **US-823** | Layer toggles en Header | 2 | ⏳ Pendiente | US-826 |
+| **US-826** | Migración `activeTab` → `activeLayers` en Zustand | 3 | ✅ Done (ver nota) | — |
+| **US-823** | Layer toggles en Header | 2 | ✅ Done (ver nota) | US-826 |
 | **US-824** | Layout general: mapa como protagonista | 1 (reducido, ver DEC-904) | ✅ Done | US-826 |
-| **US-821** | Filtros adaptativos en sidebar por capa | 3 | ⏳ Pendiente | US-826, US-823 |
+| **US-821** | Panel de filtros deslizante en sidebar por capa (rediseño 2026-07-05, ver DEC-906) | 5 | ⏳ Pendiente | US-826, US-823 |
 | **US-818** | Feed unificado en sidebar (clima + nidos) | 5 | ⏳ Pendiente | US-826, US-821, US-823 |
 | **US-815** | Leyenda dinámica por capas activas | 2 | ⏳ Pendiente | US-826, US-823 |
 
-**Total SP sesión 3:** 17
+**Total SP sesión 3:** 19 (revisado — US-821 sube de 3 a 5 SP por rediseño a panel deslizante, ver DEC-906)
 
 > US-826 es el desbloqueo de toda la sesión. Implementar primero, el resto en paralelo o secuencial.
+
+> **Nota post-auditoria 2026-06-28:** La implementacion original de 2026-06-21 de US-826/823/821/818 (commits `9d08644, 6dd2468, 342e0e1, fae3265, aeafcd3, 2efee11`) fue revertida en `c6df8e5` por resultado no esperado — el revert NO actualizo el status de los specs individuales, que quedaron incorrectamente marcados "Done". Al reimplementar US-824 (`4a3cca8`, 2026-06-28) se recreo `activeLayers` y `LayerToggles` como efecto colateral, dejando US-826 y US-823 funcionalmente cubiertas hoy. US-821 y US-818 siguen sin codigo real — quedan Pendientes. Ver `decisions.md` DEC-905.
 
 ---
 

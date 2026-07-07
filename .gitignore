@@ -41,3 +41,6 @@ ds-bundle/
 .design-sync/.cache/
 # Windows junction que apunta a la raiz del repo (recrear con New-Item -ItemType Junction)
 node_modules/pokeweather
+
+# context-snapshot (local, no versionar)
+.context/

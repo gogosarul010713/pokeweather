@@ -4,21 +4,21 @@
 
 ---
 
-## ESTADO ACTUAL (2026-06-28)
+## ESTADO ACTUAL (2026-07-07)
 
-**Sprint 9 — Sesion 3 — Capas independientes (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 4 — US-821 homologacion completa (branch: `sprint-9-nests`)**
 
 **Completado:**
-- US-811 a US-825 ✅, US-826 ✅, US-823 ✅ — base de sesiones 1-2 y migracion `activeLayers` (ver decisions.md)
-- US-824 ✅ — Layout mapa protagonista: Header en flex flow (sin `margin-top` hardcodeado), z-index formal (`src/config/zIndex.ts`), sidebar siempre visible en desktop/tablet (toggle descartado, DEC-904). Sin commit aun — pendiente de confirmar con el usuario.
+- US-811 a US-826 ✅ — base sesiones 1-3
+- US-821 estructura ✅ — store slice + subcomponentes + panel overlay slide animation
+- US-821 homologacion ✅ — labels ES, imgs `/weather/*.png` y `/types/ico_*.webp`, pills "Todos", badge descriptivo, iconos por seccion, sort asc/desc, subtitulo GroupHeader — sin commitear
 
 **Siguiente:**
-- US-821 — Filtros adaptativos en sidebar. Spec: `src/docs/sprints/sprint-9/us/US-821.md`
+- Commit US-821 completo y cierre formal (ver `src/docs/sprints/sprint-9/us/US-821.md`)
 
 **Backlog critico pendiente (en orden):**
-- US-821 — Filtros adaptativos en sidebar (depende US-826 ✅, US-823 ✅)
-- US-818 — Feed unificado clima+nidos (depende US-826 ✅, US-821, US-823 ✅)
-- US-815 — Leyenda dinamica por capas (depende US-826 ✅, US-823 ✅)
+- US-818 — Feed unificado clima+nidos (depende US-821)
+- US-815 — Leyenda dinamica por capas
 
 ---
 

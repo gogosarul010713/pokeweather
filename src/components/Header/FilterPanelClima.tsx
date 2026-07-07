@@ -70,7 +70,8 @@ export default function FilterPanelClima() {
           gap: 8px;
           align-items: center;
           flex: 1;
-          height: 48px;
+          flex-wrap: wrap;
+          min-height: 48px;
           max-width: none;
         }
 

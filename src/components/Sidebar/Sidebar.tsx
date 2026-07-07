@@ -1,5 +1,6 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
+import FilterPanel from './FilterPanel'
 import Overlay from '../UI/Overlay'
 import { Z } from '../../config/zIndex'
 
@@ -92,6 +93,9 @@ export default function Sidebar({ cities }: SidebarProps) {
                 message="Activa Clima o Nidos para explorar la lista y mostrar los filtros"
                 zIndex={Z.mapOverlay}
               />
+
+              {/* FilterPanel — filtros adaptativos por capa activa (US-821) */}
+              <FilterPanel />
 
               {/* LocationFeed — lista de ciudades (solo cuando capa clima activa) */}
               {activeLayers.clima && (
