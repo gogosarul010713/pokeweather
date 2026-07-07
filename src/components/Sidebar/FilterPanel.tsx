@@ -70,7 +70,19 @@ function badgeForRegion(region: string, items: { value: string; label: string }[
   return (found?.label ?? region).toUpperCase()
 }
 
-export default function FilterPanel() {
+const FILTER_ICON = (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M1 2.5h12M3 7h8M5 11.5h4" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+)
+
+const CLEAR_ICON = (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <path d="M2 2l8 8M10 2l-8 8" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+)
+
+export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
   const activeLayers = useStore((s) => s.activeLayers)
   const filterPanelOpen = useStore((s) => s.filterPanelOpen)
   const accordionState = useStore((s) => s.accordionState)
@@ -89,7 +101,6 @@ export default function FilterPanel() {
   const setDraftNestType = useStore((s) => s.setDraftNestType)
   const setDraftNestSortBy = useStore((s) => s.setDraftNestSortBy)
 
-  // Conteo de filtros activos (estado real, para badge del boton)
   const regionFilter = useStore((s) => s.regionFilter)
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
@@ -141,27 +152,39 @@ export default function FilterPanel() {
   return (
     <>
       <style>{`
-        /* ── Search row — siempre visible, fuera del panel deslizante ── */
+        /* ── Search row ── */
         .fsp-search-row {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 12px;
+          padding: 8px 10px;
           flex-shrink: 0;
-          border-bottom: 1px solid var(--border-default);
         }
 
-        .fsp-search {
+        .fsp-search-wrap {
           flex: 1;
-          min-width: 0;
-          height: 30px;
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        .fsp-search-icon {
+          position: absolute;
+          left: 10px;
+          color: var(--text-muted);
+          pointer-events: none;
+          display: flex;
+        }
+        .fsp-search {
+          width: 100%;
+          height: 34px;
           border-radius: 8px;
           border: 1px solid var(--border-default);
           background: var(--bg-primary);
           color: var(--text-primary);
           font-size: 12px;
-          padding: 0 10px;
+          padding: 0 10px 0 30px;
           outline: none;
+          box-sizing: border-box;
         }
         .fsp-search::placeholder { color: var(--text-muted); }
         .fsp-search:focus { border-color: #58a6ff; }
@@ -171,9 +194,8 @@ export default function FilterPanel() {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 12px 8px;
+          padding: 0 10px 8px;
           flex-shrink: 0;
-          border-bottom: 1px solid var(--border-default);
         }
 
         .fsp-filter-btn {
@@ -182,58 +204,72 @@ export default function FilterPanel() {
           align-items: center;
           justify-content: center;
           gap: 6px;
-          padding: 7px 12px;
-          border-radius: 8px;
-          border: 1px solid var(--border-default);
-          background: var(--bg-tertiary);
-          color: var(--text-secondary);
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s, color 0.15s;
-        }
-        .fsp-filter-btn:hover {
-          background: var(--bg-elevated);
-          color: var(--text-primary);
-        }
-        .fsp-filter-btn.active {
-          border-color: #58a6ff;
-          color: #58a6ff;
-          background: rgba(88,166,255,0.08);
-        }
-        .fsp-filter-badge {
-          background: #58a6ff;
+          height: 40px;
+          border-radius: 10px;
+          border: none;
+          background: var(--ui-accent);
           color: #fff;
+          font: 700 13px 'Exo 2', sans-serif;
+          cursor: pointer;
+          box-shadow: 0 2px 12px rgba(88,166,255,0.25);
+          transition: opacity 0.15s;
+        }
+        .fsp-filter-btn:hover { opacity: 0.88; }
+
+        .fsp-filter-badge {
+          background: #fff;
+          color: var(--ui-accent);
           font-size: 10px;
           font-weight: 700;
-          border-radius: 8px;
-          padding: 0 5px;
-          line-height: 16px;
-          min-width: 16px;
+          border-radius: 9px;
+          padding: 0 6px;
+          line-height: 18px;
+          height: 18px;
+          min-width: 18px;
           text-align: center;
         }
 
         .fsp-clear-quick {
-          width: 30px;
-          height: 30px;
-          border-radius: 6px;
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
           border: 1px solid var(--border-default);
-          background: transparent;
-          color: var(--text-muted);
+          background: var(--bg-primary);
+          color: var(--text-secondary);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 13px;
           flex-shrink: 0;
-          transition: color 0.15s, background 0.15s;
+          transition: background 0.15s;
         }
-        .fsp-clear-quick:hover {
-          color: var(--text-primary);
-          background: var(--bg-hover, rgba(255,255,255,0.06));
+        .fsp-clear-quick:hover { background: var(--bg-elevated); }
+
+        /* ── Header ciudades ── */
+        .fsp-cities-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 4px 10px 6px;
+          flex-shrink: 0;
+        }
+        .fsp-cities-label {
+          font: 700 10px 'Rajdhani', sans-serif;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          letter-spacing: 0.08em;
+        }
+        .fsp-cities-count {
+          background: var(--ui-accent);
+          color: #fff;
+          font-size: 10px;
+          font-weight: 700;
+          border-radius: 8px;
+          padding: 0 6px;
+          line-height: 16px;
         }
 
-        /* ── Panel overlay — cubre toda el area del sidebar bajo el search ── */
+        /* ── Panel overlay ── */
         .fsp-panel-overlay {
           position: absolute;
           top: 0;
@@ -257,39 +293,42 @@ export default function FilterPanel() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 10px 16px 8px;
+          padding: 10px 12px;
           border-bottom: 1px solid var(--border-default);
           flex-shrink: 0;
+          min-height: 48px;
+          box-sizing: border-box;
         }
         .fsp-panel-back {
           display: flex;
           align-items: center;
           gap: 4px;
-          font-size: 12px;
-          color: #58a6ff;
+          font: 500 12px 'Exo 2', sans-serif;
+          color: var(--text-secondary);
           cursor: pointer;
           background: none;
           border: none;
-          padding: 0;
-          font-weight: 600;
+          padding: 4px 6px;
+          border-radius: 6px;
         }
-        .fsp-panel-back:hover { opacity: 0.75; }
+        .fsp-panel-back:hover { background: var(--bg-elevated); }
         .fsp-panel-title {
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.6px;
+          font: 700 13px 'Rajdhani', sans-serif;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
           color: var(--text-primary);
         }
         .fsp-panel-clear-header {
-          font-size: 11px;
-          color: var(--text-muted);
+          font: 500 11px 'Exo 2', sans-serif;
+          color: var(--text-secondary);
+          opacity: 0.7;
           cursor: pointer;
           background: none;
           border: none;
-          padding: 0;
+          padding: 4px 6px;
+          border-radius: 6px;
         }
-        .fsp-panel-clear-header:hover { color: var(--text-secondary); }
+        .fsp-panel-clear-header:hover { opacity: 1; }
 
         .fsp-panel-scroll {
           flex: 1;
@@ -308,208 +347,221 @@ export default function FilterPanel() {
           display: flex;
           flex-direction: column;
           gap: 6px;
-          padding: 10px 16px;
+          padding: 10px 12px 12px;
           border-top: 1px solid var(--border-default);
           flex-shrink: 0;
         }
         .fsp-footer-btns {
           display: flex;
-          gap: 8px;
+          gap: 7px;
         }
         .fsp-btn-apply {
           flex: 2;
-          height: 36px;
-          border-radius: 8px;
+          height: 40px;
+          border-radius: 9px;
           border: none;
-          background: #58a6ff;
+          background: var(--ui-accent);
           color: #fff;
-          font-size: 12px;
-          font-weight: 700;
+          font: 700 13px 'Exo 2', sans-serif;
           cursor: pointer;
           transition: opacity 0.15s;
         }
         .fsp-btn-apply:hover { opacity: 0.85; }
         .fsp-btn-cancel {
           flex: 1;
-          height: 36px;
-          border-radius: 8px;
+          height: 40px;
+          border-radius: 9px;
           border: 1px solid var(--border-default);
-          background: transparent;
+          background: var(--bg-primary);
           color: var(--text-secondary);
-          font-size: 12px;
-          font-weight: 600;
+          font: 600 13px 'Exo 2', sans-serif;
           cursor: pointer;
           transition: background 0.15s;
         }
-        .fsp-btn-cancel:hover { background: var(--bg-hover, rgba(255,255,255,0.04)); }
+        .fsp-btn-cancel:hover { background: var(--bg-elevated); }
         .fsp-footer-clear-all {
           text-align: center;
-          font-size: 11px;
-          color: var(--text-muted);
+          font: 400 11px 'Exo 2', sans-serif;
+          color: var(--text-secondary);
+          opacity: 0.6;
           cursor: pointer;
           background: none;
           border: none;
           padding: 2px 0;
+          text-decoration: underline;
         }
-        .fsp-footer-clear-all:hover { color: var(--text-secondary); }
+        .fsp-footer-clear-all:hover { opacity: 1; }
       `}</style>
 
-      {/* Search — siempre visible */}
+      {/* Search */}
       <div className="fsp-search-row">
-        <input
-          className="fsp-search"
-          placeholder="Buscar ciudad..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <div className="fsp-search-wrap">
+          <span className="fsp-search-icon">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.4"/>
+              <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+          </span>
+          <input
+            className="fsp-search"
+            placeholder="Buscar ciudad..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Boton filtros + limpiar rapido */}
       <div className="fsp-action-row">
-        <button
-          className={`fsp-filter-btn ${hasApplied ? 'active' : ''}`}
-          onClick={openFilterPanel}
-          type="button"
-        >
-          &#9776; Filtros
+        <button className="fsp-filter-btn" onClick={openFilterPanel} type="button">
+          {FILTER_ICON}
+          Filtros
           {hasApplied && <span className="fsp-filter-badge">{appliedCount}</span>}
         </button>
         {hasApplied && (
           <button className="fsp-clear-quick" onClick={clearAppliedFilters} title="Limpiar filtros" type="button">
-            ✕
+            {CLEAR_ICON}
           </button>
         )}
       </div>
 
-      {/* Panel overlay — cubre toda el area del content wrapper */}
+      {/* Header ciudades */}
+      {citiesCount !== undefined && (
+        <div className="fsp-cities-header">
+          <span className="fsp-cities-label">Ciudades</span>
+          <span className="fsp-cities-count">{citiesCount}</span>
+        </div>
+      )}
+
+      {/* Panel overlay */}
       <div className={`fsp-panel-overlay ${filterPanelOpen ? 'open' : ''}`}>
         <div className="fsp-panel-header">
           <button className="fsp-panel-back" onClick={cancelFilterPanel} type="button">
             &#8249; Volver
           </button>
-          <span className="fsp-panel-title">FILTROS</span>
+          <span className="fsp-panel-title">Filtros</span>
           <button className="fsp-panel-clear-header" onClick={clearDraftFilters} type="button">
             Limpiar
           </button>
         </div>
 
-            <div className="fsp-panel-scroll">
-              {noLayers && (
-                <p className="fsp-empty">Activa Clima o Nidos en el header para ver filtros</p>
-              )}
+        <div className="fsp-panel-scroll">
+          {noLayers && (
+            <p className="fsp-empty">Activa Clima o Nidos en el header para ver filtros</p>
+          )}
 
-              {activeLayers.clima && (
-                <>
-                  <GroupHeader color="#58a6ff" title="Clima" subtitle="Condicion · Region · Tipo · Orden" />
-                  <AccordionSection
-                    label="Condicion"
-                    icon="⛅"
-                    isOpen={accordionState.condicion}
-                    onToggle={() => toggleAccordion('condicion')}
-                    badgeText={badgeForMulti(draftFilters.condition, CONDITION_ITEMS)}
-                  >
-                    <PillsGrid
-                      items={CONDITION_ITEMS}
-                      selected={draftFilters.condition}
-                      cols={4}
-                      onToggle={toggleDraftCondition}
-                    />
-                  </AccordionSection>
+          {activeLayers.clima && (
+            <>
+              <GroupHeader color="#58a6ff" title="Clima" subtitle="Condicion · Region · Tipo · Orden" />
+              <AccordionSection
+                label="Condicion"
+                icon="⛅"
+                isOpen={accordionState.condicion}
+                onToggle={() => toggleAccordion('condicion')}
+                badgeText={badgeForMulti(draftFilters.condition, CONDITION_ITEMS)}
+              >
+                <PillsGrid
+                  items={CONDITION_ITEMS}
+                  selected={draftFilters.condition}
+                  cols={4}
+                  onToggle={toggleDraftCondition}
+                />
+              </AccordionSection>
 
-                  <AccordionSection
-                    label="Region"
-                    icon="🌐"
-                    isOpen={accordionState.region}
-                    onToggle={() => toggleAccordion('region')}
-                    badgeText={badgeForRegion(draftFilters.region, REGION_ITEMS)}
-                  >
-                    <PillsWrap
-                      items={REGION_ITEMS}
-                      selected={draftFilters.region}
-                      onSelect={(v) => setDraftRegion(v as any)}
-                    />
-                  </AccordionSection>
+              <AccordionSection
+                label="Region"
+                icon="🌐"
+                isOpen={accordionState.region}
+                onToggle={() => toggleAccordion('region')}
+                badgeText={badgeForRegion(draftFilters.region, REGION_ITEMS)}
+              >
+                <PillsWrap
+                  items={REGION_ITEMS}
+                  selected={draftFilters.region}
+                  onSelect={(v) => setDraftRegion(v as any)}
+                />
+              </AccordionSection>
 
-                  <AccordionSection
-                    label="Tipo Clima"
-                    icon="🌡️"
-                    isOpen={accordionState.tipoClima}
-                    onToggle={() => toggleAccordion('tipoClima')}
-                    badgeText={badgeForMulti(draftFilters.type, TYPE_ITEMS_ALL)}
-                  >
-                    <PillsGrid
-                      items={TYPE_ITEMS_ALL}
-                      selected={draftFilters.type}
-                      cols={3}
-                      onToggle={toggleDraftType}
-                    />
-                  </AccordionSection>
+              <AccordionSection
+                label="Tipo Clima"
+                icon="🌡️"
+                isOpen={accordionState.tipoClima}
+                onToggle={() => toggleAccordion('tipoClima')}
+                badgeText={badgeForMulti(draftFilters.type, TYPE_ITEMS_ALL)}
+              >
+                <PillsGrid
+                  items={TYPE_ITEMS_ALL}
+                  selected={draftFilters.type}
+                  cols={3}
+                  onToggle={toggleDraftType}
+                />
+              </AccordionSection>
 
-                  <AccordionSection
-                    label="Ordenar"
-                    icon="↕️"
-                    isOpen={accordionState.orden}
-                    onToggle={() => toggleAccordion('orden')}
-                    badgeText={badgeForSort(draftFilters.sortMode, SORT_CLIMA_ITEMS)}
-                  >
-                    <RadioList
-                      items={SORT_CLIMA_ITEMS}
-                      selected={draftFilters.sortMode}
-                      onSelect={(v) => setDraftSortMode(v as any)}
-                    />
-                  </AccordionSection>
-                </>
-              )}
+              <AccordionSection
+                label="Ordenar"
+                icon="↕️"
+                isOpen={accordionState.orden}
+                onToggle={() => toggleAccordion('orden')}
+                badgeText={badgeForSort(draftFilters.sortMode, SORT_CLIMA_ITEMS)}
+              >
+                <RadioList
+                  items={SORT_CLIMA_ITEMS}
+                  selected={draftFilters.sortMode}
+                  onSelect={(v) => setDraftSortMode(v as any)}
+                />
+              </AccordionSection>
+            </>
+          )}
 
-              {activeLayers.nidos && (
-                <>
-                  <GroupHeader color="#22c55e" title="Nidos" subtitle="Tipo Pokemon · Orden" />
-                  <AccordionSection
-                    label="Tipo Pokemon"
-                    icon="⚡"
-                    isOpen={accordionState.tipoPoke}
-                    onToggle={() => toggleAccordion('tipoPoke')}
-                    badgeText={badgeForMulti(draftFilters.nestType, TYPE_ITEMS_ALL)}
-                  >
-                    <PillsGrid
-                      items={TYPE_ITEMS_ALL}
-                      selected={draftFilters.nestType}
-                      cols={3}
-                      onToggle={toggleDraftNestType}
-                    />
-                  </AccordionSection>
+          {activeLayers.nidos && (
+            <>
+              <GroupHeader color="#22c55e" title="Nidos" subtitle="Tipo Pokemon · Orden" />
+              <AccordionSection
+                label="Tipo Pokemon"
+                icon="⚡"
+                isOpen={accordionState.tipoPoke}
+                onToggle={() => toggleAccordion('tipoPoke')}
+                badgeText={badgeForMulti(draftFilters.nestType, TYPE_ITEMS_ALL)}
+              >
+                <PillsGrid
+                  items={TYPE_ITEMS_ALL}
+                  selected={draftFilters.nestType}
+                  cols={3}
+                  onToggle={toggleDraftNestType}
+                />
+              </AccordionSection>
 
-                  <AccordionSection
-                    label="Ordenar"
-                    icon="↕️"
-                    isOpen={accordionState.ordenNidos}
-                    onToggle={() => toggleAccordion('ordenNidos')}
-                    badgeText={badgeForSort(draftFilters.nestSortBy, SORT_NIDOS_ITEMS)}
-                  >
-                    <RadioList
-                      items={SORT_NIDOS_ITEMS}
-                      selected={draftFilters.nestSortBy}
-                      onSelect={(v) => setDraftNestSortBy(v as any)}
-                    />
-                  </AccordionSection>
-                </>
-              )}
-            </div>
+              <AccordionSection
+                label="Ordenar"
+                icon="↕️"
+                isOpen={accordionState.ordenNidos}
+                onToggle={() => toggleAccordion('ordenNidos')}
+                badgeText={badgeForSort(draftFilters.nestSortBy, SORT_NIDOS_ITEMS)}
+              >
+                <RadioList
+                  items={SORT_NIDOS_ITEMS}
+                  selected={draftFilters.nestSortBy}
+                  onSelect={(v) => setDraftNestSortBy(v as any)}
+                />
+              </AccordionSection>
+            </>
+          )}
+        </div>
 
-            <div className="fsp-panel-footer">
-              <div className="fsp-footer-btns">
-                <button className="fsp-btn-apply" onClick={applyFilterPanel} type="button">
-                  &#10003; Aplicar
-                </button>
-                <button className="fsp-btn-cancel" onClick={cancelFilterPanel} type="button">
-                  &#10005; Cancelar
-                </button>
-              </div>
-              <button className="fsp-footer-clear-all" onClick={clearDraftFilters} type="button">
-                &#10005; Limpiar todos los filtros
-              </button>
-            </div>
+        <div className="fsp-panel-footer">
+          <div className="fsp-footer-btns">
+            <button className="fsp-btn-apply" onClick={applyFilterPanel} type="button">
+              &#10003; Aplicar
+            </button>
+            <button className="fsp-btn-cancel" onClick={cancelFilterPanel} type="button">
+              &#10005; Cancelar
+            </button>
           </div>
+          <button className="fsp-footer-clear-all" onClick={clearDraftFilters} type="button">
+            &#10005; Limpiar todos los filtros
+          </button>
+        </div>
+      </div>
     </>
   )
 }

@@ -10,6 +10,8 @@ interface SidebarProps {
 
 export default function Sidebar({ cities }: SidebarProps) {
   const activeLayers = useStore((s) => s.activeLayers)
+  const getFilteredCities = useStore((s) => s.getFilteredCities)
+  const filteredCount = activeLayers.clima ? getFilteredCities(cities).length : undefined
 
   return (
     <>
@@ -95,7 +97,7 @@ export default function Sidebar({ cities }: SidebarProps) {
               />
 
               {/* FilterPanel — filtros adaptativos por capa activa (US-821) */}
-              <FilterPanel />
+              <FilterPanel citiesCount={filteredCount} />
 
               {/* LocationFeed — lista de ciudades (solo cuando capa clima activa) */}
               {activeLayers.clima && (
