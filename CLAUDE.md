@@ -56,13 +56,14 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 - US-1201 ✅ — Panel de precision del algoritmo (CA-01 a CA-06), commits 8a99aa7 + 85965fb
 - BUG-029 ✅ — Auto-sync no persistia, commit 4fa335f
 - US-1202 ✅ — Script limpieza forecasts sin reporte, commit bb59316
-- REF-004 ✅ — Eliminacion definitiva `classification_reports` (D-047): 4 archivos + docs + deploy CF a DEV, commit c6bb841
-- US-1203 ✅ — Utilidad UI limpieza forecasts sin reporte (CleanupPanel, Client SDK, D-048), commit pendiente
+- REF-004 ✅ — Eliminacion definitiva `classification_reports` (D-047), commit c6cb841
+- US-1203 ✅ — Utilidad UI limpieza forecasts sin reporte (CleanupPanel, D-048), commit c4ca11d
+- BUG-031/032/033 ✅ — Sort tabla predictiva (3 fixes)
+- US-1204 ✅ — Eliminar reporte de clima desde tabla predictiva
+- EPIC-001 ✅ — Condicion `clear` completa (US-1205 + US-1206 + US-1207), commits fa8d0d2 + 1ce9f9c + 52b496f
 
-**Siguiente:**
-- (ver Backlog critico pendiente)
-
-**Backlog critico pendiente:**
+**Backlog critico pendiente (deuda tecnica, no bloquean sprint):**
 - BL-001 — Firestore Security Rules (App Check) — 2h
 - BL-002 — Remover VITE_ACCUWEATHER_KEY de Vercel — 0.5h
 - US-1114 — TestingTools visible en Preview/Prod — 0.5h
+- BL-013 — Ejecutar `scripts/migrate-clear-condition.ts` en PROD — requiere confirmacion explicita del usuario antes de correr
