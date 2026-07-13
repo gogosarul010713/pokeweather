@@ -189,6 +189,7 @@ export async function exportCitiesToExcel(cities: City[], options: ExportOptions
 function translateCondition(condition: string): string {
   const map: Record<string, string> = {
     sunny: 'Soleado',
+    clear: 'Despejado',
     partly: 'Parcial',
     cloudy: 'Nublado',
     fog: 'Niebla',
@@ -243,8 +244,9 @@ function generateCalculationText(city: City): string {
 function getBaseConditionName(iconId: number): string {
   const map: Record<number, string> = {
     // Sunny
-    1: 'Soleado', 2: 'Soleado', 3: 'Soleado', 4: 'Soleado',
-    30: 'Soleado', 33: 'Soleado', 34: 'Soleado',
+    1: 'Soleado', 2: 'Soleado', 3: 'Soleado', 4: 'Soleado', 30: 'Soleado',
+    // Clear (noche despejada)
+    33: 'Despejado', 34: 'Despejado',
     // Partly
     5: 'Parcial', 6: 'Parcial', 35: 'Parcial', 36: 'Parcial',
     // Cloudy

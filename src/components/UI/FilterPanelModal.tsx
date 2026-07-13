@@ -4,6 +4,7 @@ import { useStore, type SortMode, type Region } from '../../store/useStore'
 const CLIMATE_OPTIONS = [
   { label: 'Todos', value: 'todos', icon: '/weather/all.png' },
   { label: 'Soleado', value: 'sunny', icon: '/weather/sunny.png' },
+  { label: 'Despejado', value: 'clear', icon: '/weather/clear.png' },
   { label: 'Parcial', value: 'partly', icon: '/weather/partly.png' },
   { label: 'Nublado', value: 'cloudy', icon: '/weather/cloudy.png' },
   { label: 'Niebla', value: 'fog', icon: '/weather/fog.png' },

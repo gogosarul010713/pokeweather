@@ -49,7 +49,12 @@ const FALLBACK_CONDITIONS: Record<string, CatalogCondition> = {
   sunny: {
     label: 'Soleado',
     emoji: '☀️',
-    accuweather_codes: [1, 2, 30, 33, 34],
+    accuweather_codes: [1, 2, 30],
+  },
+  clear: {
+    label: 'Despejado',
+    emoji: '🌙',
+    accuweather_codes: [33, 34],
   },
   partly: {
     label: 'Parcialmente nublado',
@@ -90,7 +95,7 @@ const FALLBACK_TYPE_MAPPING: Record<string, string[]> = CONDITION_TO_TYPES
 const FALLBACK_RULES: CatalogRules = {
   windy_override: {
     description: 'WINDY reemplaza sunny/partly/cloudy si viento >= threshold',
-    base_conditions_replaceable: ['sunny', 'partly', 'cloudy'],
+    base_conditions_replaceable: ['sunny', 'partly', 'cloudy', 'clear'],
     never_replaces: ['fog', 'rain', 'snow'],
     threshold_wind_kmh: 29,
     threshold_gust_kmh: 31,
