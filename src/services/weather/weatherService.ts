@@ -14,6 +14,7 @@ import type { WeatherCondition } from './weatherClassify'
 
 export const CONDITION_TO_TYPES: Record<WeatherCondition, string[]> = {
   sunny:  ['fire',     'ground',   'grass'],
+  clear:  ['fire',     'ground',   'grass'],
   partly: ['normal',   'rock'],
   cloudy: ['fairy',    'fighting', 'poison'],
   fog:    ['ghost',    'dark'],
@@ -27,6 +28,7 @@ export const CONDITION_TO_TYPES: Record<WeatherCondition, string[]> = {
 
 export const CONDITION_COLORS: Record<WeatherCondition, string> = {
   sunny:  '#FFB347',
+  clear:  '#4A5568',
   partly: '#87CEEB',
   cloudy: '#9E9E9E',
   fog:    '#C8C8C8',
@@ -37,6 +39,7 @@ export const CONDITION_COLORS: Record<WeatherCondition, string> = {
 
 export const CONDITION_LABEL: Record<WeatherCondition, string> = {
   sunny:  'Soleado',
+  clear:  'Despejado',
   partly: 'Parcial',
   cloudy: 'Nublado',
   fog:    'Niebla',

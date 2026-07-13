@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { WeatherCondition } from '../services/weather/weatherClassify'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ export interface City {
   transporte: string
 
   // Runtime (AccuWeather + S2)
-  condition: 'sunny' | 'partly' | 'cloudy' | 'fog' | 'rain' | 'snow' | 'windy'
+  condition: WeatherCondition
   isExtreme: boolean
   boostedTypes: string[]
   tempC: number

@@ -6,7 +6,7 @@
 // Decision arquitectonica: D-042 (src/docs/architecture/11-decision-log.md)
 // ════════════════════════════════════════════════════════════════════════════
 
-export type WeatherCondition = 'sunny' | 'partly' | 'cloudy' | 'fog' | 'rain' | 'snow' | 'windy'
+export type WeatherCondition = 'sunny' | 'partly' | 'cloudy' | 'fog' | 'rain' | 'snow' | 'windy' | 'clear'
 
 export interface WeatherTranslation {
   id: number
@@ -46,8 +46,8 @@ export const WEATHER_TRANSLATIONS: Record<number, WeatherTranslation> = {
   31: { id: 31, iconText: 'Cold',                      canWindy: true,  pgoCondition: 'snow' },
   32: { id: 32, iconText: 'Windy',                     canWindy: true,  pgoCondition: 'windy' },
   // ── Noche (33-44) ──
-  33: { id: 33, iconText: 'Clear',                     canWindy: true,  pgoCondition: 'sunny' },
-  34: { id: 34, iconText: 'Mostly Clear',              canWindy: true,  pgoCondition: 'sunny' },
+  33: { id: 33, iconText: 'Clear',                     canWindy: true,  pgoCondition: 'clear' },
+  34: { id: 34, iconText: 'Mostly Clear',              canWindy: true,  pgoCondition: 'clear' },
   35: { id: 35, iconText: 'Partly Cloudy',             canWindy: true,  pgoCondition: 'partly' },
   36: { id: 36, iconText: 'Intermittent Clouds',       canWindy: true,  pgoCondition: 'partly' },
   37: { id: 37, iconText: 'Hazy Moonlight',            canWindy: true,  pgoCondition: 'cloudy' },
