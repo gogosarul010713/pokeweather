@@ -53,17 +53,19 @@ Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potencia
 ## Estado Sprint 12 (branch: `sprint-12`)
 
 **Completado:**
-- US-1201 ✅ — Panel de precision del algoritmo (CA-01 a CA-06), commits 8a99aa7 + 85965fb
-- BUG-029 ✅ — Auto-sync no persistia, commit 4fa335f
-- US-1202 ✅ — Script limpieza forecasts sin reporte, commit bb59316
-- REF-004 ✅ — Eliminacion definitiva `classification_reports` (D-047), commit c6cb841
-- US-1203 ✅ — Utilidad UI limpieza forecasts sin reporte (CleanupPanel, D-048), commit c4ca11d
-- BUG-031/032/033 ✅ — Sort tabla predictiva (3 fixes)
-- US-1204 ✅ — Eliminar reporte de clima desde tabla predictiva
-- EPIC-001 ✅ — Condicion `clear` completa (US-1205 + US-1206 + US-1207), commits fa8d0d2 + 1ce9f9c + 52b496f
+- US-1201/1202/1203 ✅ — Panel precision, script limpieza, CleanupPanel
+- BUG-029/031/032/033 ✅ — Auto-sync + sort tabla predictiva
+- REF-004 ✅ — Eliminacion definitiva `classification_reports` (D-047)
+- US-1204 ✅ — Eliminar reporte desde tabla predictiva
+- EPIC-001 ✅ — Condicion `clear` completa: clasificador + UI + script migracion, commits fa8d0d2 + 1ce9f9c + 52b496f + 0f29ea7
+- BUG-034 ✅ — Tabla predictiva no se actualizaba tras sync manual, commit 217b814
 
-**Backlog critico pendiente (deuda tecnica, no bloquean sprint):**
+**Siguiente — Validaciones EPIC-001 en nueva sesion:**
+- Verificar condicion `clear` en ciudades reales con iconos 33/34 (noche despejada)
+- Ejecutar `scripts/migrate-clear-condition.ts --dry-run` en DEV y revisar resultado
+- Confirmar que FilterPanel, MapLegend, FilterPanelModal y exportacion Excel muestran `clear`
+
+**Backlog critico pendiente:**
 - BL-001 — Firestore Security Rules (App Check) — 2h
 - BL-002 — Remover VITE_ACCUWEATHER_KEY de Vercel — 0.5h
-- US-1114 — TestingTools visible en Preview/Prod — 0.5h
-- BL-013 — Ejecutar `scripts/migrate-clear-condition.ts` en PROD — requiere confirmacion explicita del usuario antes de correr
+- BL-013 — Migrar datos historicos PROD con `scripts/migrate-clear-condition.ts` — requiere confirmacion explicita
