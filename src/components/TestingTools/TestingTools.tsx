@@ -80,6 +80,7 @@ export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
           type: 'success',
           text: `✅ Sincronización completada: ${data.citiesUpdated} ciudades actualizadas`,
         })
+        setPredictionRefreshKey(k => k + 1)
       } else {
         setSyncMessage({
           type: 'error',
