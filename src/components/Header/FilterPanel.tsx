@@ -44,13 +44,14 @@ const REGION_OPTIONS: SelectOption[] = [
 ]
 
 const CLIMATE_OPTIONS: SelectOption[] = [
-  { label: 'Sunny',  value: 'sunny',  icon: '/weather/sunny.png'  },
-  { label: 'Partly', value: 'partly', icon: '/weather/partly.png' },
-  { label: 'Cloudy', value: 'cloudy', icon: '/weather/cloudy.png' },
-  { label: 'Fog',    value: 'fog',    icon: '/weather/fog.png'    },
-  { label: 'Rain',   value: 'rain',   icon: '/weather/rain.png'   },
-  { label: 'Snow',   value: 'snow',   icon: '/weather/snow.png'   },
-  { label: 'Windy',  value: 'windy',  icon: '/weather/windy.png'  },
+  { label: 'Sunny',     value: 'sunny',  icon: '/weather/sunny.png'  },
+  { label: 'Despejado', value: 'clear',  icon: '/weather/clear.png'  },
+  { label: 'Partly',    value: 'partly', icon: '/weather/partly.png' },
+  { label: 'Cloudy',    value: 'cloudy', icon: '/weather/cloudy.png' },
+  { label: 'Fog',       value: 'fog',    icon: '/weather/fog.png'    },
+  { label: 'Rain',      value: 'rain',   icon: '/weather/rain.png'   },
+  { label: 'Snow',      value: 'snow',   icon: '/weather/snow.png'   },
+  { label: 'Windy',     value: 'windy',  icon: '/weather/windy.png'  },
 ]
 
 
