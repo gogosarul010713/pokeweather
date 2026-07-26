@@ -49,7 +49,10 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
       <style>{`
         .np-backdrop {
           position: fixed;
-          inset: 0;
+          top: 0;
+          bottom: 0;
+          left: 360px;
+          right: 0;
           background: rgba(0,0,0,0.4);
           z-index: 1100;
           animation: np-fade 200ms ease;

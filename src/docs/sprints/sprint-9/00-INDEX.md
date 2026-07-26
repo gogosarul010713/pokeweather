@@ -88,15 +88,17 @@
 | ENH-001 | Homologacion visual + UX del FilterPanel (sticky headers, colapso por grupo, toast, icono +/−) | ✅ Completado |
 | ENH-002 | Badges por grupo + grid compacto + indicador contextual por fila + chips scrolleables | ✅ Completado |
 | OBS-001 | Fixes observados post ENH-001/002: toast light theme, boton Limpiar unificado, chips onRemove con applied setters | ✅ Completado (sesion 9, 2026-07-15) |
-| ENH-006 | Sidebar oculto cuando no hay capa activa — transicion suave width+opacity 280ms; Overlay eliminado | ✅ Completado (sesion 23, 2026-07-25) |
+| ENH-004 | Homologacion visual NestDetail — bottom sheet, sprite en header, hora local | ⏳ Pendiente — ver `enhancements/ENH-004-nest-detail-homologacion-visual.md` |
+| ENH-006 | Sidebar oculto cuando no hay capa activa — transicion suave width+opacity 280ms; Overlay eliminado | ✅ Completado (sesion 23, 2026-07-25) — sin doc propio, ver sesion 23 en estado general |
 
 ## Bugfixes
 
 | Bug | Titulo | Status |
 |---|---|---|
-| BUG-001 | "Ver en lista" no hacia scroll ni highlight | ✅ Resuelto (sesion 13) |
+| BUG-001 | "Ver en lista" no hacia scroll ni highlight | ✅ Resuelto — fix final en App.tsx (sesion 26, 2026-07-26) |
 | BUG-002 | Popup de clima bloqueado por nido abierto | ✅ Resuelto |
-| BUG-003 | MapLegend oculta por z-index de Leaflet | ✅ Resuelto (sesion 24, 2026-07-25) |
+| BUG-003 | MapLegend oculta por z-index de Leaflet | ✅ Resuelto (sesion 24, 2026-07-25) — z-index hardcodeado a 1000 en MapLegend.tsx |
+| BUG-004 | Backdrop NestPopup bloqueaba scroll del sidebar | ✅ Resuelto (sesion 26, 2026-07-26) — `inset:0` → `left:360px` en `.np-backdrop` de NestPopup.tsx |
 
 > Referencia de diseno final: `Filter Panel Final.dc.html` — claude.ai/design proyecto "Copy of Variantes filtros Pokeweather"
 

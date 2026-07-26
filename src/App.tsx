@@ -21,8 +21,8 @@ export default function App() {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const selectedNest = useStore((s) => s.selectedNest)
   const nestPopupOpen = useStore((s) => s.nestPopupOpen)
-  const setSelectedNest = useStore((s) => s.setSelectedNest)
   const setNestPopupOpen = useStore((s) => s.setNestPopupOpen)
+  const scrollToFeed = useStore((s) => s.scrollToFeed)
   const isMobile = useIsMobile()
   const getFilteredCities = useStore((s) => s.getFilteredCities)
   // Dependencias para recalcular filtro cuando cambian
@@ -209,7 +209,7 @@ export default function App() {
           <NestPopup
             nest={selectedNest}
             onClose={() => setNestPopupOpen(false)}
-            onViewInList={() => { setNestPopupOpen(false); setSelectedNest(selectedNest) }}
+            onViewInList={() => { setNestPopupOpen(false); scrollToFeed('nest') }}
           />
         )}
 

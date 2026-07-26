@@ -52,7 +52,7 @@ export default function MapLegend() {
           position: absolute;
           bottom: 28px;
           right: 12px;
-          z-index: ${Z.mapOverlay};
+          z-index: 1000;
           background: var(--bg-secondary);
           border: 1px solid var(--border-default);
           border-radius: 8px;

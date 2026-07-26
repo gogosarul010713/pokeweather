@@ -18,8 +18,8 @@
 
 ## Causas raiz
 
-### BUG-001a — Callback roto en MapView
-`onViewInList` en `SelectedNestPopup` estaba implementado como `() => setSelectedNest(selectedNest)` — re-seteaba el mismo valor, sin efecto.
+### BUG-001a — Callback roto en App.tsx
+`onViewInList` en `NestPopup` (montado desde `App.tsx`) estaba implementado como `() => setSelectedNest(selectedNest)` — re-seteaba el mismo valor sin disparar scroll, sin efecto.
 
 ### BUG-001b — selectedNest se limpiaba antes del scroll
 Al limpiar `selectedNest` para cerrar el popup de Leaflet, el NestCard perdia `isActive=true` antes de que el scroll ocurriera → sin highlight.
@@ -43,7 +43,8 @@ Un solo `scrollToFeedTick` disparaba ambos `useEffect` (ciudad y nido) simultane
 | Archivo | Cambio |
 |---------|--------|
 | `src/store/useStore.ts` | `nestPopupOpen`, `scrollToFeedTick`, `scrollToFeedTarget`, `scrollToFeed(target)` |
-| `src/components/Map/MapView.tsx` | `onViewInList` → `scrollToFeed('nest')`; condicion `nestPopupOpen` |
+| `src/App.tsx` | `onViewInList` → `scrollToFeed('nest')` (fix BUG-001a, sesion 26) |
+| `src/components/Map/MapView.tsx` | condicion `nestPopupOpen` en SelectedPopup |
 | `src/components/Map/FlyToCity.tsx` | Reacciona a `scrollToFeedTick` via `prevTickRef` |
 | `src/components/Sidebar/LocationDetail.tsx` | `scrollToFeed('city')` en footer |
 | `src/components/Sidebar/LocationFeed.tsx` | `useEffect` condicionados por `scrollToFeedTarget` |
