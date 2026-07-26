@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/_ds_bundle.css">
+  <link rel="stylesheet" href="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/styles.css">
+  <script src="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--bg-primary); font-family: 'Exo 2', sans-serif; display: flex; align-items: flex-start; justify-content: center; padding: 32px 24px; min-height: 100vh; box-sizing: border-box; transition: background 0.2s; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(128,128,128,.18); border-radius: 4px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</helmet>
+
+<!-- theme toggle -->
+<div style="position:fixed;top:16px;right:16px;z-index:100;">
+  <button onClick="{{ toggleTheme }}" style="padding:6px 14px;border-radius:20px;border:1px solid var(--border-default);background:var(--bg-secondary);font:600 11px/1 'Exo 2',sans-serif;color:var(--text-secondary);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);">{{ themeLabel }}</button>
+</div>
+
+<!-- Panel -->
+<div style="width:236px;background:var(--bg-secondary);border:1px solid var(--border-default);border-radius:14px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.35);animation:fadeIn 0.3s ease;">
+
+  <!-- Panel header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px 10px;border-bottom:1px solid var(--border-default);background:var(--bg-secondary);">
+    <span style="font:500 12px/1 'Exo 2',sans-serif;color:var(--text-secondary);cursor:pointer;">‹ Volver</span>
+    <span style="font:700 13px/1 'Rajdhani',sans-serif;color:var(--text-primary);text-transform:uppercase;letter-spacing:.1em;">Filtros</span>
+    <span onClick="{{ clearAll }}" style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-secondary);opacity:.6;cursor:pointer;">Limpiar</span>
+  </div>
+
+  <div style="max-height:calc(100vh - 160px);overflow-y:auto;">
+
+    <!-- ══ CLIMA GROUP ══ -->
+    <div style="border-left:3px solid #58a6ff;">
+      <!-- Group header -->
+      <div onClick="{{ toggleClima }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:9px 13px 8px 10px;background:var(--bg-secondary);border-bottom:1px solid rgba(88,166,255,.15);box-shadow:0 2px 8px rgba(0,0,0,.25);">
+        <div>
+          <div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.14em;">Filtros de Clima</div>
+          <div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.45;">Condición · Región · Tipo · Orden</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <div style="min-width:15px;height:15px;padding:0 5px;border-radius:8px;background:rgba(88,166,255,.18);font:700 9px/15px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;opacity:{{ climaBadgeOp }};transition:opacity .2s;">{{ climaActiveCount }}</div>
+          <div style="width:20px;height:20px;border-radius:5px;border:1.5px solid rgba(88,166,255,.4);display:flex;align-items:center;justify-content:center;background:rgba(88,166,255,.06);">
+            <span style="font:700 15px/1 'Exo 2',sans-serif;color:#58a6ff;margin-top:-1px;">{{ climaIcon }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clima sub-sections -->
+      <div style="overflow:hidden;max-height:{{ climaH }};transition:max-height 0.3s cubic-bezier(0.16,1,0.3,1);">
+
+        <!-- — Condición — -->
+        <div onClick="{{ toggleCond }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-subtle);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:13px;">⛅</span>
+            <span style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Condición</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <!-- B: pill usa #58a6ff; visible solo cuando colapsado -->
+            <div style="overflow:hidden;max-height:{{ condPillH }};opacity:{{ condPillOp }};transition:max-height .22s ease,opacity .18s ease;">
+              <div style="padding:2px 7px;border-radius:10px;background:#58a6ff;white-space:nowrap;">
+                <span style="font:700 9px/1 'Exo 2',sans-serif;color:#fff;text-transform:uppercase;">{{ condLabel }}</span>
+              </div>
+            </div>
+            <span style="font-size:9px;color:var(--text-secondary);opacity:.6;">{{ condChevron }}</span>
+          </div>
+        </div>
+        <div style="overflow:hidden;max-height:{{ condH }};transition:max-height .28s cubic-bezier(0.16,1,0.3,1);">
+          <!-- C: 4 cols, 24px icons -->
+          <div style="padding:8px 10px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
+            <div onClick="{{ setCond_Todos }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ condBg_Todos }};border:1.5px solid {{ condBorder_Todos }};cursor:pointer;"><span style="font-size:13px;">🔘</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ condText_Todos }};text-transform:uppercase;">Todos</span></div>
+            <div onClick="{{ setCond_Soleado }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ condBg_Soleado }};border:1.5px solid {{ condBorder_Soleado }};cursor:pointer;"><span style="font-size:13px;">☀️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ condText_Soleado }};text-transform:uppercase;">Soleado</span></div>
+            <div onClick="{{ setCond_Parcial }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ condBg_Parcial }};border:1.5px solid {{ condBorder_Parcial }};cursor:pointer;"><span style="font-size:13px;">⛅</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ condText_Parcial }};text-transform:uppercase;">Parcial</span></div>
+            <div onClick="{{ setCond_Nublado }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ condBg_Nublado }};border:1.5px solid {{ condBorder_Nublado }};cursor:pointer;"><span style="font-size:13px;">☁️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ condText_Nublado }};text-transform:uppercase;">Nublado</span></div>
+            <div onClick="{{ setCond_Niebla }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ condBg_Niebla }};border:1.5px solid {{ condBorder_Niebla }};cursor:pointer;"><span style="font-size:13px;">🌫️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ condText_Niebla }};text-transform:uppercase;">Niebla</span></div>
+            <div onClick="{{ setCond_Lluvia }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ condBg_Lluvia }};border:1.5px solid {{ condBorder_Lluvia }};cursor:pointer;"><span style="font-size:13px;">🌧️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ condText_Lluvia }};text-transform:uppercase;">Lluvia</span></div>
+            <div onClick="{{ setCond_Nieve }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ condBg_Nieve }};border:1.5px solid {{ condBorder_Nieve }};cursor:pointer;"><span style="font-size:13px;">❄️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ condText_Nieve }};text-transform:uppercase;">Nieve</span></div>
+            <div onClick="{{ setCond_Ventoso }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ condBg_Ventoso }};border:1.5px solid {{ condBorder_Ventoso }};cursor:pointer;"><span style="font-size:13px;">💨</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ condText_Ventoso }};text-transform:uppercase;">Ventoso</span></div>
+          </div>
+        </div>
+
+        <!-- — Region — -->
+        <div onClick="{{ toggleReg }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-subtle);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:13px;">🌐</span>
+            <span style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Región</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="overflow:hidden;max-height:{{ regPillH }};opacity:{{ regPillOp }};transition:max-height .22s ease,opacity .18s ease;">
+              <div style="padding:2px 7px;border-radius:10px;background:#58a6ff;">
+                <span style="font:700 9px/1 'Exo 2',sans-serif;color:#fff;text-transform:uppercase;">{{ regLabel }}</span>
+              </div>
+            </div>
+            <span style="font-size:9px;color:var(--text-secondary);opacity:.6;">{{ regChevron }}</span>
+          </div>
+        </div>
+        <div style="overflow:hidden;max-height:{{ regH }};transition:max-height .28s cubic-bezier(0.16,1,0.3,1);">
+          <div style="padding:8px 10px 10px;display:flex;flex-wrap:wrap;gap:5px;">
+            <div onClick="{{ setReg_Todas }}" style="padding:4px 10px;border-radius:12px;font:600 10px/1 'Exo 2',sans-serif;cursor:pointer;background:{{ regBg_Todas }};border:1.5px solid {{ regBorder_Todas }};color:{{ regText_Todas }};">Todas</div>
+            <div onClick="{{ setReg_Asia }}" style="padding:4px 10px;border-radius:12px;font:600 10px/1 'Exo 2',sans-serif;cursor:pointer;background:{{ regBg_Asia }};border:1.5px solid {{ regBorder_Asia }};color:{{ regText_Asia }};">Asia</div>
+            <div onClick="{{ setReg_Europa }}" style="padding:4px 10px;border-radius:12px;font:600 10px/1 'Exo 2',sans-serif;cursor:pointer;background:{{ regBg_Europa }};border:1.5px solid {{ regBorder_Europa }};color:{{ regText_Europa }};">Europa</div>
+            <div onClick="{{ setReg_America }}" style="padding:4px 10px;border-radius:12px;font:600 10px/1 'Exo 2',sans-serif;cursor:pointer;background:{{ regBg_America }};border:1.5px solid {{ regBorder_America }};color:{{ regText_America }};">América</div>
+            <div onClick="{{ setReg_Oceania }}" style="padding:4px 10px;border-radius:12px;font:600 10px/1 'Exo 2',sans-serif;cursor:pointer;background:{{ regBg_Oceania }};border:1.5px solid {{ regBorder_Oceania }};color:{{ regText_Oceania }};">Oceanía</div>
+            <div onClick="{{ setReg_Africa }}" style="padding:4px 10px;border-radius:12px;font:600 10px/1 'Exo 2',sans-serif;cursor:pointer;background:{{ regBg_Africa }};border:1.5px solid {{ regBorder_Africa }};color:{{ regText_Africa }};">África</div>
+          </div>
+        </div>
+
+        <!-- — Tipo Clima — -->
+        <div onClick="{{ toggleTipoC }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-subtle);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:13px;">⚡</span>
+            <span style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Tipo Clima</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="overflow:hidden;max-height:{{ tipoCPillH }};opacity:{{ tipoCPillOp }};transition:max-height .22s ease,opacity .18s ease;">
+              <div style="padding:2px 7px;border-radius:10px;background:#58a6ff;">
+                <span style="font:700 9px/1 'Exo 2',sans-serif;color:#fff;text-transform:uppercase;">{{ tipoCLabel }}</span>
+              </div>
+            </div>
+            <span style="font-size:9px;color:var(--text-secondary);opacity:.6;">{{ tipoCChevron }}</span>
+          </div>
+        </div>
+        <div style="overflow:hidden;max-height:{{ tipoCH }};transition:max-height .28s cubic-bezier(0.16,1,0.3,1);">
+          <!-- D: activos usan #58a6ff (color del grupo), no color del tipo -->
+          <div style="padding:8px 10px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
+            <div onClick="{{ setTC_Todos }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Todos }};border:1.5px solid {{ tcBorder_Todos }};cursor:pointer;"><span style="font-size:13px;">🔘</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Todos }};text-transform:uppercase;">Todos</span></div>
+            <div onClick="{{ setTC_Normal }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Normal }};border:1.5px solid {{ tcBorder_Normal }};cursor:pointer;"><span style="font-size:13px;">⬜</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Normal }};text-transform:uppercase;">Normal</span></div>
+            <div onClick="{{ setTC_Fire }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Fire }};border:1.5px solid {{ tcBorder_Fire }};cursor:pointer;"><span style="font-size:13px;">🔥</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Fire }};text-transform:uppercase;">Fire</span></div>
+            <div onClick="{{ setTC_Ground }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Ground }};border:1.5px solid {{ tcBorder_Ground }};cursor:pointer;"><span style="font-size:13px;">🏜️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Ground }};text-transform:uppercase;">Ground</span></div>
+            <div onClick="{{ setTC_Flying }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Flying }};border:1.5px solid {{ tcBorder_Flying }};cursor:pointer;"><span style="font-size:13px;">🌪️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Flying }};text-transform:uppercase;">Flying</span></div>
+            <div onClick="{{ setTC_Ghost }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Ghost }};border:1.5px solid {{ tcBorder_Ghost }};cursor:pointer;"><span style="font-size:13px;">👻</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Ghost }};text-transform:uppercase;">Ghost</span></div>
+            <div onClick="{{ setTC_Dark }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Dark }};border:1.5px solid {{ tcBorder_Dark }};cursor:pointer;"><span style="font-size:13px;">🌑</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Dark }};text-transform:uppercase;">Dark</span></div>
+            <div onClick="{{ setTC_Water }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Water }};border:1.5px solid {{ tcBorder_Water }};cursor:pointer;"><span style="font-size:13px;">💧</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Water }};text-transform:uppercase;">Water</span></div>
+            <div onClick="{{ setTC_Electric }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Electric }};border:1.5px solid {{ tcBorder_Electric }};cursor:pointer;"><span style="font-size:13px;">⚡</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Electric }};text-transform:uppercase;">Elec.</span></div>
+            <div onClick="{{ setTC_Ice }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Ice }};border:1.5px solid {{ tcBorder_Ice }};cursor:pointer;"><span style="font-size:13px;">❄️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Ice }};text-transform:uppercase;">Ice</span></div>
+            <div onClick="{{ setTC_Steel }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Steel }};border:1.5px solid {{ tcBorder_Steel }};cursor:pointer;"><span style="font-size:13px;">⚙️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Steel }};text-transform:uppercase;">Steel</span></div>
+            <div onClick="{{ setTC_Dragon }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Dragon }};border:1.5px solid {{ tcBorder_Dragon }};cursor:pointer;"><span style="font-size:13px;">🐉</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Dragon }};text-transform:uppercase;">Dragon</span></div>
+            <div onClick="{{ setTC_Rock }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Rock }};border:1.5px solid {{ tcBorder_Rock }};cursor:pointer;"><span style="font-size:13px;">🪨</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Rock }};text-transform:uppercase;">Rock</span></div>
+            <div onClick="{{ setTC_Poison }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Poison }};border:1.5px solid {{ tcBorder_Poison }};cursor:pointer;"><span style="font-size:13px;">☠️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Poison }};text-transform:uppercase;">Poison</span></div>
+            <div onClick="{{ setTC_Psychic }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Psychic }};border:1.5px solid {{ tcBorder_Psychic }};cursor:pointer;"><span style="font-size:13px;">🔮</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Psychic }};text-transform:uppercase;">Psych.</span></div>
+            <div onClick="{{ setTC_Bug }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Bug }};border:1.5px solid {{ tcBorder_Bug }};cursor:pointer;"><span style="font-size:13px;">🐛</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Bug }};text-transform:uppercase;">Bug</span></div>
+            <div onClick="{{ setTC_Grass }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Grass }};border:1.5px solid {{ tcBorder_Grass }};cursor:pointer;"><span style="font-size:13px;">🌿</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Grass }};text-transform:uppercase;">Grass</span></div>
+            <div onClick="{{ setTC_Fighting }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Fighting }};border:1.5px solid {{ tcBorder_Fighting }};cursor:pointer;"><span style="font-size:13px;">🥊</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Fighting }};text-transform:uppercase;">Fight.</span></div>
+            <div onClick="{{ setTC_Fairy }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ tcBg_Fairy }};border:1.5px solid {{ tcBorder_Fairy }};cursor:pointer;"><span style="font-size:13px;">✨</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ tcText_Fairy }};text-transform:uppercase;">Fairy</span></div>
+          </div>
+        </div>
+
+        <!-- — Ordenar Clima — -->
+        <div onClick="{{ toggleOrdC }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-subtle);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:13px;">↕</span>
+            <span style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Ordenar</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="overflow:hidden;max-height:{{ ordCPillH }};opacity:{{ ordCPillOp }};transition:max-height .22s ease,opacity .18s ease;">
+              <div style="padding:2px 7px;border-radius:10px;background:#58a6ff;">
+                <span style="font:700 9px/1 'Exo 2',sans-serif;color:#fff;text-transform:uppercase;">{{ ordCLabel }}</span>
+              </div>
+            </div>
+            <span style="font-size:9px;color:var(--text-secondary);opacity:.6;">{{ ordCChevron }}</span>
+          </div>
+        </div>
+        <div style="overflow:hidden;max-height:{{ ordCH }};transition:max-height .28s cubic-bezier(0.16,1,0.3,1);">
+          <div style="padding:6px 12px 10px;display:flex;flex-direction:column;gap:1px;">
+            <div onClick="{{ setOrdC_SinOrden }}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid {{ ordCRadio_SinOrden }};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:6px;height:6px;border-radius:50%;background:#58a6ff;opacity:{{ ordCDot_SinOrden }};"></div></div>
+              <span style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-primary);">Sin orden</span>
+            </div>
+            <div onClick="{{ setOrdC_Nombre }}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid {{ ordCRadio_Nombre }};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:6px;height:6px;border-radius:50%;background:#58a6ff;opacity:{{ ordCDot_Nombre }};"></div></div>
+              <span style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-primary);">Nombre</span>
+            </div>
+            <div onClick="{{ setOrdC_Densidad }}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid {{ ordCRadio_Densidad }};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:6px;height:6px;border-radius:50%;background:#58a6ff;opacity:{{ ordCDot_Densidad }};"></div></div>
+              <span style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-primary);">Densidad</span>
+            </div>
+            <div onClick="{{ setOrdC_Rating }}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid {{ ordCRadio_Rating }};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:6px;height:6px;border-radius:50%;background:#58a6ff;opacity:{{ ordCDot_Rating }};"></div></div>
+              <span style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-primary);">Rating</span>
+            </div>
+            <div onClick="{{ setOrdC_HoraLocal }}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid {{ ordCRadio_HoraLocal }};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:6px;height:6px;border-radius:50%;background:#58a6ff;opacity:{{ ordCDot_HoraLocal }};"></div></div>
+              <span style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-primary);">Hora Local</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ NIDOS GROUP ══ -->
+    <div style="border-left:3px solid #22c55e;border-top:2px solid var(--border-default);">
+      <!-- Group header -->
+      <div onClick="{{ toggleNidos }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:9px 13px 8px 10px;background:var(--bg-secondary);border-bottom:1px solid rgba(34,197,94,.15);box-shadow:0 2px 8px rgba(0,0,0,.25);">
+        <div>
+          <div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.14em;">Filtros de Nidos</div>
+          <div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.45;">Tipo Pokémon · Orden</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <div style="min-width:15px;height:15px;padding:0 5px;border-radius:8px;background:rgba(34,197,94,.18);font:700 9px/15px 'Exo 2',sans-serif;color:#22c55e;text-align:center;opacity:{{ nidosBadgeOp }};transition:opacity .2s;">{{ nidosActiveCount }}</div>
+          <div style="width:20px;height:20px;border-radius:5px;border:1.5px solid rgba(34,197,94,.4);display:flex;align-items:center;justify-content:center;background:rgba(34,197,94,.06);">
+            <span style="font:700 15px/1 'Exo 2',sans-serif;color:#22c55e;margin-top:-1px;">{{ nidosIcon }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="overflow:hidden;max-height:{{ nidosH }};transition:max-height 0.3s cubic-bezier(0.16,1,0.3,1);">
+
+        <!-- — Tipo Pokemon — -->
+        <div onClick="{{ toggleTipoPok }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-subtle);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:13px;">⚡</span>
+            <span style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Tipo Pokémon</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="overflow:hidden;max-height:{{ pokPillH }};opacity:{{ pokPillOp }};transition:max-height .22s ease,opacity .18s ease;">
+              <div style="padding:2px 7px;border-radius:10px;background:#22c55e;">
+                <span style="font:700 9px/1 'Exo 2',sans-serif;color:#fff;text-transform:uppercase;">{{ pokLabel }}</span>
+              </div>
+            </div>
+            <span style="font-size:9px;color:var(--text-secondary);opacity:.6;">{{ pokChevron }}</span>
+          </div>
+        </div>
+        <div style="overflow:hidden;max-height:{{ pokH }};transition:max-height .28s cubic-bezier(0.16,1,0.3,1);">
+          <!-- D: activos usan #22c55e (color del grupo) -->
+          <div style="padding:8px 10px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
+            <div onClick="{{ togglePok_Todos }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Todos }};border:1.5px solid {{ pokBorder_Todos }};cursor:pointer;"><span style="font-size:13px;">🔘</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Todos }};text-transform:uppercase;">Todos</span></div>
+            <div onClick="{{ togglePok_Normal }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Normal }};border:1.5px solid {{ pokBorder_Normal }};cursor:pointer;"><span style="font-size:13px;">⬜</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Normal }};text-transform:uppercase;">Normal</span></div>
+            <div onClick="{{ togglePok_Fire }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Fire }};border:1.5px solid {{ pokBorder_Fire }};cursor:pointer;"><span style="font-size:13px;">🔥</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Fire }};text-transform:uppercase;">Fire</span></div>
+            <div onClick="{{ togglePok_Ground }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Ground }};border:1.5px solid {{ pokBorder_Ground }};cursor:pointer;"><span style="font-size:13px;">🏜️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Ground }};text-transform:uppercase;">Ground</span></div>
+            <div onClick="{{ togglePok_Flying }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Flying }};border:1.5px solid {{ pokBorder_Flying }};cursor:pointer;"><span style="font-size:13px;">🌪️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Flying }};text-transform:uppercase;">Flying</span></div>
+            <div onClick="{{ togglePok_Ghost }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Ghost }};border:1.5px solid {{ pokBorder_Ghost }};cursor:pointer;"><span style="font-size:13px;">👻</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Ghost }};text-transform:uppercase;">Ghost</span></div>
+            <div onClick="{{ togglePok_Dark }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Dark }};border:1.5px solid {{ pokBorder_Dark }};cursor:pointer;"><span style="font-size:13px;">🌑</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Dark }};text-transform:uppercase;">Dark</span></div>
+            <div onClick="{{ togglePok_Water }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Water }};border:1.5px solid {{ pokBorder_Water }};cursor:pointer;"><span style="font-size:13px;">💧</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Water }};text-transform:uppercase;">Water</span></div>
+            <div onClick="{{ togglePok_Electric }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Electric }};border:1.5px solid {{ pokBorder_Electric }};cursor:pointer;"><span style="font-size:13px;">⚡</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Electric }};text-transform:uppercase;">Elec.</span></div>
+            <div onClick="{{ togglePok_Ice }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Ice }};border:1.5px solid {{ pokBorder_Ice }};cursor:pointer;"><span style="font-size:13px;">❄️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Ice }};text-transform:uppercase;">Ice</span></div>
+            <div onClick="{{ togglePok_Steel }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Steel }};border:1.5px solid {{ pokBorder_Steel }};cursor:pointer;"><span style="font-size:13px;">⚙️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Steel }};text-transform:uppercase;">Steel</span></div>
+            <div onClick="{{ togglePok_Dragon }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Dragon }};border:1.5px solid {{ pokBorder_Dragon }};cursor:pointer;"><span style="font-size:13px;">🐉</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Dragon }};text-transform:uppercase;">Dragon</span></div>
+            <div onClick="{{ togglePok_Rock }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Rock }};border:1.5px solid {{ pokBorder_Rock }};cursor:pointer;"><span style="font-size:13px;">🪨</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Rock }};text-transform:uppercase;">Rock</span></div>
+            <div onClick="{{ togglePok_Poison }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Poison }};border:1.5px solid {{ pokBorder_Poison }};cursor:pointer;"><span style="font-size:13px;">☠️</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Poison }};text-transform:uppercase;">Poison</span></div>
+            <div onClick="{{ togglePok_Psychic }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Psychic }};border:1.5px solid {{ pokBorder_Psychic }};cursor:pointer;"><span style="font-size:13px;">🔮</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Psychic }};text-transform:uppercase;">Psych.</span></div>
+            <div onClick="{{ togglePok_Bug }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Bug }};border:1.5px solid {{ pokBorder_Bug }};cursor:pointer;"><span style="font-size:13px;">🐛</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Bug }};text-transform:uppercase;">Bug</span></div>
+            <div onClick="{{ togglePok_Grass }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Grass }};border:1.5px solid {{ pokBorder_Grass }};cursor:pointer;"><span style="font-size:13px;">🌿</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Grass }};text-transform:uppercase;">Grass</span></div>
+            <div onClick="{{ togglePok_Fighting }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Fighting }};border:1.5px solid {{ pokBorder_Fighting }};cursor:pointer;"><span style="font-size:13px;">🥊</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Fighting }};text-transform:uppercase;">Fight.</span></div>
+            <div onClick="{{ togglePok_Fairy }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:7px;background:{{ pokBg_Fairy }};border:1.5px solid {{ pokBorder_Fairy }};cursor:pointer;"><span style="font-size:13px;">✨</span><span style="font:600 7px/1 'Exo 2',sans-serif;color:{{ pokText_Fairy }};text-transform:uppercase;">Fairy</span></div>
+          </div>
+        </div>
+
+        <!-- — Ordenar Nidos — -->
+        <div onClick="{{ toggleOrdN }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-subtle);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:13px;">↕</span>
+            <span style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Ordenar</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="overflow:hidden;max-height:{{ ordNPillH }};opacity:{{ ordNPillOp }};transition:max-height .22s ease,opacity .18s ease;">
+              <div style="padding:2px 7px;border-radius:10px;background:#22c55e;">
+                <span style="font:700 9px/1 'Exo 2',sans-serif;color:#fff;text-transform:uppercase;">{{ ordNLabel }}</span>
+              </div>
+            </div>
+            <span style="font-size:9px;color:var(--text-secondary);opacity:.6;">{{ ordNChevron }}</span>
+          </div>
+        </div>
+        <div style="overflow:hidden;max-height:{{ ordNH }};transition:max-height .28s cubic-bezier(0.16,1,0.3,1);">
+          <div style="padding:6px 12px 10px;display:flex;flex-direction:column;gap:1px;">
+            <div onClick="{{ setOrdN_NombreAZ }}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid {{ ordNRadio_NombreAZ }};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:6px;height:6px;border-radius:50%;background:#22c55e;opacity:{{ ordNDot_NombreAZ }};"></div></div>
+              <span style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-primary);">Nombre A-Z</span>
+            </div>
+            <div onClick="{{ setOrdN_TipoPokemon }}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid {{ ordNRadio_TipoPokemon }};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:6px;height:6px;border-radius:50%;background:#22c55e;opacity:{{ ordNDot_TipoPokemon }};"></div></div>
+              <span style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-primary);">Tipo Pokémon</span>
+            </div>
+            <div onClick="{{ setOrdN_TasaSpawn }}" style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;">
+              <div style="width:14px;height:14px;border-radius:50%;border:2px solid {{ ordNRadio_TasaSpawn }};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:6px;height:6px;border-radius:50%;background:#22c55e;opacity:{{ ordNDot_TasaSpawn }};"></div></div>
+              <span style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-primary);">Tasa de spawn</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div style="padding:8px 10px 10px;border-top:1px solid var(--border-default);display:flex;flex-direction:column;gap:6px;">
+    <div style="display:flex;gap:6px;">
+      <button style="flex:2;height:36px;background:var(--ui-accent);border:none;border-radius:8px;font:700 12px/1 'Exo 2',sans-serif;color:white;cursor:pointer;">✓ Aplicar</button>
+      <button style="flex:1;height:36px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:8px;font:600 12px/1 'Exo 2',sans-serif;color:var(--text-secondary);cursor:pointer;">✕ Cancelar</button>
+    </div>
+    <div style="text-align:center;">
+      <span onClick="{{ clearAll }}" style="font:500 10px/1 'Exo 2',sans-serif;color:var(--text-secondary);opacity:.5;cursor:pointer;text-decoration:underline;">× Limpiar todos los filtros</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    dark: true,
+    // Group open/closed
+    climaOpen: true,
+    nidosOpen: true,
+    // Sub-section open/closed
+    condOpen: true,
+    regOpen: true,
+    tipoCOpen: true,
+    ordCOpen: true,
+    tipoPokOpen: true,
+    ordNOpen: true,
+    // Filter values
+    condicion: 'Todos',
+    region: 'Africa',
+    tipoClima: 'Normal',
+    ordClima: 'Nombre',
+    tiposPok: ['Fire', 'Ground', 'Flying', 'Ghost'],
+    ordNidos: 'NombreAZ',
+  };
+
+  componentDidMount() {
+    document.documentElement.classList.toggle('light', !this.state.dark);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const AC = '#58a6ff'; // clima accent
+    const AN = '#22c55e'; // nidos accent
+
+    // helpers
+    const pillH = open => open ? '0px' : '22px';
+    const pillOp = open => open ? '0' : '1';
+    const chevron = open => open ? '▲' : '▼';
+
+    // cell styles for clima (B+D: active = #58a6ff)
+    const cCell = (val, cur) => ({
+      bg: cur === val ? 'rgba(88,166,255,.15)' : 'var(--bg-tertiary)',
+      border: cur === val ? AC : 'var(--border-default)',
+      text: cur === val ? AC : 'var(--text-secondary)',
+    });
+    // single-select helper
+    const cc = (val) => cCell(val, s.condicion);
+    const tc = (val) => cCell(val, s.tipoClima);
+
+    // region chip styles
+    const rCell = (val) => ({
+      bg: s.region === val ? 'rgba(88,166,255,.15)' : 'var(--bg-tertiary)',
+      border: s.region === val ? AC : 'var(--border-default)',
+      text: s.region === val ? AC : 'var(--text-secondary)',
+    });
+
+    // radio helpers clima
+    const ordCr = (val) => s.ordClima === val ? AC : 'var(--border-default)';
+    const ordCd = (val) => s.ordClima === val ? '1' : '0';
+
+    // pokemon multi-select (B+D: active = #22c55e)
+    const pok = (val) => ({
+      bg: s.tiposPok.includes(val) ? 'rgba(34,197,94,.15)' : 'var(--bg-tertiary)',
+      border: s.tiposPok.includes(val) ? AN : 'var(--border-default)',
+      text: s.tiposPok.includes(val) ? AN : 'var(--text-secondary)',
+    });
+
+    // radio helpers nidos
+    const ordNr = (val) => s.ordNidos === val ? AN : 'var(--border-default)';
+    const ordNd = (val) => s.ordNidos === val ? '1' : '0';
+
+    // counts for group badges
+    const climaCount = [s.condicion !== 'Todos' ? 1 : 0, s.region !== 'Todas' ? 1 : 0, s.tipoClima !== 'Todos' ? 1 : 0, s.ordClima !== 'SinOrden' ? 1 : 0].reduce((a, b) => a + b, 0);
+    const nidosCount = s.tiposPok.length + (s.ordNidos !== 'NombreAZ' ? 1 : 0);
+
+    const pokLabel = s.tiposPok.length === 0 ? 'TODOS' : s.tiposPok.length + ' SELEC.';
+    const ordNLabels = { NombreAZ: 'NOMBRE A-Z', TipoPokemon: 'TIPO POKÉMON', TasaSpawn: 'TASA SPAWN' };
+
+    return {
+      themeLabel: s.dark ? '☀ Light' : '🌑 Dark',
+      toggleTheme: () => {
+        const next = !s.dark;
+        document.documentElement.classList.toggle('light', !next);
+        this.setState({ dark: next });
+      },
+
+      // Group toggles
+      climaIcon: s.climaOpen ? '−' : '+',
+      nidosIcon: s.nidosOpen ? '−' : '+',
+      climaH: s.climaOpen ? '1200px' : '0',
+      nidosH: s.nidosOpen ? '1200px' : '0',
+      climaBadgeOp: s.climaOpen ? '0' : '1',
+      nidosBadgeOp: s.nidosOpen ? '0' : '1',
+      climaActiveCount: climaCount || '',
+      nidosActiveCount: nidosCount || '',
+      toggleClima: () => this.setState(st => ({ climaOpen: !st.climaOpen })),
+      toggleNidos: () => this.setState(st => ({ nidosOpen: !st.nidosOpen })),
+
+      // — Condición —
+      condPillH: pillH(s.condOpen), condPillOp: pillOp(s.condOpen),
+      condChevron: chevron(s.condOpen), condH: s.condOpen ? '200px' : '0',
+      condLabel: s.condicion.toUpperCase(),
+      toggleCond: () => this.setState(st => ({ condOpen: !st.condOpen })),
+      setCond_Todos:   () => this.setState({ condicion: 'Todos' }),
+      setCond_Soleado: () => this.setState({ condicion: 'Soleado' }),
+      setCond_Parcial: () => this.setState({ condicion: 'Parcial' }),
+      setCond_Nublado: () => this.setState({ condicion: 'Nublado' }),
+      setCond_Niebla:  () => this.setState({ condicion: 'Niebla' }),
+      setCond_Lluvia:  () => this.setState({ condicion: 'Lluvia' }),
+      setCond_Nieve:   () => this.setState({ condicion: 'Nieve' }),
+      setCond_Ventoso: () => this.setState({ condicion: 'Ventoso' }),
+      ...['Todos','Soleado','Parcial','Nublado','Niebla','Lluvia','Nieve','Ventoso'].reduce((acc, v) => {
+        const c = cc(v); acc[`condBg_${v}`] = c.bg; acc[`condBorder_${v}`] = c.border; acc[`condText_${v}`] = c.text; return acc;
+      }, {}),
+
+      // — Región —
+      regPillH: pillH(s.regOpen), regPillOp: pillOp(s.regOpen),
+      regChevron: chevron(s.regOpen), regH: s.regOpen ? '140px' : '0',
+      regLabel: s.region.toUpperCase(),
+      toggleReg: () => this.setState(st => ({ regOpen: !st.regOpen })),
+      setReg_Todas:   () => this.setState({ region: 'Todas' }),
+      setReg_Asia:    () => this.setState({ region: 'Asia' }),
+      setReg_Europa:  () => this.setState({ region: 'Europa' }),
+      setReg_America: () => this.setState({ region: 'America' }),
+      setReg_Oceania: () => this.setState({ region: 'Oceania' }),
+      setReg_Africa:  () => this.setState({ region: 'Africa' }),
+      ...['Todas','Asia','Europa','America','Oceania','Africa'].reduce((acc, v) => {
+        const c = rCell(v); acc[`regBg_${v}`] = c.bg; acc[`regBorder_${v}`] = c.border; acc[`regText_${v}`] = c.text; return acc;
+      }, {}),
+
+      // — Tipo Clima —
+      tipoCPillH: pillH(s.tipoCOpen), tipoCPillOp: pillOp(s.tipoCOpen),
+      tipoCChevron: chevron(s.tipoCOpen), tipoCH: s.tipoCOpen ? '360px' : '0',
+      tipoCLabel: s.tipoClima.toUpperCase(),
+      toggleTipoC: () => this.setState(st => ({ tipoCOpen: !st.tipoCOpen })),
+      ...['Todos','Normal','Fire','Ground','Flying','Ghost','Dark','Water','Electric','Ice','Steel','Dragon','Rock','Poison','Psychic','Bug','Grass','Fighting','Fairy'].reduce((acc, v) => {
+        const c = tc(v);
+        acc[`tcBg_${v}`] = c.bg; acc[`tcBorder_${v}`] = c.border; acc[`tcText_${v}`] = c.text;
+        acc[`setTC_${v}`] = () => this.setState({ tipoClima: v });
+        return acc;
+      }, {}),
+
+      // — Ordenar Clima —
+      ordCPillH: pillH(s.ordCOpen), ordCPillOp: pillOp(s.ordCOpen),
+      ordCChevron: chevron(s.ordCOpen), ordCH: s.ordCOpen ? '200px' : '0',
+      ordCLabel: '← ' + (s.ordClima === 'SinOrden' ? 'SIN ORDEN' : s.ordClima === 'HoraLocal' ? 'HORA LOCAL' : s.ordClima.toUpperCase()),
+      toggleOrdC: () => this.setState(st => ({ ordCOpen: !st.ordCOpen })),
+      ordCRadio_SinOrden: ordCr('SinOrden'), ordCDot_SinOrden: ordCd('SinOrden'),
+      ordCRadio_Nombre:   ordCr('Nombre'),   ordCDot_Nombre:   ordCd('Nombre'),
+      ordCRadio_Densidad: ordCr('Densidad'), ordCDot_Densidad: ordCd('Densidad'),
+      ordCRadio_Rating:   ordCr('Rating'),   ordCDot_Rating:   ordCd('Rating'),
+      ordCRadio_HoraLocal:ordCr('HoraLocal'),ordCDot_HoraLocal:ordCd('HoraLocal'),
+      setOrdC_SinOrden:  () => this.setState({ ordClima: 'SinOrden' }),
+      setOrdC_Nombre:    () => this.setState({ ordClima: 'Nombre' }),
+      setOrdC_Densidad:  () => this.setState({ ordClima: 'Densidad' }),
+      setOrdC_Rating:    () => this.setState({ ordClima: 'Rating' }),
+      setOrdC_HoraLocal: () => this.setState({ ordClima: 'HoraLocal' }),
+
+      // — Tipo Pokemon (multi-select) —
+      pokPillH: pillH(s.tipoPokOpen), pokPillOp: pillOp(s.tipoPokOpen),
+      pokChevron: chevron(s.tipoPokOpen), pokH: s.tipoPokOpen ? '380px' : '0',
+      pokLabel,
+      toggleTipoPok: () => this.setState(st => ({ tipoPokOpen: !st.tipoPokOpen })),
+      togglePok_Todos: () => this.setState({ tiposPok: [] }),
+      ...['Normal','Fire','Ground','Flying','Ghost','Dark','Water','Electric','Ice','Steel','Dragon','Rock','Poison','Psychic','Bug','Grass','Fighting','Fairy'].reduce((acc, v) => {
+        const p = pok(v);
+        acc[`pokBg_${v}`] = p.bg; acc[`pokBorder_${v}`] = p.border; acc[`pokText_${v}`] = p.text;
+        acc[`togglePok_${v}`] = () => this.setState(st => {
+          const cur = st.tiposPok;
+          return { tiposPok: cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v] };
+        });
+        return acc;
+      }, {}),
+      pokBg_Todos: s.tiposPok.length === 0 ? 'rgba(34,197,94,.15)' : 'var(--bg-tertiary)',
+      pokBorder_Todos: s.tiposPok.length === 0 ? AN : 'var(--border-default)',
+      pokText_Todos: s.tiposPok.length === 0 ? AN : 'var(--text-secondary)',
+
+      // — Ordenar Nidos —
+      ordNPillH: pillH(s.ordNOpen), ordNPillOp: pillOp(s.ordNOpen),
+      ordNChevron: chevron(s.ordNOpen), ordNH: s.ordNOpen ? '160px' : '0',
+      ordNLabel: ordNLabels[s.ordNidos] || s.ordNidos,
+      toggleOrdN: () => this.setState(st => ({ ordNOpen: !st.ordNOpen })),
+      ordNRadio_NombreAZ:    ordNr('NombreAZ'),    ordNDot_NombreAZ:    ordNd('NombreAZ'),
+      ordNRadio_TipoPokemon: ordNr('TipoPokemon'), ordNDot_TipoPokemon: ordNd('TipoPokemon'),
+      ordNRadio_TasaSpawn:   ordNr('TasaSpawn'),   ordNDot_TasaSpawn:   ordNd('TasaSpawn'),
+      setOrdN_NombreAZ:    () => this.setState({ ordNidos: 'NombreAZ' }),
+      setOrdN_TipoPokemon: () => this.setState({ ordNidos: 'TipoPokemon' }),
+      setOrdN_TasaSpawn:   () => this.setState({ ordNidos: 'TasaSpawn' }),
+
+      // Clear all
+      clearAll: () => this.setState({
+        condicion: 'Todos', region: 'Todas', tipoClima: 'Todos',
+        ordClima: 'SinOrden', tiposPok: [], ordNidos: 'NombreAZ',
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

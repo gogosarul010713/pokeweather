@@ -1,8 +1,8 @@
-# 📖 Diccionario de Datos — Tipos y Schemas
+# Diccionario de Datos — Tipos y Schemas
 
-**Rama:** `feature/nests`  
-**Status:** Referencia  
-**Última actualización:** 2026-04-12  
+**Rama:** `sprint-9-nests`  
+**Status:** Referencia activa  
+**Ultima actualizacion:** 2026-07-16  
 
 ---
 
@@ -10,44 +10,106 @@
 
 ### `Nest` (Principal)
 
+Schema definitivo aprobado en sesion 12 (2026-07-22). Ver DEC-909 en `decisions.md`.
+
 ```typescript
 interface Nest {
   // ─── Identidad ───
-  id: string                    // "shinjuku-sandshrew" (slug único)
-  name: string                  // "Shinjuku Central Park"
+  id: string                    // "nyc-central-park-grass" (slug unico kebab-case)
+  name: string                  // "Central Park"
 
-  // ─── Ubicación ───
-  lat: number                   // 35.6839
-  lon: number                   // 139.7462
-  country: string               // "Japan"
-  region: Region                // 'asia' | 'europa' | 'america' | 'oceania' | 'africa'
-  city: string                  // "Tokyo"
+  // ─── Ubicacion ───
+  lat: number                   // 40.7829
+  lng: number                   // -73.9654  (ojo: "lng", NO "lon")
+  city: string                  // "New York"
+  country: string               // "USA"
+  countryCode: string           // "US" — ISO 3166-1 alpha-2; emoji derivado via countryFlag(code)
+  timezone: string              // "America/New_York" (IANA) — para display de hora local futura
 
-  // ─── Pokémon Nidificado ───
-  nestPokemon: NestPokemon[]   // Array de 1+ pokémon
+  // ─── Pokemon nidificado ───
+  pokemonId: number             // 1 (Bulbasaur) — ID PokeAPI para sprite CDN
+  pokemonName: string           // "Bulbasaur"
+  types: PokemonType[]          // ["grass", "poison"] — 1 o 2 tipos
+  rarity: PokemonRarity         // 'common' | 'uncommon' | 'rare' | 'very_rare'
+  hasShiny: boolean             // true si la forma shiny esta disponible en GO
+  spawnRate: number             // 14.2 (porcentaje estimado 0-100)
+  stardust?: number             // 1000 — SD base al capturar. Omitir si desconocido
+  evolutionLine: string         // "Bulbasaur -> Ivysaur -> Venusaur"
+  evolutionLineExtra?: string   // "(Mega Venusaur)" — formas alternativas, opcional
 
-  // ─── Metadatos ───
-  discoveredAt: string          // "2026-01-15" (ISO date)
-  lastVerifiedAt: string        // "2026-04-09" (ISO date)
-  radius: number                // 250 (metros de cobertura)
-  accuracy: Accuracy            // 'high' | 'medium' | 'low'
-  notes?: string                // Observaciones adicionales (opcional)
+  // ─── Confirmacion ───
+  confirmed: boolean            // true si el nido esta activo y verificado actualmente
+  confirmedAt?: string          // ISO UTC — ultima confirmacion. Ej: "2026-07-19T18:00:00Z"
 
-  // ─── Insignias ───
-  badges: BadgeType[]          // ['verified', 'hot']
+  // ─── Datos del lugar ───
+  stops?: number                // Aproximacion de PokeParadas dentro del nido
+  gyms?: number                 // Aproximacion de Gimnasios dentro del nido
 }
 ```
 
-### `NestPokemon` (Pokémon en Nido)
+**Campos eliminados respecto a version anterior:**
+- `nextMigration` — movido a constante global en config/store (DEC-909). No va por nido.
+- `flag` — eliminado. Reemplazado por `countryCode` + funcion `countryFlag()` en `src/config/countryFlags.ts`.
+- `nestPokemon[]` — simplificado a campos planos (`pokemonId`, `pokemonName`, `types`, etc.)
+- `discoveredAt`, `lastVerifiedAt`, `radius`, `accuracy`, `badges`, `migrationCycle`, `notes`, `region` — deuda tecnica futura, no requeridos para US-818.
+
+**Nota sobre `confirmed` en runtime:** cuando `Date.now() >= store.nextMigration`, el nido se considera migrado aunque `confirmed` sea `true` en el JSON. El estado de display se deriva en runtime — el JSON no se muta.
+
+---
+
+### Campos derivados (calcular en frontend, NO en JSON)
+
+```typescript
+// Badge "hot": spawn alto
+const isHot = (nest.spawnRate ?? 0) >= 65
+
+// Badge "new": confirmado hace menos de 48h
+const isNew = nest.confirmedAt
+  ? Date.now() - new Date(nest.confirmedAt).getTime() < 48 * 60 * 60 * 1000
+  : false
+
+// Spawn con tilde si no confirmado
+const spawnRateDisplay = nest.confirmed ? `${nest.spawnRate}%` : `~${nest.spawnRate}%`
+
+// Estrellas de rareza para display
+const rarityStars: Record<PokemonRarity, string> = {
+  common:    '★',
+  uncommon:  '★★',
+  rare:      '★★★',
+  very_rare: '★★★★',
+}
+
+const rarityLabel: Record<PokemonRarity, string> = {
+  common:    'Comun',
+  uncommon:  'Poco comun',
+  rare:      'Raro',
+  very_rare: 'Muy raro',
+}
+```
+
+---
+
+### Migracion global
+
+`nextMigration` NO esta en cada nido. Es una constante global porque todos los nidos del mundo migran en el mismo instante UTC (definido por Niantic).
+
+```typescript
+// src/config/nestMigration.ts
+export const NEXT_MIGRATION = '2026-08-06T10:00:00Z'  // actualizar cada ciclo
+```
+
+El store expone `store.now` (timestamp reactivo, ver DEC-907) para el countdown. El estado migrado se deriva comparando `Date.now()` vs `new Date(NEXT_MIGRATION).getTime()`.
+
+### `NestPokemon` (Pokemon en Nido)
 
 ```typescript
 interface NestPokemon {
-  pokemonId: number             // 27 (Sandshrew)
+  pokemonId: number             // 27 (Sandshrew) — mismo que Nest.pokemonId para el primario
   name: string                  // "Sandshrew"
-  type: PokemonType            // 'ground' | 'fire' | ... (18 tipos)
-  rarity: PokemonRarity        // 'common' | 'uncommon' | 'rare' | 'very_rare'
-  spawnRate: number            // 45 (porcentaje estimado 0-100)
-  minIV?: number               // 60 (IV mínimo observado, opcional)
+  type: PokemonType             // 'ground' | 'fire' | ... (18 tipos)
+  rarity: PokemonRarity         // 'common' | 'uncommon' | 'rare' | 'very_rare'
+  spawnRate: number             // 45 (porcentaje estimado 0-100)
+  minIV?: number                // 60 (IV minimo observado, opcional)
 }
 ```
 
@@ -118,63 +180,47 @@ interface NestFilters {
 
 ## JSON: Estructura nests.json
 
-### Archivo Completo
+### Ejemplo de nido completo (schema sesion 12 — DEC-909)
 
 ```json
 {
   "nests": [
     {
-      "id": "shinjuku-sandshrew",
-      "name": "Shinjuku Central Park",
-      "lat": 35.6839,
-      "lon": 139.7462,
-      "country": "Japan",
-      "region": "asia",
-      "city": "Tokyo",
-      "nestPokemon": [
-        {
-          "pokemonId": 27,
-          "name": "Sandshrew",
-          "type": "ground",
-          "rarity": "common",
-          "spawnRate": 45,
-          "minIV": 60
-        }
-      ],
-      "discoveredAt": "2026-01-15",
-      "lastVerifiedAt": "2026-04-09",
-      "radius": 250,
-      "accuracy": "high",
-      "badges": ["verified", "hot"]
-    },
-    {
-      "id": "harajuku-vulpix",
-      "name": "Harajuku Omotesando",
-      "lat": 35.6653,
-      "lon": 139.7297,
-      "country": "Japan",
-      "region": "asia",
-      "city": "Tokyo",
-      "nestPokemon": [
-        {
-          "pokemonId": 37,
-          "name": "Vulpix",
-          "type": "fire",
-          "rarity": "uncommon",
-          "spawnRate": 32,
-          "minIV": 55
-        }
-      ],
-      "discoveredAt": "2026-02-01",
-      "lastVerifiedAt": "2026-04-08",
-      "radius": 200,
-      "accuracy": "high",
-      "badges": ["verified"]
+      "id": "nyc-central-park-grass",
+      "name": "Central Park",
+      "lat": 40.7829,
+      "lng": -73.9654,
+      "city": "New York",
+      "country": "USA",
+      "countryCode": "US",
+      "timezone": "America/New_York",
+      "pokemonId": 1,
+      "pokemonName": "Bulbasaur",
+      "types": ["grass", "poison"],
+      "rarity": "rare",
+      "hasShiny": true,
+      "spawnRate": 14.2,
+      "stardust": 1000,
+      "evolutionLine": "Bulbasaur -> Ivysaur -> Venusaur",
+      "evolutionLineExtra": "(Mega Venusaur)",
+      "confirmed": true,
+      "confirmedAt": "2026-07-19T18:00:00Z",
+      "stops": 34,
+      "gyms": 12
     }
-    // ... 3 nidos más
   ]
 }
 ```
+
+**Campos opcionales:** `stardust`, `stops`, `gyms`, `evolutionLineExtra`, `confirmedAt` — omitir si desconocidos; los componentes los ocultan si `undefined`.
+
+### Valores de referencia para `stardust`
+
+| SD | Ejemplos de pokemon |
+|---|---|
+| 100 | Pidgey, Rattata, Weedle |
+| 300 | Sandshrew, Vulpix, Abra, la mayoria |
+| 2100 | Combee, Meowth, Ekans, Seel — especie seleccionada por la comunidad para farming SD |
 
 ---
 
@@ -417,6 +463,6 @@ store.getFavoriteNests()                  // → [nest]
 
 ---
 
-**Última actualización:** 2026-04-12  
-**Rama:** feature/nests  
+**Ultima actualizacion:** 2026-07-22  
+**Rama:** sprint-9-nests  
 

@@ -2,6 +2,9 @@ import { useMemo, useEffect, useRef } from 'react'
 import { useStore, type City } from '../../store/useStore'
 import { calculateBadges } from '../../services/weather/weatherService'
 import LocationCard from './LocationCard'
+import NestCard from '../Nests/NestCard'
+import MigrationBanner from '../Nests/MigrationBanner'
+import type { Nest } from '../../types/nest'
 
 interface LocationFeedProps {
   cities: City[]
@@ -17,12 +20,21 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
   const regionFilter = useStore((s) => s.regionFilter)
+  const activeLayers = useStore((s) => s.activeLayers)
+  const nests = useStore((s) => s.nests)
+  const selectedNest = useStore((s) => s.selectedNest)
+  const scrollToFeedTick   = useStore((s) => s.scrollToFeedTick)
+  const scrollToFeedTarget = useStore((s) => s.scrollToFeedTarget)
+  const setSelectedNest = useStore((s) => s.setSelectedNest)
+  const nestTypeFilter = useStore((s) => s.nestTypeFilter)
+  const nestSortBy = useStore((s) => s.nestSortBy)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const activeFilterCount =
     (regionFilter !== 'todas' ? 1 : 0) +
     conditionFilter.length +
-    typeFilter.length
+    typeFilter.length +
+    nestTypeFilter.length
 
   // Calcular badges por ciudad
   const badgesByCity = useMemo(() => {
@@ -55,23 +67,43 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
     return result
   }, [cities, sidebarMode, favorites, badgeFilter, badgesByCity])
 
+  // Filtrar nidos
+  const displayedNests = useMemo<Nest[]>(() => {
+    if (!activeLayers.nidos) return []
+    let result = [...nests]
+    if (nestTypeFilter.length > 0) {
+      result = result.filter((n) => n.types.some((t) => nestTypeFilter.includes(t)))
+    }
+    if (nestSortBy === 'type') {
+      result.sort((a, b) => (a.types[0] ?? '').localeCompare(b.types[0] ?? ''))
+    } else if (nestSortBy === 'spawnRate') {
+      result.sort((a, b) => b.spawnRate - a.spawnRate)
+    } else {
+      result.sort((a, b) => a.pokemonName.localeCompare(b.pokemonName))
+    }
+    return result
+  }, [nests, activeLayers.nidos, nestTypeFilter, nestSortBy])
+
   const cityCount = displayedCities.length
+  const totalCount = cityCount + displayedNests.length
 
   // Auto-scroll al LocationCard activo
   useEffect(() => {
     if (!selectedCity || !scrollContainerRef.current) return
-
     const activeCard = scrollContainerRef.current.querySelector(
       `[data-city-id="${selectedCity.id}"]`
     ) as HTMLElement | null
+    if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [selectedCity?.id, scrollToFeedTarget === 'city' ? scrollToFeedTick : 0])
 
-    if (activeCard) {
-      activeCard.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      })
-    }
-  }, [selectedCity?.id])
+  // Auto-scroll al NestCard activo
+  useEffect(() => {
+    if (!selectedNest || !scrollContainerRef.current) return
+    const activeCard = scrollContainerRef.current.querySelector(
+      `[data-nest-id="${selectedNest.id}"]`
+    ) as HTMLElement | null
+    if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [selectedNest?.id, scrollToFeedTarget === 'nest' ? scrollToFeedTick : 0])
 
   return (
     <>
@@ -104,6 +136,7 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
           color: var(--text-secondary);
           flex: 1;
         }
+
 
         /* Botones de acción — solo mobile */
         .lf-actions {
@@ -221,11 +254,21 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
         .lf-scroll {
           flex: 1;
           overflow-y: auto;
+          display: block;
+          padding: 0 8px 8px;
+        }
+
+        .lf-group {
+          display: block;
+        }
+
+        .lf-group-content {
           display: flex;
           flex-direction: column;
           gap: 8px;
-          padding: 8px;
+          padding: 8px 0;
         }
+
 
         .lf-empty {
           flex: 1;
@@ -260,64 +303,101 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
         .lf-scroll::-webkit-scrollbar-thumb:hover {
           background: var(--border-strong);
         }
+
+        .lf-section-sep {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background: var(--bg-primary);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          margin: 0 -8px;
+          width: calc(100% + 16px);
+          box-sizing: border-box;
+        }
       `}</style>
 
       <div className="lf-root">
-        {/* Header con contador + acciones mobile */}
-        <div className="lf-header">
-          <span className="lf-header-label">
-            {sidebarMode === 'favorites' ? '⭐ Favoritos' : '📋 Ciudades'} • {cityCount}
-          </span>
-
-          <div className="lf-actions">
-            {/* Filtros */}
-            <button
-              className={`lf-action-btn${activeFilterCount > 0 ? ' active' : ''}`}
-              onClick={() => setIsFilterPanelOpen(true)}
-              title="Filtros"
-              type="button"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="4" y1="6" x2="20" y2="6" />
-                <circle cx="8" cy="6" r="2" />
-                <line x1="4" y1="12" x2="20" y2="12" />
-                <circle cx="16" cy="12" r="2" />
-                <line x1="4" y1="18" x2="20" y2="18" />
-                <circle cx="12" cy="18" r="2" />
-              </svg>
-              {activeFilterCount > 0 && (
-                <span className="lf-action-badge">{activeFilterCount}</span>
-              )}
-            </button>
-          </div>
-        </div>
-
         {/* Lista o mensaje vacío */}
-        {cityCount > 0 ? (
+        {totalCount > 0 ? (
           <div className={`lf-scroll ${loadingStatus === 'loading' ? 'fade-refresh' : ''}`} ref={scrollContainerRef}>
-            {displayedCities.map((city) => (
-              <div key={city.id} data-city-id={city.id}>
-                <LocationCard
-                  city={city}
-                  isActive={selectedCity?.id === city.id}
-                />
+            {/* Grupo Climas */}
+            {activeLayers.clima && (
+              <div className="lf-group">
+                <div className="lf-header lf-section-sep">
+                  <span className="lf-header-label">
+                    {sidebarMode === 'favorites'
+                      ? `⭐ Favoritos · ${cityCount}`
+                      : `📋 Climas · ${cityCount}`
+                    }
+                  </span>
+                  <div className="lf-actions">
+                    <button
+                      className={`lf-action-btn${activeFilterCount > 0 ? ' active' : ''}`}
+                      onClick={() => setIsFilterPanelOpen(true)}
+                      title="Filtros"
+                      type="button"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="4" y1="6" x2="20" y2="6" />
+                        <circle cx="8" cy="6" r="2" />
+                        <line x1="4" y1="12" x2="20" y2="12" />
+                        <circle cx="16" cy="12" r="2" />
+                        <line x1="4" y1="18" x2="20" y2="18" />
+                        <circle cx="12" cy="18" r="2" />
+                      </svg>
+                      {activeFilterCount > 0 && (
+                        <span className="lf-action-badge">{activeFilterCount}</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="lf-group-content">
+                  {displayedCities.map((city) => (
+                    <div key={city.id} data-city-id={city.id} className="lf-card-wrap">
+                      <LocationCard city={city} isActive={selectedCity?.id === city.id} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* Grupo Nidos */}
+            {activeLayers.nidos && (
+              <div className="lf-group">
+                <div className="lf-header lf-section-sep">
+                  <span className="lf-header-label">{`🌿 Nidos · ${displayedNests.length}`}</span>
+                  <MigrationBanner />
+                </div>
+                <div className="lf-group-content">
+                  {displayedNests.map((nest) => (
+                    <div key={nest.id} data-nest-id={nest.id} className="lf-card-wrap">
+                      <NestCard nest={nest} isActive={selectedNest?.id === nest.id} onSelect={setSelectedNest} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="lf-empty">
             <div>
               <div className="lf-empty-icon">
-                {sidebarMode === 'favorites' ? '🤍' : '🔍'}
+                {!activeLayers.clima && !activeLayers.nidos
+                  ? '🗺️'
+                  : sidebarMode === 'favorites'
+                    ? '🤍'
+                    : '🔍'}
               </div>
               <div>
-                {sidebarMode === 'favorites'
-                  ? 'Sin favoritos aún'
-                  : 'Sin resultados'}
+                {!activeLayers.clima && !activeLayers.nidos
+                  ? 'Activa una capa para ver resultados'
+                  : sidebarMode === 'favorites'
+                    ? 'Sin favoritos aun'
+                    : 'Sin resultados'}
               </div>
-              {sidebarMode === 'favorites' && (
+              {sidebarMode === 'favorites' && (activeLayers.clima || activeLayers.nidos) && (
                 <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.7 }}>
-                  Marca ciudades como favoritas para verlas aquí
+                  Marca ciudades como favoritas para verlas aqui
                 </div>
               )}
             </div>

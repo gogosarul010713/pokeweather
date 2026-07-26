@@ -4,7 +4,7 @@
 **Componente:** `src/components/Sidebar/FilterPanel.tsx`  
 **Referencia de diseno:** `src/docs/mockups/filtersdesign/README.md` + `FilterLayouts.dc.html` (Turn 4a)  
 **Sprint:** 9  
-**Estado:** Parcialmente implementado (items 1-8 ✅, items 9-15 pendientes)
+**Estado:** Completado ✅ (sesion 7, 2026-07-13)
 
 ---
 
@@ -25,8 +25,9 @@ Background blanco, texto `var(--ui-accent)`, 18px height, border-radius 9px.
 ### 3. Boton limpiar rapido ✅
 40x40px, `var(--bg-primary)`, border-radius 10px, SVG ✕ inline.
 
-### 4. Header "CIUDADES" con conteo ✅
-Label Rajdhani 700 10px uppercase + badge con conteo dinamico en `var(--ui-accent)`. Recibe `citiesCount` como prop desde Sidebar.
+### 4. Header "CIUDADES" con conteo ~~✅~~ eliminado (sesion 15)
+~~Label Rajdhani 700 10px uppercase + badge con conteo dinamico en `var(--ui-accent)`. Recibe `citiesCount` como prop desde Sidebar.~~
+Eliminado en sesion 15 — duplicaba el conteo que ya muestra `LocationFeed`. El bloque `.fsp-cities-header` y sus estilos fueron removidos de `FilterPanel.tsx`.
 
 ### 5. Boton "← Volver" ✅
 Color `var(--text-secondary)`, font `500 12px 'Exo 2'`.
@@ -176,7 +177,7 @@ Al hacer click en "Limpiar todos los filtros" (footer) o "Limpiar" (header del p
 
 - `src/components/Sidebar/FilterPanel.tsx` — barra lateral, wrappers de grupo, animacion, toast, badge counts
 - `src/components/Sidebar/filters/GroupHeader.tsx` — sticky, chevron, badge, props isOpen/onToggle
-- `src/components/Sidebar/Sidebar.tsx` — ya actualizado (citiesCount prop)
+- `src/components/Sidebar/Sidebar.tsx` — prop `citiesCount` y `filteredCount` eliminados (sesion 15)
 - Sin cambios al store (todo local state en FilterPanel)
 
 ---
@@ -211,7 +212,123 @@ El `backdrop-filter: blur(8px)` sin un fondo solido deja ver el contenido del sc
 
 ---
 
+---
+
+## Items 16-18 — Rediseno GroupHeader (mockup filterheader, 2026-07-07)
+
+> Segunda pasada de diseno sobre el GroupHeader. Referencia: `src/docs/mockups/filtersdesign/filterheader/CHANGES_group_header_combo.md` + `Filter Group Headers.dc.html` (columna "Combinacion 2+3+4").
+
+### 16. Icono +/- en caja (reemplaza chevron ▾/▸)
+
+El chevron actual se elimina. Se reemplaza por un cuadro 22x22px con borde tintado que muestra `−` cuando expandido y `+` cuando colapsado.
+
+**Spec:**
+- `width: 22px; height: 22px; border-radius: 5px`
+- Clima: `border: 1.5px solid rgba(88,166,255,0.5)`, `background: rgba(88,166,255,0.06)`
+- Nidos: `border: 1.5px solid rgba(34,197,94,0.5)`, `background: rgba(34,197,94,0.06)`
+- Texto: `font: 700 16px/1 'Exo 2'`, `marginTop: -1px` (ajuste optico), color del grupo
+- `'−'` cuando abierto, `'+'` cuando cerrado
+
+**Archivo:** `src/components/Sidebar/filters/GroupHeader.tsx`
+
+---
+
+### 17. Header compacto al colapsar
+
+El padding del header transiciona al colapsar, y el subtitulo se desvanece.
+
+**Spec:**
+- Padding abierto: `10px 14px 9px 11px` — cerrado: `6px 14px 6px 11px`
+- `transition: padding 0.28s cubic-bezier(0.16,1,0.3,1)`
+- Subtitulo: `max-height: 20px → 0px` + `opacity: 1 → 0`, `transition: 0.25s ease`
+
+**Archivo:** `src/components/Sidebar/filters/GroupHeader.tsx`
+
+---
+
+### 18. Pill de resumen cuando esta colapsado
+
+Al colapsar el grupo, aparece un pill debajo del titulo con un resumen de los filtros activos. Logica dinamica.
+
+**Spec:**
+- Transicion inversa al subtitulo: `max-height: 0 → 28px` al colapsar
+- Clima: `background: rgba(88,166,255,0.12)`, `border: 1px solid rgba(88,166,255,0.25)`, `color: #58a6ff`
+- Nidos: `background: rgba(34,197,94,0.10)`, `border: 1px solid rgba(34,197,94,0.25)`, `color: #22c55e`
+- Texto dinamico via `buildClimaSummary(filterCondicion, filterRegion, filterOrden)` / `buildNidosSummary(filterTipoPoke, filterOrdenNidos)`
+- Sin filtros activos: `"Ver filtros de clima"` / `"Ver filtros de nidos"`
+- Logica de texto en `FilterPanel.tsx`, pasada como prop `summaryText` a GroupHeader
+
+**Archivos:** `src/components/Sidebar/FilterPanel.tsx` (logica), `src/components/Sidebar/filters/GroupHeader.tsx` (render)
+
+---
+
+## Criterios de aceptacion — items 16-18
+
+- [ ] Chevron `▾/▸` eliminado, reemplazado por caja `+/−` 22x22px con borde tintado
+- [ ] Padding del header transiciona entre estado abierto y cerrado
+- [ ] Subtitulo se desvanece (`max-height + opacity`) al colapsar
+- [ ] Pill de resumen aparece al colapsar, oculto al expandir (transicion inversa)
+- [ ] Pill muestra filtros activos en texto compacto; sin filtros: texto neutro
+- [ ] `overflow: hidden` solo en el div de contenido colapsable, nunca en el wrapper del grupo (requerimiento sticky)
+
+---
+
+## Sesion 7 — Diseno final aprobado (2026-07-13)
+
+**Referencia:** `Filter Panel Final.dc.html` — proyecto "Copy of Variantes filtros Pokeweather" en claude.ai/design
+
+Los items 16-18 (badge en GroupHeader, subtitle animado, pill de resumen al colapsar) fueron **revertidos** en esta sesion. El diseno final aprobado simplifica el GroupHeader a su minima expresion.
+
+### Decision: GroupHeader — solo titulo + boton +/−
+
+Los items 16 (icono +/−), 17 (header compacto) y 18 (pill de resumen) quedan sustituidos por una version mas simple:
+
+- **Mantiene:** boton +/− en caja 22x22px con borde tintado (item 16)
+- **Elimina:** badge numerico de filtros activos en el header (item 13)
+- **Elimina:** subtitle con categorias del grupo
+- **Elimina:** pill de resumen al colapsar (item 18) — reemplazado por chips fuera del panel (ver ENH-002)
+- **Elimina:** padding transitorio al colapsar (item 17) — header tiene padding fijo siempre
+
+**Spec final GroupHeader:**
+```tsx
+// Solo estas props:
+interface GroupHeaderProps {
+  color: string
+  title: string
+  isOpen?: boolean
+  onToggle?: () => void
+}
+```
+
+**Visual:**
+- Padding fijo: `10px 14px 9px 11px`
+- Titulo: `Rajdhani 700 11px uppercase letter-spacing 0.14em`
+- Boton +/−: caja 22x22px, border tintado 1.5px, bg tintado 0.06 opacity
+- Sin badge, sin subtitle, sin pill
+
+**Archivos modificados:**
+- `src/components/Sidebar/filters/GroupHeader.tsx` — simplificado
+- `src/components/Sidebar/FilterPanel.tsx` — removidas props badge/summary/subtitle
+
+---
+
+## Criterios de aceptacion — estado final
+
+- [x] Barra `border-left: 3px solid` corre por toda la altura de cada grupo
+- [x] GroupHeaders sticky con box-shadow al hacer scroll
+- [x] Click en GroupHeader colapsa/expande todos los accordions del grupo con animacion
+- [x] Boton +/− en caja 22x22px, tintado por color de grupo
+- [x] GroupHeader muestra SOLO titulo + boton +/−, sin badge ni subtitle
+- [x] Animacion max-height 0.28s en colapso de grupo, sin parpadeo
+- [x] Toast "Filtros eliminados" aparece 2200ms al limpiar, con fade in/out
+
+---
+
 ## Notas
 
 - Los items 9-15 no estan en el mockup HTML ni el README del handoff. Son mejoras definidas directamente por el usuario.
-- OBS-1 y OBS-2 son correcciones detectadas visualmente post-implementacion.
+- OBS-1 y OBS-2 son correcciones detectadas visualmente post-implementacion (2026-07-07).
+- Items 16-18 surgen de un segundo mockup entregado en sesion 2026-07-07 (`filterheader/`). Redisenan el GroupHeader.
+- Sesion 7 (2026-07-13): items 13, 17, 18 revertidos. GroupHeader simplificado al diseno final aprobado en `Filter Panel Final.dc.html`.
+
+- Sesion 15 (2026-07-22): boton Filtros movido a inline row junto al search input — ver ENH-003.

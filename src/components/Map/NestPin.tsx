@@ -1,4 +1,5 @@
-import { Marker, Popup } from 'react-leaflet'
+import { useMemo } from 'react'
+import { Marker } from 'react-leaflet'
 import L from 'leaflet'
 import { useStore } from '../../store/useStore'
 import type { Nest } from '../../types/nest'
@@ -8,84 +9,73 @@ interface NestPinProps {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  'normal': '#A8A878',
-  'fire': '#F08030',
-  'water': '#6890F0',
-  'grass': '#78C850',
-  'electric': '#F8D030',
-  'ice': '#98D8D8',
-  'fighting': '#C03028',
-  'poison': '#A040A0',
-  'ground': '#E0C068',
-  'flying': '#A890F0',
-  'psychic': '#F85888',
-  'bug': '#A8B820',
-  'rock': '#B8A038',
-  'ghost': '#705898',
-  'dragon': '#7038F8',
-  'dark': '#705848',
-  'steel': '#B8B8D0',
-  'fairy': '#EE99AC',
+  normal: '#A8A878', fire: '#F08030', water: '#6890F0', grass: '#78C850',
+  electric: '#F8D030', ice: '#98D8D8', fighting: '#C03028', poison: '#A040A0',
+  ground: '#E0C068', flying: '#A890F0', psychic: '#F85888', bug: '#A8B820',
+  rock: '#B8A038', ghost: '#705898', dragon: '#7038F8', dark: '#705848',
+  steel: '#B8B8D0', fairy: '#EE99AC',
+}
+
+function buildNestIcon(color: string, selected: boolean, badges: string[]): L.DivIcon {
+  const size = selected ? 36 : 28
+  const half = size / 2
+  const filter = selected
+    ? 'drop-shadow(0 0 8px rgba(255,255,255,0.95)) drop-shadow(0 0 16px rgba(255,255,255,0.6))'
+    : 'drop-shadow(0 2px 6px rgba(0,0,0,0.7))'
+
+  // Hexagon points scaled to size
+  const pts = [
+    `${half},2`, `${size - 2},${Math.round(size * 0.27)}`,
+    `${size - 2},${Math.round(size * 0.73)}`, `${half},${size - 2}`,
+    `2,${Math.round(size * 0.73)}`, `2,${Math.round(size * 0.27)}`,
+  ].join(' ')
+
+  const positions = ['top:-6px;left:-6px', 'top:-6px;right:-6px', 'bottom:-2px;right:-6px']
+  const badgesHtml = badges.slice(0, 3).map((b, i) =>
+    `<div style="position:absolute;${positions[i]};font-size:12px;line-height:1;z-index:10;">${b}</div>`
+  ).join('')
+
+  const html = `
+    <div style="position:relative;width:${size}px;height:${size}px;filter:${filter};">
+      <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="${pts}" fill="${color}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+        <circle cx="${half}" cy="${half}" r="${Math.round(half * 0.38)}" fill="rgba(255,255,255,0.85)"/>
+      </svg>
+      ${badgesHtml}
+    </div>`
+
+  return L.divIcon({
+    className: '',
+    html,
+    iconSize: [size, size],
+    iconAnchor: [half, half],
+  })
 }
 
 export default function NestPin({ nest }: NestPinProps) {
   const setSelectedNest = useStore((s) => s.setSelectedNest)
+  const selectedNest = useStore((s) => s.selectedNest)
 
-  // Get primary type color
-  const primaryType = nest.pokemonType[0]?.toLowerCase() || 'normal'
-  const color = TYPE_COLORS[primaryType] || '#999999'
+  const isSelected = selectedNest?.id === nest.id
+  const color = TYPE_COLORS[nest.types[0]?.toLowerCase() || 'normal'] || '#999999'
 
-  // SVG hexagon (32x32px)
-  const hexagonSvg = `
-    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="16,2 28,8 28,24 16,30 4,24 4,8"
-               fill="${color}"
-               stroke="white"
-               stroke-width="1.5"/>
-      <circle cx="16" cy="16" r="3" fill="white" opacity="0.8"/>
-    </svg>
-  `
+  const badges: string[] = []
+  if ((nest.spawnRate ?? 0) > 0) badges.push('🌿')
+  if ((nest.stops ?? 0) > 0) badges.push('🎯')
+  if ((nest.gyms ?? 0) > 0) badges.push('💪')
 
-  const icon = L.divIcon({
-    html: hexagonSvg,
-    className: 'nest-pin',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-  })
-
-  const handleClick = () => {
-    setSelectedNest(nest)
-  }
+  const icon = useMemo(
+    () => buildNestIcon(color, isSelected, badges),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [color, isSelected, nest.spawnRate, nest.stops, nest.gyms]
+  )
 
   return (
     <Marker
       position={[nest.lat, nest.lng]}
       icon={icon}
-      eventHandlers={{ click: handleClick }}
-    >
-      <Popup>
-        <div style={{ minWidth: '200px' }}>
-          <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: 600 }}>
-            {nest.name}
-          </h4>
-          <div style={{ fontSize: '12px', lineHeight: '1.5', color: '#666' }}>
-            <p style={{ margin: '4px 0' }}>
-              <strong>Pokémon:</strong> {nest.pokemon}
-            </p>
-            <p style={{ margin: '4px 0' }}>
-              <strong>Tipo:</strong> {nest.pokemonType.join(', ')}
-            </p>
-            <p style={{ margin: '4px 0' }}>
-              <strong>Ubicación:</strong> {nest.city}, {nest.country}
-            </p>
-            {nest.spawnRate !== undefined && (
-              <p style={{ margin: '4px 0' }}>
-                <strong>Tasa de spawn:</strong> {nest.spawnRate}%
-              </p>
-            )}
-          </div>
-        </div>
-      </Popup>
-    </Marker>
+      zIndexOffset={isSelected ? 1000 : 0}
+      eventHandlers={{ click: () => setSelectedNest(nest) }}
+    />
   )
 }

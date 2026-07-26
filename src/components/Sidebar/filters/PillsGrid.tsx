@@ -11,9 +11,17 @@ interface PillsGridProps {
   selected: string[]
   cols?: number
   onToggle: (value: string) => void
+  accentColor?: string
 }
 
-export default function PillsGrid({ items, selected, cols = 4, onToggle }: PillsGridProps) {
+export default function PillsGrid({ items, selected, cols = 4, onToggle, accentColor = '#58a6ff' }: PillsGridProps) {
+  const isGreen = accentColor === '#22c55e'
+  const activeStyle = {
+    background: isGreen ? 'rgba(34,197,94,0.15)' : 'rgba(88,166,255,0.15)',
+    borderColor: accentColor,
+    color: accentColor,
+  }
+
   return (
     <>
       <style>{`
@@ -27,7 +35,7 @@ export default function PillsGrid({ items, selected, cols = 4, onToggle }: Pills
           justify-content: center;
           flex-direction: column;
           gap: 2px;
-          padding: 6px 4px;
+          padding: 6px 2px;
           border-radius: 8px;
           border: 1px solid var(--border-default);
           background: transparent;
@@ -42,11 +50,6 @@ export default function PillsGrid({ items, selected, cols = 4, onToggle }: Pills
         }
         .fp-pill:hover {
           background: var(--bg-hover, rgba(255,255,255,0.04));
-        }
-        .fp-pill.active {
-          background: rgba(88,166,255,0.15);
-          border-color: #58a6ff;
-          color: #58a6ff;
         }
         .fp-pill-emoji {
           font-size: 14px;
@@ -65,32 +68,36 @@ export default function PillsGrid({ items, selected, cols = 4, onToggle }: Pills
           flex-shrink: 0;
         }
         .fp-pill-img-type {
-          width: 28px;
-          height: 28px;
+          width: 24px;
+          height: 24px;
           object-fit: contain;
           flex-shrink: 0;
         }
       `}</style>
       <div className="fp-pills-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-        {items.map((item) => (
-          <button
-            key={item.value}
-            className={`fp-pill ${item.value === '' ? selected.length === 0 ? 'active' : '' : selected.includes(item.value) ? 'active' : ''}`}
-            onClick={() => onToggle(item.value)}
-            type="button"
-          >
-            {item.color && <span className="fp-pill-dot" style={{ background: item.color }} />}
-            {item.emoji && <span className="fp-pill-emoji">{item.emoji}</span>}
-            {item.img && (
-              <img
-                src={item.img}
-                alt=""
-                className={item.img.includes('/types/') ? 'fp-pill-img-type' : 'fp-pill-img'}
-              />
-            )}
-            {item.label}
-          </button>
-        ))}
+        {items.map((item) => {
+          const isActive = item.value === '' ? selected.length === 0 : selected.includes(item.value)
+          return (
+            <button
+              key={item.value}
+              className="fp-pill"
+              style={isActive ? activeStyle : undefined}
+              onClick={() => onToggle(item.value)}
+              type="button"
+            >
+              {item.color && <span className="fp-pill-dot" style={{ background: item.color }} />}
+              {item.emoji && <span className="fp-pill-emoji">{item.emoji}</span>}
+              {item.img && (
+                <img
+                  src={item.img}
+                  alt=""
+                  className={item.img.includes('/types/') ? 'fp-pill-img-type' : 'fp-pill-img'}
+                />
+              )}
+              {item.label}
+            </button>
+          )
+        })}
       </div>
     </>
   )

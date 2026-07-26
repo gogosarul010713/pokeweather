@@ -28,11 +28,11 @@ const REGION_ITEMS = [
 ]
 
 const SORT_CLIMA_ITEMS = [
-  { value: '',        label: '🔤 Sin orden' },
-  { value: 'name',    label: '🔤 Nombre' },
-  { value: 'density', label: '📊 Densidad' },
-  { value: 'rating',  label: '⭐ Rating' },
-  { value: 'time',    label: '🕐 Hora Local' },
+  { value: '',        label: 'Sin orden' },
+  { value: 'name',    label: 'Nombre' },
+  { value: 'density', label: 'Densidad' },
+  { value: 'rating',  label: 'Rating' },
+  { value: 'time',    label: 'Hora Local' },
 ]
 
 const SORT_NIDOS_ITEMS = [
@@ -50,25 +50,24 @@ const TYPE_ITEMS_ALL = [
   })),
 ]
 
-function badgeForMulti(selected: string[], allItems: { value: string; label: string }[]): string {
-  if (selected.length === 0) return 'TODOS'
-  if (selected.length === 1) {
-    const found = allItems.find((i) => i.value === selected[0])
-    return (found?.label ?? selected[0]).toUpperCase()
-  }
-  return `${selected.length} SELEC.`
+const COND_EMOJI: Record<string, string> = {
+  sunny: '☀️', partly: '⛅', cloudy: '☁️',
+  fog: '🌫', rain: '🌧', snow: '❄️', windy: '💨',
 }
-
-function badgeForSort(value: string, items: { value: string; label: string }[]): string {
-  if (!value) return 'SIN ORDEN'
-  const found = items.find((i) => i.value === value)
-  return (found?.label ?? value).toUpperCase()
+const REGION_LABEL: Record<string, string> = {
+  asia: '🌏 Asia', europa: '🌍 Europa', america: '🌎 America',
+  oceania: '🌏 Oceania', africa: '🌍 Africa',
 }
-
-function badgeForRegion(region: string, items: { value: string; label: string }[]): string {
-  if (region === 'todas') return 'TODAS'
-  const found = items.find((i) => i.value === region)
-  return (found?.label ?? region).toUpperCase()
+const ORDEN_LABEL: Record<string, string> = {
+  name: 'A-Z', density: 'Densidad', rating: 'Rating', time: 'Hora',
+}
+const TYPE_EMOJI: Record<string, string> = {
+  fire: '🔥', water: '💧', grass: '🌿', electric: '⚡',
+  ice: '❄️', dragon: '🐉', psychic: '🔮', dark: '🌑',
+  ghost: '👻', ground: '🏜', normal: '⭐', fairy: '✨',
+}
+const ORDEN_NIDOS_LABEL: Record<string, string> = {
+  name: 'A-Z', type: 'Tipo', spawnRate: 'Spawn',
 }
 
 const FILTER_ICON = (
@@ -83,7 +82,17 @@ const CLEAR_ICON = (
   </svg>
 )
 
-export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
+/** Chips que aparecen debajo del boton Filtros cuando el panel esta cerrado */
+interface ActiveChip {
+  key: string
+  emoji?: string
+  label: string
+  count?: number
+  group: 'clima' | 'nidos'
+  onRemove: () => void
+}
+
+export default function FilterPanel() {
   const [groupClima, setGroupClima] = useState(true)
   const [groupNidos, setGroupNidos] = useState(true)
   const [showToast, setShowToast] = useState(false)
@@ -114,6 +123,12 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
   const nestSortBy = useStore((s) => s.nestSortBy)
   const searchQuery = useStore((s) => s.searchQuery)
   const setSearchQuery = useStore((s) => s.setSearchQuery)
+  const setConditionFilter = useStore((s) => s.setConditionFilter)
+  const setRegionFilter = useStore((s) => s.setRegionFilter)
+  const setTypeFilter = useStore((s) => s.setTypeFilter)
+  const setSortMode = useStore((s) => s.setSortMode)
+  const setNestTypeFilter = useStore((s) => s.setNestTypeFilter)
+  const setNestSortBy = useStore((s) => s.setNestSortBy)
 
   const appliedCount =
     (regionFilter !== 'todas' ? 1 : 0) +
@@ -124,6 +139,100 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
     (nestSortBy !== 'name' ? 1 : 0)
 
   const hasApplied = appliedCount > 0
+
+  // ── Chips para la fila horizontal (filtros aplicados, panel cerrado) ──
+  const activeChips: ActiveChip[] = []
+
+  if (conditionFilter.length === 1) {
+    const v = conditionFilter[0]
+    activeChips.push({
+      key: `cond-${v}`,
+      emoji: COND_EMOJI[v],
+      label: CONDITION_ITEMS.find((i) => i.value === v)?.label ?? v,
+      group: 'clima',
+      onRemove: () => setConditionFilter([]),
+    })
+  } else if (conditionFilter.length >= 2) {
+    activeChips.push({
+      key: 'cond-multi',
+      emoji: '⛅',
+      label: 'Condicion',
+      count: conditionFilter.length,
+      group: 'clima',
+      onRemove: () => setConditionFilter([]),
+    })
+  }
+
+  if (regionFilter !== 'todas') {
+    const label = REGION_ITEMS.find((i) => i.value === regionFilter)?.label ?? regionFilter
+    activeChips.push({
+      key: `region-${regionFilter}`,
+      emoji: '🌐',
+      label,
+      group: 'clima',
+      onRemove: () => setRegionFilter('todas' as any),
+    })
+  }
+
+  if (typeFilter.length === 1) {
+    const v = typeFilter[0]
+    activeChips.push({
+      key: `type-${v}`,
+      emoji: TYPE_EMOJI[v],
+      label: v.charAt(0).toUpperCase() + v.slice(1),
+      group: 'clima',
+      onRemove: () => setTypeFilter([]),
+    })
+  } else if (typeFilter.length >= 2) {
+    activeChips.push({
+      key: 'type-multi',
+      emoji: '⚡',
+      label: 'Tipos',
+      count: typeFilter.length,
+      group: 'clima',
+      onRemove: () => setTypeFilter([]),
+    })
+  }
+
+  if (sortMode !== '') {
+    activeChips.push({
+      key: `sort-${sortMode}`,
+      emoji: '↕',
+      label: ORDEN_LABEL[sortMode] ?? sortMode,
+      group: 'clima',
+      onRemove: () => setSortMode('' as any),
+    })
+  }
+
+  if (nestTypeFilter.length === 1) {
+    const v = nestTypeFilter[0]
+    activeChips.push({
+      key: `ntype-${v}`,
+      emoji: TYPE_EMOJI[v],
+      label: v.charAt(0).toUpperCase() + v.slice(1),
+      group: 'nidos',
+      onRemove: () => setNestTypeFilter([]),
+    })
+  } else if (nestTypeFilter.length >= 2) {
+    activeChips.push({
+      key: 'ntype-multi',
+      emoji: '⚡',
+      label: 'Tipos',
+      count: nestTypeFilter.length,
+      group: 'nidos',
+      onRemove: () => setNestTypeFilter([]),
+    })
+  }
+
+  if (nestSortBy !== 'name') {
+    activeChips.push({
+      key: `nsort-${nestSortBy}`,
+      emoji: '↕',
+      label: ORDEN_NIDOS_LABEL[nestSortBy] ?? nestSortBy,
+      group: 'nidos',
+      onRemove: () => setNestSortBy('name' as any),
+    })
+  }
 
   const toggleDraftCondition = (v: string) => {
     if (v === '') { setDraftCondition([]); return }
@@ -152,28 +261,36 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
     )
   }
 
-  const climaBadgeCount =
-    conditionFilter.length +
-    (regionFilter !== 'todas' ? 1 : 0) +
-    typeFilter.length +
-    (sortMode !== '' ? 1 : 0)
-
-  const nidosBadgeCount =
-    nestTypeFilter.length +
-    (nestSortBy !== 'name' ? 1 : 0)
-
   const handleClearWithToast = useCallback(() => {
+    clearAppliedFilters()
     clearDraftFilters()
     setShowToast(true)
     setTimeout(() => setShowToast(false), 2200)
-  }, [clearDraftFilters])
+  }, [clearAppliedFilters, clearDraftFilters])
 
   const noLayers = !activeLayers.clima && !activeLayers.nidos
+
+  // helpers para AccordionSection
+  const condLabel1 = draftFilters.condition.length === 1
+    ? `${COND_EMOJI[draftFilters.condition[0]] ?? ''} ${CONDITION_ITEMS.find((i) => i.value === draftFilters.condition[0])?.label ?? draftFilters.condition[0]}`
+    : undefined
+  const regionLabel1 = draftFilters.region !== 'todas'
+    ? `🌐 ${REGION_ITEMS.find((i) => i.value === draftFilters.region)?.label ?? draftFilters.region}`
+    : undefined
+  const sortClimaLabel1 = draftFilters.sortMode !== ''
+    ? SORT_CLIMA_ITEMS.find((i) => i.value === draftFilters.sortMode)?.label
+    : undefined
+  const nestTypeLabel1 = draftFilters.nestType.length === 1
+    ? `${TYPE_EMOJI[draftFilters.nestType[0]] ?? ''} ${draftFilters.nestType[0].charAt(0).toUpperCase() + draftFilters.nestType[0].slice(1)}`
+    : undefined
+  const nestSortLabel1 = draftFilters.nestSortBy !== 'name'
+    ? SORT_NIDOS_ITEMS.find((i) => i.value === draftFilters.nestSortBy)?.label
+    : undefined
 
   return (
     <>
       <style>{`
-        /* ── Search row ── */
+        /* ── Search + filter row ── */
         .fsp-search-row {
           display: flex;
           align-items: center;
@@ -181,12 +298,12 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           padding: 8px 10px;
           flex-shrink: 0;
         }
-
         .fsp-search-wrap {
           flex: 1;
           position: relative;
           display: flex;
           align-items: center;
+          min-width: 0;
         }
         .fsp-search-icon {
           position: absolute;
@@ -209,51 +326,43 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
         }
         .fsp-search::placeholder { color: var(--text-muted); }
         .fsp-search:focus { border-color: #58a6ff; }
-
-        /* ── Fila boton filtros ── */
-        .fsp-action-row {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 0 10px 8px;
-          flex-shrink: 0;
-        }
-
         .fsp-filter-btn {
-          flex: 1;
+          position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 6px;
-          height: 40px;
-          border-radius: 10px;
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
           border: none;
           background: var(--ui-accent);
           color: #fff;
-          font: 700 13px 'Exo 2', sans-serif;
           cursor: pointer;
-          box-shadow: 0 2px 12px rgba(88,166,255,0.25);
+          box-shadow: 0 2px 8px rgba(88,166,255,0.25);
           transition: opacity 0.15s;
+          flex-shrink: 0;
         }
         .fsp-filter-btn:hover { opacity: 0.88; }
-
         .fsp-filter-badge {
+          position: absolute;
+          top: -5px;
+          right: -5px;
           background: #fff;
           color: var(--ui-accent);
-          font-size: 10px;
+          font-size: 9px;
           font-weight: 700;
           border-radius: 9px;
-          padding: 0 6px;
-          line-height: 18px;
-          height: 18px;
-          min-width: 18px;
+          padding: 0 4px;
+          line-height: 15px;
+          height: 15px;
+          min-width: 15px;
           text-align: center;
+          pointer-events: none;
         }
-
         .fsp-clear-quick {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
           border: 1px solid var(--border-default);
           background: var(--bg-primary);
           color: var(--text-secondary);
@@ -266,28 +375,58 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
         }
         .fsp-clear-quick:hover { background: var(--bg-elevated); }
 
-        /* ── Header ciudades ── */
-        .fsp-cities-header {
+        /* ── Chips activos ── */
+        .fsp-chips-row {
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 4px 10px 6px;
+          gap: 5px;
+          overflow-x: auto;
+          padding: 7px 10px 0;
+          scrollbar-width: none;
           flex-shrink: 0;
         }
-        .fsp-cities-label {
-          font: 700 10px 'Rajdhani', sans-serif;
-          text-transform: uppercase;
-          color: var(--text-secondary);
-          letter-spacing: 0.08em;
+        .fsp-chips-row::-webkit-scrollbar { display: none; }
+        .fsp-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          height: 24px;
+          padding: 0 8px 0 7px;
+          border-radius: 12px;
+          flex-shrink: 0;
+          white-space: nowrap;
         }
-        .fsp-cities-count {
-          background: var(--ui-accent);
-          color: #fff;
-          font-size: 10px;
-          font-weight: 700;
-          border-radius: 8px;
-          padding: 0 6px;
-          line-height: 16px;
+        .fsp-chip-label {
+          font: 600 10px/1 'Exo 2', sans-serif;
+        }
+        .fsp-chip-count {
+          min-width: 14px;
+          height: 14px;
+          padding: 0 4px;
+          border-radius: 7px;
+          font: 700 9px/14px 'Exo 2', sans-serif;
+          text-align: center;
+        }
+        .fsp-chip-x {
+          font: 600 11px/1 'Exo 2', sans-serif;
+          cursor: pointer;
+          margin-left: 1px;
+          opacity: 0.5;
+          background: none;
+          border: none;
+          padding: 0;
+          color: inherit;
+          line-height: 1;
+        }
+        .fsp-chip-x:hover { opacity: 1; }
+        .fsp-chip-clima {
+          background: rgba(88,166,255,.12);
+          border: 1px solid rgba(88,166,255,.25);
+          color: #58a6ff;
+        }
+        .fsp-chip-nidos {
+          background: rgba(34,197,94,.10);
+          border: 1px solid rgba(34,197,94,.25);
+          color: #22c55e;
         }
 
         /* ── Panel overlay ── */
@@ -309,7 +448,6 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           transform: translateX(0);
           pointer-events: auto;
         }
-
         .fsp-panel-header {
           display: flex;
           align-items: center;
@@ -350,20 +488,17 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           border-radius: 6px;
         }
         .fsp-panel-clear-header:hover { opacity: 1; }
-
         .fsp-panel-scroll {
           flex: 1;
           overflow-y: auto;
           min-height: 0;
         }
-
         .fsp-empty {
           padding: 24px 16px;
           font-size: 12px;
           color: var(--text-muted);
           text-align: center;
         }
-
         .fsp-panel-footer {
           display: flex;
           flex-direction: column;
@@ -400,29 +535,10 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           transition: background 0.15s;
         }
         .fsp-btn-cancel:hover { background: var(--bg-elevated); }
-        .fsp-footer-clear-all {
-          text-align: center;
-          font: 400 11px 'Exo 2', sans-serif;
-          color: var(--text-secondary);
-          opacity: 0.6;
-          cursor: pointer;
-          background: none;
-          border: none;
-          padding: 2px 0;
-          text-decoration: underline;
-        }
-        .fsp-footer-clear-all:hover { opacity: 1; }
-
-        /* ── Grupos con barra lateral de color ── */
-        .fsp-group {
-          border-left: 3px solid transparent;
-        }
-        .fsp-group-clima {
-          border-left-color: #58a6ff;
-        }
-        .fsp-group-nidos {
-          border-left-color: #22c55e;
-        }
+/* ── Grupos con barra lateral de color ── */
+        .fsp-group { border-left: 3px solid transparent; }
+        .fsp-group-clima { border-left-color: #58a6ff; }
+        .fsp-group-nidos { border-left-color: #22c55e; border-top: 2px solid var(--border-default); }
 
         /* ── Animacion de colapso de grupo ── */
         .fsp-group-content {
@@ -430,9 +546,7 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           max-height: 2000px;
           transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .fsp-group-content.collapsed {
-          max-height: 0;
-        }
+        .fsp-group-content.collapsed { max-height: 0; }
 
         /* ── Toast ── */
         .fsp-toast {
@@ -440,7 +554,7 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           bottom: 72px;
           left: 50%;
           transform: translateX(-50%);
-          background: var(--bg-elevated, #1c2333);
+          background: var(--bg-elevated);
           border: 1px solid var(--border-default);
           border-radius: 8px;
           padding: 8px 14px;
@@ -452,20 +566,13 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
           animation: fsp-toast-in 0.15s ease forwards;
           pointer-events: none;
         }
-        .fsp-toast.hiding {
-          animation: fsp-toast-out 0.3s ease forwards;
-        }
         @keyframes fsp-toast-in {
           from { opacity: 0; transform: translateX(-50%) translateY(6px); }
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-        @keyframes fsp-toast-out {
-          from { opacity: 1; transform: translateX(-50%) translateY(0); }
-          to   { opacity: 0; transform: translateX(-50%) translateY(6px); }
-        }
       `}</style>
 
-      {/* Search */}
+      {/* Search + filtros inline */}
       <div className="fsp-search-row">
         <div className="fsp-search-wrap">
           <span className="fsp-search-icon">
@@ -481,13 +588,8 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-      </div>
-
-      {/* Boton filtros + limpiar rapido */}
-      <div className="fsp-action-row">
-        <button className="fsp-filter-btn" onClick={openFilterPanel} type="button">
+        <button className="fsp-filter-btn" onClick={openFilterPanel} title="Filtros" type="button">
           {FILTER_ICON}
-          Filtros
           {hasApplied && <span className="fsp-filter-badge">{appliedCount}</span>}
         </button>
         {hasApplied && (
@@ -497,11 +599,27 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
         )}
       </div>
 
-      {/* Header ciudades */}
-      {citiesCount !== undefined && (
-        <div className="fsp-cities-header">
-          <span className="fsp-cities-label">Ciudades</span>
-          <span className="fsp-cities-count">{citiesCount}</span>
+      {/* Chips activos — solo si hay filtros y el panel esta cerrado */}
+      {!filterPanelOpen && activeChips.length > 0 && (
+        <div className="fsp-chips-row">
+          {activeChips.map((chip) => (
+            <div key={chip.key} className={`fsp-chip fsp-chip-${chip.group}`}>
+              {chip.emoji && <span style={{ fontSize: 11 }}>{chip.emoji}</span>}
+              <span className="fsp-chip-label">{chip.label}</span>
+              {chip.count !== undefined && (
+                <div
+                  className="fsp-chip-count"
+                  style={{
+                    background: chip.group === 'clima' ? 'rgba(88,166,255,.25)' : 'rgba(34,197,94,.25)',
+                    color: chip.group === 'clima' ? '#58a6ff' : '#22c55e',
+                  }}
+                >
+                  {chip.count}
+                </div>
+              )}
+              <button className="fsp-chip-x" onClick={chip.onRemove} type="button">×</button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -527,10 +645,8 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
               <GroupHeader
                 color="#58a6ff"
                 title="Filtros de Clima"
-                subtitle="Condicion · Region · Tipo · Orden"
                 isOpen={groupClima}
                 onToggle={() => setGroupClima((v) => !v)}
-                badgeCount={climaBadgeCount}
               />
               <div className={`fsp-group-content${groupClima ? '' : ' collapsed'}`}>
                 <AccordionSection
@@ -538,13 +654,16 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
                   icon="⛅"
                   isOpen={accordionState.condicion}
                   onToggle={() => toggleAccordion('condicion')}
-                  badgeText={badgeForMulti(draftFilters.condition, CONDITION_ITEMS)}
+                  accentColor="#58a6ff"
+                  activeValues={draftFilters.condition}
+                  activeLabel={condLabel1}
                 >
                   <PillsGrid
                     items={CONDITION_ITEMS}
                     selected={draftFilters.condition}
                     cols={4}
                     onToggle={toggleDraftCondition}
+                    accentColor="#58a6ff"
                   />
                 </AccordionSection>
 
@@ -553,7 +672,9 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
                   icon="🌐"
                   isOpen={accordionState.region}
                   onToggle={() => toggleAccordion('region')}
-                  badgeText={badgeForRegion(draftFilters.region, REGION_ITEMS)}
+                  accentColor="#58a6ff"
+                  activeValues={draftFilters.region !== 'todas' ? [draftFilters.region] : []}
+                  activeLabel={regionLabel1}
                 >
                   <PillsWrap
                     items={REGION_ITEMS}
@@ -563,26 +684,13 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
                 </AccordionSection>
 
                 <AccordionSection
-                  label="Tipo Clima"
-                  icon="🌡️"
-                  isOpen={accordionState.tipoClima}
-                  onToggle={() => toggleAccordion('tipoClima')}
-                  badgeText={badgeForMulti(draftFilters.type, TYPE_ITEMS_ALL)}
-                >
-                  <PillsGrid
-                    items={TYPE_ITEMS_ALL}
-                    selected={draftFilters.type}
-                    cols={3}
-                    onToggle={toggleDraftType}
-                  />
-                </AccordionSection>
-
-                <AccordionSection
                   label="Ordenar"
-                  icon="↕️"
+                  icon="↕"
                   isOpen={accordionState.orden}
                   onToggle={() => toggleAccordion('orden')}
-                  badgeText={badgeForSort(draftFilters.sortMode, SORT_CLIMA_ITEMS)}
+                  accentColor="#58a6ff"
+                  activeValues={draftFilters.sortMode !== '' ? [draftFilters.sortMode] : []}
+                  activeLabel={sortClimaLabel1}
                 >
                   <RadioList
                     items={SORT_CLIMA_ITEMS}
@@ -599,10 +707,8 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
               <GroupHeader
                 color="#22c55e"
                 title="Filtros de Nidos"
-                subtitle="Tipo Pokemon · Orden"
                 isOpen={groupNidos}
                 onToggle={() => setGroupNidos((v) => !v)}
-                badgeCount={nidosBadgeCount}
               />
               <div className={`fsp-group-content${groupNidos ? '' : ' collapsed'}`}>
                 <AccordionSection
@@ -610,22 +716,27 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
                   icon="⚡"
                   isOpen={accordionState.tipoPoke}
                   onToggle={() => toggleAccordion('tipoPoke')}
-                  badgeText={badgeForMulti(draftFilters.nestType, TYPE_ITEMS_ALL)}
+                  accentColor="#22c55e"
+                  activeValues={draftFilters.nestType}
+                  activeLabel={nestTypeLabel1}
                 >
                   <PillsGrid
                     items={TYPE_ITEMS_ALL}
                     selected={draftFilters.nestType}
-                    cols={3}
+                    cols={4}
                     onToggle={toggleDraftNestType}
+                    accentColor="#22c55e"
                   />
                 </AccordionSection>
 
                 <AccordionSection
                   label="Ordenar"
-                  icon="↕️"
+                  icon="↕"
                   isOpen={accordionState.ordenNidos}
                   onToggle={() => toggleAccordion('ordenNidos')}
-                  badgeText={badgeForSort(draftFilters.nestSortBy, SORT_NIDOS_ITEMS)}
+                  accentColor="#22c55e"
+                  activeValues={draftFilters.nestSortBy !== 'name' ? [draftFilters.nestSortBy] : []}
+                  activeLabel={nestSortLabel1}
                 >
                   <RadioList
                     items={SORT_NIDOS_ITEMS}
@@ -647,9 +758,6 @@ export default function FilterPanel({ citiesCount }: { citiesCount?: number }) {
               &#10005; Cancelar
             </button>
           </div>
-          <button className="fsp-footer-clear-all" onClick={handleClearWithToast} type="button">
-            &#10005; Limpiar todos los filtros
-          </button>
         </div>
 
         {showToast && (

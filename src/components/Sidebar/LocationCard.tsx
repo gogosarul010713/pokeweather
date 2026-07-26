@@ -23,12 +23,14 @@ function getLocalDate(timezone: number): string {
 
 export default function LocationCard({ city, isActive }: LocationCardProps) {
   const setSelectedCity = useStore((s) => s.setSelectedCity)
+  const setNestPopupOpen = useStore((s) => s.setNestPopupOpen)
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const favorites = useStore((s) => s.favorites)
 
   const isFavorite = favorites.includes(city.id)
 
   const handleCardClick = () => {
+    setNestPopupOpen(false)
     setSelectedCity(city)
   }
 

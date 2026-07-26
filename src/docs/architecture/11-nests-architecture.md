@@ -1,8 +1,8 @@
-# 🏗️ Arquitectura — Nidos de Pokémon
+# Arquitectura — Nidos de Pokemon
 
-**Rama:** `feature/nests`  
-**Status:** Phase 1 (MVP)  
-**Última actualización:** 2026-04-10  
+**Rama:** `sprint-9-nests`  
+**Status:** Phase 2 completada (Sprint 9 — sesion 13-15)  
+**Ultima actualizacion:** 2026-07-22  
 
 ---
 
@@ -58,15 +58,15 @@ src/
 │   │
 │   ├── Sidebar/                    (Clima)
 │   │
-│   ├── Nests-Sidebar/              ✨ CREAR
-│   │   ├── NestFeed.tsx            (listado scroll)
-│   │   ├── NestCard.tsx            (card individual)
-│   │   └── NestDetail.tsx          (panel modal)
+│   ├── Nests/                      ✅ IMPLEMENTADO
+│   │   ├── NestCard.tsx            (card feed sidebar — sprite, badges, tipos, spawn%)
+│   │   ├── NestDetail.tsx          (panel 310px — countdown, stats, evo line)
+│   │   ├── NestPopup.tsx           (popup mapa 290px)
+│   │   └── MigrationBanner.tsx     (chip inline en header sticky Nidos)
 │   │
-│   ├── Header/
-│   │   ├── Header.tsx              (componente principal)
-│   │   ├── FilterPanel.tsx         (clima, extender)
-│   │   └── ModeToggle.tsx          ✨ CREAR (Clima ⇄ Nidos)
+│   ├── Sidebar/
+│   │   ├── LocationFeed.tsx        (feed unificado — grupos sticky Climas + Nidos)
+│   │   └── FilterPanel.tsx         (panel deslizante — grupos clima/nidos)
 │
 ├── store/
 │   └── useStore.ts                 (extender con nests slice)
@@ -80,28 +80,33 @@ src/
 
 ```
 ┌─────────────────┐
-│  App.tsx (init) │
+│  App.tsx (init) │  setInterval(tickNow, 60_000) — countdown global
 └────────┬────────┘
+         │  activeLayers: { clima, nidos } — capas independientes
          │
-    currentMode?
-    ├─ 'clima'  → MapView (existe)
-    └─ 'nests'  → NestMapView (nueva)
-                  │
-                  ├─ useNests.run()
-                  │  ├─ loadNests() → src/data/nests.json
-                  │  ├─ setNestCache() → IndexedDB.nests_data
-                  │  └─ setNests(nests) → Zustand.nests[]
-                  │
-                  ├─ Sidebar: NestFeed.tsx
-                  │  ├─ Map nests → NestCard[]
-                  │  └─ onClick → setSelectedNest()
-                  │
-                  ├─ Map: NestPin[] + NestTooltip
-                  │  ├─ render pinpoint por cada nest
-                  │  └─ onClick → setSelectedNest() + show tooltip
-                  │
-                  └─ Detail: NestDetail.tsx
-                     └─ Leer selectedNest del store
+    ┌────┴──────────────────────────────┐
+    │  MapView                          │
+    │  ├─ NestPin[] (hex por tipo)      │
+    │  ├─ NestPopup (al seleccionar)    │
+    │  └─ FlyToNest (zoom 14)           │
+    └────┬──────────────────────────────┘
+         │
+    ┌────┴──────────────────────────────┐
+    │  Sidebar → FilterPanel            │
+    │         → LocationFeed            │
+    │              ├─ [sticky] Climas · N
+    │              │   └─ LocationCard[]
+    │              └─ [sticky] Nidos · N
+    │                  ├─ MigrationBanner (inline chip)
+    │                  └─ NestCard[]
+    └───────────────────────────────────┘
+         │
+    Zustand store:
+    ├─ nests: Nest[]          (src/data/nests.json — estatico)
+    ├─ selectedNest: Nest|null
+    ├─ now: number            (tick cada 60s para countdown)
+    ├─ nestTypeFilter: string[]
+    └─ nestSortBy: 'name'|'type'|'spawnRate'
 ```
 
 ---
@@ -232,8 +237,9 @@ type NestsStore = {
 | Archivo | Responsabilidad |
 |---------|-----------------|
 | `NestFeed.tsx` | Listado scroll: map nests → NestCard[] |
-| `NestCard.tsx` | Card individual: nombre + país + tipo |
+| `NestCard.tsx` | Card individual: nombre + pais + tipo |
 | `NestDetail.tsx` | Panel modal: info completa del nido |
+| `MigrationBanner.tsx` | Banner de countdown a proxima migracion — renderizado dentro de `LocationFeed` como primer item de la seccion de nidos cuando `activeLayers.nidos` es true. Lee `store.now` vs `NEXT_MIGRATION`. |
 
 ### Header
 
@@ -314,6 +320,55 @@ type NestsStore = {
 
 ---
 
-**Última actualización:** 2026-04-10  
-**Rama:** feature/nests
+---
+
+## Logica de Migracion (Sprint 9)
+
+### Premisa
+
+Niantic aplica las migraciones de nidos en un **instante UTC fijo** — todos los nidos del mundo cambian al mismo tiempo. No hay logica por zona horaria del nido ni del usuario.
+
+El campo `nextMigration` en el JSON es una fecha ISO UTC. El countdown es logica de display pura derivada de `Date.now() - new Date(nextMigration).getTime()`.
+
+### Estados de un nido en runtime
+
+| Condicion | Display |
+|---|---|
+| `confirmed: true` AND `now < nextMigration` | Badge "Confirmado" + "Migra en Xd Yh" |
+| `confirmed: false` AND `now < nextMigration` | Sin badge + "Migra en Xd Yh" |
+| `now >= nextMigration` (cualquier `confirmed`) | "Migro hace Xh · Sin confirmar" |
+
+El JSON nunca se muta en runtime — `confirmed` permanece como estaba en el JSON hasta la proxima edicion manual del dataset.
+
+### Interval global en Zustand
+
+Un unico `setTimeout` por ciclo de vida de la app, que apunta al `nextMigration` mas proximo entre todos los nidos:
+
+```ts
+// init en useStore o en App.tsx al cargar nests
+const nearest = Math.min(...nests.map(n => new Date(n.nextMigration).getTime()))
+const msUntil = nearest - Date.now()
+
+setTimeout(() => {
+  store.tickNow()                      // dispara re-render de todos los countdowns
+  setInterval(store.tickNow, 60_000)   // luego cada minuto para actualizar "Migra en X"
+}, Math.max(0, msUntil))
+```
+
+`tickNow` actualiza `store.now = Date.now()`. Todos los componentes que muestran countdown leen `store.now` — un solo interval, todos reaccionan.
+
+### Funcion utilitaria
+
+```ts
+// src/utils/nestMigration.ts
+getMigrationStatus(nextMigration: string, now: number): string
+// "Migra en 2d 14h"
+// "Migra en 6h 23m"
+// "Migro hace 3h · Sin confirmar"
+```
+
+---
+
+**Ultima actualizacion:** 2026-07-16  
+**Rama:** sprint-9-nests
 

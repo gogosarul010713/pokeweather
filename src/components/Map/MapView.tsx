@@ -11,6 +11,7 @@ import MapPin from './MapPin'
 import NestPin from './NestPin'
 import CityTooltip from './CityTooltip'
 import FlyToCity from './FlyToCity'
+import FlyToNest from './FlyToNest'
 import MapLegend from './MapLegend'
 import { Z } from '../../config/zIndex'
 
@@ -167,6 +168,7 @@ export default function MapView({ cities }: MapViewProps) {
         >
           <TileSwitcher />
           <FlyToCity />
+          <FlyToNest />
 
           {/* MapPin (Clima) */}
           {activeLayers.clima &&

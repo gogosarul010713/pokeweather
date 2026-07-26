@@ -326,3 +326,222 @@ Decisiones de implementacion incluidas:
 - **useState local en el componente del panel para el borrador** — descartado; duplica los tipos de filtro fuera de Zustand y complica compartir el borrador con los subcomponentes reutilizados por el modal mobile.
 - **Aplicar en vivo (sin borrador, Cancelar = Aplicar)** — descartado por el usuario; el mockup distingue explicitamente Aplicar de Cancelar y se quiere fidelidad real a ese comportamiento.
 - **Omitir "Tipo Clima" por falta de dato** — descartado al confirmarse que no es un campo nuevo, sino el filtro de tipo Pokemon ya existente mal etiquetado por el mockup.
+
+---
+
+## DEC-907 — Campo `nextMigration` UTC + interval global Zustand para countdown de nidos
+
+**Fecha:** Sprint 9 — Sesion 10 (2026-07-16)
+**Estado:** Aprobada
+**Afecta:** `src/types/nest.ts`, `src/data/nests.json`, `src/store/useStore.ts`, `src/utils/nestMigration.ts`
+
+### Contexto
+
+Los nidos de Pokemon GO migran cada ~2 semanas en un instante UTC fijo (definido por Niantic). El usuario necesita ver en el feed cuanto falta para la proxima migracion de cada nido, y que el estado cambie automaticamente cuando el nido migra — sin importar la zona horaria del usuario ni la del nido.
+
+### Decision
+
+1. **Campo `nextMigration: string` (ISO UTC)** en cada nido del JSON. Todos los nidos de un mismo ciclo comparten la misma fecha. Cuando Niantic anuncia el nuevo ciclo, se actualiza el JSON.
+
+2. **El countdown es logica de display pura** — se calcula como `new Date(nextMigration).getTime() - Date.now()`. No se necesita la zona horaria del nido para el calculo; la zona horaria solo seria relevante si se quisiera mostrar "la migracion es a las 10am hora de Auckland", que no es un requerimiento actual.
+
+3. **Un unico interval global en Zustand** (`store.now`) en lugar de un `setInterval` por componente:
+   - Un `setTimeout` inicial apunta exactamente al `nextMigration` mas proximo entre todos los nidos
+   - Cuando se dispara, actualiza `store.now` y arranca un `setInterval` de 60s para mantener el countdown visible
+   - Todos los componentes con countdown leen `store.now` del store — un solo timer, sin drift por multiples instancias
+
+4. **Estados de display derivados en runtime** (el JSON no se muta):
+   - `now < nextMigration` → `"Migra en Xd Yh"`
+   - `now >= nextMigration` → `"Migro hace Xh · Sin confirmar"`
+
+### Alternativas descartadas
+
+- **`timezone: string` (IANA) por nido** — descartado. La zona horaria del nido no afecta cuando ocurre la migracion (es UTC fijo); solo seria util para mostrar la hora local del nido, que no es requerimiento actual. Agrega dependencia de libreria DST sin beneficio real hoy.
+- **`setInterval` por componente (un NestCard, un timer)** — descartado. Con N tarjetas en el feed, son N timers en paralelo. Drift acumulado, memory leaks si el componente se desmonta sin cleanup, re-renders innecesarios.
+- **Recalcular en cada render sin interval** — valido para countdown en dias, insuficiente para "Migra en 6h 23m" que debe actualizarse visualmente cada minuto.
+
+---
+
+## DEC-908 — Usar `DesignSync` tool (skill /design-sync), NO `mcp__claude-design__*`
+
+**Fecha:** Sprint 9 — Sesion 11 (2026-07-19)
+**Estado:** Aprobada
+**Afecta:** Workflow de design sync en este proyecto
+
+### Contexto
+
+Al intentar subir archivos al proyecto Pokeweather Design System (`c550872f-6704-4a62-8c2f-43e002b050b8`) via el MCP server `mcp__claude-design__write_files`, el servidor devuelve `{"error":"needs_project_grant"}` de forma persistente, aunque el toggle "Claude product access: On" este activo en claude.ai/design/settings. El error se reproduce en todos los proyectos y en todas las sesiones de Claude Code CLI.
+
+### Decision
+
+**El tool correcto para operaciones de design sync es `DesignSync`**, disponible a traves del skill `/design-sync` (via `ToolSearch("select:DesignSync")`). Este tool usa un canal de autorizacion diferente al MCP server `mcp__claude-design__*` y funciona correctamente desde Claude Code CLI.
+
+El flujo de re-sync es:
+1. Cargar `DesignSync` via `ToolSearch`
+2. Correr `resync.mjs` para build + diff + validate
+3. `DesignSync(finalize_plan)` → `write_files` (sentinel → contenido → sentinel re-arm → `_ds_sync.json`)
+
+### Alternativas descartadas
+
+- **`mcp__claude-design__write_files`** — descartado. Falla con `needs_project_grant` desde Claude Code CLI independientemente del estado del toggle. No hay workaround conocido desde CLI.
+- **Upload manual** — descartado. El objetivo es sincronizacion automatica reproducible.
+
+---
+
+## DEC-909 — Schema definitivo `Nest` para US-818 (sesion 12)
+
+**Fecha:** Sprint 9 — Sesion 12 (2026-07-22)
+**Estado:** Aprobada
+**Afecta:** `src/types/nest.ts`, `src/data/nests.json`, `src/docs/architecture/12-nests-data-dictionary.md`
+
+### Contexto
+
+El schema de sesion 10 (DEC-907) definio campos para el countdown (`nextMigration`) y datos de caza (`pokemonId`, `stardust`, `stops`), pero mantuvo una estructura compleja con `nestPokemon[]` y campos de metadata que no son requeridos para la UI de US-818. Al revisar el handoff de diseno (`design_handoff_nidos/README.md`) contra el JSON real, se identificaron 6 discrepancias: campos faltantes, campos con nombre incorrecto, y un campo conceptualmente mal ubicado (`nextMigration` por nido en lugar de global).
+
+### Decisiones
+
+1. **`nextMigration` pasa a constante global** en `src/config/nestMigration.ts`. Todos los nidos migran en el mismo instante UTC — no tiene sentido repetir el campo en cada objeto del JSON. Se actualiza manualmente cada ciclo Niantic.
+
+2. **`flag` (emoji de bandera) eliminado** del schema. No aporta dato funcional que no este ya en `country`. Era deuda de diseno del handoff inicial.
+
+3. **`nestPokemon[]` simplificado a campos planos**: `pokemonId`, `pokemonName`, `types[]`, `rarity`, `hasShiny`, `spawnRate`, `stardust?`, `evolutionLine`, `evolutionLineExtra?`. Un nido tiene un pokemon primario en el contexto de US-818 — el array era prematura generalizacion.
+
+4. **Renombres en JSON**: `pokemon` → `pokemonName`, `pokemonType` → `types`, `lastReported` → `confirmedAt`, `lon` → `lng` (consistente con el resto del JSON del proyecto).
+
+5. **Campos nuevos**: `hasShiny: boolean`, `rarity: PokemonRarity`, `evolutionLine: string`, `evolutionLineExtra?: string`, `timezone: string`, `gyms?: number`.
+
+6. **Campos eliminados** (deuda tecnica futura): `region`, `discoveredAt`, `lastVerifiedAt`, `radius`, `accuracy`, `badges`, `migrationCycle`, `notes`, `nestPokemon`.
+
+7. **Iconos de tipo** via `/types/ico_N_name.webp` — ya existe `src/config/typeIcons.ts` con el map completo. No se necesita ningun campo nuevo en el JSON para los iconos.
+
+8. **Flujo de navegacion definitivo** (3 componentes nuevos):
+   - `NestCard` (sidebar) — click → `map.flyTo(lat, lng)` → abre `NestPopup`
+   - `NestPopup` (Leaflet popup, 290px, caret ▼) — "Ver detalle →" → abre `NestDetail`
+   - `NestDetail` (panel flotante, 310px, z-index sobre popup) — "Ver en lista" → cierra todo + scroll + highlight en sidebar
+
+### Alternativas descartadas
+
+- **Mantener `nestPokemon[]`** — descartado. US-818 no requiere multiples pokemon por nido. La generalizacion se agrega cuando haya un caso de uso real.
+- **`flag` como campo derivado en frontend** (lookup por `country`) — descartado. Agregar un lookup de bandera por string de pais es fragil (nombres de pais no normalizados). Si se necesita en el futuro, se resuelve con una tabla de mapeo en config.
+- **`nextMigration` repetido en cada nido pero derivado de una constante** — descartado. Si la constante existe, el JSON no debe repetirla; cualquier desincronizacion entre la constante y el JSON seria un bug silencioso.
+
+---
+
+## DEC-911 — Separar visibilidad del NestPopup de selectedNest via nestPopupOpen (sesion 20)
+
+**Fecha:** Sprint 9 — Sesion 20 (2026-07-25)
+**Estado:** Aprobada
+**Afecta:** `src/store/useStore.ts`, `src/components/Map/MapView.tsx`
+
+### Contexto
+
+El popup de Leaflet para nidos usaba `selectedNest !== null` como unica condicion de visibilidad. Al presionar "Ver en lista", se necesitaba limpiar `selectedNest` para cerrar el popup — pero eso eliminaba el highlight en el NestCard del sidebar.
+
+### Decision
+
+Agregar `nestPopupOpen: boolean` al store. El popup se renderiza solo cuando `selectedNest && nestPopupOpen`. `setSelectedNest(nest)` automaticamente pone `nestPopupOpen: true`; `scrollToFeed('nest')` pone `nestPopupOpen: false` sin tocar `selectedNest`, preservando el highlight.
+
+### Cambios
+
+- `useStore.ts`: `nestPopupOpen` + `setNestPopupOpen`, `setSelectedNest` setea ambos atomicamente
+- `MapView.tsx`: condicion `!selectedNest || !nestPopupOpen`; `remove` event solo limpia si `nestPopupOpen` es true
+
+---
+
+## DEC-912 — scrollToFeed con target para evitar race condition (sesion 20)
+
+**Fecha:** Sprint 9 — Sesion 20 (2026-07-25)
+**Estado:** Aprobada
+**Afecta:** `src/store/useStore.ts`, `src/components/Sidebar/LocationFeed.tsx`
+
+### Contexto
+
+`scrollToFeedTick` como contador unico hacia que ambos `useEffect` de scroll (ciudad y nido) se dispararan simultaneamente al bumpar el tick, causando race condition — el scroll llegaba al elemento equivocado segun cual efecto ganara.
+
+### Decision
+
+`scrollToFeed(target: 'city' | 'nest')` guarda el target en `scrollToFeedTarget`. Cada `useEffect` solo reacciona al tick cuando `scrollToFeedTarget` coincide con su tipo.
+
+### Cambios
+
+- `useStore.ts`: `scrollToFeedTarget: 'city' | 'nest' | null`, `scrollToFeed` acepta parametro
+- `LocationFeed.tsx`: dependencias de `useEffect` condicionadas al target
+- `LocationDetail.tsx`: `scrollToFeed('city')`
+- `MapView.tsx`: `scrollToFeed('nest')`
+- `FlyToCity.tsx`: solo reacciona al tick si `scrollToFeedTarget === 'city'` (fix BUG-002, sesion 22)
+
+---
+
+## DEC-913 — selectedCity y selectedNest son mutuamente excluyentes (sesion 22)
+
+**Fecha:** Sprint 9 — Sesion 22 (2026-07-25)
+**Estado:** Aprobada
+**Afecta:** `src/store/useStore.ts`
+
+### Contexto
+
+Con clima y nidos activos simultaneamente, era posible tener `selectedCity` y `selectedNest` no nulos al mismo tiempo. Esto causaba doble highlight en el sidebar (ciudad Y nido activos a la vez) y permitia que `FlyToCity` reaccionara a ticks de nido (BUG-002).
+
+### Decision
+
+`setSelectedCity(city)` limpia `selectedNest` y `nestPopupOpen`. `setSelectedNest(nest)` limpia `selectedCity`. Solo un elemento puede estar seleccionado en cualquier momento.
+
+### Cambios
+
+- `useStore.ts`: `setSelectedCity` → `set({ selectedCity: city, selectedNest: null, nestPopupOpen: false })`
+- `useStore.ts`: `setSelectedNest` → `set({ selectedNest: nest, nestPopupOpen: nest !== null, selectedCity: null })`
+
+---
+
+## DEC-910 — Countdown de migracion se elimina del NestPopup (sesion 16)
+
+**Fecha:** Sprint 9 — Sesion 16 (2026-07-25)
+**Estado:** Aprobada
+**Afecta:** `src/components/Nests/NestPopup.tsx`
+
+### Contexto
+
+`NestPopup` incluia un bloque `np-countdown` con el resultado de `getMigrationStatus()` mostrando cuanto falta para la migracion. El mismo dato ya aparece en el `MigrationBanner` sticky del header de la seccion Nidos en el sidebar (implementado sesion 15).
+
+### Decision
+
+Eliminar el bloque countdown del `NestPopup`. El timer de migracion es informacion global del ciclo (todos los nidos migran al mismo tiempo), no especifica de un nido individual — no aporta valor diferencial en el popup. El `NestDetail` si mantiene el countdown ya que es un panel de detalle completo.
+
+### Cambios
+
+- `NestPopup.tsx`: eliminado `import getMigrationStatus`, variable `countdown`, bloque JSX `.np-countdown` y clase CSS `.np-countdown`
+- `NestDetail.tsx`: sin cambios — countdown permanece en el panel de detalle
+
+---
+
+## BUG-001 — LocationFeed no renderiza cuando solo capa Nidos activa (sesion 13)
+
+**Fecha:** Sprint 9 — Sesion 13 (2026-07-22)
+**Estado:** Corregido
+**Afecta:** `src/components/Sidebar/Sidebar.tsx`
+
+### Sintoma
+
+Con solo la capa Nidos activa (Clima desactivado), el sidebar mostraba el boton Filtros y el header de conteo ("🌿 Nidos • 8") pero el area del feed aparecia completamente vacia — sin NestCards visibles.
+
+### Causa raiz
+
+`Sidebar.tsx` condicionaba el montaje de `LocationFeed` a `activeLayers.clima`:
+
+```tsx
+// Antes (incorrecto)
+{activeLayers.clima && <LocationFeed cities={cities} />}
+```
+
+El componente nunca se montaba cuando solo Nidos estaba activo. El DOM confirmaba `lf-root` con `width: 0, height: 0` — el contenedor colapsaba porque no existia en el arbol.
+
+### Fix
+
+```tsx
+// Despues (correcto)
+{(activeLayers.clima || activeLayers.nidos) && <LocationFeed cities={cities} />}
+```
+
+### Nota
+
+El componente `LocationFeed` ya manejaba internamente la logica de que mostrar segun `activeLayers` — el bug estaba un nivel arriba, en `Sidebar`, que lo impedia montarse. El conteo en el header ("• 8") si aparecia porque ese texto es parte del `FilterPanel`, no del `LocationFeed`.

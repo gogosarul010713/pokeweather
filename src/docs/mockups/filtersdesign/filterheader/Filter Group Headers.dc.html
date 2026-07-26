@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/_ds_bundle.css">
+  <link rel="stylesheet" href="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/styles.css">
+  <script src="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: #0f1117; font-family: 'Exo 2', sans-serif; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 4px; }
+  </style>
+</helmet>
+
+<div style="padding: 48px 40px; display: flex; flex-direction: column; gap: 32px; min-width: max-content;">
+
+  <div>
+    <div style="font: 700 11px/1 'Rajdhani',sans-serif; color: rgba(255,255,255,.35); text-transform: uppercase; letter-spacing: .14em; margin-bottom: 6px;">Exploración de variantes</div>
+    <div style="font: 700 22px/1 'Rajdhani',sans-serif; color: var(--text-primary); letter-spacing: .04em;">Header de grupo — Clima / Nidos</div>
+    <div style="font: 400 12px/1.5 'Exo 2',sans-serif; color: var(--text-secondary); margin-top: 6px;">Click en el header para colapsar/expandir. Ambos grupos activos.</div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start;">
+
+    <!-- ── OPCIÓN 2: +/− en caja ── -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 20px; height: 20px; border-radius: 50%; background: var(--ui-accent); display: flex; align-items: center; justify-content: center; font: 700 10px/1 'Rajdhani',sans-serif; color: white; flex-shrink: 0;">2</div>
+        <span style="font: 700 13px/1 'Rajdhani',sans-serif; color: var(--text-primary); text-transform: uppercase; letter-spacing: .08em;">+ / − explícito</span>
+      </div>
+      <div style="font: 400 11px/1.4 'Exo 2',sans-serif; color: var(--text-secondary); max-width: 240px;">Ícono universal de expandir/colapsar. Visualmente distinto a las flechas de sub-items.</div>
+      <div style="width: 268px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.5);">
+        <!-- Panel header -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px; border-bottom: 1px solid var(--border-default);">
+          <span style="font: 500 12px/1 'Exo 2',sans-serif; color: var(--text-secondary);">‹ Volver</span>
+          <span style="font: 700 13px/1 'Rajdhani',sans-serif; color: var(--text-primary); text-transform: uppercase; letter-spacing: .08em;">Filtros</span>
+          <span style="font: 500 11px/1 'Exo 2',sans-serif; color: var(--text-secondary); opacity: .7;">Limpiar</span>
+        </div>
+        <!-- CLIMA group -->
+        <div style="border-left: 3px solid #58a6ff;">
+          <!-- Sticky header opción 2 -->
+          <div onClick="{{ toggleC2 }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 14px 9px 11px;background:var(--bg-secondary);border-bottom:1px solid rgba(88,166,255,0.2);box-shadow:0 2px 10px rgba(0,0,0,.4);backdrop-filter:blur(8px);">
+            <div>
+              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.14em;">Filtros de Clima</div>
+              <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;">Condición · Región · Tipo · Orden</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">2</div>
+              <!-- +/- icon box -->
+              <div style="width:22px;height:22px;border-radius:5px;border:1.5px solid rgba(88,166,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span style="font:700 16px/1 'Exo 2',sans-serif;color:#58a6ff;line-height:1;margin-top:-1px;">{{ c2icon }}</span>
+              </div>
+            </div>
+          </div>
+          <!-- Collapsible -->
+          <div style="overflow:hidden;max-height:{{ c2height }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <div style="width:24px;height:24px;border-radius:6px;background:rgba(88,166,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⛅</div>
+                <div>
+                  <div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Condición</div>
+                  <div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:1px;">Clima actual</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;"><div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">1</div><span style="font-size:8px;color:var(--text-secondary);">▲</span></div>
+            </div>
+            <div style="padding:0 10px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:rgba(88,166,255,.15);border:1.5px solid #58a6ff;"><span style="font-size:16px;">☀️</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:#58a6ff;text-transform:uppercase;">Soleado</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">⛅</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Parcial</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">☁️</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Nublado</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">🌧</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Lluvia</span></div>
+            </div>
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;">
+              <div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(88,166,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">↕</div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div></div>
+              <span style="font-size:8px;color:var(--text-secondary);">▼</span>
+            </div>
+          </div>
+        </div>
+        <!-- NIDOS group -->
+        <div style="border-left: 3px solid #22c55e; margin-top: 2px;">
+          <div onClick="{{ toggleN2 }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 14px 9px 11px;background:var(--bg-secondary);border-bottom:1px solid rgba(34,197,94,0.2);box-shadow:0 2px 10px rgba(0,0,0,.4);backdrop-filter:blur(8px);">
+            <div>
+              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.14em;">Filtros de Nidos</div>
+              <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;">Tipo Pokémon · Orden</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:22px;height:22px;border-radius:5px;border:1.5px solid rgba(34,197,94,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span style="font:700 16px/1 'Exo 2',sans-serif;color:#22c55e;line-height:1;margin-top:-1px;">{{ n2icon }}</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow:hidden;max-height:{{ n2height }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;">
+              <div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⚡</div><div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Tipo Pokémon</div><div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:1px;">Especies en nidos</div></div></div>
+              <span style="font-size:8px;color:var(--text-secondary);">▼</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">↕</div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+          </div>
+        </div>
+        <div style="padding:8px 10px 10px;border-top:1px solid var(--border-default);display:flex;gap:6px;margin-top:2px;">
+          <button style="flex:2;height:36px;background:var(--ui-accent);border:none;border-radius:8px;font:700 12px/1 'Exo 2',sans-serif;color:white;cursor:pointer;">✓ Aplicar</button>
+          <button style="flex:1;height:36px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:8px;font:600 12px/1 'Exo 2',sans-serif;color:var(--text-secondary);cursor:pointer;">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OPCIÓN 3: Header compacto al colapsar ── -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 20px; height: 20px; border-radius: 50%; background: var(--ui-accent); display: flex; align-items: center; justify-content: center; font: 700 10px/1 'Rajdhani',sans-serif; color: white; flex-shrink: 0;">3</div>
+        <span style="font: 700 13px/1 'Rajdhani',sans-serif; color: var(--text-primary); text-transform: uppercase; letter-spacing: .08em;">Header compacto</span>
+      </div>
+      <div style="font: 400 11px/1.4 'Exo 2',sans-serif; color: var(--text-secondary); max-width: 240px;">Al colapsar, el header se comprime a una línea densa. El cambio de densidad comunica el estado.</div>
+      <div style="width: 268px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.5);">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px; border-bottom: 1px solid var(--border-default);">
+          <span style="font: 500 12px/1 'Exo 2',sans-serif; color: var(--text-secondary);">‹ Volver</span>
+          <span style="font: 700 13px/1 'Rajdhani',sans-serif; color: var(--text-primary); text-transform: uppercase; letter-spacing: .08em;">Filtros</span>
+          <span style="font: 500 11px/1 'Exo 2',sans-serif; color: var(--text-secondary); opacity: .7;">Limpiar</span>
+        </div>
+        <!-- CLIMA group -->
+        <div style="border-left: 3px solid #58a6ff;">
+          <div onClick="{{ toggleC3 }}" style="cursor:pointer;background:var(--bg-secondary);border-bottom:1px solid rgba(88,166,255,0.2);box-shadow:0 2px 10px rgba(0,0,0,.4);backdrop-filter:blur(8px);overflow:hidden;transition:padding 0.28s cubic-bezier(0.16,1,0.3,1);padding:{{ c3padding }};">
+            <!-- Expanded state: full header -->
+            <div style="overflow:hidden;max-height:{{ c3titleheight }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.14em;">Filtros de Clima</div>
+                <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;max-height:{{ c3subtitleH }};overflow:hidden;transition:max-height 0.2s ease,opacity 0.2s ease;opacity:{{ c3subtitleOp }};">Condición · Región · Tipo · Orden</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;">
+                <div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">2</div>
+                <span style="font-size:14px;font-weight:600;color:rgba(88,166,255,.85);">{{ c3chevron }}</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow:hidden;max-height:{{ c3height }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;">
+              <div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(88,166,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⛅</div><div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Condición</div><div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:1px;">Clima actual</div></div></div>
+              <div style="display:flex;align-items:center;gap:4px;"><div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">1</div><span style="font-size:8px;color:var(--text-secondary);">▲</span></div>
+            </div>
+            <div style="padding:0 10px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:rgba(88,166,255,.15);border:1.5px solid #58a6ff;"><span style="font-size:16px;">☀️</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:#58a6ff;text-transform:uppercase;">Soleado</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">⛅</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Parcial</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">☁️</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Nublado</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">🌧</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Lluvia</span></div>
+            </div>
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;">
+              <div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(88,166,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">↕</div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div></div>
+              <span style="font-size:8px;color:var(--text-secondary);">▼</span>
+            </div>
+          </div>
+        </div>
+        <!-- NIDOS group -->
+        <div style="border-left: 3px solid #22c55e; margin-top: 2px;">
+          <div onClick="{{ toggleN3 }}" style="cursor:pointer;background:var(--bg-secondary);border-bottom:1px solid rgba(34,197,94,0.2);box-shadow:0 2px 10px rgba(0,0,0,.4);backdrop-filter:blur(8px);overflow:hidden;transition:padding 0.28s cubic-bezier(0.16,1,0.3,1);padding:{{ n3padding }};">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.14em;">Filtros de Nidos</div>
+                <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;max-height:{{ n3subtitleH }};overflow:hidden;transition:max-height 0.2s ease;opacity:{{ n3subtitleOp }};">Tipo Pokémon · Orden</div>
+              </div>
+              <span style="font-size:14px;font-weight:600;color:rgba(34,197,94,.85);">{{ n3chevron }}</span>
+            </div>
+          </div>
+          <div style="overflow:hidden;max-height:{{ n3height }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⚡</div><div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Tipo Pokémon</div><div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:1px;">Especies en nidos</div></div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">↕</div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+          </div>
+        </div>
+        <div style="padding:8px 10px 10px;border-top:1px solid var(--border-default);display:flex;gap:6px;margin-top:2px;">
+          <button style="flex:2;height:36px;background:var(--ui-accent);border:none;border-radius:8px;font:700 12px/1 'Exo 2',sans-serif;color:white;cursor:pointer;">✓ Aplicar</button>
+          <button style="flex:1;height:36px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:8px;font:600 12px/1 'Exo 2',sans-serif;color:var(--text-secondary);cursor:pointer;">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OPCIÓN 4: Pill resumen al colapsar ── -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 20px; height: 20px; border-radius: 50%; background: var(--ui-accent); display: flex; align-items: center; justify-content: center; font: 700 10px/1 'Rajdhani',sans-serif; color: white; flex-shrink: 0;">4</div>
+        <span style="font: 700 13px/1 'Rajdhani',sans-serif; color: var(--text-primary); text-transform: uppercase; letter-spacing: .08em;">Pill de resumen</span>
+      </div>
+      <div style="font: 400 11px/1.4 'Exo 2',sans-serif; color: var(--text-secondary); max-width: 240px;">Al colapsar muestra un resumen de filtros activos. Sin filtros: "Ver filtros". El contenido es el affordance.</div>
+      <div style="width: 268px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.5);">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px; border-bottom: 1px solid var(--border-default);">
+          <span style="font: 500 12px/1 'Exo 2',sans-serif; color: var(--text-secondary);">‹ Volver</span>
+          <span style="font: 700 13px/1 'Rajdhani',sans-serif; color: var(--text-primary); text-transform: uppercase; letter-spacing: .08em;">Filtros</span>
+          <span style="font: 500 11px/1 'Exo 2',sans-serif; color: var(--text-secondary); opacity: .7;">Limpiar</span>
+        </div>
+        <!-- CLIMA group -->
+        <div style="border-left: 3px solid #58a6ff;">
+          <div onClick="{{ toggleC4 }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:9px 14px 8px 11px;background:var(--bg-secondary);border-bottom:1px solid rgba(88,166,255,0.2);box-shadow:0 2px 10px rgba(0,0,0,.4);backdrop-filter:blur(8px);min-height:38px;">
+            <div>
+              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.14em;">Filtros de Clima</div>
+              <!-- Subtitle: visible when open -->
+              <div style="overflow:hidden;max-height:{{ c4subtitleH }};transition:max-height 0.22s ease;opacity:{{ c4subtitleOp }};transition:max-height 0.22s ease,opacity 0.22s ease;">
+                <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;">Condición · Región · Tipo · Orden</div>
+              </div>
+              <!-- Summary pill: visible when collapsed -->
+              <div style="overflow:hidden;max-height:{{ c4pillH }};transition:max-height 0.22s ease;margin-top:{{ c4pillMT }};">
+                <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 8px;border-radius:10px;background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);">
+                  <span style="font:500 10px/1 'Exo 2',sans-serif;color:#58a6ff;">☀️ Soleado · 🌐 Europa</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">2</div>
+              <span style="font-size:14px;font-weight:600;color:rgba(88,166,255,.85);">{{ c4chevron }}</span>
+            </div>
+          </div>
+          <div style="overflow:hidden;max-height:{{ c4height }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;">
+              <div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(88,166,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⛅</div><div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Condición</div><div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:1px;">Clima actual</div></div></div>
+              <div style="display:flex;align-items:center;gap:4px;"><div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">1</div><span style="font-size:8px;color:var(--text-secondary);">▲</span></div>
+            </div>
+            <div style="padding:0 10px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:rgba(88,166,255,.15);border:1.5px solid #58a6ff;"><span style="font-size:16px;">☀️</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:#58a6ff;text-transform:uppercase;">Soleado</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">⛅</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Parcial</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">☁️</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Nublado</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">🌧</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Lluvia</span></div>
+            </div>
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(88,166,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">↕</div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+          </div>
+        </div>
+        <!-- NIDOS group -->
+        <div style="border-left: 3px solid #22c55e; margin-top: 2px;">
+          <div onClick="{{ toggleN4 }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:9px 14px 8px 11px;background:var(--bg-secondary);border-bottom:1px solid rgba(34,197,94,0.2);box-shadow:0 2px 10px rgba(0,0,0,.4);backdrop-filter:blur(8px);min-height:38px;">
+            <div>
+              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.14em;">Filtros de Nidos</div>
+              <div style="overflow:hidden;max-height:{{ n4subtitleH }};transition:max-height 0.22s ease,opacity 0.22s ease;opacity:{{ n4subtitleOp }};">
+                <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;">Tipo Pokémon · Orden</div>
+              </div>
+              <div style="overflow:hidden;max-height:{{ n4pillH }};transition:max-height 0.22s ease;margin-top:{{ n4pillMT }};">
+                <div style="display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 8px;border-radius:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);">
+                  <span style="font:500 10px/1 'Exo 2',sans-serif;color:#22c55e;">Ver filtros de nidos</span>
+                </div>
+              </div>
+            </div>
+            <span style="font-size:14px;font-weight:600;color:rgba(34,197,94,.85);flex-shrink:0;">{{ n4chevron }}</span>
+          </div>
+          <div style="overflow:hidden;max-height:{{ n4height }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⚡</div><div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Tipo Pokémon</div><div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:1px;">Especies en nidos</div></div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">↕</div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+          </div>
+        </div>
+        <div style="padding:8px 10px 10px;border-top:1px solid var(--border-default);display:flex;gap:6px;margin-top:2px;">
+          <button style="flex:2;height:36px;background:var(--ui-accent);border:none;border-radius:8px;font:700 12px/1 'Exo 2',sans-serif;color:white;cursor:pointer;">✓ Aplicar</button>
+          <button style="flex:1;height:36px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:8px;font:600 12px/1 'Exo 2',sans-serif;color:var(--text-secondary);cursor:pointer;">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COMBINACIÓN 2+3+4 ── -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 20px; height: 20px; border-radius: 50%; background: #a855f7; display: flex; align-items: center; justify-content: center; font: 700 10px/1 'Rajdhani',sans-serif; color: white; flex-shrink: 0;">✦</div>
+        <span style="font: 700 13px/1 'Rajdhani',sans-serif; color: var(--text-primary); text-transform: uppercase; letter-spacing: .08em;">Combinación 2+3+4</span>
+      </div>
+      <div style="font: 400 11px/1.4 'Exo 2',sans-serif; color: var(--text-secondary); max-width: 240px;">+/− · header compacto · pill de resumen. Click para probar.</div>
+      <div style="width: 268px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.5);">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px; border-bottom: 1px solid var(--border-default);">
+          <span style="font: 500 12px/1 'Exo 2',sans-serif; color: var(--text-secondary);">‹ Volver</span>
+          <span style="font: 700 13px/1 'Rajdhani',sans-serif; color: var(--text-primary); text-transform: uppercase; letter-spacing: .08em;">Filtros</span>
+          <span style="font: 500 11px/1 'Exo 2',sans-serif; color: var(--text-secondary); opacity: .7;">Limpiar</span>
+        </div>
+        <div style="border-left: 3px solid #58a6ff;">
+          <div onClick="{{ toggleCX }}" style="cursor:pointer;background:var(--bg-secondary);border-bottom:1px solid rgba(88,166,255,0.2);box-shadow:0 2px 10px rgba(0,0,0,.4);backdrop-filter:blur(8px);transition:padding 0.28s cubic-bezier(0.16,1,0.3,1);padding:{{ cxPad }};display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.14em;">Filtros de Clima</div>
+              <div style="overflow:hidden;max-height:{{ cxSubH }};opacity:{{ cxSubOp }};transition:max-height 0.25s ease,opacity 0.25s ease;"><div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;">Condición · Región · Tipo · Orden</div></div>
+              <div style="overflow:hidden;max-height:{{ cxPillH }};transition:max-height 0.25s ease;"><div style="display:inline-flex;align-items:center;margin-top:4px;padding:3px 8px;border-radius:10px;background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);"><span style="font:500 10px/1 'Exo 2',sans-serif;color:#58a6ff;">☀️ Soleado · 🌐 Europa</span></div></div>
+            </div>
+            <div style="width:22px;height:22px;border-radius:5px;border:1.5px solid rgba(88,166,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(88,166,255,.06);"><span style="font:700 16px/1 'Exo 2',sans-serif;color:#58a6ff;line-height:1;margin-top:-1px;">{{ cxIcon }}</span></div>
+          </div>
+          <div style="overflow:hidden;max-height:{{ cxH }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(88,166,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⛅</div><div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Condición</div><div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:1px;">Clima actual</div></div></div><div style="display:flex;align-items:center;gap:4px;"><div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">1</div><span style="font-size:8px;color:var(--text-secondary);">▲</span></div></div>
+            <div style="padding:0 10px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:rgba(88,166,255,.15);border:1.5px solid #58a6ff;"><span style="font-size:16px;">☀️</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:#58a6ff;text-transform:uppercase;">Soleado</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">⛅</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Parcial</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">☁️</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Nublado</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;border-radius:8px;background:var(--bg-tertiary);border:1.5px solid var(--border-default);"><span style="font-size:16px;">🌧</span><span style="font:600 8px/1 'Exo 2',sans-serif;color:var(--text-secondary);text-transform:uppercase;">Lluvia</span></div>
+            </div>
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(88,166,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">↕</div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+          </div>
+        </div>
+        <div style="border-left: 3px solid #22c55e; margin-top: 2px;">
+          <div onClick="{{ toggleNX }}" style="cursor:pointer;background:var(--bg-secondary);border-bottom:1px solid rgba(34,197,94,0.2);box-shadow:0 2px 10px rgba(0,0,0,.4);backdrop-filter:blur(8px);transition:padding 0.28s cubic-bezier(0.16,1,0.3,1);padding:{{ nxPad }};display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.14em;">Filtros de Nidos</div>
+              <div style="overflow:hidden;max-height:{{ nxSubH }};opacity:{{ nxSubOp }};transition:max-height 0.25s ease,opacity 0.25s ease;"><div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;">Tipo Pokémon · Orden</div></div>
+              <div style="overflow:hidden;max-height:{{ nxPillH }};transition:max-height 0.25s ease;"><div style="display:inline-flex;align-items:center;margin-top:4px;padding:3px 8px;border-radius:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);"><span style="font:500 10px/1 'Exo 2',sans-serif;color:#22c55e;">Ver filtros de nidos</span></div></div>
+            </div>
+            <div style="width:22px;height:22px;border-radius:5px;border:1.5px solid rgba(34,197,94,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(34,197,94,.06);"><span style="font:700 16px/1 'Exo 2',sans-serif;color:#22c55e;line-height:1;margin-top:-1px;">{{ nxIcon }}</span></div>
+          </div>
+          <div style="overflow:hidden;max-height:{{ nxH }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+            <div style="border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⚡</div><div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Tipo Pokémon</div><div style="font:400 9px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:1px;">Especies en nidos</div></div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;"><div style="display:flex;align-items:center;gap:7px;"><div style="width:24px;height:24px;border-radius:6px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;font-size:12px;">↕</div><div style="font:700 10px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div></div><span style="font-size:8px;color:var(--text-secondary);">▼</span></div>
+          </div>
+        </div>
+        <div style="padding:8px 10px 10px;border-top:1px solid var(--border-default);display:flex;gap:6px;margin-top:2px;">
+          <button style="flex:2;height:36px;background:var(--ui-accent);border:none;border-radius:8px;font:700 12px/1 'Exo 2',sans-serif;color:white;cursor:pointer;">✓ Aplicar</button>
+          <button style="flex:1;height:36px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:8px;font:600 12px/1 'Exo 2',sans-serif;color:var(--text-secondary);cursor:pointer;">✕</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    c2open: true, n2open: true,
+    c3open: true, n3open: true,
+    c4open: true, n4open: true,
+    cxopen: true, nxopen: true,
+  };
+
+  renderVals() {
+    const s = this.state;
+
+    // Opción 2
+    const c2icon = s.c2open ? '−' : '+';
+    const n2icon = s.n2open ? '−' : '+';
+
+    // Opción 3
+    const c3chevron = s.c3open ? '▾' : '▸';
+    const n3chevron = s.n3open ? '▾' : '▸';
+    const c3padding = s.c3open ? '10px 14px 9px 11px' : '6px 14px 6px 11px';
+    const n3padding = s.n3open ? '10px 14px 9px 11px' : '6px 14px 6px 11px';
+    const c3subtitleH = s.c3open ? '20px' : '0px';
+    const n3subtitleH = s.n3open ? '20px' : '0px';
+    const c3subtitleOp = s.c3open ? '1' : '0';
+    const n3subtitleOp = s.n3open ? '1' : '0';
+
+    // Opción 4
+    const c4chevron = s.c4open ? '▾' : '▸';
+    const n4chevron = s.n4open ? '▾' : '▸';
+    const c4subtitleH = s.c4open ? '20px' : '0px';
+    const n4subtitleH = s.n4open ? '20px' : '0px';
+    const c4subtitleOp = s.c4open ? '0.6' : '0';
+    const n4subtitleOp = s.n4open ? '0.6' : '0';
+    const c4pillH = s.c4open ? '0px' : '28px';
+    const n4pillH = s.n4open ? '0px' : '28px';
+    const c4pillMT = s.c4open ? '0' : '0';
+    const n4pillMT = s.n4open ? '0' : '0';
+
+    return {
+      // Opción 2
+      c2icon, n2icon,
+      c2height: s.c2open ? '600px' : '0',
+      n2height: s.n2open ? '600px' : '0',
+      toggleC2: () => this.setState(st => ({ c2open: !st.c2open })),
+      toggleN2: () => this.setState(st => ({ n2open: !st.n2open })),
+
+      // Opción 3
+      c3chevron, n3chevron, c3padding, n3padding,
+      c3subtitleH, n3subtitleH, c3subtitleOp, n3subtitleOp,
+      c3height: s.c3open ? '600px' : '0',
+      n3height: s.n3open ? '600px' : '0',
+      c3titleheight: '60px',
+      toggleC3: () => this.setState(st => ({ c3open: !st.c3open })),
+      toggleN3: () => this.setState(st => ({ n3open: !st.n3open })),
+
+      // Opción 4
+      c4chevron, n4chevron,
+      c4subtitleH, n4subtitleH, c4subtitleOp, n4subtitleOp,
+      c4pillH, n4pillH, c4pillMT, n4pillMT,
+      c4height: s.c4open ? '600px' : '0',
+      n4height: s.n4open ? '600px' : '0',
+      toggleC4: () => this.setState(st => ({ c4open: !st.c4open })),
+      toggleN4: () => this.setState(st => ({ n4open: !st.n4open })),
+
+      // Combinación
+      cxIcon: s.cxopen ? '−' : '+',
+      nxIcon: s.nxopen ? '−' : '+',
+      cxPad: s.cxopen ? '10px 14px 9px 11px' : '6px 14px 6px 11px',
+      nxPad: s.nxopen ? '10px 14px 9px 11px' : '6px 14px 6px 11px',
+      cxSubH: s.cxopen ? '20px' : '0px',
+      nxSubH: s.nxopen ? '20px' : '0px',
+      cxSubOp: s.cxopen ? '0.6' : '0',
+      nxSubOp: s.nxopen ? '0.6' : '0',
+      cxPillH: s.cxopen ? '0px' : '28px',
+      nxPillH: s.nxopen ? '0px' : '28px',
+      cxH: s.cxopen ? '600px' : '0',
+      nxH: s.nxopen ? '600px' : '0',
+      toggleCX: () => this.setState(st => ({ cxopen: !st.cxopen })),
+      toggleNX: () => this.setState(st => ({ nxopen: !st.nxopen })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

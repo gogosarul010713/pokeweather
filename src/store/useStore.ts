@@ -107,6 +107,8 @@ interface AppStore {
   loadingStatus: LoadingStatus
   loadingProgress: LoadingProgress
   sidebarMode: 'list' | 'detail' | 'favorites'
+  scrollToFeedTick: number
+  scrollToFeedTarget: 'city' | 'nest' | null
   favorites: string[]
   badgeFilter: string[]
   showBadgesOnPins: boolean
@@ -116,9 +118,14 @@ interface AppStore {
   activeLayers: ActiveLayers
   nests: Nest[]
   selectedNest: Nest | null
+  nestPopupOpen: boolean
   nestTypeFilter: string[]
   nestSortBy: 'name' | 'type' | 'spawnRate'
   nestSortDirection: 'asc' | 'desc'
+
+  // Migration countdown
+  now: number
+  tickNow: () => void
 
   // Filter panel
   filterPanelOpen: boolean
@@ -138,6 +145,7 @@ interface AppStore {
   setLoadingStatus: (status: LoadingStatus) => void
   setLoadingProgress: (progress: LoadingProgress) => void
   setSidebarMode: (mode: 'list' | 'detail' | 'favorites') => void
+  scrollToFeed: (target: 'city' | 'nest') => void
   toggleFavorite: (cityId: string) => void
   clearFavorites: () => void
   setBadgeFilter: (badges: string[]) => void
@@ -151,6 +159,7 @@ interface AppStore {
   setLayer: (layer: LayerKey, value: boolean) => void
   setNests: (nests: Nest[]) => void
   setSelectedNest: (nest: Nest | null) => void
+  setNestPopupOpen: (open: boolean) => void
   setNestTypeFilter: (types: string[]) => void
   toggleNestType: (type: string) => void
   setNestSortBy: (mode: 'name' | 'type' | 'spawnRate') => void
@@ -188,6 +197,8 @@ export const useStore = create<AppStore>((set, get) => ({
   loadingStatus: 'idle',
   loadingProgress: { cityName: '', current: 0, total: 0, percent: 0 },
   sidebarMode: 'list',
+  scrollToFeedTick: 0,
+  scrollToFeedTarget: null,
   favorites: (() => {
     try {
       const saved = localStorage.getItem('pwe-favorites')
@@ -219,9 +230,11 @@ export const useStore = create<AppStore>((set, get) => ({
   })(),
   nests: [],
   selectedNest: null,
+  nestPopupOpen: false,
   nestTypeFilter: [],
   nestSortBy: 'name',
   nestSortDirection: 'asc',
+  now: Date.now(),
   filterPanelOpen: false,
   accordionState: {
     condicion: true,
@@ -256,7 +269,7 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ sortDirection: direction })
   },
 
-  setSelectedCity: (city) => set({ selectedCity: city }),
+  setSelectedCity: (city) => set({ selectedCity: city, selectedNest: null, nestPopupOpen: false }),
 
   toggleTheme: () => {
     const next = get().theme === 'dark' ? 'light' : 'dark'
@@ -266,6 +279,7 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   setSidebarMode: (mode) => set({ sidebarMode: mode }),
+  scrollToFeed: (target) => set((s) => ({ sidebarMode: 'list', scrollToFeedTick: s.scrollToFeedTick + 1, scrollToFeedTarget: target, nestPopupOpen: false })),
 
   toggleFavorite: (cityId) =>
     set((state) => {
@@ -334,7 +348,8 @@ export const useStore = create<AppStore>((set, get) => ({
 
   setNests: (nests) => set({ nests }),
 
-  setSelectedNest: (nest) => set({ selectedNest: nest }),
+  setSelectedNest: (nest) => set({ selectedNest: nest, nestPopupOpen: nest !== null, selectedCity: null }),
+  setNestPopupOpen: (open) => set({ nestPopupOpen: open }),
 
   setNestTypeFilter: (types) => set({ nestTypeFilter: types }),
 
@@ -348,6 +363,8 @@ export const useStore = create<AppStore>((set, get) => ({
   setNestSortBy: (mode) => set({ nestSortBy: mode }),
 
   setNestSortDirection: (direction) => set({ nestSortDirection: direction }),
+
+  tickNow: () => set({ now: Date.now() }),
 
   openFilterPanel: () => {
     const { regionFilter, conditionFilter, typeFilter, sortMode, nestTypeFilter, nestSortBy } = get()

@@ -4,22 +4,25 @@
 
 ---
 
-## ESTADO ACTUAL (2026-07-07)
+## ESTADO ACTUAL (2026-07-26)
 
-**Sprint 9 — Sesion 5 — ENH-001 Filter Panel visual (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 25 (branch: `sprint-9-nests`)**
 
 **Completado:**
-- US-811 a US-826 ✅ — base sesiones 1-3
-- US-821 ✅ — commiteado (8b602dd)
-- ENH-001 items 1-8 ✅ — homologacion visual boton/badge/footer/search/header ciudades (92ef1f7)
-- ENH-001 items 9-15 ✅ — sticky headers, colapso grupo, chevron, badge grupo, animacion, toast (04b180d)
+- US-811 a US-826 + ENH-001/002/003 ✅ — commiteados
+- US-818 ✅ — NestCard + feed + NestPopup + NestDetail completo
+- ENH-004 ✅ — NestDetail homologado: modal centrado, sprite en header, hora local, sin marcos
+- BUG-001 ✅ — "Ver en lista" scroll+highlight en NestDetail y LocationDetail (DEC-911, DEC-912)
+- BUG-002 ✅ — FlyToCity disparaba con tick de nido; exclusion mutua selectedCity/selectedNest (DEC-913)
+- ENH-006 ✅ — Sidebar oculto con transicion suave (width+opacity 280ms) cuando no hay capa activa; Overlay eliminado
+- Mockups MapLegend Categorias ✅ — 2 artifacts + doc en `src/docs/mockups/maplegend-categorias/`
 
 **Siguiente:**
-- ENH-001 OBS-1 + OBS-2 — corregir GroupHeader: eliminar barra interna redundante + fondo solido en sticky (ver `src/docs/sprints/sprint-9/enhancements/ENH-001-filter-panel-visual.md`)
+- Commit pendiente: sesiones 15-16-18-19-20-21-22-23-24-25
+- MapLegend rediseno tab Categorias — elegir entre propuesta 1 (checkbox+ojo estado+Ver) o 3 (checkbox+Ver). Mockups en `src/docs/mockups/maplegend-categorias/README.md`
 
-**Backlog critico pendiente (en orden):**
-- US-818 — Feed unificado clima+nidos
-- US-815 — Leyenda dinamica por capas
+**Backlog critico pendiente:**
+- US-815 — Rediseno MapLegend highlight visual con anillo segmentado SVG. Mockup en `src/docs/mockups/map-highlight-segmented-ring/`
 
 ---
 

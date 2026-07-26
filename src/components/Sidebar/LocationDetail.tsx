@@ -38,6 +38,7 @@ interface LocationDetailProps {
 
 export default function LocationDetail({ city }: LocationDetailProps) {
   const setSidebarMode = useStore((s) => s.setSidebarMode)
+  const scrollToFeed = useStore((s) => s.scrollToFeed)
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const favorites = useStore((s) => s.favorites)
 
@@ -87,28 +88,28 @@ export default function LocationDetail({ city }: LocationDetailProps) {
 
         .ld-modal {
           position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          max-height: 72vh;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: min(520px, 92vw);
+          max-height: 80vh;
           background: var(--bg-secondary);
-          border-top: 1px solid var(--border-default);
-          border-radius: 16px 16px 0 0;
+          border: 1px solid var(--border-default);
+          border-radius: 16px;
           z-index: 1101;
           display: flex;
           flex-direction: column;
-          animation: slideUp 250ms ease;
-          max-width: 600px;
-          margin: 0 auto;
-          box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+          animation: ld-popIn 200ms ease;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
         }
 
         @keyframes fadeIn {
           from { opacity: 0; } to { opacity: 1; }
         }
 
-        @keyframes slideUp {
-          from { transform: translateY(100%); } to { transform: translateY(0); }
+        @keyframes ld-popIn {
+          from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
         /* ── Header ── */
@@ -405,7 +406,7 @@ export default function LocationDetail({ city }: LocationDetailProps) {
         }
 
         @media (max-width: 600px) {
-          .ld-modal { max-height: 82vh; border-radius: 12px 12px 0 0; }
+          .ld-modal { width: 92vw; max-height: 85vh; }
         }
       `}</style>
 
@@ -559,7 +560,7 @@ export default function LocationDetail({ city }: LocationDetailProps) {
 
         {/* ── Footer ── */}
         <div className="ld-footer">
-          <button className="ld-footer-btn" onClick={() => setSidebarMode('list')} type="button">
+          <button className="ld-footer-btn" onClick={() => scrollToFeed('city')} type="button">
             Ver en lista
           </button>
         </div>

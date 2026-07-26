@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/_ds_bundle.css">
+  <link rel="stylesheet" href="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/styles.css">
+  <script src="_ds/pokeweather-design-system-c550872f-6704-4a62-8c2f-43e002b050b8/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: #1a1d23; font-family: 'Exo 2', sans-serif; }
+  </style>
+</helmet>
+
+<div style="padding: 40px;">
+  <div style="display: inline-flex; flex-direction: column; gap: 8px;">
+    <div style="font: 600 10px ui-monospace,monospace; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .1em;">4a — Panel definitivo · mapa siempre visible</div>
+    <div style="border: 1px solid rgba(255,255,255,.1); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 32px rgba(0,0,0,.5);">
+
+      <div style="display:flex;flex-direction:column;width:1100px;height:700px;overflow:hidden;background:var(--bg-primary);">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;height:50px;background:var(--bg-secondary);border-bottom:1px solid var(--border-default);flex-shrink:0;">
+          <div style="display:flex;align-items:center;gap:8px;padding:0 16px;flex-shrink:0;">
+            <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#58a6ff,#a855f7);display:flex;align-items:center;justify-content:center;font-size:11px;">⚡</div>
+            <span style="font:700 13px/1 'Rajdhani',sans-serif;color:var(--text-primary);letter-spacing:1px;text-transform:uppercase;">POKÉ<span style="color:var(--ui-accent);">WEATHER</span></span>
+          </div>
+          <div style="width:1px;height:28px;background:var(--border-default);flex-shrink:0;"></div>
+          <div style="display:flex;align-items:stretch;height:100%;">
+            <button onClick="{{ toggleClima }}" style="display:flex;align-items:center;gap:6px;padding:0 18px;background:none;border:none;border-bottom-width:2px;border-bottom-style:solid;cursor:pointer;font:600 13px/1 'Exo 2',sans-serif;border-bottom-color:{{ climaTabBorder }};color:{{ climaTabColor }};">
+              <span style="width:7px;height:7px;border-radius:50%;background:#58a6ff;flex-shrink:0;opacity:{{ climaDot }};"></span>Clima
+              <sc-if value="{{ climaBadgeVis }}" hint-placeholder-val="{{ false }}">
+                <div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,0.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">{{ climaBadge }}</div>
+              </sc-if>
+            </button>
+            <button onClick="{{ toggleNidos }}" style="display:flex;align-items:center;gap:6px;padding:0 18px;background:none;border:none;border-bottom-width:2px;border-bottom-style:solid;cursor:pointer;font:600 13px/1 'Exo 2',sans-serif;border-bottom-color:{{ nidosTabBorder }};color:{{ nidosTabColor }};">
+              <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;opacity:{{ nidosDot }};"></span>Nidos
+              <sc-if value="{{ nidosBadgeVis }}" hint-placeholder-val="{{ false }}">
+                <div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(34,197,94,0.2);font:700 9px/16px 'Exo 2',sans-serif;color:#22c55e;text-align:center;">{{ nidosBadge }}</div>
+              </sc-if>
+            </button>
+            <button style="display:flex;align-items:center;gap:6px;padding:0 18px;background:none;border:none;border-bottom:2px solid transparent;cursor:not-allowed;opacity:0.35;font:600 13px/1 'Exo 2',sans-serif;color:var(--text-secondary);">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--border-default);flex-shrink:0;"></span>Gyms
+              <span style="font:500 9px/1 'Exo 2',sans-serif;padding:2px 5px;background:var(--bg-tertiary);border-radius:3px;margin-left:2px;">pronto</span>
+            </button>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="padding:0 12px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:7px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:7px;padding:0 11px;width:200px;height:32px;">
+              <span style="font-size:11px;color:var(--text-secondary);">🔍</span>
+              <span style="font:400 11px/1 'Exo 2',sans-serif;color:var(--text-secondary);">Buscar ciudad...</span>
+            </div>
+          </div>
+          <div style="width:30px;height:30px;border-radius:7px;background:var(--bg-tertiary);border:1px solid var(--border-default);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;margin-right:12px;">🌙</div>
+        </div>
+
+        <!-- Body -->
+        <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
+
+          <!-- Sidebar -->
+          <div style="width:300px;flex-shrink:0;background:var(--bg-secondary);border-right:1px solid var(--border-default);display:flex;flex-direction:column;overflow:hidden;position:relative;">
+
+            <!-- LIST VIEW -->
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;transform:{{ listTransform }};transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);pointer-events:{{ listPE }};">
+              <div style="padding:10px 10px 6px;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:7px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:8px;padding:0 11px;height:34px;">
+                  <span style="font-size:12px;color:var(--text-secondary);">🔍</span>
+                  <span style="font:400 12px/1 'Exo 2',sans-serif;color:var(--text-secondary);">Buscar ciudad...</span>
+                </div>
+              </div>
+              <div style="padding:0 10px 8px;flex-shrink:0;display:flex;gap:6px;">
+                <button onClick="{{ openPanel }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:40px;background:var(--ui-accent);border:none;border-radius:10px;cursor:pointer;box-shadow:0 2px 12px rgba(88,166,255,0.25);">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 2.5h12M3 7h8M5 11.5h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  <span style="font:700 13px/1 'Exo 2',sans-serif;color:white;">Filtros</span>
+                  <sc-if value="{{ anyFilterVis }}" hint-placeholder-val="{{ false }}">
+                    <div style="min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:white;font:700 10px/18px 'Exo 2',sans-serif;color:var(--ui-accent);text-align:center;">{{ totalBadge }}</div>
+                  </sc-if>
+                </button>
+                <sc-if value="{{ anyFilterVis }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ clearAll }}" style="width:40px;height:40px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Limpiar filtros">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </button>
+                </sc-if>
+              </div>
+              <sc-if value="{{ noTabs }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:2px 12px 8px;flex-shrink:0;">
+                  <span style="font:400 11px/1.4 'Exo 2',sans-serif;color:var(--text-secondary);opacity:0.45;">Activa Clima o Nidos para filtrar</span>
+                </div>
+              </sc-if>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 12px;flex-shrink:0;border-top:1px solid var(--border-subtle);">
+                <span style="font:700 10px/1 'Rajdhani',sans-serif;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.1em;">Ciudades</span>
+                <span style="font:700 12px/1 'Exo 2',sans-serif;color:var(--ui-accent);">{{ count }}</span>
+              </div>
+              <div style="flex:1;min-height:0;overflow-y:auto;padding:3px 8px 8px;display:flex;flex-direction:column;gap:4px;">
+                <sc-for list="{{ cities }}" as="city" hint-placeholder-count="7">
+                  <div style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:8px;cursor:pointer;flex-shrink:0;">
+                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;line-height:1;">{{ city.icon }}</div>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font:700 13px/1.4 'Exo 2',sans-serif;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ city.name }}</div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1px;">
+                        <span style="font:400 11px/1 'Exo 2',sans-serif;color:var(--text-secondary);">{{ city.country }}</span>
+                        <div style="display:flex;gap:3px;">
+                          <sc-for list="{{ city.dots }}" as="d" hint-placeholder-count="2">
+                            <div style="width:8px;height:8px;border-radius:50%;background:{{ d.color }};"></div>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="font:400 10px/1 'Exo 2',sans-serif;color:var(--text-secondary);flex-shrink:0;">{{ city.time }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <!-- FILTER PANEL VIEW -->
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;transform:{{ panelTransform }};transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);background:var(--bg-secondary);pointer-events:{{ panelPE }};">
+              <!-- Panel header -->
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;border-bottom:1px solid var(--border-default);flex-shrink:0;">
+                <button onClick="{{ closePanel }}" style="display:flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;color:var(--text-secondary);">
+                  <span style="font-size:14px;line-height:1;">‹</span>
+                  <span style="font:500 12px/1 'Exo 2',sans-serif;">Volver</span>
+                </button>
+                <span style="font:700 13px/1 'Rajdhani',sans-serif;color:var(--text-primary);text-transform:uppercase;letter-spacing:.08em;">Filtros</span>
+                <button onClick="{{ clearAll }}" style="font:500 11px/1 'Exo 2',sans-serif;color:var(--text-secondary);background:none;border:none;cursor:pointer;padding:4px 6px;opacity:0.7;">Limpiar</button>
+              </div>
+
+              <!-- Accordion body -->
+              <div style="flex:1;min-height:0;overflow-y:auto;">
+
+                <!-- CLIMA group -->
+                <sc-if value="{{ climaOn }}" hint-placeholder-val="{{ true }}">
+                  <div style="border-left:3px solid #58a6ff;">
+                    <!-- Sticky clima group header -->
+                    <div onClick="{{ toggleClimaGroup }}" style="position:sticky;top:0;z-index:2;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:9px 14px 8px 11px;background:var(--bg-secondary);border-bottom:1px solid rgba(88,166,255,0.2);box-shadow:0 2px 10px rgba(0,0,0,.5);backdrop-filter:blur(8px);">
+                      <div>
+                        <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.14em;">Filtros de Clima</div>
+                        <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;">Condición · Región · Tipo · Orden</div>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:6px;">
+                        <sc-if value="{{ climaBadgeVis }}" hint-placeholder-val="{{ false }}">
+                          <div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(88,166,255,0.2);font:700 9px/16px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">{{ climaBadge }}</div>
+                        </sc-if>
+                        <span style="font-size:14px;color:rgba(88,166,255,.85);font-weight:600;">{{ climaGroupChevron }}</span>
+                      </div>
+                    </div>
+                    <!-- Collapsible clima content -->
+                    <div style="overflow:hidden;max-height:{{ climaGroupMaxHeight }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+                      <!-- Condición -->
+                      <div style="border-bottom:1px solid var(--border-subtle);">
+                        <button onClick="{{ toggleCondicion }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;">
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:26px;height:26px;border-radius:7px;background:rgba(88,166,255,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">⛅</div>
+                            <div>
+                              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Condición</div>
+                              <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;">Clima actual de la ciudad</div>
+                            </div>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <sc-if value="{{ condActiveVis }}" hint-placeholder-val="{{ false }}">
+                              <div style="min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(88,166,255,0.15);font:700 10px/18px 'Exo 2',sans-serif;color:#58a6ff;text-align:center;">{{ condActiveCt }}</div>
+                            </sc-if>
+                            <span style="font-size:9px;color:var(--text-secondary);">{{ condArr }}</span>
+                          </div>
+                        </button>
+                        <sc-if value="{{ condOpen }}" hint-placeholder-val="{{ true }}">
+                          <div style="padding:0 12px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+                            <sc-for list="{{ wPills }}" as="p" hint-placeholder-count="7">
+                              <button onClick="{{ p.toggle }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:9px;border-width:1.5px;border-style:solid;cursor:pointer;background:{{ p.bg }};border-color:{{ p.border }};">
+                                <span style="font-size:18px;line-height:1;">{{ p.emoji }}</span>
+                                <span style="font:600 9px/1 'Exo 2',sans-serif;color:{{ p.textColor }};text-align:center;text-transform:uppercase;letter-spacing:.04em;">{{ p.label }}</span>
+                              </button>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                      <!-- Región -->
+                      <div style="border-bottom:1px solid var(--border-subtle);">
+                        <button onClick="{{ toggleRegion }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;">
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:26px;height:26px;border-radius:7px;background:rgba(88,166,255,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">🌐</div>
+                            <div>
+                              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Región</div>
+                              <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;">Zona geográfica del mundo</div>
+                            </div>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <sc-if value="{{ regionActiveVis }}" hint-placeholder-val="{{ false }}">
+                              <span style="font:500 10px/1 'Exo 2',sans-serif;color:#58a6ff;">{{ regionLabel }}</span>
+                            </sc-if>
+                            <span style="font-size:9px;color:var(--text-secondary);">{{ regionArr }}</span>
+                          </div>
+                        </button>
+                        <sc-if value="{{ regionOpen }}" hint-placeholder-val="{{ false }}">
+                          <div style="padding:0 12px 12px;display:flex;flex-wrap:wrap;gap:6px;">
+                            <sc-for list="{{ regionPills }}" as="p" hint-placeholder-count="6">
+                              <button onClick="{{ p.select }}" style="display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:15px;border-width:1.5px;border-style:solid;cursor:pointer;font:500 11px/1 'Exo 2',sans-serif;background:{{ p.bg }};border-color:{{ p.border }};color:{{ p.textColor }};">{{ p.label }}</button>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                      <!-- Tipo Clima -->
+                      <div style="border-bottom:1px solid var(--border-subtle);">
+                        <button onClick="{{ toggleTipoClima }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;">
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:26px;height:26px;border-radius:7px;background:rgba(88,166,255,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">🌡</div>
+                            <div>
+                              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Tipo clima</div>
+                              <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;">Clasificación climática general</div>
+                            </div>
+                          </div>
+                          <span style="font-size:9px;color:var(--text-secondary);">{{ tipoClimaArr }}</span>
+                        </button>
+                        <sc-if value="{{ tipoClimaOpen }}" hint-placeholder-val="{{ false }}">
+                          <div style="padding:0 12px 12px;display:flex;flex-wrap:wrap;gap:6px;">
+                            <sc-for list="{{ tipoClimaPills }}" as="p" hint-placeholder-count="5">
+                              <button onClick="{{ p.select }}" style="display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:15px;border-width:1.5px;border-style:solid;cursor:pointer;font:500 11px/1 'Exo 2',sans-serif;background:{{ p.bg }};border-color:{{ p.border }};color:{{ p.textColor }};">{{ p.label }}</button>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                      <!-- Ordenar Clima -->
+                      <div style="border-bottom:1px solid var(--border-subtle);">
+                        <button onClick="{{ toggleOrden }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;">
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:26px;height:26px;border-radius:7px;background:rgba(88,166,255,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">↕</div>
+                            <div>
+                              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#58a6ff;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div>
+                              <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;">Criterio para listar ciudades</div>
+                            </div>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font:500 10px/1 'Exo 2',sans-serif;color:#58a6ff;">{{ ordenLabel }}</span>
+                            <span style="font-size:9px;color:var(--text-secondary);">{{ ordenArr }}</span>
+                          </div>
+                        </button>
+                        <sc-if value="{{ ordenOpen }}" hint-placeholder-val="{{ false }}">
+                          <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:4px;">
+                            <sc-for list="{{ ordenOpts }}" as="o" hint-placeholder-count="4">
+                              <button onClick="{{ o.select }}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border-width:1px;border-style:solid;cursor:pointer;background:{{ o.bg }};border-color:{{ o.border }};">
+                                <div style="width:16px;height:16px;border-radius:50%;border-width:2px;border-style:solid;border-color:{{ o.radioBorder }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                  <sc-if value="{{ o.active }}" hint-placeholder-val="{{ false }}">
+                                    <div style="width:7px;height:7px;border-radius:50%;background:#58a6ff;"></div>
+                                  </sc-if>
+                                </div>
+                                <span style="font:500 12px/1 'Exo 2',sans-serif;color:{{ o.textColor }};">{{ o.label }}</span>
+                              </button>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- NIDOS group -->
+                <sc-if value="{{ nidosOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="border-left:3px solid #22c55e;">
+                    <!-- Sticky nidos group header -->
+                    <div onClick="{{ toggleNidosGroup }}" style="position:sticky;top:0;z-index:2;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:9px 14px 8px 11px;background:var(--bg-secondary);border-bottom:1px solid rgba(34,197,94,0.2);box-shadow:0 2px 10px rgba(0,0,0,.5);backdrop-filter:blur(8px);">
+                      <div>
+                        <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.14em;">Filtros de Nidos</div>
+                        <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;opacity:.6;">Tipo Pokémon · Orden</div>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:6px;">
+                        <sc-if value="{{ nidosBadgeVis }}" hint-placeholder-val="{{ false }}">
+                          <div style="min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(34,197,94,0.2);font:700 9px/16px 'Exo 2',sans-serif;color:#22c55e;text-align:center;">{{ nidosBadge }}</div>
+                        </sc-if>
+                        <span style="font-size:14px;color:rgba(34,197,94,.85);font-weight:600;">{{ nidosGroupChevron }}</span>
+                      </div>
+                    </div>
+                    <!-- Collapsible nidos content -->
+                    <div style="overflow:hidden;max-height:{{ nidosGroupMaxHeight }};transition:max-height 0.28s cubic-bezier(0.16,1,0.3,1);">
+                      <!-- Tipo Pokémon -->
+                      <div style="border-bottom:1px solid var(--border-subtle);">
+                        <button onClick="{{ toggleTipoPoke }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;">
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:26px;height:26px;border-radius:7px;background:rgba(34,197,94,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">⚡</div>
+                            <div>
+                              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Tipo Pokémon</div>
+                              <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;">Especies en nidos activos</div>
+                            </div>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <sc-if value="{{ tipoPokeActiveVis }}" hint-placeholder-val="{{ false }}">
+                              <div style="min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(34,197,94,0.15);font:700 10px/18px 'Exo 2',sans-serif;color:#22c55e;text-align:center;">{{ tipoPokeCount }}</div>
+                            </sc-if>
+                            <span style="font-size:9px;color:var(--text-secondary);">{{ tipoPokeArr }}</span>
+                          </div>
+                        </button>
+                        <sc-if value="{{ tipoPokeOpen }}" hint-placeholder-val="{{ true }}">
+                          <div style="padding:0 12px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+                            <sc-for list="{{ typePills }}" as="p" hint-placeholder-count="9">
+                              <button onClick="{{ p.toggle }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:9px;border-width:1.5px;border-style:solid;cursor:pointer;background:{{ p.bg }};border-color:{{ p.border }};">
+                                <div style="width:22px;height:22px;border-radius:50%;background:{{ p.typeColor }};display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;">{{ p.typeEmoji }}</div>
+                                <span style="font:600 9px/1 'Exo 2',sans-serif;color:{{ p.textColor }};text-transform:uppercase;letter-spacing:.04em;">{{ p.label }}</span>
+                              </button>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                      <!-- Ordenar Nidos -->
+                      <div style="border-bottom:1px solid var(--border-subtle);">
+                        <button onClick="{{ toggleOrdenNidos }}" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;">
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:26px;height:26px;border-radius:7px;background:rgba(34,197,94,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">↕</div>
+                            <div>
+                              <div style="font:700 11px/1 'Rajdhani',sans-serif;color:#22c55e;text-transform:uppercase;letter-spacing:.1em;">Ordenar</div>
+                              <div style="font:400 10px/1.3 'Exo 2',sans-serif;color:var(--text-secondary);margin-top:2px;">Criterio para listar nidos</div>
+                            </div>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font:500 10px/1 'Exo 2',sans-serif;color:#22c55e;">{{ ordenNidosLabel }}</span>
+                            <span style="font-size:9px;color:var(--text-secondary);">{{ ordenNidosArr }}</span>
+                          </div>
+                        </button>
+                        <sc-if value="{{ ordenNidosOpen }}" hint-placeholder-val="{{ false }}">
+                          <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:4px;">
+                            <sc-for list="{{ ordenNidosOpts }}" as="o" hint-placeholder-count="3">
+                              <button onClick="{{ o.select }}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border-width:1px;border-style:solid;cursor:pointer;background:{{ o.bg }};border-color:{{ o.border }};">
+                                <div style="width:16px;height:16px;border-radius:50%;border-width:2px;border-style:solid;border-color:{{ o.radioBorder }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                  <sc-if value="{{ o.active }}" hint-placeholder-val="{{ false }}">
+                                    <div style="width:7px;height:7px;border-radius:50%;background:#22c55e;"></div>
+                                  </sc-if>
+                                </div>
+                                <span style="font:500 12px/1 'Exo 2',sans-serif;color:{{ o.textColor }};">{{ o.label }}</span>
+                              </button>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- Empty state -->
+                <sc-if value="{{ noTabs }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:28px 16px;text-align:center;">
+                    <div style="font-size:28px;margin-bottom:8px;opacity:.3;">⚙</div>
+                    <span style="font:400 12px/1.5 'Exo 2',sans-serif;color:var(--text-secondary);opacity:.5;">Activa Clima o Nidos<br>en el header para ver filtros</span>
+                  </div>
+                </sc-if>
+
+              </div>
+
+              <!-- Toast -->
+              <sc-if value="{{ showClearToast }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;bottom:72px;left:50%;transform:translateX(-50%);background:rgba(30,34,42,.97);border:1px solid var(--border-default);border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:7px;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:10;">
+                  <span style="font-size:13px;">🗑</span>
+                  <span style="font:500 12px/1 'Exo 2',sans-serif;color:var(--text-secondary);">Filtros eliminados</span>
+                </div>
+              </sc-if>
+
+              <!-- Footer -->
+              <div style="padding:10px 12px 12px;border-top:1px solid var(--border-default);flex-shrink:0;display:flex;flex-direction:column;gap:7px;">
+                <div style="display:flex;gap:7px;">
+                  <button onClick="{{ apply }}" style="flex:2;height:40px;background:var(--ui-accent);border:none;border-radius:9px;cursor:pointer;font:700 13px/1 'Exo 2',sans-serif;color:white;">✓ Aplicar</button>
+                  <button onClick="{{ closePanel }}" style="flex:1;height:40px;background:var(--bg-primary);border:1px solid var(--border-default);border-radius:9px;cursor:pointer;font:600 13px/1 'Exo 2',sans-serif;color:var(--text-secondary);">✕ Cancelar</button>
+                </div>
+                <button onClick="{{ clearAll }}" style="background:none;border:none;cursor:pointer;font:400 11px/1 'Exo 2',sans-serif;color:var(--text-secondary);opacity:.6;text-decoration:underline;">✕ Limpiar todos los filtros</button>
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Map -->
+          <div style="flex:1;background:#0b1120;position:relative;overflow:hidden;">
+            <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:52px 52px;"></div>
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 55% 38%,rgba(20,60,130,.38) 0%,transparent 62%);"></div>
+            <div style="position:absolute;top:27%;left:36%;width:11px;height:11px;border-radius:50%;background:#58a6ff;box-shadow:0 0 16px rgba(88,166,255,.7);"></div>
+            <div style="position:absolute;top:27%;left:36%;width:24px;height:24px;border-radius:50%;border:1px solid rgba(88,166,255,.3);margin-left:-6.5px;margin-top:-6.5px;"></div>
+            <div style="position:absolute;top:52%;left:60%;width:9px;height:9px;border-radius:50%;background:#f59e0b;box-shadow:0 0 12px rgba(245,158,11,.6);"></div>
+            <div style="position:absolute;top:40%;left:74%;width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,.6);"></div>
+            <div style="position:absolute;top:64%;left:26%;width:9px;height:9px;border-radius:50%;background:#3b82f6;box-shadow:0 0 12px rgba(59,130,246,.6);"></div>
+            <div style="position:absolute;top:44%;left:48%;width:8px;height:8px;border-radius:50%;background:#8b5cf6;box-shadow:0 0 10px rgba(139,92,246,.5);"></div>
+            <sc-if value="{{ anyFilterVis }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:12px;left:12px;display:flex;flex-wrap:wrap;gap:5px;max-width:320px;">
+                <sc-for list="{{ mapPills }}" as="pill" hint-placeholder-count="2">
+                  <div style="display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;background:rgba(13,17,23,.82);border:1px solid {{ pill.color }};font:500 11px/1 'Exo 2',sans-serif;color:{{ pill.color }};">{{ pill.label }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="position:absolute;bottom:14px;right:18px;font:400 10px/1 'Exo 2',sans-serif;color:rgba(255,255,255,.1);letter-spacing:.12em;text-transform:uppercase;">Mapa Interactivo</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    climaOn: true, nidosOn: false, panelOpen: false,
+    climaGroupOpen: true, nidosGroupOpen: true, showClearToast: false,
+    condOpen: true, regionOpen: false, tipoClimaOpen: false, ordenOpen: false,
+    tipoPokeOpen: true, ordenNidosOpen: false,
+    condicion: [], region: 'todas', tipoClima: 'todos', orden: 'sin_orden',
+    tipoPoke: [], ordenNidos: 'sin_orden',
+  };
+
+  renderVals() {
+    const s = this.state;
+    const CITIES = [
+      { name: 'Buenos Aires', country: 'Argentina', condition: 'sunny',  types: ['fire','grass'],      time: '14:30' },
+      { name: 'Ciudad de México', country: 'México', condition: 'partly', types: ['electric','dragon'], time: '13:30' },
+      { name: 'Lima',         country: 'Perú',      condition: 'fog',    types: ['ghost','dark'],       time: '13:30' },
+      { name: 'Bogotá',       country: 'Colombia',  condition: 'rain',   types: ['water','electric'],   time: '14:30' },
+      { name: 'Santiago',     country: 'Chile',     condition: 'cloudy', types: ['dragon','psychic'],   time: '15:30' },
+      { name: 'Medellín',     country: 'Colombia',  condition: 'partly', types: ['grass','fairy'],      time: '14:30' },
+      { name: 'São Paulo',    country: 'Brasil',    condition: 'rain',   types: ['water','fire'],       time: '16:30' },
+      { name: 'Rio de Janeiro', country: 'Brasil',  condition: 'partly', types: ['grass','electric'],   time: '16:30' },
+    ];
+    const COND_EMOJI = { sunny:'☀️', partly:'⛅', cloudy:'☁️', fog:'🌫', rain:'🌧', snow:'❄️', windy:'💨' };
+    const TYPE_COLOR = { fire:'#ef4444', water:'#3b82f6', grass:'#22c55e', electric:'#eab308', ice:'#67e8f9', dragon:'#7c3aed', psychic:'#ec4899', dark:'#6b7280', ghost:'#8b5cf6', ground:'#d97706', normal:'#9ca3af', fairy:'#f472b6' };
+
+    const WEATHER = [
+      { value:'sunny', emoji:'☀️', label:'Soleado' }, { value:'partly', emoji:'⛅', label:'Parcial' },
+      { value:'cloudy', emoji:'☁️', label:'Nublado' }, { value:'fog', emoji:'🌫', label:'Niebla' },
+      { value:'rain', emoji:'🌧', label:'Lluvia' }, { value:'snow', emoji:'❄️', label:'Nieve' },
+      { value:'windy', emoji:'💨', label:'Ventoso' },
+    ];
+    const REGIONS = [
+      { value:'todas', label:'🌐 Todas' }, { value:'asia', label:'🌏 Asia' },
+      { value:'eu', label:'🌍 Europa' }, { value:'am', label:'🌎 América' },
+      { value:'oc', label:'🌏 Oceanía' }, { value:'af', label:'🌍 África' },
+    ];
+    const TIPO_CLIMA = [
+      { value:'todos', label:'Todos' }, { value:'tropical', label:'Tropical' },
+      { value:'seco', label:'Seco' }, { value:'templado', label:'Templado' }, { value:'polar', label:'Polar' },
+    ];
+    const ORDEN = [
+      { value:'sin_orden', label:'Sin orden' }, { value:'nombre', label:'Nombre' },
+      { value:'densidad', label:'Densidad' }, { value:'raid', label:'Raid activo' }, { value:'hora', label:'Hora Local' },
+    ];
+    const TYPES = [
+      { value:'fire', label:'Fire', emoji:'🔥', color:'#ef4444' }, { value:'water', label:'Water', emoji:'💧', color:'#3b82f6' },
+      { value:'grass', label:'Grass', emoji:'🌿', color:'#22c55e' }, { value:'electric', label:'Electric', emoji:'⚡', color:'#eab308' },
+      { value:'ice', label:'Ice', emoji:'❄️', color:'#67e8f9' }, { value:'dragon', label:'Dragon', emoji:'🐉', color:'#7c3aed' },
+      { value:'psychic', label:'Psychic', emoji:'🔮', color:'#ec4899' }, { value:'dark', label:'Dark', emoji:'🌑', color:'#6b7280' },
+      { value:'ghost', label:'Ghost', emoji:'👻', color:'#8b5cf6' }, { value:'ground', label:'Ground', emoji:'🏜', color:'#d97706' },
+      { value:'normal', label:'Normal', emoji:'⭐', color:'#9ca3af' }, { value:'fairy', label:'Fairy', emoji:'✨', color:'#f472b6' },
+    ];
+    const ORDEN_NIDOS = [
+      { value:'sin_orden', label:'Sin orden' }, { value:'nombre', label:'Nombre' },
+      { value:'nidos', label:'Nidos activos' }, { value:'hora', label:'Hora Local' },
+    ];
+
+    // Pills builders
+    const wPills = WEATHER.map(w => {
+      const on = s.condicion.includes(w.value);
+      return { emoji: w.emoji, label: w.label,
+        bg: on ? 'rgba(88,166,255,0.15)' : 'var(--bg-tertiary)',
+        border: on ? '#58a6ff' : 'var(--border-default)',
+        textColor: on ? '#58a6ff' : 'var(--text-secondary)',
+        toggle: () => this.setState(st => ({ condicion: st.condicion.includes(w.value) ? st.condicion.filter(v => v !== w.value) : [...st.condicion, w.value] })) };
+    });
+    const regionPills = REGIONS.map(r => {
+      const on = s.region === r.value;
+      return { label: r.label, bg: on ? 'rgba(88,166,255,0.15)' : 'var(--bg-tertiary)', border: on ? '#58a6ff' : 'var(--border-default)', textColor: on ? '#58a6ff' : 'var(--text-secondary)', select: () => this.setState({ region: r.value }) };
+    });
+    const tipoClimaPills = TIPO_CLIMA.map(r => {
+      const on = s.tipoClima === r.value;
+      return { label: r.label, bg: on ? 'rgba(88,166,255,0.15)' : 'var(--bg-tertiary)', border: on ? '#58a6ff' : 'var(--border-default)', textColor: on ? '#58a6ff' : 'var(--text-secondary)', select: () => this.setState({ tipoClima: r.value }) };
+    });
+    const ordenOpts = ORDEN.map(o => {
+      const on = s.orden === o.value;
+      return { label: o.label, active: on, bg: on ? 'rgba(88,166,255,0.08)' : 'var(--bg-primary)', border: on ? 'rgba(88,166,255,0.3)' : 'var(--border-default)', radioBorder: on ? '#58a6ff' : 'var(--border-strong)', textColor: on ? 'var(--text-primary)' : 'var(--text-secondary)', select: () => this.setState({ orden: o.value }) };
+    });
+    const typePills = TYPES.map(t => {
+      const on = s.tipoPoke.includes(t.value);
+      return { label: t.label, typeEmoji: t.emoji, typeColor: t.color,
+        bg: on ? 'rgba(255,255,255,0.06)' : 'var(--bg-tertiary)', border: on ? t.color : 'var(--border-default)', textColor: on ? 'var(--text-primary)' : 'var(--text-secondary)',
+        toggle: () => this.setState(st => ({ tipoPoke: st.tipoPoke.includes(t.value) ? st.tipoPoke.filter(v => v !== t.value) : [...st.tipoPoke, t.value] })) };
+    });
+    const ordenNidosOpts = ORDEN_NIDOS.map(o => {
+      const on = s.ordenNidos === o.value;
+      return { label: o.label, active: on, bg: on ? 'rgba(34,197,94,0.08)' : 'var(--bg-primary)', border: on ? 'rgba(34,197,94,0.3)' : 'var(--border-default)', radioBorder: on ? '#22c55e' : 'var(--border-strong)', textColor: on ? 'var(--text-primary)' : 'var(--text-secondary)', select: () => this.setState({ ordenNidos: o.value }) };
+    });
+
+    // Badges
+    const condActiveCt  = String(s.condicion.length);
+    const condActiveVis = s.condicion.length > 0;
+    const regionActiveVis = s.region !== 'todas';
+    const regionLabel   = REGIONS.find(r => r.value === s.region)?.label || '';
+    const tipoPokeCount    = String(s.tipoPoke.length);
+    const tipoPokeActiveVis = s.tipoPoke.length > 0;
+    const ordenLabel    = ORDEN.find(o => o.value === s.orden)?.label || '';
+    const ordenNidosLabel = ORDEN_NIDOS.find(o => o.value === s.ordenNidos)?.label || '';
+
+    const climaBadgeN = (s.condicion.length > 0 ? 1 : 0) + (s.region !== 'todas' ? 1 : 0) + (s.tipoClima !== 'todos' ? 1 : 0) + (s.orden !== 'sin_orden' ? 1 : 0);
+    const nidosBadgeN = (s.tipoPoke.length > 0 ? 1 : 0) + (s.ordenNidos !== 'sin_orden' ? 1 : 0);
+    const totalN = climaBadgeN + nidosBadgeN;
+
+    // Map pills
+    const mapPills = [];
+    if (s.condicion.length > 0) mapPills.push({ label: s.condicion.map(v => WEATHER.find(w => w.value === v)?.emoji).join(''), color: '#58a6ff' });
+    if (s.region !== 'todas') mapPills.push({ label: regionLabel, color: '#58a6ff' });
+    if (s.tipoPoke.length > 0) mapPills.push({ label: '🌿 ' + s.tipoPoke.slice(0,3).map(v => TYPES.find(t => t.value === v)?.label).join(', '), color: '#22c55e' });
+
+    // City list filtered
+    const cities = CITIES.filter(c => {
+      if (s.climaOn && s.condicion.length > 0 && !s.condicion.includes(c.condition)) return false;
+      if (s.nidosOn && s.tipoPoke.length > 0 && !c.types.some(t => s.tipoPoke.includes(t))) return false;
+      return true;
+    }).map(c => ({ ...c, icon: COND_EMOJI[c.condition] || '●', dots: c.types.slice(0,3).map(t => ({ color: TYPE_COLOR[t] || '#666' })) }));
+
+    return {
+      climaOn: s.climaOn, nidosOn: s.nidosOn, noTabs: !s.climaOn && !s.nidosOn,
+      panelOpen: s.panelOpen,
+      listTransform: s.panelOpen ? 'translateX(-100%)' : 'translateX(0)',
+      panelTransform: s.panelOpen ? 'translateX(0)' : 'translateX(100%)',
+      listPE: s.panelOpen ? 'none' : 'auto',
+      panelPE: s.panelOpen ? 'auto' : 'none',
+      climaTabBorder: s.climaOn ? '#58a6ff' : 'transparent',
+      climaTabColor: s.climaOn ? 'var(--text-primary)' : 'var(--text-secondary)',
+      nidosTabBorder: s.nidosOn ? '#22c55e' : 'transparent',
+      nidosTabColor: s.nidosOn ? 'var(--text-primary)' : 'var(--text-secondary)',
+      climaDot: s.climaOn ? 1 : 0.3, nidosDot: s.nidosOn ? 1 : 0.3,
+      climaBadge: String(climaBadgeN), climaBadgeVis: climaBadgeN > 0,
+      nidosBadge: String(nidosBadgeN), nidosBadgeVis: nidosBadgeN > 0,
+      totalBadge: String(totalN), anyFilterVis: totalN > 0, mapPills,
+      condOpen: s.condOpen, regionOpen: s.regionOpen, tipoClimaOpen: s.tipoClimaOpen,
+      ordenOpen: s.ordenOpen, tipoPokeOpen: s.tipoPokeOpen, ordenNidosOpen: s.ordenNidosOpen,
+      condArr: s.condOpen ? '▲' : '▼', regionArr: s.regionOpen ? '▲' : '▼',
+      tipoClimaArr: s.tipoClimaOpen ? '▲' : '▼', ordenArr: s.ordenOpen ? '▲' : '▼',
+      tipoPokeArr: s.tipoPokeOpen ? '▲' : '▼', ordenNidosArr: s.ordenNidosOpen ? '▲' : '▼',
+      condActiveCt, condActiveVis, regionActiveVis, regionLabel,
+      tipoPokeCount, tipoPokeActiveVis, ordenLabel, ordenNidosLabel,
+      wPills, regionPills, tipoClimaPills, ordenOpts, typePills, ordenNidosOpts,
+      cities, count: String(cities.length),
+      openPanel:  () => this.setState({ panelOpen: true }),
+      closePanel: () => this.setState({ panelOpen: false }),
+      apply:      () => this.setState({ panelOpen: false }),
+      clearAll: () => {
+        this.setState({ condicion: [], region: 'todas', tipoClima: 'todos', orden: 'sin_orden', tipoPoke: [], ordenNidos: 'sin_orden', showClearToast: true });
+        setTimeout(() => this.setState({ showClearToast: false }), 2200);
+      },
+      climaGroupOpen: s.climaGroupOpen, nidosGroupOpen: s.nidosGroupOpen,
+      climaGroupMaxHeight: s.climaGroupOpen ? '2000px' : '0',
+      nidosGroupMaxHeight: s.nidosGroupOpen ? '2000px' : '0',
+      climaGroupChevron: s.climaGroupOpen ? '▾' : '▸',
+      nidosGroupChevron: s.nidosGroupOpen ? '▾' : '▸',
+      showClearToast: s.showClearToast,
+      toggleClimaGroup: () => this.setState(st => ({ climaGroupOpen: !st.climaGroupOpen })),
+      toggleNidosGroup: () => this.setState(st => ({ nidosGroupOpen: !st.nidosGroupOpen })),
+      toggleClima:      () => this.setState(st => ({ climaOn: !st.climaOn })),
+      toggleNidos:      () => this.setState(st => ({ nidosOn: !st.nidosOn })),
+      toggleCondicion:  () => this.setState(st => ({ condOpen: !st.condOpen })),
+      toggleRegion:     () => this.setState(st => ({ regionOpen: !st.regionOpen })),
+      toggleTipoClima:  () => this.setState(st => ({ tipoClimaOpen: !st.tipoClimaOpen })),
+      toggleOrden:      () => this.setState(st => ({ ordenOpen: !st.ordenOpen })),
+      toggleTipoPoke:   () => this.setState(st => ({ tipoPokeOpen: !st.tipoPokeOpen })),
+      toggleOrdenNidos: () => this.setState(st => ({ ordenNidosOpen: !st.ordenNidosOpen })),
+    };
+  }
+}
+</script>
+</body>
+</html>

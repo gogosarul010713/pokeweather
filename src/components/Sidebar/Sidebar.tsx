@@ -1,7 +1,6 @@
 import { useStore, type City } from '../../store/useStore'
 import LocationFeed from './LocationFeed'
 import FilterPanel from './FilterPanel'
-import Overlay from '../UI/Overlay'
 import { Z } from '../../config/zIndex'
 
 interface SidebarProps {
@@ -10,8 +9,7 @@ interface SidebarProps {
 
 export default function Sidebar({ cities }: SidebarProps) {
   const activeLayers = useStore((s) => s.activeLayers)
-  const getFilteredCities = useStore((s) => s.getFilteredCities)
-  const filteredCount = activeLayers.clima ? getFilteredCities(cities).length : undefined
+  const hasActiveLayer = activeLayers.clima || activeLayers.nidos
 
   return (
     <>
@@ -21,7 +19,7 @@ export default function Sidebar({ cities }: SidebarProps) {
           height: 100%;
         }
 
-        /* Sidebar siempre visible en desktop/tablet — ver DEC-904 */
+        /* Sidebar visible solo cuando hay capa activa */
         .sb-root {
           width: 300px;
           flex-shrink: 0;
@@ -33,6 +31,14 @@ export default function Sidebar({ cities }: SidebarProps) {
           height: 100%;
           z-index: ${Z.sidebar};
           position: relative;
+          transition: width 280ms ease, opacity 280ms ease;
+        }
+
+        .sb-root.sb-hidden {
+          width: 0;
+          opacity: 0;
+          border-right: none;
+          pointer-events: none;
         }
 
         /* ── Content ── */
@@ -85,22 +91,15 @@ export default function Sidebar({ cities }: SidebarProps) {
       `}</style>
 
       <div className="sb-wrapper">
-        <aside className="sb-root">
+        <aside className={`sb-root${hasActiveLayer ? '' : ' sb-hidden'}`}>
           <div className="sb-content" style={{ position: 'relative' }}>
             {/* Content Wrapper — posición relativa para Overlay */}
             <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              {/* Overlay cuando ninguna capa activa */}
-              <Overlay
-                isActive={!activeLayers.clima && !activeLayers.nidos}
-                message="Activa Clima o Nidos para explorar la lista y mostrar los filtros"
-                zIndex={Z.mapOverlay}
-              />
-
               {/* FilterPanel — filtros adaptativos por capa activa (US-821) */}
-              <FilterPanel citiesCount={filteredCount} />
+              <FilterPanel />
 
-              {/* LocationFeed — lista de ciudades (solo cuando capa clima activa) */}
-              {activeLayers.clima && (
+              {/* LocationFeed — lista unificada cuando al menos una capa activa */}
+              {(activeLayers.clima || activeLayers.nidos) && (
                 <LocationFeed cities={cities} />
               )}
             </div>
