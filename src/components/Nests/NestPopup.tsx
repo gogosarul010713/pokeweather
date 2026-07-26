@@ -51,7 +51,7 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
           position: fixed;
           top: 0;
           bottom: 0;
-          left: 360px;
+          left: 300px;
           right: 0;
           background: rgba(0,0,0,0.4);
           z-index: 1100;
@@ -64,7 +64,7 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
         .np-wrapper {
           position: fixed;
           top: 50%;
-          left: 50%;
+          left: calc(300px + (100vw - 300px) / 2);
           transform: translate(-50%, -50%);
           z-index: 1101;
         }
@@ -268,7 +268,6 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
 
       `}</style>
 
-      <div className="np-backdrop" onClick={handleCloseAll} />
       <div className="np-wrapper">
 
         <div className="np-root">
