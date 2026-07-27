@@ -99,6 +99,7 @@
 | BUG-002 | Popup de clima bloqueado por nido abierto | ✅ Resuelto |
 | BUG-003 | MapLegend oculta por z-index de Leaflet | ✅ Resuelto (sesion 24, 2026-07-25) — z-index hardcodeado a 1000 en MapLegend.tsx |
 | BUG-004 | Backdrop NestPopup bloqueaba scroll del sidebar | ✅ Resuelto (sesion 26, 2026-07-26) — `inset:0` → `left:360px` en `.np-backdrop` de NestPopup.tsx |
+| BUG-005 | NestPopup backdrop eliminado + left corregido a 300px + popup centrado en area mapa | ✅ Resuelto (sesion 27, 2026-07-26, commit 809c2a0) — backdrop removido; `left: calc(300px + (100vw - 300px) / 2)` |
 
 > Referencia de diseno final: `Filter Panel Final.dc.html` — claude.ai/design proyecto "Copy of Variantes filtros Pokeweather"
 
