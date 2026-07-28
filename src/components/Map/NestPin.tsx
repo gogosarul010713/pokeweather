@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
-import { Marker } from 'react-leaflet'
+import { useMemo, useRef, useEffect } from 'react'
+import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { useStore } from '../../store/useStore'
 import type { Nest } from '../../types/nest'
+import NestPopup from '../Nests/NestPopup'
 
 interface NestPinProps {
   nest: Nest
@@ -49,15 +50,18 @@ function buildNestIcon(color: string, selected: boolean, badges: string[]): L.Di
     html,
     iconSize: [size, size],
     iconAnchor: [half, half],
+    popupAnchor: [0, -half],
   })
 }
 
 export default function NestPin({ nest }: NestPinProps) {
   const setSelectedNest = useStore((s) => s.setSelectedNest)
   const selectedNest = useStore((s) => s.selectedNest)
+  const scrollToFeed = useStore((s) => s.scrollToFeed)
 
   const isSelected = selectedNest?.id === nest.id
   const color = TYPE_COLORS[nest.types[0]?.toLowerCase() || 'normal'] || '#999999'
+  const markerRef = useRef<L.Marker>(null)
 
   const badges: string[] = []
   if ((nest.spawnRate ?? 0) > 0) badges.push('🌿')
@@ -70,12 +74,26 @@ export default function NestPin({ nest }: NestPinProps) {
     [color, isSelected, nest.spawnRate, nest.stops, nest.gyms]
   )
 
+  useEffect(() => {
+    if (isSelected) markerRef.current?.openPopup()
+    else markerRef.current?.closePopup()
+  }, [isSelected])
+
   return (
     <Marker
+      ref={markerRef}
       position={[nest.lat, nest.lng]}
       icon={icon}
       zIndexOffset={isSelected ? 1000 : 0}
       eventHandlers={{ click: () => setSelectedNest(nest) }}
-    />
+    >
+      <Popup autoPan={false} closeButton={false} minWidth={290} maxWidth={290} className="leaflet-popup-nest">
+        <NestPopup
+          nest={nest}
+          onClose={() => markerRef.current?.closePopup()}
+          onViewInList={() => { markerRef.current?.closePopup(); scrollToFeed('nest') }}
+        />
+      </Popup>
+    </Marker>
   )
 }

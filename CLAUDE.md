@@ -4,25 +4,22 @@
 
 ---
 
-## ESTADO ACTUAL (2026-07-26)
+## ESTADO ACTUAL (2026-07-28)
 
-**Sprint 9 — Sesion 25 (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 28 (branch: `sprint-9-nests`)**
 
 **Completado:**
-- US-811 a US-826 + ENH-001/002/003 ✅ — commiteados
+- US-811 a US-826 + ENH-001/002/003/006 ✅ — commiteados
 - US-818 ✅ — NestCard + feed + NestPopup + NestDetail completo
-- ENH-004 ✅ — NestDetail homologado: modal centrado, sprite en header, hora local, sin marcos
-- BUG-001 ✅ — "Ver en lista" scroll+highlight en NestDetail y LocationDetail (DEC-911, DEC-912)
-- BUG-002 ✅ — FlyToCity disparaba con tick de nido; exclusion mutua selectedCity/selectedNest (DEC-913)
-- ENH-006 ✅ — Sidebar oculto con transicion suave (width+opacity 280ms) cuando no hay capa activa; Overlay eliminado
-- Mockups MapLegend Categorias ✅ — 2 artifacts + doc en `src/docs/mockups/maplegend-categorias/`
+- BUG-001/002/003/004 ✅ — commiteados (c61ebe2)
+- BUG-005 ✅ — NestPopup: backdrop eliminado (809c2a0)
+- BUG-006 ✅ — Popups clima y nidos homologados: Popup Leaflet dentro del Marker, popupAnchor automatico, flyTo offset alineado (sin commit aun)
 
 **Siguiente:**
-- Commit pendiente: sesiones 15-16-18-19-20-21-22-23-24-25
-- MapLegend rediseno tab Categorias — elegir entre propuesta 1 (checkbox+ojo estado+Ver) o 3 (checkbox+Ver). Mockups en `src/docs/mockups/maplegend-categorias/README.md`
+- US-815 — Filtros por categoria en MapLegend: resaltar pins + chips sidebar. Mockup aprobado en artifact `0c33f214`.
 
 **Backlog critico pendiente:**
-- US-815 — Rediseno MapLegend highlight visual con anillo segmentado SVG. Mockup en `src/docs/mockups/map-highlight-segmented-ring/`
+- ENH-004 ⏳ — NestDetail homologacion visual (bottom sheet, sprite header, hora local). Ver `enhancements/ENH-004-nest-detail-homologacion-visual.md`
 
 ---
 
@@ -31,7 +28,7 @@
 Dashboard web interactivo: clima de ciudades del mundo -> tipos Pokemon potenciados (sistema Pokemon GO).
 
 **Stack:** React 18 + Vite 5 + Leaflet + Zustand 4 + AccuWeather API + idb-keyval + s2-geometry
-**Dev server:** port 5173
+**Dev server:** port 5174
 **Env:** `VITE_ACCUWEATHER_KEY` (requerida)
 
 ---

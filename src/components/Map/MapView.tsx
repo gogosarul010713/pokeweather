@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { MapContainer, useMap, Popup } from 'react-leaflet'
+import { MapContainer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useStore } from '../../store/useStore'
@@ -9,7 +9,6 @@ import type { Nest } from '../../types/nest'
 import nestsData from '../../data/nests.json'
 import MapPin from './MapPin'
 import NestPin from './NestPin'
-import CityTooltip from './CityTooltip'
 import FlyToCity from './FlyToCity'
 import FlyToNest from './FlyToNest'
 import MapLegend from './MapLegend'
@@ -41,29 +40,6 @@ function TileSwitcher() {
   }, [theme, map])
 
   return null
-}
-
-// ─── SelectedPopup — popup sincronizado con selectedCity ──────────────────────
-// Se monta dentro de MapContainer para tener acceso al mapa.
-
-function SelectedPopup({ cities }: { cities: City[] }) {
-  const selectedCity = useStore((s) => s.selectedCity)
-  const setSelectedCity = useStore((s) => s.setSelectedCity)
-
-  if (!selectedCity) return null
-
-  const city = cities.find((c) => c.id === selectedCity.id) ?? selectedCity
-
-  return (
-    <Popup
-      position={[city.lat, city.lon]}
-      eventHandlers={{ remove: () => setSelectedCity(null) }}
-      closeButton={true}
-      autoPan={false}
-    >
-      <CityTooltip city={city} />
-    </Popup>
-  )
 }
 
 // ─── MapView ──────────────────────────────────────────────────────────────────
@@ -150,6 +126,18 @@ export default function MapView({ cities }: MapViewProps) {
           color: var(--text-primary) !important;
         }
 
+        /* Nest popup: anula wrapper de Leaflet — NestPopup tiene su propio estilo */
+        .mv-root .leaflet-popup-nest .leaflet-popup-content-wrapper {
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          box-shadow: none;
+          padding: 0;
+        }
+        .mv-root .leaflet-popup-nest .leaflet-popup-content {
+          margin: 0;
+        }
+
         /* Dark mode: invierte positron → dark grisáceo sin CORS issues */
         .mv-root .leaflet-tile-container {
           filter: var(--tile-filter, none);
@@ -188,7 +176,6 @@ export default function MapView({ cities }: MapViewProps) {
             ))
           }
 
-          <SelectedPopup cities={cities} />
         </MapContainer>
 
         {/* Leyenda fuera del MapContainer para evitar z-index conflicts */}

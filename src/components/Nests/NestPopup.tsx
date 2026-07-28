@@ -47,28 +47,6 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
   return (
     <>
       <style>{`
-        .np-backdrop {
-          position: fixed;
-          top: 0;
-          bottom: 0;
-          left: 300px;
-          right: 0;
-          background: rgba(0,0,0,0.4);
-          z-index: 1100;
-          animation: np-fade 200ms ease;
-        }
-        @keyframes np-fade {
-          from { opacity: 0; } to { opacity: 1; }
-        }
-
-        .np-wrapper {
-          position: fixed;
-          top: 50%;
-          left: calc(300px + (100vw - 300px) / 2);
-          transform: translate(-50%, -50%);
-          z-index: 1101;
-        }
-
         .np-root {
           width: 290px;
           background: var(--bg-primary);
@@ -268,9 +246,7 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
 
       `}</style>
 
-      <div className="np-wrapper">
-
-        <div className="np-root">
+      <div className="np-root">
           {/* Header */}
           <div className="np-header">
             <div className="np-header-info">
@@ -344,7 +320,6 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
           <div className="np-tip-container">
             <div className="np-tip" />
           </div>
-      </div>
 
       {showDetail && createPortal(
         <NestDetail

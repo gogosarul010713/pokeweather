@@ -7,7 +7,6 @@ import MapLegend from './components/Map/MapLegend'
 import LocationFeed from './components/Sidebar/LocationFeed'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
-import NestPopup from './components/Nests/NestPopup'
 import { BottomSheetPortal } from './components/BottomSheet/BottomSheetPortal'
 import { Toast } from './components/UI/Toast'
 import { useWeather } from './hooks/useWeather'
@@ -20,8 +19,6 @@ export default function App() {
   const selectedCity = useStore((s) => s.selectedCity)
   const sidebarMode = useStore((s) => s.sidebarMode)
   const selectedNest = useStore((s) => s.selectedNest)
-  const nestPopupOpen = useStore((s) => s.nestPopupOpen)
-  const setNestPopupOpen = useStore((s) => s.setNestPopupOpen)
   const scrollToFeed = useStore((s) => s.scrollToFeed)
   const isMobile = useIsMobile()
   const getFilteredCities = useStore((s) => s.getFilteredCities)
@@ -202,15 +199,6 @@ export default function App() {
         {/* LOCATION DETAIL MODAL */}
         {sidebarMode === 'detail' && selectedCity && (
           <LocationDetail city={selectedCity} />
-        )}
-
-        {/* NEST POPUP */}
-        {nestPopupOpen && selectedNest && (
-          <NestPopup
-            nest={selectedNest}
-            onClose={() => setNestPopupOpen(false)}
-            onViewInList={() => { setNestPopupOpen(false); scrollToFeed('nest') }}
-          />
         )}
 
         {/* TOAST NOTIFICATIONS — Auto-refresh */}

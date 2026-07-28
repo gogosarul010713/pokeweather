@@ -1,12 +1,13 @@
 // MapPin.tsx — US-501 + Badges
 // Pin teardrop fijo. Badges pequeños para categorías (stops, gyms, community).
 
-import { useMemo } from 'react'
-import { Marker } from 'react-leaflet'
+import { useMemo, useRef, useEffect } from 'react'
+import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { useStore } from '../../store/useStore'
 import { CONDITION_COLORS, BADGE_ICONS, type BadgeType } from '../../services/weather/weatherService'
 import type { City } from '../../store/useStore'
+import CityTooltip from './CityTooltip'
 
 interface MapPinProps {
   city: City
@@ -64,17 +65,28 @@ export default function MapPin({ city, badges = [] }: MapPinProps) {
 
   const isSelected = selectedCity?.id === city.id
   const color = CONDITION_COLORS[city.condition]
+  const markerRef = useRef<L.Marker>(null)
 
   const icon = useMemo(() => buildIcon(color, isSelected, badges, showBadgesOnPins), [color, isSelected, badges, showBadgesOnPins])
 
+  useEffect(() => {
+    if (isSelected) markerRef.current?.openPopup()
+    else markerRef.current?.closePopup()
+  }, [isSelected])
+
   return (
     <Marker
+      ref={markerRef}
       position={[city.lat, city.lon]}
       icon={icon}
       zIndexOffset={isSelected ? 1000 : 0}
       eventHandlers={{
         click: () => setSelectedCity(city),
       }}
-    />
+    >
+      <Popup autoPan={false} closeButton={true}>
+        <CityTooltip city={city} />
+      </Popup>
+    </Marker>
   )
 }
