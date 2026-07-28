@@ -34,3 +34,14 @@ dos controles con responsabilidades separadas:
 |-------|--------------------|--------------------|
 | Clima | US-827             | US-828             |
 | Nidos | pendiente spec     | pendiente spec     |
+
+## Estructura MapLegend aprobada (2026-07-28)
+
+Mockup: https://claude.ai/code/artifact/28bec987-9bf1-4832-959e-0ec4e2d94f5a
+
+La leyenda tiene 2 tabs principales (Clima / Nidos), cada una con 2 subtabs:
+
+- Clima > Tipo Clima: sprite condicion + label
+- Clima > Categoria: iconos de las 4 categorias de ciudad (donde va el highlight de US-827)
+- Nidos > Tipos: grid 3col de 18 tipos Pokemon
+- Nidos > Estado: badges de verificacion/spawn/polvo
