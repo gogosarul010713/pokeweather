@@ -514,6 +514,44 @@ Eliminar el bloque countdown del `NestPopup`. El timer de migracion es informaci
 
 ---
 
+## DEC-914 — badgeFilter cambia de semantica: de filtrar a resaltar (ENH-007)
+
+**Fecha:** Sprint 9 — Sesion 29 (2026-07-28)
+**Estado:** Aprobada
+**Afecta:** `src/store/useStore.ts`, `src/components/Map/MapLegend.tsx`, `src/components/Map/MapView.tsx`, `src/components/Sidebar/LocationFeed.tsx`
+
+### Contexto
+
+`badgeFilter: string[]` en el store actualmente filtra/oculta ciudades: cuando hay valores, solo se muestran ciudades cuyo badge esta en el array. Default arranca con `['stops', 'gyms', 'community', 'best']` (todos activos = todo visible).
+
+ENH-007 (US-827) cambia la semantica completa de este control.
+
+### Decision
+
+`badgeFilter` (o campo renombrado `highlightCategories`) pasa de **filtrar** a **resaltar**:
+
+- Default: array vacio = todo visible y normal
+- Con valores: pines e items del sidebar de esa categoria se resaltan (highlight + glow), el resto reduce opacidad y saturacion
+- No oculta nada — solo cambia el peso visual
+
+El filtrado por categoria pasa al FilterPanel como chips independientes (`categoryFilter: string[]`, US-828), con la misma semantica AND que Region, Clima y Tipo Pokemon.
+
+### Consecuencias
+
+- `MapLegend.tsx`: checkboxes desmarcados por default; al activar, tine el checkbox y label con el color de la categoria
+- `MapView.tsx`: logica de dim/highlight en pines en lugar de `filter()`
+- `LocationFeed.tsx`: logica de dim/highlight en items en lugar de `filter()`
+- `FilterPanelClima.tsx`: nueva seccion con chips de categoria (filtrado real)
+- `useStore.ts`: renombrar o limpiar semantica de `badgeFilter`; agregar `categoryFilter`
+
+### Alternativas descartadas
+
+- **Toggle resaltar/ocultar en MapLegend** — descartado. Dos controles con las mismas etiquetas en dos modos diferentes es confuso (mismo click, resultado distinto).
+- **Auto-deteccion por densidad de pines** — descartado. Mismo click, comportamiento distinto segun cuantos pines haya; impredecible para el usuario.
+- **Solo resaltar sin atenuar el resto** — descartado. Sin contraste el highlight es invisible con muchos pines.
+
+---
+
 ## BUG-001 — LocationFeed no renderiza cuando solo capa Nidos activa (sesion 13)
 
 **Fecha:** Sprint 9 — Sesion 13 (2026-07-22)
