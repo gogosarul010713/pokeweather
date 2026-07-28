@@ -3,7 +3,6 @@ import { useStore } from './store/useStore'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import MapView from './components/Map/MapView'
-import MapLegend from './components/Map/MapLegend'
 import LocationFeed from './components/Sidebar/LocationFeed'
 import LoadingScreen from './components/UI/LoadingScreen'
 import LocationDetail from './components/Sidebar/LocationDetail'
@@ -180,7 +179,6 @@ export default function App() {
           {/* MAP AREA */}
           <main className="app-map-area" ref={mapAreaRef}>
             <MapView cities={filteredCities} />
-            <MapLegend />
           </main>
 
           {/* LIST AREA — Mobile only (LocationFeed extracted from Sidebar) */}

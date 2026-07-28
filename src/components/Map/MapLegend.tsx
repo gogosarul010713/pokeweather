@@ -1,17 +1,12 @@
-// MapLegend.tsx — Leyenda con pestañas (Clima + Categorías)
-// Tab 1: Condiciones de clima
-// Tab 2: Filtros de categorías + Toggle de badges en pines
-
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 import { CONDITION_COLORS, CONDITION_LABEL, BADGE_ICONS } from '../../services/weather/weatherService'
-import type { WeatherCondition } from '../../config/weatherImages'
+import { WEATHER_IMAGES, type WeatherCondition } from '../../config/weatherImages'
 import type { BadgeType } from '../../services/weather/weatherService'
+import { POKEMON_TYPES, TYPE_IMAGES } from '../../config/pokemonTypes'
 import { Z } from '../../config/zIndex'
 
-const CONDITIONS: WeatherCondition[] = [
-  'sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy',
-]
+const CONDITIONS: WeatherCondition[] = ['sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy']
 
 const BADGE_LABELS: Record<BadgeType, string> = {
   stops: 'Pokestop Hub',
@@ -19,30 +14,35 @@ const BADGE_LABELS: Record<BadgeType, string> = {
   community: 'Comunidad Activa',
   best: 'Mejores Lugares',
 }
-
 const BADGE_ORDER: BadgeType[] = ['stops', 'gyms', 'community', 'best']
 
-type TabType = 'clima' | 'categorias'
+const TYPE_LABELS: Record<string, string> = {
+  normal: 'Normal', fire: 'Fuego', water: 'Agua', grass: 'Planta',
+  electric: 'Electrico', ice: 'Hielo', fighting: 'Lucha', poison: 'Veneno',
+  ground: 'Tierra', flying: 'Volador', psychic: 'Psiquico', bug: 'Bicho',
+  rock: 'Roca', ghost: 'Fantasma', dragon: 'Dragon', dark: 'Siniestro',
+  steel: 'Acero', fairy: 'Hada',
+}
+
+type MainTab = 'clima' | 'nidos'
+type ClimaSubtab = 'tipo' | 'categoria'
+type NidosSubtab = 'tipos' | 'estado'
 
 export default function MapLegend() {
-  // Mobile (<768px): collapsed by default for space savings
-  // Desktop/Tablet: expanded by default
-  const [collapsed, setCollapsed] = useState(() => {
-    return typeof window !== 'undefined' && window.innerWidth < 768
-  })
-  const [activeTab, setActiveTab] = useState<TabType>('clima')
+  const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768)
+  const [mainTab, setMainTab] = useState<MainTab>('clima')
+  const [climaSubtab, setClimaSubtab] = useState<ClimaSubtab>('tipo')
+  const [nidosSubtab, setNidosSubtab] = useState<NidosSubtab>('tipos')
+
   const badgeFilter = useStore((s) => s.badgeFilter)
   const setBadgeFilter = useStore((s) => s.setBadgeFilter)
-  const showBadgesOnPins = useStore((s) => s.showBadgesOnPins)
-  const setShowBadgesOnPins = useStore((s) => s.setShowBadgesOnPins)
 
   const handleBadgeToggle = (badge: BadgeType) => {
-    const isChecked = badgeFilter.includes(badge)
-    if (isChecked) {
-      setBadgeFilter(badgeFilter.filter(b => b !== badge))
-    } else {
-      setBadgeFilter([...badgeFilter, badge])
-    }
+    setBadgeFilter(
+      badgeFilter.includes(badge)
+        ? badgeFilter.filter((b) => b !== badge)
+        : [...badgeFilter, badge]
+    )
   }
 
   return (
@@ -58,7 +58,7 @@ export default function MapLegend() {
           border-radius: 8px;
           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
           overflow: hidden;
-          min-width: 150px;
+          width: 188px;
           max-height: 70vh;
           display: flex;
           flex-direction: column;
@@ -71,86 +71,109 @@ export default function MapLegend() {
           padding: 8px 10px;
           cursor: pointer;
           user-select: none;
-          gap: 8px;
-          flex-shrink: 0;
           border-bottom: 1px solid var(--border-default);
+          flex-shrink: 0;
         }
-
-        .ml-header:hover {
-          background: var(--bg-tertiary);
-        }
+        .ml-header:hover { background: var(--bg-tertiary); }
 
         .ml-title {
           font-family: 'Exo 2', sans-serif;
           font-size: 10px;
           font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.08em;
           color: var(--text-secondary);
         }
 
         .ml-chevron {
-          font-size: 10px;
+          font-size: 9px;
           color: var(--text-secondary);
           transition: transform 200ms ease;
         }
+        .ml-chevron.open { transform: rotate(180deg); }
 
-        .ml-chevron.open {
-          transform: rotate(180deg);
-        }
-
-        /* ── Pestañas ── */
+        /* tabs principales */
         .ml-tabs {
           display: flex;
           border-bottom: 1px solid var(--border-default);
-          flex-shrink: 0;
           background: var(--bg-primary);
+          flex-shrink: 0;
         }
 
         .ml-tab {
           flex: 1;
-          padding: 8px 10px;
+          padding: 7px 6px;
           border: none;
           background: transparent;
           color: var(--text-secondary);
           cursor: pointer;
+          font-family: 'Exo 2', sans-serif;
           font-size: 10px;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.4px;
           border-bottom: 2px solid transparent;
           transition: all 150ms ease;
-          font-family: 'Exo 2', sans-serif;
         }
+        .ml-tab:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .ml-tab.active { color: var(--ui-accent); border-bottom-color: var(--ui-accent); }
 
-        .ml-tab:hover {
-          color: var(--text-primary);
+        /* subtabs */
+        .ml-subtabs {
+          display: flex;
+          border-bottom: 1px solid var(--border-subtle);
           background: var(--bg-tertiary);
+          flex-shrink: 0;
         }
 
-        .ml-tab.active {
-          color: var(--ui-accent);
-          border-bottom-color: var(--ui-accent);
+        .ml-subtab {
+          flex: 1;
+          padding: 5px 6px;
+          border: none;
+          background: transparent;
+          color: var(--text-secondary);
+          cursor: pointer;
+          font-family: 'Exo 2', sans-serif;
+          font-size: 9px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+          border-bottom: 2px solid transparent;
+          transition: all 150ms ease;
         }
+        .ml-subtab:hover { color: var(--text-primary); }
+        .ml-subtab.active { color: var(--ui-accent); border-bottom-color: var(--ui-accent); }
 
+        /* body */
         .ml-body {
-          padding: 8px 0;
           overflow-y: auto;
           flex: 1;
+          padding: 6px 0;
         }
 
-        .ml-row {
+        /* clima: sprite + label */
+        .ml-clima-row {
           display: flex;
           align-items: center;
           gap: 8px;
           padding: 4px 10px;
         }
 
-        .ml-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
+        .ml-sprite {
+          width: 22px;
+          height: 22px;
+          border-radius: 4px;
+          overflow: hidden;
           flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .ml-sprite img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
 
         .ml-label {
@@ -160,18 +183,22 @@ export default function MapLegend() {
           color: var(--text-primary);
         }
 
-        .ml-checkbox-row {
+        /* categoria: icono + label */
+        .ml-cat-row {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 6px 10px;
+          padding: 5px 10px;
           cursor: pointer;
-          user-select: none;
           transition: background 150ms ease;
         }
+        .ml-cat-row:hover { background: var(--bg-tertiary); }
 
-        .ml-checkbox-row:hover {
-          background: var(--bg-tertiary);
+        .ml-cat-icon {
+          font-size: 14px;
+          width: 20px;
+          text-align: center;
+          flex-shrink: 0;
         }
 
         .ml-checkbox {
@@ -184,13 +211,12 @@ export default function MapLegend() {
           justify-content: center;
           flex-shrink: 0;
           transition: all 150ms ease;
+          margin-left: auto;
         }
-
         .ml-checkbox.checked {
           background: var(--ui-accent);
           border-color: var(--ui-accent);
         }
-
         .ml-checkbox.checked::after {
           content: '✓';
           color: white;
@@ -198,71 +224,66 @@ export default function MapLegend() {
           font-weight: bold;
         }
 
-        .ml-checkbox-icon {
-          font-size: 14px;
-          flex-shrink: 0;
+        /* tipos grid 3col */
+        .ml-types-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 4px;
+          padding: 8px;
         }
 
-        .ml-checkbox-label {
+        .ml-type-chip {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+          padding: 5px 3px;
+          border-radius: 6px;
+          cursor: default;
+        }
+
+        .ml-type-icon {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .ml-type-icon img {
+          width: 20px;
+          height: 20px;
+          object-fit: contain;
+        }
+
+        .ml-type-name {
           font-family: 'Exo 2', sans-serif;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--text-primary);
-          flex: 1;
+          font-size: 8px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+          color: var(--text-secondary);
+          text-align: center;
+          line-height: 1;
         }
 
-        /* ── Toggle Switch ── */
-        .ml-toggle-row {
+        /* estado badges */
+        .ml-estado-row {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 10px;
-          border-top: 1px solid var(--border-subtle);
-          border-bottom: 1px solid var(--border-subtle);
+          padding: 6px 10px;
         }
 
-        .ml-toggle-label {
-          font-family: 'Exo 2', sans-serif;
-          font-size: 11px;
-          font-weight: 600;
-          color: var(--text-secondary);
-          text-transform: uppercase;
-          letter-spacing: 0.3px;
-          flex: 1;
-        }
-
-        .ml-switch {
-          width: 32px;
-          height: 18px;
-          border-radius: 9px;
-          background: var(--border-default);
-          border: none;
-          cursor: pointer;
-          padding: 2px;
-          display: flex;
-          align-items: center;
-          transition: background 200ms ease;
-          position: relative;
-        }
-
-        .ml-switch.on {
-          background: var(--ui-accent);
-        }
-
-        .ml-switch-thumb {
-          width: 14px;
-          height: 14px;
-          border-radius: 50%;
-          background: white;
-          transition: transform 200ms ease;
+        .ml-badge {
+          font-size: 15px;
+          width: 22px;
+          text-align: center;
           flex-shrink: 0;
         }
 
-        .ml-switch.on .ml-switch-thumb {
-          transform: translateX(14px);
-        }
-
-        /* ── RESPONSIVE ── */
         @media (max-width: 767px) {
           .ml-root {
             bottom: 75px;
@@ -274,6 +295,7 @@ export default function MapLegend() {
       `}</style>
 
       <div className="ml-root">
+        {/* Header colapsable */}
         <div className="ml-header" onClick={() => setCollapsed((c) => !c)}>
           <span className="ml-title">Leyenda</span>
           <span className={`ml-chevron ${collapsed ? '' : 'open'}`}>▼</span>
@@ -281,69 +303,128 @@ export default function MapLegend() {
 
         {!collapsed && (
           <>
-            {/* ── Pestañas ── */}
+            {/* Tabs principales */}
             <div className="ml-tabs">
               <button
-                className={`ml-tab ${activeTab === 'clima' ? 'active' : ''}`}
-                onClick={() => setActiveTab('clima')}
+                className={`ml-tab ${mainTab === 'clima' ? 'active' : ''}`}
+                onClick={() => setMainTab('clima')}
                 type="button"
               >
                 Clima
               </button>
               <button
-                className={`ml-tab ${activeTab === 'categorias' ? 'active' : ''}`}
-                onClick={() => setActiveTab('categorias')}
+                className={`ml-tab ${mainTab === 'nidos' ? 'active' : ''}`}
+                onClick={() => setMainTab('nidos')}
                 type="button"
               >
-                Categorías
+                Nidos
               </button>
             </div>
 
-            {/* ── Body ── */}
-            <div className="ml-body">
-              {/* Tab: Clima */}
-              {activeTab === 'clima' && (
-                <>
-                  {CONDITIONS.map((cond) => (
-                    <div key={cond} className="ml-row">
-                      <div className="ml-dot" style={{ background: CONDITION_COLORS[cond] }} />
+            {/* Tab Clima */}
+            {mainTab === 'clima' && (
+              <>
+                <div className="ml-subtabs">
+                  <button
+                    className={`ml-subtab ${climaSubtab === 'tipo' ? 'active' : ''}`}
+                    onClick={() => setClimaSubtab('tipo')}
+                    type="button"
+                  >
+                    Tipo Clima
+                  </button>
+                  <button
+                    className={`ml-subtab ${climaSubtab === 'categoria' ? 'active' : ''}`}
+                    onClick={() => setClimaSubtab('categoria')}
+                    type="button"
+                  >
+                    Categoria
+                  </button>
+                </div>
+
+                <div className="ml-body">
+                  {climaSubtab === 'tipo' && CONDITIONS.map((cond) => (
+                    <div key={cond} className="ml-clima-row">
+                      <div
+                        className="ml-sprite"
+                        style={{ background: `${CONDITION_COLORS[cond]}30` }}
+                      >
+                        <img src={WEATHER_IMAGES[cond]} alt={cond} />
+                      </div>
                       <span className="ml-label">{CONDITION_LABEL[cond]}</span>
                     </div>
                   ))}
-                </>
-              )}
 
-              {/* Tab: Categorías */}
-              {activeTab === 'categorias' && (
-                <>
-                  {/* ── Toggle Badges en Pines ── */}
-                  <div className="ml-toggle-row">
-                    <span className="ml-toggle-label">Iconos en pines</span>
-                    <button
-                      className={`ml-switch ${showBadgesOnPins ? 'on' : ''}`}
-                      onClick={() => setShowBadgesOnPins(!showBadgesOnPins)}
-                      type="button"
-                      title={showBadgesOnPins ? 'Desactivar iconos' : 'Activar iconos'}
-                    >
-                      <div className="ml-switch-thumb" />
-                    </button>
-                  </div>
-
-                  {/* ── Filtro de Categorías ── */}
-                  {BADGE_ORDER.map((badge) => (
+                  {climaSubtab === 'categoria' && BADGE_ORDER.map((badge) => (
                     <div
                       key={badge}
-                      className="ml-checkbox-row"
+                      className="ml-cat-row"
                       onClick={() => handleBadgeToggle(badge)}
                     >
+                      <span className="ml-cat-icon">{BADGE_ICONS[badge]}</span>
+                      <span className="ml-label">{BADGE_LABELS[badge]}</span>
                       <div className={`ml-checkbox ${badgeFilter.includes(badge) ? 'checked' : ''}`} />
-                      <span className="ml-checkbox-icon">{BADGE_ICONS[badge]}</span>
-                      <span className="ml-checkbox-label">{BADGE_LABELS[badge]}</span>
                     </div>
                   ))}
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            )}
+
+            {/* Tab Nidos */}
+            {mainTab === 'nidos' && (
+              <>
+                <div className="ml-subtabs">
+                  <button
+                    className={`ml-subtab ${nidosSubtab === 'tipos' ? 'active' : ''}`}
+                    onClick={() => setNidosSubtab('tipos')}
+                    type="button"
+                  >
+                    Tipos
+                  </button>
+                  <button
+                    className={`ml-subtab ${nidosSubtab === 'estado' ? 'active' : ''}`}
+                    onClick={() => setNidosSubtab('estado')}
+                    type="button"
+                  >
+                    Estado
+                  </button>
+                </div>
+
+                <div className="ml-body">
+                  {nidosSubtab === 'tipos' && (
+                    <div className="ml-types-grid">
+                      {POKEMON_TYPES.map((type) => (
+                        <div key={type} className="ml-type-chip" title={TYPE_LABELS[type]}>
+                          <div
+                            className="ml-type-icon"
+                            style={{ background: `var(--type-${type}, #888)` }}
+                          >
+                            <img src={TYPE_IMAGES[type]} alt={type} />
+                          </div>
+                          <span className="ml-type-name">{TYPE_LABELS[type]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {nidosSubtab === 'estado' && (
+                    <>
+                      <div className="ml-estado-row">
+                        <span className="ml-badge">✅</span>
+                        <span className="ml-label">Verificado</span>
+                      </div>
+                      <div className="ml-estado-row">
+                        <span className="ml-badge">⭐</span>
+                        <span className="ml-label">Mayor Spawn</span>
+                      </div>
+                      <div className="ml-estado-row">
+                        <span className="ml-badge">✨</span>
+                        <span className="ml-label">Mayor Polvo</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
