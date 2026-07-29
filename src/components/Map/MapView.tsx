@@ -50,7 +50,7 @@ interface MapViewProps {
 
 export default function MapView({ cities }: MapViewProps) {
   const activeLayers = useStore((s) => s.activeLayers)
-  const badgeFilter = useStore((s) => s.badgeFilter)
+  const highlightCategories = useStore((s) => s.highlightCategories)
   const nests = useStore((s) => s.nests)
   const setNests = useStore((s) => s.setNests)
 
@@ -72,14 +72,18 @@ export default function MapView({ cities }: MapViewProps) {
     return badges
   }, [cities])
 
-  // Filtrar ciudades por badges seleccionados (OR logic)
-  const filteredCities = useMemo(() => {
-    if (badgeFilter.length === 0) return cities
-    return cities.filter(city => {
+  // US-827: set de ids resaltados (highlight, no filtro)
+  const highlightedCityIds = useMemo(() => {
+    if (highlightCategories.length === 0) return null
+    const ids = new Set<string>()
+    cities.forEach(city => {
       const cityBadges = badgesByCity.get(city.id) || []
-      return cityBadges.some((badge: string) => badgeFilter.includes(badge))
+      if (cityBadges.some((badge: string) => highlightCategories.includes(badge))) {
+        ids.add(city.id)
+      }
     })
-  }, [cities, badgeFilter, badgesByCity])
+    return ids
+  }, [cities, highlightCategories, badgesByCity])
 
   return (
     <>
@@ -160,11 +164,12 @@ export default function MapView({ cities }: MapViewProps) {
 
           {/* MapPin (Clima) */}
           {activeLayers.clima &&
-            filteredCities.map((city) => (
+            cities.map((city) => (
               <MapPin
                 key={city.id}
                 city={city}
                 badges={badgesByCity.get(city.id)}
+                dimmed={highlightedCityIds !== null && !highlightedCityIds.has(city.id)}
               />
             ))
           }

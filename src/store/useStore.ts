@@ -110,7 +110,8 @@ interface AppStore {
   scrollToFeedTick: number
   scrollToFeedTarget: 'city' | 'nest' | null
   favorites: string[]
-  badgeFilter: string[]
+  badgeFilter: string[] // DEPRECATED: uso en MapLegend eliminado en US-827. Solo FilterPanel lo usa para filtrar ciudades.
+  highlightCategories: string[] // US-827: resaltar pines en mapa sin filtrar. Exclusivo de MapLegend > Categoria.
   showBadgesOnPins: boolean
   lastUpdated: number | null
   isFilterPanelOpen: boolean
@@ -149,6 +150,8 @@ interface AppStore {
   toggleFavorite: (cityId: string) => void
   clearFavorites: () => void
   setBadgeFilter: (badges: string[]) => void
+  setHighlightCategories: (cats: string[]) => void
+  toggleHighlightCategory: (cat: string) => void
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
   setIsFilterPanelOpen: (open: boolean) => void
@@ -208,6 +211,7 @@ export const useStore = create<AppStore>((set, get) => ({
     }
   })(),
   badgeFilter: ['stops', 'gyms', 'community', 'best'],
+  highlightCategories: [],
   showBadgesOnPins: (() => {
     try {
       const saved = localStorage.getItem('pwe-showBadgesOnPins')
@@ -300,6 +304,15 @@ export const useStore = create<AppStore>((set, get) => ({
   setLoadingProgress: (progress) => set({ loadingProgress: progress }),
 
   setBadgeFilter: (badges) => set({ badgeFilter: badges }),
+
+  setHighlightCategories: (cats) => set({ highlightCategories: cats }),
+
+  toggleHighlightCategory: (cat) =>
+    set((s) => ({
+      highlightCategories: s.highlightCategories.includes(cat)
+        ? s.highlightCategories.filter((c) => c !== cat)
+        : [...s.highlightCategories, cat],
+    })),
 
   setShowBadgesOnPins: (show) => {
     localStorage.setItem('pwe-showBadgesOnPins', JSON.stringify(show))

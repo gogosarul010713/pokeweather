@@ -15,6 +15,7 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const favorites = useStore((s) => s.favorites)
   const badgeFilter = useStore((s) => s.badgeFilter)
+  const highlightCategories = useStore((s) => s.highlightCategories)
   const loadingStatus = useStore((s) => s.loadingStatus)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
   const conditionFilter = useStore((s) => s.conditionFilter)
@@ -83,6 +84,19 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
     }
     return result
   }, [nests, activeLayers.nidos, nestTypeFilter, nestSortBy])
+
+  // US-827: set de ids resaltados para dim en sidebar
+  const highlightedCityIds = useMemo(() => {
+    if (highlightCategories.length === 0) return null
+    const ids = new Set<string>()
+    cities.forEach(city => {
+      const cityBadges = badgesByCity.get(city.id) || []
+      if (cityBadges.some((badge: string) => highlightCategories.includes(badge))) {
+        ids.add(city.id)
+      }
+    })
+    return ids
+  }, [cities, highlightCategories, badgesByCity])
 
   const cityCount = displayedCities.length
   const totalCount = cityCount + displayedNests.length
@@ -353,7 +367,16 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
                 </div>
                 <div className="lf-group-content">
                   {displayedCities.map((city) => (
-                    <div key={city.id} data-city-id={city.id} className="lf-card-wrap">
+                    <div
+                      key={city.id}
+                      data-city-id={city.id}
+                      className="lf-card-wrap"
+                      style={
+                        highlightedCityIds !== null && !highlightedCityIds.has(city.id)
+                          ? { opacity: 0.3, transition: 'opacity 200ms ease' }
+                          : { transition: 'opacity 200ms ease' }
+                      }
+                    >
                       <LocationCard city={city} isActive={selectedCity?.id === city.id} />
                     </div>
                   ))}

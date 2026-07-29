@@ -4,7 +4,6 @@ import { CONDITION_COLORS, CONDITION_LABEL, BADGE_ICONS } from '../../services/w
 import { WEATHER_IMAGES, type WeatherCondition } from '../../config/weatherImages'
 import type { BadgeType } from '../../services/weather/weatherService'
 import { POKEMON_TYPES, TYPE_IMAGES } from '../../config/pokemonTypes'
-import { Z } from '../../config/zIndex'
 
 const CONDITIONS: WeatherCondition[] = ['sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy']
 
@@ -15,6 +14,14 @@ const BADGE_LABELS: Record<BadgeType, string> = {
   best: 'Mejores Lugares',
 }
 const BADGE_ORDER: BadgeType[] = ['stops', 'gyms', 'community', 'best']
+
+// US-827: colores oficiales de highlight por categoria
+const CATEGORY_COLORS: Record<BadgeType, string> = {
+  stops:     '#58A6FF',
+  gyms:      '#F85149',
+  community: '#3FB950',
+  best:      '#FFD700',
+}
 
 const TYPE_LABELS: Record<string, string> = {
   normal: 'Normal', fire: 'Fuego', water: 'Agua', grass: 'Planta',
@@ -34,16 +41,8 @@ export default function MapLegend() {
   const [climaSubtab, setClimaSubtab] = useState<ClimaSubtab>('tipo')
   const [nidosSubtab, setNidosSubtab] = useState<NidosSubtab>('tipos')
 
-  const badgeFilter = useStore((s) => s.badgeFilter)
-  const setBadgeFilter = useStore((s) => s.setBadgeFilter)
-
-  const handleBadgeToggle = (badge: BadgeType) => {
-    setBadgeFilter(
-      badgeFilter.includes(badge)
-        ? badgeFilter.filter((b) => b !== badge)
-        : [...badgeFilter, badge]
-    )
-  }
+  const highlightCategories = useStore((s) => s.highlightCategories)
+  const toggleHighlightCategory = useStore((s) => s.toggleHighlightCategory)
 
   return (
     <>
@@ -298,7 +297,18 @@ export default function MapLegend() {
         {/* Header colapsable */}
         <div className="ml-header" onClick={() => setCollapsed((c) => !c)}>
           <span className="ml-title">Leyenda</span>
-          <span className={`ml-chevron ${collapsed ? '' : 'open'}`}>▼</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {highlightCategories.length > 0 && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, fontFamily: "'Exo 2', sans-serif",
+                background: 'var(--ui-accent)', color: '#fff',
+                borderRadius: 8, padding: '1px 5px', lineHeight: 1.4,
+              }}>
+                {highlightCategories.length}
+              </span>
+            )}
+            <span className={`ml-chevron ${collapsed ? '' : 'open'}`}>▼</span>
+          </div>
         </div>
 
         {!collapsed && (
@@ -354,17 +364,27 @@ export default function MapLegend() {
                     </div>
                   ))}
 
-                  {climaSubtab === 'categoria' && BADGE_ORDER.map((badge) => (
-                    <div
-                      key={badge}
-                      className="ml-cat-row"
-                      onClick={() => handleBadgeToggle(badge)}
-                    >
-                      <span className="ml-cat-icon">{BADGE_ICONS[badge]}</span>
-                      <span className="ml-label">{BADGE_LABELS[badge]}</span>
-                      <div className={`ml-checkbox ${badgeFilter.includes(badge) ? 'checked' : ''}`} />
-                    </div>
-                  ))}
+                  {climaSubtab === 'categoria' && BADGE_ORDER.map((badge) => {
+                    const active = highlightCategories.includes(badge)
+                    const color = CATEGORY_COLORS[badge]
+                    return (
+                      <div
+                        key={badge}
+                        className="ml-cat-row"
+                        onClick={() => toggleHighlightCategory(badge)}
+                        style={active ? { background: `${color}18` } : undefined}
+                      >
+                        <span className="ml-cat-icon">{BADGE_ICONS[badge]}</span>
+                        <span className="ml-label" style={active ? { color, fontWeight: 600 } : undefined}>
+                          {BADGE_LABELS[badge]}
+                        </span>
+                        <div
+                          className={`ml-checkbox ${active ? 'checked' : ''}`}
+                          style={active ? { background: color, borderColor: color } : undefined}
+                        />
+                      </div>
+                    )
+                  })}
                 </div>
               </>
             )}

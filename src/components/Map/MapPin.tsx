@@ -12,9 +12,10 @@ import CityTooltip from './CityTooltip'
 interface MapPinProps {
   city: City
   badges?: BadgeType[]
+  dimmed?: boolean
 }
 
-function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], showBadges: boolean = true): L.DivIcon {
+function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], showBadges: boolean = true, dimmed = false): L.DivIcon {
   const w = selected ? 28 : 22
   const h = selected ? 37 : 29
   const cx = w / 2
@@ -40,8 +41,9 @@ function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], s
       .join('')
   }
 
+  const opacity = dimmed ? 'opacity:0.25;' : ''
   const html = `
-    <div style="position:relative;width:${w}px;height:${h}px;filter:${filter};">
+    <div style="position:relative;width:${w}px;height:${h}px;filter:${filter};${opacity}transition:opacity 200ms ease;">
       <svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
         <path d="${path}" fill="${color}" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
         <circle cx="${cx}" cy="${cy}" r="${Math.round(r * 0.42)}" fill="rgba(255,255,255,0.9)"/>
@@ -58,7 +60,7 @@ function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], s
   })
 }
 
-export default function MapPin({ city, badges = [] }: MapPinProps) {
+export default function MapPin({ city, badges = [], dimmed = false }: MapPinProps) {
   const selectedCity = useStore((s) => s.selectedCity)
   const setSelectedCity = useStore((s) => s.setSelectedCity)
   const showBadgesOnPins = useStore((s) => s.showBadgesOnPins)
@@ -67,7 +69,7 @@ export default function MapPin({ city, badges = [] }: MapPinProps) {
   const color = CONDITION_COLORS[city.condition]
   const markerRef = useRef<L.Marker>(null)
 
-  const icon = useMemo(() => buildIcon(color, isSelected, badges, showBadgesOnPins), [color, isSelected, badges, showBadgesOnPins])
+  const icon = useMemo(() => buildIcon(color, isSelected, badges, showBadgesOnPins, dimmed), [color, isSelected, badges, showBadgesOnPins, dimmed])
 
   useEffect(() => {
     if (isSelected) markerRef.current?.openPopup()
