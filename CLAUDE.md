@@ -4,22 +4,22 @@
 
 ---
 
-## ESTADO ACTUAL (2026-07-28)
+## ESTADO ACTUAL (2026-07-29)
 
-**Sprint 9 — Sesion 28 (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 30 (branch: `sprint-9-nests`)**
 
 **Completado:**
-- US-811 a US-826 + ENH-001/002/003/006 ✅ — commiteados
+- US-811 a US-827 + ENH-001/002/003/006 ✅ — commiteados
 - US-818 ✅ — NestCard + feed + NestPopup + NestDetail completo
-- BUG-001/002/003/004 ✅ — commiteados (c61ebe2)
-- BUG-005 ✅ — NestPopup: backdrop eliminado (809c2a0)
-- BUG-006 ✅ — Popups clima y nidos homologados: Popup Leaflet dentro del Marker, popupAnchor automatico, flyTo offset alineado (sin commit aun)
+- BUG-001 a BUG-007 ✅ — commiteados
+- US-828 ✅ — Chips de categoria del lugar en FilterPanel (d104f80)
+- ENH-004 ✅ — NestDetail bottom sheet + marcos sprites + hora local (sin commit aun)
 
 **Siguiente:**
-- US-815 — Filtros por categoria en MapLegend: resaltar pins + chips sidebar. Mockup aprobado en artifact `0c33f214`.
+- US-901/902/903 — Tests de integracion, validacion visual y performance
 
 **Backlog critico pendiente:**
-- ENH-004 ⏳ — NestDetail homologacion visual (bottom sheet, sprite header, hora local). Ver `enhancements/ENH-004-nest-detail-homologacion-visual.md`
+- Commit ENH-004 pendiente
 
 ---
 

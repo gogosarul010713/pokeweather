@@ -88,7 +88,7 @@
 | ENH-001 | Homologacion visual + UX del FilterPanel (sticky headers, colapso por grupo, toast, icono +/−) | ✅ Completado |
 | ENH-002 | Badges por grupo + grid compacto + indicador contextual por fila + chips scrolleables | ✅ Completado |
 | OBS-001 | Fixes observados post ENH-001/002: toast light theme, boton Limpiar unificado, chips onRemove con applied setters | ✅ Completado (sesion 9, 2026-07-15) |
-| ENH-004 | Homologacion visual NestDetail — bottom sheet, sprite en header, hora local | ⏳ Pendiente — ver `enhancements/ENH-004-nest-detail-homologacion-visual.md` |
+| ENH-004 | Homologacion visual NestDetail — bottom sheet, sprite en header, hora local | ✅ Completado |
 | ENH-006 | Sidebar oculto cuando no hay capa activa — transicion suave width+opacity 280ms; Overlay eliminado | ✅ Completado (sesion 23, 2026-07-25) — sin doc propio, ver sesion 23 en estado general |
 
 ## Bugfixes

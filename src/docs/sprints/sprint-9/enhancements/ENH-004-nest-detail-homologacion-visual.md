@@ -4,7 +4,7 @@
 **Componente:** `src/components/Nests/NestDetail.tsx`  
 **Referencia:** `src/components/Sidebar/LocationDetail.tsx` (patron a homologar)  
 **Sprint:** 9  
-**Estado:** Pendiente
+**Estado:** Completado
 
 ---
 

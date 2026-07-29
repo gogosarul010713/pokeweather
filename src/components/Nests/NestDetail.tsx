@@ -79,23 +79,23 @@ export default function NestDetail({ nest, onClose, onViewInList }: NestDetailPr
 
         .nd-modal {
           position: fixed;
-          top: 50%;
+          bottom: 0;
           left: 50%;
-          transform: translate(-50%, -50%);
-          width: min(520px, 92vw);
-          max-height: 80vh;
+          transform: translateX(-50%);
+          width: min(600px, 100vw);
+          max-height: 72vh;
           background: var(--bg-secondary);
           border: 1px solid var(--border-default);
-          border-radius: 16px;
+          border-radius: 16px 16px 0 0;
           z-index: 1101;
           display: flex;
           flex-direction: column;
-          animation: nd-popIn 200ms ease;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+          animation: nd-slideUp 250ms ease;
+          box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
         }
-        @keyframes nd-popIn {
-          from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
-          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        @keyframes nd-slideUp {
+          from { transform: translateX(-50%) translateY(100%); }
+          to   { transform: translateX(-50%) translateY(0); }
         }
 
         /* Header */
@@ -114,6 +114,10 @@ export default function NestDetail({ nest, onClose, onViewInList }: NestDetailPr
           object-fit: contain;
           flex-shrink: 0;
           margin-top: 2px;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-default);
+          border-radius: 8px;
+          padding: 2px;
         }
         .nd-header-info {
           flex: 1;
@@ -219,6 +223,10 @@ export default function NestDetail({ nest, onClose, onViewInList }: NestDetailPr
           image-rendering: pixelated;
           object-fit: contain;
           flex-shrink: 0;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-default);
+          border-radius: 8px;
+          padding: 4px;
         }
         .nd-pokemon-info { flex: 1; min-width: 0; }
         .nd-pokemon-name {
@@ -324,7 +332,7 @@ export default function NestDetail({ nest, onClose, onViewInList }: NestDetailPr
         .nd-footer-btn:hover { background: var(--bg-tertiary); border-color: var(--border-strong); }
 
         @media (max-width: 600px) {
-          .nd-modal { width: 92vw; max-height: 85vh; }
+          .nd-modal { width: 100vw; max-height: 85vh; border-radius: 12px 12px 0 0; }
         }
       `}</style>
 
