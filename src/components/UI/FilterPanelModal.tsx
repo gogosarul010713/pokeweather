@@ -61,15 +61,25 @@ interface FilterPanelModalProps {
   onClose: () => void
 }
 
+const CATEGORY_CHIPS = [
+  { value: 'stops',     label: 'Pokéstops',       icon: '🎯' },
+  { value: 'gyms',      label: 'Gym Hub',          icon: '💪' },
+  { value: 'community', label: 'Comunidad Activa', icon: '👥' },
+  { value: 'best',      label: 'Mejores Lugares',  icon: '✨' },
+]
+
 export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalProps) {
   const regionFilter = useStore((s) => s.regionFilter)
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
+  const categoryFilter = useStore((s) => s.categoryFilter)
   const sortMode = useStore((s) => s.sortMode)
   const sortDirection = useStore((s) => s.sortDirection)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const setTypeFilter = useStore((s) => s.setTypeFilter)
+  const toggleCategory = useStore((s) => s.toggleCategory)
+  const setCategoryFilter = useStore((s) => s.setCategoryFilter)
   const setSortMode = useStore((s) => s.setSortMode)
   const setSortDirection = useStore((s) => s.setSortDirection)
 
@@ -78,6 +88,7 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
     regions: false,
     climate: false,
     types: false,
+    categories: false,
     sort: false,
   })
   const [showAllTypes, setShowAllTypes] = useState(false)
@@ -94,9 +105,10 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
     setRegionFilter('todas')
     setConditionFilter([])
     setTypeFilter([])
+    setCategoryFilter([])
     setSortMode('' as any)
     setSortDirection('asc')
-    setExpandedSections({ regions: false, climate: false, types: false, sort: false })
+    setExpandedSections({ regions: false, climate: false, types: false, categories: false, sort: false })
     setShowAllTypes(false)
   }
 
@@ -528,6 +540,39 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
           border-color: var(--ui-error);
           color: var(--ui-error);
         }
+
+        .fpm-cat-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .fpm-cat-chip {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 14px;
+          border: 1.5px solid var(--border-default);
+          background: var(--bg-tertiary);
+          color: var(--text-secondary);
+          border-radius: 999px;
+          cursor: pointer;
+          font-size: 13px;
+          transition: all 150ms ease;
+          white-space: nowrap;
+        }
+
+        .fpm-cat-chip:hover {
+          background: var(--bg-overlay);
+          border-color: var(--border-strong);
+        }
+
+        .fpm-cat-chip.active {
+          background: var(--bg-secondary);
+          border-color: var(--ui-accent);
+          color: var(--ui-accent);
+          font-weight: 500;
+        }
       `}</style>
 
       {/* Backdrop */}
@@ -691,6 +736,36 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
                     - Menos tipos
                   </button>
                 )}
+              </div>
+            )}
+          </div>
+
+          {/* CATEGORY Section */}
+          <div className="fpm-section">
+            <div className="fpm-section-header" onClick={() => toggleSection('categories')}>
+              <span className="fpm-section-icon">📍</span>
+              <span className="fpm-section-label">Categoria del lugar</span>
+              <span className="fpm-section-badge">
+                {categoryFilter.length === 0 ? 'TODAS' : `${categoryFilter.length} SELEC.`}
+              </span>
+              <span className={`fpm-section-chevron ${expandedSections.categories ? 'open' : ''}`}>
+                ▼
+              </span>
+            </div>
+            {expandedSections.categories && (
+              <div className="fpm-section-content">
+                <div className="fpm-cat-grid">
+                  {CATEGORY_CHIPS.map((chip) => (
+                    <button
+                      key={chip.value}
+                      className={`fpm-cat-chip${categoryFilter.includes(chip.value) ? ' active' : ''}`}
+                      onClick={() => toggleCategory(chip.value)}
+                    >
+                      <span>{chip.icon}</span>
+                      <span>{chip.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

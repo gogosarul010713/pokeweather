@@ -6,6 +6,13 @@ import SortDropdown from './SortDropdown'
 import SearchInput from './SearchInput'
 import { POKEMON_TYPES, TYPE_IMAGES } from '../../config/pokemonTypes'
 
+const CATEGORY_CHIPS = [
+  { value: 'stops',     label: 'Pokéstops',       icon: '🎯' },
+  { value: 'gyms',      label: 'Gym Hub',          icon: '💪' },
+  { value: 'community', label: 'Comunidad Activa', icon: '👥' },
+  { value: 'best',      label: 'Mejores Lugares',  icon: '✨' },
+]
+
 const REGION_OPTIONS: SelectOption[] = [
   { label: 'Todas', value: 'todas' },
   { label: '🌏 Asia', value: 'asia' },
@@ -29,11 +36,14 @@ export default function FilterPanelClima() {
   const regionFilter = useStore((s) => s.regionFilter)
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
+  const categoryFilter = useStore((s) => s.categoryFilter)
   const sortMode = useStore((s) => s.sortMode)
   const sortDirection = useStore((s) => s.sortDirection)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const setTypeFilter = useStore((s) => s.setTypeFilter)
+  const toggleCategory = useStore((s) => s.toggleCategory)
+  const setCategoryFilter = useStore((s) => s.setCategoryFilter)
   const setSortMode = useStore((s) => s.setSortMode)
   const setSortDirection = useStore((s) => s.setSortDirection)
 
@@ -50,6 +60,7 @@ export default function FilterPanelClima() {
     (regionFilter !== 'todas' ? 1 : 0) +
     conditionFilter.length +
     typeFilter.length +
+    categoryFilter.length +
     (sortMode !== '' ? 1 : 0)
 
   const hasActiveFilters = activeFilterCount > 0
@@ -58,6 +69,7 @@ export default function FilterPanelClima() {
     setRegionFilter('todas')
     setConditionFilter([])
     setTypeFilter([])
+    setCategoryFilter([])
     setSortMode('' as any)
     setSortDirection('asc')
   }
@@ -135,6 +147,41 @@ export default function FilterPanelClima() {
           align-items: center;
         }
 
+        .fp-cat-chips {
+          display: flex;
+          gap: 4px;
+          align-items: center;
+          flex-shrink: 0;
+        }
+
+        .fp-cat-chip {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          border-radius: 20px;
+          border: 1px solid var(--border-default);
+          background: var(--bg-tertiary);
+          color: var(--text-secondary);
+          font-size: 12px;
+          cursor: pointer;
+          transition: all 150ms ease;
+          white-space: nowrap;
+          line-height: 1;
+        }
+
+        .fp-cat-chip:hover {
+          border-color: var(--border-strong);
+          color: var(--text-primary);
+        }
+
+        .fp-cat-chip.active {
+          background: var(--ui-accent);
+          border-color: var(--ui-accent);
+          color: var(--bg-primary);
+          font-weight: 600;
+        }
+
         @media (min-width: 768px) and (max-width: 1023px) {
           .fp-root {
             gap: 6px;
@@ -178,6 +225,20 @@ export default function FilterPanelClima() {
           }}
           isMulti={true}
         />
+
+        <div className="fp-cat-chips">
+          {CATEGORY_CHIPS.map((chip) => (
+            <button
+              key={chip.value}
+              className={`fp-cat-chip${categoryFilter.includes(chip.value) ? ' active' : ''}`}
+              onClick={() => toggleCategory(chip.value)}
+              title={chip.label}
+            >
+              <span>{chip.icon}</span>
+              <span>{chip.label}</span>
+            </button>
+          ))}
+        </div>
 
         <SortDropdown
           sortMode={sortMode}

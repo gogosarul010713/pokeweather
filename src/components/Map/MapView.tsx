@@ -51,6 +51,7 @@ interface MapViewProps {
 export default function MapView({ cities }: MapViewProps) {
   const activeLayers = useStore((s) => s.activeLayers)
   const highlightCategories = useStore((s) => s.highlightCategories)
+  const categoryFilter = useStore((s) => s.categoryFilter)
   const nests = useStore((s) => s.nests)
   const setNests = useStore((s) => s.setNests)
 
@@ -71,6 +72,15 @@ export default function MapView({ cities }: MapViewProps) {
     })
     return badges
   }, [cities])
+
+  // US-828: filtrar ciudades por categoria desde FilterPanelClima
+  const filteredByCategory = useMemo(() => {
+    if (categoryFilter.length === 0) return cities
+    return cities.filter(city => {
+      const cityBadges = badgesByCity.get(city.id) || []
+      return cityBadges.some((badge: string) => categoryFilter.includes(badge))
+    })
+  }, [cities, categoryFilter, badgesByCity])
 
   // US-827: set de ids resaltados (highlight, no filtro)
   const highlightedCityIds = useMemo(() => {
@@ -164,7 +174,7 @@ export default function MapView({ cities }: MapViewProps) {
 
           {/* MapPin (Clima) */}
           {activeLayers.clima &&
-            cities.map((city) => (
+            filteredByCategory.map((city) => (
               <MapPin
                 key={city.id}
                 city={city}

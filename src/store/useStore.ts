@@ -66,7 +66,7 @@ export type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin 
 type SortDirection = 'asc' | 'desc'
 type LoadingStatus = 'idle' | 'loading' | 'ready' | 'error'
 
-export type AccordionKey = 'condicion' | 'region' | 'tipoClima' | 'orden' | 'tipoPoke' | 'ordenNidos'
+export type AccordionKey = 'condicion' | 'region' | 'tipoClima' | 'orden' | 'tipoPoke' | 'ordenNidos' | 'categoria'
 
 export interface DraftFilters {
   region: Region
@@ -112,6 +112,7 @@ interface AppStore {
   favorites: string[]
   badgeFilter: string[] // DEPRECATED: uso en MapLegend eliminado en US-827. Solo FilterPanel lo usa para filtrar ciudades.
   highlightCategories: string[] // US-827: resaltar pines en mapa sin filtrar. Exclusivo de MapLegend > Categoria.
+  categoryFilter: string[] // US-828: filtrar ciudades por categoria (stops/gyms/community/best) desde FilterPanelClima
   showBadgesOnPins: boolean
   lastUpdated: number | null
   isFilterPanelOpen: boolean
@@ -151,6 +152,8 @@ interface AppStore {
   clearFavorites: () => void
   setBadgeFilter: (badges: string[]) => void
   setHighlightCategories: (cats: string[]) => void
+  setCategoryFilter: (cats: string[]) => void
+  toggleCategory: (cat: string) => void
   toggleHighlightCategory: (cat: string) => void
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
@@ -211,6 +214,7 @@ export const useStore = create<AppStore>((set, get) => ({
     }
   })(),
   badgeFilter: ['stops', 'gyms', 'community', 'best'],
+  categoryFilter: [],
   highlightCategories: [],
   showBadgesOnPins: (() => {
     try {
@@ -247,6 +251,7 @@ export const useStore = create<AppStore>((set, get) => ({
     orden: false,
     tipoPoke: true,
     ordenNidos: false,
+    categoria: false,
   },
   draftFilters: DEFAULT_DRAFT,
 
@@ -304,6 +309,15 @@ export const useStore = create<AppStore>((set, get) => ({
   setLoadingProgress: (progress) => set({ loadingProgress: progress }),
 
   setBadgeFilter: (badges) => set({ badgeFilter: badges }),
+
+  setCategoryFilter: (cats) => set({ categoryFilter: cats }),
+
+  toggleCategory: (cat) =>
+    set((s) => ({
+      categoryFilter: s.categoryFilter.includes(cat)
+        ? s.categoryFilter.filter((c) => c !== cat)
+        : [...s.categoryFilter, cat],
+    })),
 
   setHighlightCategories: (cats) => set({ highlightCategories: cats }),
 
@@ -418,6 +432,7 @@ export const useStore = create<AppStore>((set, get) => ({
     sortMode: '',
     nestTypeFilter: [],
     nestSortBy: 'name',
+    categoryFilter: [],
   }),
 
   setDraftRegion: (region) => set((s) => ({ draftFilters: { ...s.draftFilters, region } })),

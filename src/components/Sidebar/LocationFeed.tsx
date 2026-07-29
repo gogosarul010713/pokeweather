@@ -15,6 +15,7 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
   const sidebarMode = useStore((s) => s.sidebarMode)
   const favorites = useStore((s) => s.favorites)
   const badgeFilter = useStore((s) => s.badgeFilter)
+  const categoryFilter = useStore((s) => s.categoryFilter)
   const highlightCategories = useStore((s) => s.highlightCategories)
   const loadingStatus = useStore((s) => s.loadingStatus)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
@@ -35,6 +36,7 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
     (regionFilter !== 'todas' ? 1 : 0) +
     conditionFilter.length +
     typeFilter.length +
+    categoryFilter.length +
     nestTypeFilter.length
 
   // Calcular badges por ciudad
@@ -65,8 +67,16 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
       })
     }
 
+    // US-828: filtrar por categoria desde FilterPanelClima (OR logic)
+    if (categoryFilter.length > 0) {
+      result = result.filter(city => {
+        const cityBadges = badgesByCity.get(city.id) || []
+        return cityBadges.some((badge: string) => categoryFilter.includes(badge))
+      })
+    }
+
     return result
-  }, [cities, sidebarMode, favorites, badgeFilter, badgesByCity])
+  }, [cities, sidebarMode, favorites, badgeFilter, categoryFilter, badgesByCity])
 
   // Filtrar nidos
   const displayedNests = useMemo<Nest[]>(() => {

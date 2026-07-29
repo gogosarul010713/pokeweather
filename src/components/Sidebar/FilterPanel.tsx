@@ -118,6 +118,7 @@ export default function FilterPanel() {
   const regionFilter = useStore((s) => s.regionFilter)
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
+  const categoryFilter = useStore((s) => s.categoryFilter)
   const sortMode = useStore((s) => s.sortMode)
   const nestTypeFilter = useStore((s) => s.nestTypeFilter)
   const nestSortBy = useStore((s) => s.nestSortBy)
@@ -126,6 +127,8 @@ export default function FilterPanel() {
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setTypeFilter = useStore((s) => s.setTypeFilter)
+  const toggleCategory = useStore((s) => s.toggleCategory)
+  const setCategoryFilter = useStore((s) => s.setCategoryFilter)
   const setSortMode = useStore((s) => s.setSortMode)
   const setNestTypeFilter = useStore((s) => s.setNestTypeFilter)
   const setNestSortBy = useStore((s) => s.setNestSortBy)
@@ -134,6 +137,7 @@ export default function FilterPanel() {
     (regionFilter !== 'todas' ? 1 : 0) +
     conditionFilter.length +
     typeFilter.length +
+    categoryFilter.length +
     (sortMode !== '' ? 1 : 0) +
     nestTypeFilter.length +
     (nestSortBy !== 'name' ? 1 : 0)
@@ -204,6 +208,15 @@ export default function FilterPanel() {
     })
   }
 
+  const CAT_EMOJI: Record<string, string> = { stops: '🎯', gyms: '💪', community: '👥', best: '✨' }
+  const CAT_LABEL: Record<string, string> = { stops: 'Pokestops', gyms: 'Gym Hub', community: 'Comunidad', best: 'Mejores' }
+  if (categoryFilter.length === 1) {
+    const v = categoryFilter[0]
+    activeChips.push({ key: `cat-${v}`, emoji: CAT_EMOJI[v], label: CAT_LABEL[v] ?? v, group: 'clima', onRemove: () => setCategoryFilter([]) })
+  } else if (categoryFilter.length >= 2) {
+    activeChips.push({ key: 'cat-multi', emoji: '📍', label: 'Categoria', count: categoryFilter.length, group: 'clima', onRemove: () => setCategoryFilter([]) })
+  }
+
   if (nestTypeFilter.length === 1) {
     const v = nestTypeFilter[0]
     activeChips.push({
@@ -264,9 +277,10 @@ export default function FilterPanel() {
   const handleClearWithToast = useCallback(() => {
     clearAppliedFilters()
     clearDraftFilters()
+    setCategoryFilter([])
     setShowToast(true)
     setTimeout(() => setShowToast(false), 2200)
-  }, [clearAppliedFilters, clearDraftFilters])
+  }, [clearAppliedFilters, clearDraftFilters, setCategoryFilter])
 
   const noLayers = !activeLayers.clima && !activeLayers.nidos
 
@@ -697,6 +711,43 @@ export default function FilterPanel() {
                     selected={draftFilters.sortMode}
                     onSelect={(v) => setDraftSortMode(v as any)}
                   />
+                </AccordionSection>
+
+                <AccordionSection
+                  label="Categoria del lugar"
+                  icon="📍"
+                  isOpen={accordionState.categoria}
+                  onToggle={() => toggleAccordion('categoria')}
+                  accentColor="#58a6ff"
+                  activeValues={categoryFilter}
+                  activeLabel={categoryFilter.length === 1 ? `${CAT_EMOJI[categoryFilter[0]]} ${CAT_LABEL[categoryFilter[0]]}` : undefined}
+                >
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '4px 0' }}>
+                    {([
+                      { value: 'stops',     label: 'Pokéstops',       icon: '🎯' },
+                      { value: 'gyms',      label: 'Gym Hub',          icon: '💪' },
+                      { value: 'community', label: 'Comunidad Activa', icon: '👥' },
+                      { value: 'best',      label: 'Mejores Lugares',  icon: '✨' },
+                    ] as const).map((chip) => (
+                      <button
+                        key={chip.value}
+                        onClick={() => toggleCategory(chip.value)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 5,
+                          padding: '6px 12px', borderRadius: 999,
+                          border: categoryFilter.includes(chip.value) ? '1.5px solid #58a6ff' : '1.5px solid var(--border-default)',
+                          background: categoryFilter.includes(chip.value) ? 'rgba(88,166,255,.12)' : 'var(--bg-tertiary)',
+                          color: categoryFilter.includes(chip.value) ? '#58a6ff' : 'var(--text-secondary)',
+                          fontSize: 12, fontWeight: categoryFilter.includes(chip.value) ? 600 : 400,
+                          cursor: 'pointer', whiteSpace: 'nowrap',
+                        }}
+                        type="button"
+                      >
+                        <span>{chip.icon}</span>
+                        <span>{chip.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </AccordionSection>
               </div>
             </div>
