@@ -90,6 +90,7 @@
 | OBS-001 | Fixes observados post ENH-001/002: toast light theme, boton Limpiar unificado, chips onRemove con applied setters | ✅ Completado (sesion 9, 2026-07-15) |
 | ENH-004 | Homologacion visual NestDetail — bottom sheet, sprite en header, hora local | ✅ Completado |
 | ENH-006 | Sidebar oculto cuando no hay capa activa — transicion suave width+opacity 280ms; Overlay eliminado | ✅ Completado (sesion 23, 2026-07-25) — sin doc propio, ver sesion 23 en estado general |
+| ENH-008 | Official Artwork sprites — reemplazo sprites 96px pixelados por artwork 475px en los 4 componentes de nidos | ✅ Completado (sesion 30, 2026-07-30) |
 
 ## Bugfixes
 
