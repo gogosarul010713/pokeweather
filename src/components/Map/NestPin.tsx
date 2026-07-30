@@ -17,7 +17,7 @@ const TYPE_COLORS: Record<string, string> = {
   steel: '#B8B8D0', fairy: '#EE99AC',
 }
 
-function buildNestIcon(color: string, selected: boolean, badges: string[]): L.DivIcon {
+function buildNestIcon(color: string, selected: boolean, badges: string[], pokemonId: number): L.DivIcon {
   const size = selected ? 36 : 28
   const half = size / 2
   const filter = selected
@@ -40,8 +40,11 @@ function buildNestIcon(color: string, selected: boolean, badges: string[]): L.Di
     <div style="position:relative;width:${size}px;height:${size}px;filter:${filter};">
       <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
         <polygon points="${pts}" fill="${color}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
-        <circle cx="${half}" cy="${half}" r="${Math.round(half * 0.38)}" fill="rgba(255,255,255,0.85)"/>
       </svg>
+      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png"
+           width="${Math.round(size * 0.72)}" height="${Math.round(size * 0.72)}"
+           style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);object-fit:contain;pointer-events:none;z-index:2;"
+      />
       ${badgesHtml}
     </div>`
 
@@ -69,7 +72,7 @@ export default function NestPin({ nest }: NestPinProps) {
   if ((nest.gyms ?? 0) > 0) badges.push('💪')
 
   const icon = useMemo(
-    () => buildNestIcon(color, isSelected, badges),
+    () => buildNestIcon(color, isSelected, badges, nest.pokemonId),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [color, isSelected, nest.spawnRate, nest.stops, nest.gyms]
   )

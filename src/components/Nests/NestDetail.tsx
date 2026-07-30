@@ -37,7 +37,7 @@ function getLocalDateTime(timezone: string): { date: string; time: string } {
 export default function NestDetail({ nest, onClose, onViewInList }: NestDetailProps) {
   const now = useStore((s) => s.now)
 
-  const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${nest.pokemonId}.png`
+  const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nest.pokemonId}.png`
   const migrationMs = new Date(NEXT_MIGRATION).getTime()
   const isConfirmedActive = nest.confirmed && now < migrationMs
   const countdown = getMigrationStatus(NEXT_MIGRATION, now)
@@ -108,16 +108,11 @@ export default function NestDetail({ nest, onClose, onViewInList }: NestDetailPr
           flex-shrink: 0;
         }
         .nd-header-sprite {
-          width: 48px;
-          height: 48px;
-          image-rendering: pixelated;
+          width: 52px;
+          height: 52px;
           object-fit: contain;
           flex-shrink: 0;
           margin-top: 2px;
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-default);
-          border-radius: 8px;
-          padding: 2px;
         }
         .nd-header-info {
           flex: 1;
@@ -218,15 +213,10 @@ export default function NestDetail({ nest, onClose, onViewInList }: NestDetailPr
           gap: 10px;
         }
         .nd-sprite {
-          width: 64px;
-          height: 64px;
-          image-rendering: pixelated;
+          width: 72px;
+          height: 72px;
           object-fit: contain;
           flex-shrink: 0;
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-default);
-          border-radius: 8px;
-          padding: 4px;
         }
         .nd-pokemon-info { flex: 1; min-width: 0; }
         .nd-pokemon-name {

@@ -13,7 +13,7 @@ interface NestCardProps {
 export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
   const now = useStore((s) => s.now)
 
-  const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${nest.pokemonId}.png`
+  const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nest.pokemonId}.png`
   const migrationMs = new Date(NEXT_MIGRATION).getTime()
   const isConfirmedActive = nest.confirmed && now < migrationMs
   const isHot = nest.spawnRate >= 65
@@ -52,10 +52,9 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
         .nc-root.unconfirmed { opacity: 0.7; }
 
         .nc-sprite {
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           flex-shrink: 0;
-          image-rendering: pixelated;
           object-fit: contain;
         }
         .nc-root.unconfirmed .nc-sprite {

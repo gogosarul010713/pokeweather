@@ -24,7 +24,7 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
   const [showDetail, setShowDetail] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${nest.pokemonId}.png`
+  const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nest.pokemonId}.png`
   const migrationMs = new Date(NEXT_MIGRATION).getTime()
   const isConfirmedActive = nest.confirmed && now < migrationMs
 
@@ -139,9 +139,8 @@ export default function NestPopup({ nest, onClose, onViewInList }: NestPopupProp
           gap: 10px;
         }
         .np-sprite {
-          width: 48px;
-          height: 48px;
-          image-rendering: pixelated;
+          width: 56px;
+          height: 56px;
           object-fit: contain;
           flex-shrink: 0;
         }
