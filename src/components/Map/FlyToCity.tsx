@@ -33,7 +33,7 @@ export default function FlyToCity() {
 
   // Volar a ciudad seleccionada
   useEffect(() => {
-    if (!selectedCity) return
+    if (!selectedCity) { prevCityIdRef.current = null; return }
     const tickChanged = scrollToFeedTick !== prevTickRef.current && scrollToFeedTarget === 'city'
     if (selectedCity.id === prevCityIdRef.current && !tickChanged) return
 
@@ -44,7 +44,7 @@ export default function FlyToCity() {
 
   // Volar a nido seleccionado
   useEffect(() => {
-    if (!selectedNest) return
+    if (!selectedNest) { prevNestIdRef.current = null; return }
     if (selectedNest.id === prevNestIdRef.current) return
 
     prevNestIdRef.current = selectedNest.id
