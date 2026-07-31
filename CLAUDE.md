@@ -13,13 +13,10 @@
 - US-818 ✅ — NestCard + feed + NestPopup + NestDetail completo
 - BUG-001 a BUG-007 ✅ — commiteados
 - US-828 ✅ — Chips de categoria del lugar en FilterPanel (d104f80)
-- ENH-004 ✅ — NestDetail bottom sheet + marcos sprites + hora local (sin commit aun)
+- ENH-004 ✅ — NestDetail bottom sheet + marcos sprites + hora local (69dea6c)
 
 **Siguiente:**
 - US-901/902/903 — Tests de integracion, validacion visual y performance
-
-**Backlog critico pendiente:**
-- Commit ENH-004 pendiente
 
 ---
 
