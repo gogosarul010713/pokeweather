@@ -7,7 +7,7 @@ import { useMap } from 'react-leaflet'
 import type { Map } from 'leaflet'
 import { useStore } from '../../store/useStore'
 
-const FLY_ZOOM       = 10
+const FLY_ZOOM       = 13
 const FLY_DURATION   = 1.5
 // El popup sale ARRIBA del pin. Para que pin quede visible:
 // el pin debe estar en la mitad inferior -> sumar px al destino (bajar el pin en pantalla)

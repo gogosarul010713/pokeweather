@@ -552,6 +552,28 @@ El filtrado por categoria pasa al FilterPanel como chips independientes (`catego
 
 ---
 
+## DEC-915 — FLY_ZOOM de ciudad sube de 10 a 13 para legibilidad de sprites (sesion 30)
+
+**Fecha:** Sprint 9 — Sesion 30 (2026-07-31)
+**Estado:** Aprobada
+**Afecta:** `src/components/Map/FlyToCity.tsx`
+
+### Contexto
+
+`FLY_ZOOM = 10` mostraba la mancha urbana completa de la ciudad al hacer flyTo. A ese nivel los sprites dentro de los hexagonos de los pins son ilegibles. `FlyToNest` ya usaba zoom 14 — inconsistencia entre las dos acciones de vuelo.
+
+### Decision
+
+`FLY_ZOOM` sube de 10 a 13. A z13 se ve trama urbana con calles principales, el sprite del pin es legible, y hay contexto geografico suficiente. No se usa z14-15 (nivel PoGo) porque con 1 nido por ciudad eso muestra un solo pin sin contexto de ciudad.
+
+### Alternativas descartadas
+
+- **z14-15 (nivel Pokemon GO)** — descartado. PoGo tiene cientos de pins por barrio; esta app tiene 1 pin por ciudad. A z14 el usuario ve un pin solo, sin contexto de zona.
+- **`fitBounds` por nidos de la ciudad** — valido cuando haya multiples nidos por ciudad. Con el dataset actual (1 nido/ciudad) produce el mismo resultado que z14. Se evalua cuando el JSON tenga densidad real.
+- **Escalado dinamico de iconos por zoom** — descartado. `divIcon` en Leaflet no tiene escala nativa; recrear el HTML en cada `zoomend` rompe el memoizado del icono y causa flicker. La industria resuelve esto con cambio de representacion por umbral (sin sprite a zoom bajo), no escalado continuo.
+
+---
+
 ## BUG-001 — LocationFeed no renderiza cuando solo capa Nidos activa (sesion 13)
 
 **Fecha:** Sprint 9 — Sesion 13 (2026-07-22)
