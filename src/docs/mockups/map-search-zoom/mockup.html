@@ -1,0 +1,403 @@
+<title>Mockup — Map Search + Zoom Controls v4</title>
+<style>
+  :root {
+    --bg-primary:   #0D1117;
+    --bg-secondary: #161B22;
+    --bg-tertiary:  #1C2333;
+    --bg-overlay:   #252D3D;
+    --text-primary:   #E6EDF3;
+    --text-secondary: #7D8590;
+    --text-accent:    #FFD700;
+    --border-subtle:  rgba(255,255,255,0.06);
+    --border-default: rgba(255,255,255,0.12);
+    --ui-accent: #58A6FF;
+    --ui-success: #3FB950;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --font-main: 'Exo 2', system-ui, sans-serif;
+    --font-display: 'Rajdhani', system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg-primary:#F0F4F8; --bg-secondary:#FFFFFF; --bg-tertiary:#E8EDF2; --bg-overlay:#D8E1EA;
+      --text-primary:#1A2233; --text-secondary:#5A6680; --text-accent:#C89A00;
+      --border-subtle:rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg-primary:#F0F4F8; --bg-secondary:#FFFFFF; --bg-tertiary:#E8EDF2; --bg-overlay:#D8E1EA;
+    --text-primary:#1A2233; --text-secondary:#5A6680; --text-accent:#C89A00;
+    --border-subtle:rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12);
+  }
+  :root[data-theme="dark"] {
+    --bg-primary:#0D1117; --bg-secondary:#161B22; --bg-tertiary:#1C2333; --bg-overlay:#252D3D;
+    --text-primary:#E6EDF3; --text-secondary:#7D8590; --text-accent:#FFD700;
+    --border-subtle:rgba(255,255,255,0.06); --border-default:rgba(255,255,255,0.12);
+  }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family: var(--font-main);
+    background: var(--bg-primary); color: var(--text-primary);
+    min-height:100vh; padding:28px 16px 48px;
+    display:flex; flex-direction:column; align-items:center; gap:32px;
+  }
+  .page-header { text-align:center; max-width:560px; }
+  .eyebrow { font-family:var(--font-display); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary); margin-bottom:6px; }
+  h1 { font-family:var(--font-display); font-size:24px; font-weight:700; line-height:1.2; }
+  .sub { font-size:13px; color:var(--text-secondary); margin-top:6px; line-height:1.6; }
+
+  .section-label {
+    font-family:var(--font-display); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-secondary); display:flex; align-items:center; gap:8px;
+    width:100%; max-width:860px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:var(--border-default); }
+
+  /* MAP */
+  .map-wrap { width:100%; max-width:860px; }
+  .map-frame {
+    position:relative; width:100%; aspect-ratio:16/9;
+    border-radius:var(--radius-lg); overflow:hidden;
+    border:1px solid var(--border-default); background:#141e2e;
+  }
+  .map-tiles {
+    position:absolute; inset:0;
+    background:
+      linear-gradient(rgba(88,166,255,.03) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(88,166,255,.03) 1px,transparent 1px),#141e2e;
+    background-size:44px 44px;
+  }
+  .map-tiles::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 42% 52%,rgba(88,166,255,.07) 0%,transparent 65%); }
+  .street { position:absolute; background:rgba(255,255,255,.07); }
+  .street.h { height:2px; left:0; right:0; }
+  .street.v { width:2px; top:0; bottom:0; }
+  .street.thick { opacity:.13; } .street.thin { opacity:.05; }
+  .fake-pin { position:absolute; width:28px; height:36px; transform:translate(-50%,-100%); display:flex; flex-direction:column; align-items:center; }
+  .fake-pin .head { width:28px; height:28px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); border:2px solid rgba(255,255,255,.28); display:flex; align-items:center; justify-content:center; }
+  .fake-pin .head .em { transform:rotate(45deg); font-size:13px; line-height:1; }
+  .fake-pin .tail { width:2px; height:8px; background:rgba(255,255,255,.28); }
+  .fake-pin.sunny .head { background:#FFB347; }
+  .fake-pin.rain  .head { background:#5B9BD5; }
+  .fake-pin.windy .head { background:#78C896; }
+
+  /* SEARCH */
+  .map-search { position:absolute; top:12px; left:50%; transform:translateX(-50%); width:min(380px,calc(100% - 120px)); z-index:20; }
+  .search-box {
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg-secondary); border:1px solid var(--ui-accent);
+    border-radius:var(--radius-md); padding:0 12px; height:38px;
+    box-shadow:0 0 0 3px rgba(88,166,255,.15),0 4px 16px rgba(0,0,0,.4);
+  }
+  .search-ico { color:var(--text-secondary); flex-shrink:0; }
+  .search-input { flex:1; background:none; border:none; outline:none; font-family:var(--font-main); font-size:13px; color:var(--text-primary); }
+  .search-input::placeholder { color:var(--text-secondary); }
+  .search-kbd { font-size:10px; color:var(--text-secondary); background:var(--bg-tertiary); border:1px solid var(--border-default); border-radius:4px; padding:2px 5px; white-space:nowrap; flex-shrink:0; }
+  .search-dropdown { margin-top:4px; background:var(--bg-secondary); border:1px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,.5); }
+  .dd-header { padding:6px 12px 4px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-secondary); font-family:var(--font-display); border-bottom:1px solid var(--border-subtle); }
+  .dd-item { display:flex; align-items:center; gap:10px; padding:8px 12px; cursor:pointer; }
+  .dd-item.active,.dd-item:hover { background:var(--bg-tertiary); }
+  .dd-icon { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .dd-icon.city  { background:rgba(88,166,255,.15); }
+  .dd-icon.nest  { background:rgba(63,185,80,.15); }
+  .dd-icon.globe { background:rgba(248,208,48,.12); }
+  .dd-text { flex:1; min-width:0; }
+  .dd-name { font-size:13px; font-weight:500; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dd-sub  { font-size:11px; color:var(--text-secondary); }
+  .dd-badge { font-size:10px; padding:2px 6px; border-radius:20px; font-family:var(--font-display); font-weight:600; letter-spacing:.04em; flex-shrink:0; }
+  .badge-city { background:rgba(88,166,255,.15); color:var(--ui-accent); }
+  .badge-nest { background:rgba(63,185,80,.15);  color:var(--ui-success); }
+  .dd-divider { height:1px; background:var(--border-subtle); }
+  .dd-fallback { padding:10px 12px; display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .dd-fallback:hover { background:var(--bg-tertiary); }
+  .fallback-txt { font-size:12px; color:var(--text-secondary); }
+  .fallback-q { color:var(--text-accent); font-weight:600; }
+
+  /* ZOOM CONTROLS */
+  .zoom-controls {
+    position:absolute; top:12px; right:12px;
+    display:flex; flex-direction:column; gap:4px; z-index:20;
+  }
+  .zoom-group {
+    background:var(--bg-secondary);
+    border:1px solid var(--border-default);
+    border-radius:var(--radius-md);
+    overflow:hidden;
+    box-shadow:0 4px 12px rgba(0,0,0,.35);
+    display:flex; flex-direction:column;
+    width:36px;
+  }
+  .zdivider { height:1px; background:var(--border-subtle); margin:0 5px; }
+
+  .zbtn-wrap { position:relative; }
+  .zbtn {
+    width:36px; height:36px;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer;
+    color:var(--text-secondary); transition:background .1s,color .1s;
+  }
+  .zbtn:hover { background:var(--bg-tertiary); color:var(--text-primary); }
+  .zbtn.std { font-size:18px; font-weight:700; font-family:var(--font-main); }
+  .zbtn svg { width:16px; height:16px; }
+  .zbtn.accent { color:var(--ui-accent); }
+  .zbtn.accent:hover { background:rgba(88,166,255,.08); color:var(--ui-accent); }
+
+  .zbtn-wrap .tip {
+    position:absolute; right:calc(100% + 8px); top:50%; transform:translateY(-50%);
+    background:var(--bg-overlay); border:1px solid var(--border-default);
+    border-radius:var(--radius-sm); padding:3px 8px;
+    font-size:11px; color:var(--text-primary); white-space:nowrap;
+    pointer-events:none; opacity:0; transition:opacity .15s;
+    box-shadow:0 2px 8px rgba(0,0,0,.35);
+  }
+  .zbtn-wrap:hover .tip { opacity:1; }
+
+  /* COORD POPUP */
+  .coord-popup {
+    background:var(--bg-secondary);
+    border:1px solid var(--border-default);
+    border-radius:var(--radius-md);
+    padding:12px;
+    width:200px;
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+    position:absolute; bottom:calc(100% + 6px); right:0;
+  }
+  .popup-title {
+    font-family:var(--font-display); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-secondary); margin-bottom:8px;
+  }
+  .coord-single-input {
+    background:var(--bg-tertiary); border:1px solid var(--ui-accent);
+    border-radius:var(--radius-sm); padding:6px 8px;
+    font-size:12px; font-family:var(--font-main); color:var(--text-primary);
+    font-variant-numeric:tabular-nums; outline:none; width:100%;
+    margin-bottom:8px;
+  }
+  .coord-hint { font-size:10px; color:var(--text-secondary); margin-bottom:8px; letter-spacing:.02em; }
+  .coord-go {
+    width:100%; padding:7px;
+    background:var(--ui-accent); color:#0D1117;
+    border:none; border-radius:var(--radius-sm);
+    font-family:var(--font-display); font-size:13px; font-weight:700;
+    letter-spacing:.04em; cursor:pointer;
+  }
+  .coord-go:hover { opacity:.88; }
+  .coord-wrap { position:relative; }
+
+  /* LEGEND CARDS */
+  .cards { width:100%; max-width:860px; display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; }
+  .card { background:var(--bg-secondary); border:1px solid var(--border-default); border-radius:var(--radius-md); padding:14px 16px; display:flex; flex-direction:column; gap:6px; }
+  .card-head { display:flex; align-items:center; gap:10px; }
+  .card-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+  .card-icon svg { width:15px; height:15px; }
+  .card-icon.blue  { background:rgba(88,166,255,.12);  color:var(--ui-accent); }
+  .card-icon.gold  { background:rgba(255,215,0,.10);   color:var(--text-accent); }
+  .card-icon.green { background:rgba(63,185,80,.12);   color:var(--ui-success); }
+  .card-icon.gray  { background:rgba(255,255,255,.06); color:var(--text-secondary); }
+  .card-title { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--text-primary); }
+  .card-body  { font-size:12px; color:var(--text-secondary); line-height:1.55; }
+  .card-body em { font-style:normal; color:var(--ui-accent); font-weight:500; }
+
+  .theme-toggle {
+    position:fixed; top:14px; right:14px;
+    background:var(--bg-secondary); border:1px solid var(--border-default);
+    border-radius:20px; padding:4px 10px; font-size:11px;
+    cursor:pointer; color:var(--text-secondary); font-family:var(--font-main); z-index:999;
+  }
+  .theme-toggle:hover { color:var(--text-primary); }
+</style>
+
+<button class="theme-toggle" onclick="toggleTheme()">Tema</button>
+
+<div class="page-header">
+  <div class="eyebrow">Mockup — Sprint 9 — v4</div>
+  <h1>Mapa: Search + Zoom + Coordenadas</h1>
+  <div class="sub">Search unificado (local → OSM). Zoom: +/− / Mundo / Casa / Lupa+ / Pin. Coordenadas: un campo, formato lat,lon.</div>
+</div>
+
+<div class="map-wrap">
+  <div class="section-label">Vista del mapa con todos los controles</div>
+  <div class="map-frame">
+
+    <div class="map-tiles"></div>
+    <div class="street h thick" style="top:27%"></div>
+    <div class="street h thin"  style="top:44%"></div>
+    <div class="street h thick" style="top:63%"></div>
+    <div class="street v thick" style="left:22%"></div>
+    <div class="street v thin"  style="left:41%"></div>
+    <div class="street v thick" style="left:58%"></div>
+
+    <div class="fake-pin sunny" style="left:22%;top:27%"><div class="head"><span class="em">☀️</span></div><div class="tail"></div></div>
+    <div class="fake-pin rain"  style="left:58%;top:63%"><div class="head"><span class="em">🌧️</span></div><div class="tail"></div></div>
+    <div class="fake-pin windy" style="left:41%;top:44%"><div class="head"><span class="em">💨</span></div><div class="tail"></div></div>
+
+    <!-- SEARCH -->
+    <div class="map-search">
+      <div class="search-box">
+        <span class="search-ico">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="6" cy="6" r="4.5"/><line x1="9.5" y1="9.5" x2="13" y2="13"/>
+          </svg>
+        </span>
+        <input class="search-input" type="text" placeholder="Buscar ciudad, nido o lugar..." value="Tokyo" readonly />
+        <span class="search-kbd">/ o Ctrl+K</span>
+      </div>
+      <div class="search-dropdown">
+        <div class="dd-header">En el dataset</div>
+        <div class="dd-item active">
+          <div class="dd-icon city">🏙️</div>
+          <div class="dd-text"><div class="dd-name">Tokyo</div><div class="dd-sub">Asia — 35.6762° N, 139.6503° E</div></div>
+          <span class="dd-badge badge-city">Ciudad</span>
+        </div>
+        <div class="dd-item">
+          <div class="dd-icon nest">🌿</div>
+          <div class="dd-text"><div class="dd-name">Inokashira Nest</div><div class="dd-sub">Tokyo · Bulbasaur</div></div>
+          <span class="dd-badge badge-nest">Nido</span>
+        </div>
+        <div class="dd-divider"></div>
+        <div class="dd-header">No encontrado localmente</div>
+        <div class="dd-fallback">
+          <div class="dd-icon globe">🌐</div>
+          <div class="fallback-txt">Buscar <span class="fallback-q">"Tokyo"</span> en OpenStreetMap</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZOOM CONTROLS -->
+    <div class="zoom-controls">
+      <div class="zoom-group">
+        <div class="zbtn-wrap">
+          <button class="zbtn std">+</button>
+          <span class="tip">Acercar</span>
+        </div>
+        <div class="zdivider"></div>
+        <div class="zbtn-wrap">
+          <button class="zbtn std" style="font-size:20px;padding-bottom:2px;">−</button>
+          <span class="tip">Alejar</span>
+        </div>
+      </div>
+
+      <div class="zoom-group" style="position:relative;">
+        <div class="zbtn-wrap">
+          <button class="zbtn">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <circle cx="9" cy="9" r="7.5"/>
+              <ellipse cx="9" cy="9" rx="3.5" ry="7.5"/>
+              <line x1="1.5" y1="9" x2="16.5" y2="9"/>
+              <line x1="2.5" y1="5.5" x2="15.5" y2="5.5"/>
+              <line x1="2.5" y1="12.5" x2="15.5" y2="12.5"/>
+            </svg>
+          </button>
+          <span class="tip">Ver mapa completo</span>
+        </div>
+        <div class="zdivider"></div>
+        <div class="zbtn-wrap">
+          <button class="zbtn">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 2 L16 8 L16 16 L11.5 16 L11.5 11 L6.5 11 L6.5 16 L2 16 L2 8 Z"/>
+            </svg>
+          </button>
+          <span class="tip">Ir a mi ubicacion (GPS)</span>
+        </div>
+        <div class="zdivider"></div>
+        <div class="zbtn-wrap">
+          <button class="zbtn accent">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="7.5" cy="7.5" r="5"/>
+              <line x1="11.5" y1="11.5" x2="16" y2="16"/>
+              <line x1="7.5" y1="5" x2="7.5" y2="10"/>
+              <line x1="5" y1="7.5" x2="10" y2="7.5"/>
+            </svg>
+          </button>
+          <span class="tip">Acercar a ciudad / nido activo</span>
+        </div>
+        <div class="zdivider"></div>
+        <div class="zbtn-wrap coord-wrap">
+          <div class="coord-popup">
+            <div class="popup-title">Ir a coordenadas</div>
+            <input class="coord-single-input" type="text" value="35.6762,139.6503" readonly />
+            <div class="coord-hint">Formato: lat,lon — ej. 35.6762,139.6503</div>
+            <button class="coord-go">Ir</button>
+          </div>
+          <button class="zbtn">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 2 C6.2 2 4 4.2 4 7 C4 11 9 16 9 16 C9 16 14 11 14 7 C14 4.2 11.8 2 9 2 Z"/>
+              <circle cx="9" cy="7" r="2" fill="currentColor" stroke="none"/>
+            </svg>
+          </button>
+          <span class="tip">Ir a coordenadas exactas</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section-label">Que hace cada control</div>
+<div class="cards">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon blue">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="6.5" cy="6.5" r="4"/><line x1="9.5" y1="9.5" x2="14" y2="14"/>
+          <line x1="6.5" y1="4.2" x2="6.5" y2="8.8"/><line x1="4.2" y1="6.5" x2="8.8" y2="6.5"/>
+        </svg>
+      </div>
+      <div class="card-title">Search unificado</div>
+    </div>
+    <div class="card-body">Busca en <em>ciudades + nidos</em> locales primero. Sin resultado → opcion <em>OpenStreetMap</em>. Al elegir dispara <em>FlyToCity / FlyToNest</em>.</div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon gold">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <circle cx="8" cy="8" r="6.5"/><ellipse cx="8" cy="8" rx="3" ry="6.5"/><line x1="1.5" y1="8" x2="14.5" y2="8"/>
+        </svg>
+      </div>
+      <div class="card-title">Mundo — zoom 2</div>
+    </div>
+    <div class="card-body">Aleja a <em>vista mundial</em>. Ves todo el dataset de ciudades y nidos de un vistazo.</div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon green">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 1.5 L14 7 L14 14.5 L10 14.5 L10 10 L6 10 L6 14.5 L2 14.5 L2 7 Z"/>
+        </svg>
+      </div>
+      <div class="card-title">Casa — GPS</div>
+    </div>
+    <div class="card-body">Pide permiso de ubicacion al navegador. Si se otorga, vuela a la <em>posicion actual</em> con zoom 13.</div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon blue">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="6.5" cy="6.5" r="4"/><line x1="9.5" y1="9.5" x2="14" y2="14"/>
+          <line x1="6.5" y1="4.2" x2="6.5" y2="8.8"/><line x1="4.2" y1="6.5" x2="8.8" y2="6.5"/>
+        </svg>
+      </div>
+      <div class="card-title">Lupa+ — ciudad activa</div>
+    </div>
+    <div class="card-body">FlyTo con <em>zoom 13</em> a la ciudad o nido seleccionado actualmente en el sidebar.</div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon gray">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 1.5 C5.5 1.5 3.5 3.5 3.5 6 C3.5 9.5 8 14.5 8 14.5 C8 14.5 12.5 9.5 12.5 6 C12.5 3.5 10.5 1.5 8 1.5 Z"/>
+          <circle cx="8" cy="6" r="1.8" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <div class="card-title">Pin — coordenadas</div>
+    </div>
+    <div class="card-body">Popup con <em>un campo</em>. Formato <em>lat,lon</em> (ej. 35.6762,139.6503). Vuela al punto exacto.</div>
+  </div>
+</div>
+
+<script>
+  function toggleTheme() {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  }
+</script>
