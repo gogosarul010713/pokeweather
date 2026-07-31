@@ -4,7 +4,7 @@
 
 ---
 
-## ESTADO ACTUAL (2026-07-29)
+## ESTADO ACTUAL (2026-07-31)
 
 **Sprint 9 — Sesion 30 (branch: `sprint-9-nests`)**
 
@@ -14,6 +14,7 @@
 - BUG-001 a BUG-007 ✅ — commiteados
 - US-828 ✅ — Chips de categoria del lugar en FilterPanel (d104f80)
 - ENH-004 ✅ — NestDetail bottom sheet + marcos sprites + hora local (69dea6c)
+- ENH-MAP ✅ — FLY_ZOOM 10→13 + MapPin homologado a nidos (28/36px) + sprite clima 85% (ed8c785)
 
 **Siguiente:**
 - US-901/902/903 — Tests de integracion, validacion visual y performance
