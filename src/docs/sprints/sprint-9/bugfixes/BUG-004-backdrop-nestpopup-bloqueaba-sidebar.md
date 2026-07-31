@@ -26,7 +26,7 @@ Restringir el backdrop al area del mapa, dejando el sidebar libre:
   ...
 }
 
-/* Despues */
+/* Despues (sesion 26) */
 .np-backdrop {
   position: fixed;
   top: 0;
@@ -37,10 +37,14 @@ Restringir el backdrop al area del mapa, dejando el sidebar libre:
 }
 ```
 
-`left: 360px` corresponde al ancho del sidebar (300px desktop + margen). El sidebar queda completamente fuera del backdrop y sigue siendo interactivo mientras el popup esta abierto.
+## Evolucion posterior — BUG-005 (sesion 27, 2026-07-26, commit 809c2a0)
+
+El backdrop fue **eliminado completamente** para homologar el comportamiento con el popup de climas (que no tiene backdrop). Adicionalmente se corrigio `left: 360px` → `left: 300px` (ancho real del sidebar desktop) y el wrapper se centro correctamente sobre el area del mapa con `calc(300px + (100vw - 300px) / 2)`.
+
+Estado final: `NestPopup` no tiene backdrop — el mapa queda visible al abrir el popup, igual que el popup de clima.
 
 ## Archivos modificados
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/Nests/NestPopup.tsx` | `.np-backdrop`: `inset: 0` → `top:0; bottom:0; left:360px; right:0` |
+| `src/components/Nests/NestPopup.tsx` | `.np-backdrop` eliminado; `.np-wrapper left` corregido a calc() centrado en area mapa |
