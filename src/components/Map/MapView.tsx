@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { MapContainer, useMap } from 'react-leaflet'
+import { MapContainer, useMap, ZoomControl } from 'react-leaflet'
 import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -177,11 +177,11 @@ export default function MapView({ cities }: MapViewProps) {
           pointer-events: auto;
         }
 
-        /* Zoom controls — derecha superior */
+        /* Zoom controls — alineados con los +/-, debajo */
         .mv-zoom-wrapper {
           position: absolute;
-          top: 10px;
-          right: 220px;
+          top: 76px;
+          right: 10px;
           z-index: 1001;
           pointer-events: auto;
         }
@@ -193,11 +193,12 @@ export default function MapView({ cities }: MapViewProps) {
           zoom={2}
           minZoom={2}
           style={{ width: '100%', height: '100%' }}
-          zoomControl={true}
+          zoomControl={false}
           attributionControl={true}
           worldCopyJump={true}
         >
           <MapRefCapture mapRef={mapRef} />
+          <ZoomControl position="topright" />
           <TileSwitcher />
           <FlyToCity />
           <FlyToNest />

@@ -50,7 +50,7 @@ export default function MapLegend() {
         .ml-root {
           position: absolute;
           bottom: 28px;
-          right: 12px;
+          right: 50px;
           z-index: 1000;
           background: var(--bg-secondary);
           border: 1px solid var(--border-default);
