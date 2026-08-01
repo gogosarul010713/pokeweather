@@ -1,67 +1,75 @@
-import { useState, useRef, type RefObject } from 'react'
+import { useState, useRef, useCallback, type RefObject } from 'react'
 import type { Map as LeafletMap } from 'leaflet'
 import { useStore } from '../../store/useStore'
+import type { City } from '../../store/useStore'
 
 const FLY_DURATION = 1.2
 
 interface MapZoomControlsProps {
   mapRef: RefObject<LeafletMap | null>
+  cities: City[]
+  onOpenSearch: () => void
 }
 
-export default function MapZoomControls({ mapRef }: MapZoomControlsProps) {
-  const [coordsOpen, setCoordsOpen] = useState(false)
-  const [coordsValue, setCoordsValue] = useState('')
-  const [coordsError, setCoordsError] = useState('')
-  const coordInputRef = useRef<HTMLInputElement>(null)
+export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoomControlsProps) {
+  const [worldLoading, setWorldLoading] = useState(false)
+  const [gpsLoading, setGpsLoading] = useState(false)
 
-  const selectedCity = useStore((s) => s.selectedCity)
-  const selectedNest = useStore((s) => s.selectedNest)
+  const favorites = useStore((s) => s.favorites)
+  const setSelectedCity = useStore((s) => s.setSelectedCity)
 
-  function handleWorld() {
-    mapRef.current?.setView([20, 0], 2)
-  }
+  // Indices de rotacion para Mejores y Favoritos
+  const bestIdxRef = useRef(0)
+  const favIdxRef = useRef(0)
 
-  function handleHome() {
-    if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(pos => {
-      mapRef.current?.flyTo([pos.coords.latitude, pos.coords.longitude], 13, { duration: FLY_DURATION })
-    })
-  }
+  const bestCities = cities.filter(c => c.rating >= 4)
 
-  function handleFlyToActive() {
-    const map = mapRef.current
-    if (!map) return
-    if (selectedNest) {
-      map.flyTo([selectedNest.lat, selectedNest.lng], 13, { duration: FLY_DURATION })
-    } else if (selectedCity) {
-      map.flyTo([selectedCity.lat, selectedCity.lon], 13, { duration: FLY_DURATION })
-    }
-  }
+  const handleWorld = useCallback(() => {
+    if (worldLoading) return
+    setWorldLoading(true)
+    setTimeout(() => {
+      mapRef.current?.setView([20, 0], 2)
+      setWorldLoading(false)
+    }, 1200)
+  }, [worldLoading, mapRef])
 
-  function handleCoordsOpen() {
-    setCoordsOpen(v => !v)
-    setCoordsError('')
-    setTimeout(() => coordInputRef.current?.focus(), 50)
-  }
+  const handleHome = useCallback(() => {
+    if (!navigator.geolocation || gpsLoading) return
+    setGpsLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        mapRef.current?.flyTo([pos.coords.latitude, pos.coords.longitude], 13, { duration: FLY_DURATION })
+        setGpsLoading(false)
+      },
+      () => setGpsLoading(false)
+    )
+  }, [gpsLoading, mapRef])
 
-  function handleGo() {
-    const parts = coordsValue.split(',').map(s => parseFloat(s.trim()))
-    if (parts.length !== 2 || parts.some(isNaN)) {
-      setCoordsError('Formato invalido. Ejemplo: 35.6762,139.6503')
-      return
-    }
-    const [lat, lon] = parts
-    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-      setCoordsError('Coordenadas fuera de rango')
-      return
-    }
-    mapRef.current?.flyTo([lat, lon], 15, { duration: FLY_DURATION })
-    setCoordsOpen(false)
-    setCoordsValue('')
-    setCoordsError('')
-  }
+  const handleBest = useCallback(() => {
+    if (bestCities.length === 0) return
+    const city = bestCities[bestIdxRef.current % bestCities.length]
+    bestIdxRef.current = (bestIdxRef.current + 1) % bestCities.length
+    setSelectedCity(city)
+    mapRef.current?.flyTo([city.lat, city.lon], 13, { duration: FLY_DURATION })
+  }, [bestCities, mapRef, setSelectedCity])
 
-  const hasActive = !!(selectedCity || selectedNest)
+  const handleFavorites = useCallback(() => {
+    const favCities = cities.filter(c => favorites.includes(c.id))
+    if (favCities.length === 0) return
+    const city = favCities[favIdxRef.current % favCities.length]
+    favIdxRef.current = (favIdxRef.current + 1) % favCities.length
+    setSelectedCity(city)
+    mapRef.current?.flyTo([city.lat, city.lon], 13, { duration: FLY_DURATION })
+  }, [cities, favorites, mapRef, setSelectedCity])
+
+  const spinnerSvg = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'mzc-spin 1s linear infinite' }}>
+      <circle cx="12" cy="12" r="9" strokeDasharray="40 20" strokeLinecap="round"/>
+    </svg>
+  )
+
+  const hasBest = bestCities.length > 0
+  const hasFavs = favorites.length > 0
 
   return (
     <>
@@ -92,8 +100,7 @@ export default function MapZoomControls({ mapRef }: MapZoomControlsProps) {
           border-bottom: 1px solid var(--border-default);
           color: var(--text-primary);
           cursor: pointer;
-          font-size: 18px;
-          font-weight: 500;
+          font-size: 16px;
           line-height: 1;
           transition: background 0.12s;
         }
@@ -102,99 +109,70 @@ export default function MapZoomControls({ mapRef }: MapZoomControlsProps) {
         .mzc-btn:disabled { color: var(--text-tertiary); cursor: default; }
         .mzc-btn:disabled:hover { background: none; }
         .mzc-btn svg { width: 16px; height: 16px; }
-        .mzc-btn--active { color: var(--accent-primary); }
-        .mzc-coords-popup {
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-default);
-          border-radius: 10px;
-          padding: 10px 12px;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-          min-width: 210px;
-        }
-        .mzc-coords-popup input {
-          width: 100%;
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-default);
-          border-radius: 6px;
-          padding: 6px 8px;
-          color: var(--text-primary);
-          font-size: 13px;
-          outline: none;
-          box-sizing: border-box;
-        }
-        .mzc-coords-popup input:focus { border-color: var(--accent-primary); }
-        .mzc-coords-hint { font-size: 11px; color: var(--text-tertiary); margin: 4px 0 8px; }
-        .mzc-coords-error { font-size: 11px; color: var(--color-error, #e05); margin: 4px 0; }
-        .mzc-go-btn {
-          width: 100%;
-          padding: 6px;
-          background: var(--accent-primary);
-          color: #fff;
+        .mzc-sep {
+          height: 0;
           border: none;
-          border-radius: 6px;
-          font-size: 13px;
-          cursor: pointer;
+          border-top: 2px solid var(--border-default);
+          margin: 0;
         }
-        .mzc-go-btn:hover { opacity: 0.9; }
+        @keyframes mzc-spin { to { transform: rotate(360deg); } }
       `}</style>
 
       <div className="mzc-root">
-        {/* Grupo 1: zoom estandar leaflet (solo visual, Leaflet los provee nativo) */}
-        {/* Grupo 2: navegacion */}
         <div className="mzc-group">
-          <button className="mzc-btn" onClick={handleWorld} title="Vista mundial">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
+          {/* Bloque 1: Mundo + Casa */}
+          <button className="mzc-btn" onClick={handleWorld} title="Vista mundial" disabled={worldLoading}>
+            {worldLoading ? spinnerSvg : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            )}
           </button>
-          <button className="mzc-btn" onClick={handleHome} title="Mi ubicacion (GPS)">
+          <button className="mzc-btn" onClick={handleHome} title="Mi ubicacion (GPS)" disabled={gpsLoading}>
+            {gpsLoading ? spinnerSvg : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            )}
+          </button>
+
+          <hr className="mzc-sep" />
+
+          {/* Bloque 2: Mejores + Favoritos */}
+          <button
+            className="mzc-btn"
+            onClick={handleBest}
+            disabled={!hasBest}
+            title={hasBest ? `Mejores lugares (${bestCities.length})` : 'Sin lugares destacados'}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
           </button>
           <button
-            className={`mzc-btn${hasActive ? ' mzc-btn--active' : ''}`}
-            onClick={handleFlyToActive}
-            disabled={!hasActive}
-            title={hasActive ? 'Ir a ciudad/nido activo' : 'Sin ciudad o nido seleccionado'}
+            className="mzc-btn"
+            onClick={handleFavorites}
+            disabled={!hasFavs}
+            title={hasFavs ? `Mis favoritos (${favorites.length})` : 'Sin favoritos guardados'}
           >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+
+          <hr className="mzc-sep" />
+
+          {/* Bloque 3: Lupa (busqueda) */}
+          <button className="mzc-btn" onClick={onOpenSearch} title="Buscar ciudad, nido o coordenadas (/)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              <line x1="11" y1="8" x2="11" y2="14"/>
-              <line x1="8" y1="11" x2="14" y2="11"/>
-            </svg>
-          </button>
-          <button
-            className={`mzc-btn${coordsOpen ? ' mzc-btn--active' : ''}`}
-            onClick={handleCoordsOpen}
-            title="Ir a coordenadas"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
             </svg>
           </button>
         </div>
-
-        {/* Popup de coordenadas */}
-        {coordsOpen && (
-          <div className="mzc-coords-popup">
-            <input
-              ref={coordInputRef}
-              value={coordsValue}
-              onChange={e => { setCoordsValue(e.target.value); setCoordsError('') }}
-              placeholder="lat,lon"
-              onKeyDown={e => { if (e.key === 'Enter') handleGo(); if (e.key === 'Escape') setCoordsOpen(false) }}
-            />
-            <div className="mzc-coords-hint">Ej: 35.6762,139.6503</div>
-            {coordsError && <div className="mzc-coords-error">{coordsError}</div>}
-            <button className="mzc-go-btn" onClick={handleGo}>Ir</button>
-          </div>
-        )}
       </div>
     </>
   )

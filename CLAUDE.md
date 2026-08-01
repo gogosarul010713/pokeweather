@@ -4,20 +4,17 @@
 
 ---
 
-## ESTADO ACTUAL (2026-07-31)
+## ESTADO ACTUAL (2026-08-01)
 
-**Sprint 9 — Sesion 30 (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 33 (branch: `sprint-9-nests`)**
 
 **Completado:**
-- US-811 a US-827 + ENH-001/002/003/006 ✅ — commiteados
-- US-818 ✅ — NestCard + feed + NestPopup + NestDetail completo
-- BUG-001 a BUG-007 ✅ — commiteados
-- US-828 ✅ — Chips de categoria del lugar en FilterPanel (d104f80)
-- ENH-004 ✅ — NestDetail bottom sheet + marcos sprites + hora local (69dea6c)
-- ENH-MAP ✅ — FLY_ZOOM 10→13 + MapPin homologado a nidos (28/36px) + sprite clima 85% (ed8c785)
+- US-811 a US-828 + ENH-001/002/003/004/006 + ENH-MAP ✅ — commiteados
+- US-904 ✅ — MapZoomControls v2 (DEC-916): 5 botones, Mejores/Favoritos con setSelectedCity, Lupa abre MapSearch
+- US-904 post-review ✅ — MapSearch: coordenadas lat,lon directas + OSM fallback como item del dropdown, pill duplicado eliminado
 
 **Siguiente:**
-- US-901/902/903 — Tests de integracion, validacion visual y performance
+- Commit de sesion 33 + continuar con US-815 (Leyenda dinamica) — `src/docs/sprints/sprint-9/us/US-815.md`
 
 ---
 

@@ -12,12 +12,13 @@ type Result =
 interface MapSearchProps {
   cities: City[]
   mapRef: RefObject<LeafletMap | null>
+  openTick?: number
 }
 
 const FLY_ZOOM = 13
 const FLY_DURATION = 1.5
 
-export default function MapSearch({ cities, mapRef }: MapSearchProps) {
+export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Result[]>([])
@@ -28,6 +29,9 @@ export default function MapSearch({ cities, mapRef }: MapSearchProps) {
   const nests = useStore((s) => s.nests)
   const setSelectedCity = useStore((s) => s.setSelectedCity)
   const setSelectedNest = useStore((s) => s.setSelectedNest)
+
+  // Boton Lupa en MapZoomControls
+  useEffect(() => { if (openTick) setOpen(true) }, [openTick])
 
   // Shortcut / o Ctrl+K
   useEffect(() => {
@@ -61,9 +65,25 @@ export default function MapSearch({ cities, mapRef }: MapSearchProps) {
     }
   }, [open, mapRef])
 
+  const parseCoords = (q: string): { lat: number; lon: number } | null => {
+    const parts = q.split(',').map(s => parseFloat(s.trim()))
+    if (parts.length !== 2 || parts.some(isNaN)) return null
+    const [lat, lon] = parts
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null
+    return { lat, lon }
+  }
+
   const search = useCallback((q: string) => {
     const lq = q.toLowerCase().trim()
     if (!lq) { setResults([]); setNomOption(false); return }
+
+    // Coordenadas directas
+    const coords = parseCoords(q)
+    if (coords) {
+      setResults([{ kind: 'nominatim', label: `${coords.lat}, ${coords.lon}`, lat: coords.lat, lon: coords.lon }])
+      setNomOption(false)
+      return
+    }
 
     const cityHits: Result[] = cities
       .filter(c => c.name.toLowerCase().includes(lq) || c.country?.toLowerCase().includes(lq))
@@ -115,21 +135,7 @@ export default function MapSearch({ cities, mapRef }: MapSearchProps) {
     setOpen(false)
   }
 
-  if (!open) {
-    return (
-      <button
-        className="ms-trigger"
-        onClick={() => setOpen(true)}
-        title="Buscar ciudad o nido (/ o Ctrl+K)"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <span>Buscar ciudad o nido...</span>
-        <kbd>/</kbd>
-      </button>
-    )
-  }
+  if (!open) return null
 
   return (
     <>
@@ -235,6 +241,37 @@ export default function MapSearch({ cities, mapRef }: MapSearchProps) {
           cursor: pointer;
         }
         .ms-empty { padding: 14px; text-align: center; color: var(--text-tertiary); font-size: 13px; }
+        .ms-section-label {
+          padding: 5px 14px 3px;
+          font-size: 10px;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          color: var(--text-tertiary);
+          border-bottom: 1px solid var(--border-default);
+        }
+        .ms-osm-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 9px 14px;
+          cursor: pointer;
+          font-size: 13px;
+          color: var(--text-secondary);
+          border: none;
+          background: none;
+          width: 100%;
+          text-align: left;
+          transition: background 0.1s;
+        }
+        .ms-osm-row:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .ms-osm-row:disabled { opacity: 0.5; cursor: default; }
+        .ms-osm-icon {
+          width: 22px; height: 22px;
+          border-radius: 50%;
+          background: rgba(248,208,48,0.12);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0; font-size: 12px;
+        }
       `}</style>
 
       <div className="ms-panel">
@@ -246,13 +283,16 @@ export default function MapSearch({ cities, mapRef }: MapSearchProps) {
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Ciudad, pais o nido..."
+            placeholder="Ciudad, nido o lat,lon..."
             onKeyDown={e => e.key === 'Escape' && setOpen(false)}
           />
           <button className="ms-close" onClick={() => setOpen(false)}>×</button>
         </div>
 
         <div className="ms-results">
+          {results.length > 0 && (
+            <div className="ms-section-label">En el dataset</div>
+          )}
           {results.map((r, i) => (
             <button key={i} className="ms-result" onClick={() => selectResult(r)}>
               <span className="ms-result-label">
@@ -261,22 +301,23 @@ export default function MapSearch({ cities, mapRef }: MapSearchProps) {
                  r.label}
               </span>
               <span className="ms-result-tag">
-                {r.kind === 'city' ? 'ciudad' : r.kind === 'nest' ? 'nido' : 'OSM'}
+                {r.kind === 'city' ? 'ciudad' : r.kind === 'nest' ? 'nido' : 'coordenadas'}
               </span>
             </button>
           ))}
 
-          {query && results.length === 0 && !nomOption && !loading && (
-            <div className="ms-empty">Sin resultados locales</div>
+          {nomOption && (
+            <>
+              <div className="ms-section-label">No encontrado localmente</div>
+              <button className="ms-osm-row" onClick={searchNominatim} disabled={loading}>
+                <span className="ms-osm-icon">🌐</span>
+                <span>{loading ? 'Buscando en OpenStreetMap...' : `Buscar "${query}" en OpenStreetMap`}</span>
+              </button>
+            </>
           )}
 
-          {nomOption && (
-            <div className="ms-nominatim">
-              <span>Sin resultados locales</span>
-              <button onClick={searchNominatim} disabled={loading}>
-                {loading ? 'Buscando...' : 'Buscar en OSM'}
-              </button>
-            </div>
+          {query && results.length === 0 && !nomOption && !loading && (
+            <div className="ms-empty">Sin resultados</div>
           )}
         </div>
       </div>

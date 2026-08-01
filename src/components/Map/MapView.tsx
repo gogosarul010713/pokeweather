@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, useMap, ZoomControl } from 'react-leaflet'
 import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
@@ -60,6 +60,7 @@ interface MapViewProps {
 
 export default function MapView({ cities }: MapViewProps) {
   const mapRef = useRef<LeafletMap | null>(null)
+  const [searchOpenTick, setSearchOpenTick] = useState(0)
   const activeLayers = useStore((s) => s.activeLayers)
   const highlightCategories = useStore((s) => s.highlightCategories)
   const categoryFilter = useStore((s) => s.categoryFilter)
@@ -226,10 +227,10 @@ export default function MapView({ cities }: MapViewProps) {
 
         {/* Overlays fuera del MapContainer para evitar z-index conflicts */}
         <div className="mv-search-wrapper">
-          <MapSearch cities={cities} mapRef={mapRef} />
+          <MapSearch cities={cities} mapRef={mapRef} openTick={searchOpenTick} />
         </div>
         <div className="mv-zoom-wrapper">
-          <MapZoomControls mapRef={mapRef} />
+          <MapZoomControls mapRef={mapRef} cities={cities} onOpenSearch={() => setSearchOpenTick(t => t + 1)} />
         </div>
         <MapLegend />
       </div>
