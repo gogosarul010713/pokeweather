@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { MapContainer, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useStore } from '../../store/useStore'
 import { calculateBadges } from '../../services/weather/weatherService'
@@ -12,6 +13,8 @@ import NestPin from './NestPin'
 import FlyToCity from './FlyToCity'
 import FlyToNest from './FlyToNest'
 import MapLegend from './MapLegend'
+import MapSearch from './MapSearch'
+import MapZoomControls from './MapZoomControls'
 import { Z } from '../../config/zIndex'
 
 // ─── Tile URLs ────────────────────────────────────────────────────────────────
@@ -42,6 +45,13 @@ function TileSwitcher() {
   return null
 }
 
+// ─── MapRefCapture — expone la instancia del mapa al componente padre ─────────
+function MapRefCapture({ mapRef }: { mapRef: { current: LeafletMap | null } }) {
+  const map = useMap()
+  useEffect(() => { mapRef.current = map }, [map, mapRef])
+  return null
+}
+
 // ─── MapView ──────────────────────────────────────────────────────────────────
 
 interface MapViewProps {
@@ -49,6 +59,7 @@ interface MapViewProps {
 }
 
 export default function MapView({ cities }: MapViewProps) {
+  const mapRef = useRef<LeafletMap | null>(null)
   const activeLayers = useStore((s) => s.activeLayers)
   const highlightCategories = useStore((s) => s.highlightCategories)
   const categoryFilter = useStore((s) => s.categoryFilter)
@@ -102,7 +113,6 @@ export default function MapView({ cities }: MapViewProps) {
           width: 100%;
           height: 100%;
           position: relative;
-          z-index: ${Z.mapBase};
         }
 
         /* Compactar atribución */
@@ -156,6 +166,25 @@ export default function MapView({ cities }: MapViewProps) {
         .mv-root .leaflet-tile-container {
           filter: var(--tile-filter, none);
         }
+
+        /* Search overlay — centro superior */
+        .mv-search-wrapper {
+          position: absolute;
+          top: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          pointer-events: auto;
+        }
+
+        /* Zoom controls — derecha superior */
+        .mv-zoom-wrapper {
+          position: absolute;
+          top: 10px;
+          right: 220px;
+          z-index: 1001;
+          pointer-events: auto;
+        }
       `}</style>
 
       <div className="mv-root">
@@ -168,6 +197,7 @@ export default function MapView({ cities }: MapViewProps) {
           attributionControl={true}
           worldCopyJump={true}
         >
+          <MapRefCapture mapRef={mapRef} />
           <TileSwitcher />
           <FlyToCity />
           <FlyToNest />
@@ -193,7 +223,13 @@ export default function MapView({ cities }: MapViewProps) {
 
         </MapContainer>
 
-        {/* Leyenda fuera del MapContainer para evitar z-index conflicts */}
+        {/* Overlays fuera del MapContainer para evitar z-index conflicts */}
+        <div className="mv-search-wrapper">
+          <MapSearch cities={cities} mapRef={mapRef} />
+        </div>
+        <div className="mv-zoom-wrapper">
+          <MapZoomControls mapRef={mapRef} />
+        </div>
         <MapLegend />
       </div>
     </>
