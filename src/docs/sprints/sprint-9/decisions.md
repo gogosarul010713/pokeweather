@@ -574,6 +574,45 @@ El filtrado por categoria pasa al FilterPanel como chips independientes (`catego
 
 ---
 
+## DEC-916 — MapZoomControls v2: 5 botones con 2 separadores (sesion 32)
+
+**Fecha:** Sprint 9 — Sesion 32 (2026-07-31)
+**Estado:** Aprobada
+**Afecta:** `src/components/Map/MapZoomControls.tsx`
+
+### Contexto
+
+Post-review de US-904 (sesion 32). La estructura original de 4 botones (Mundo, Casa, Lupa+, Pin) tenia dos problemas: el boton Pin era redundante (el search ya acepta coordenadas), y el boton Lupa+ quedaba deshabilitado cuando no habia ciudad/nido seleccionado — el caso mas comun al abrir la app.
+
+### Decision
+
+Rediseno a 5 botones agrupados en 3 bloques visuales:
+
+```
+[Mundo]     — setView z2, spinner 1200ms primero luego zoom out
+[Casa]      — GPS getCurrentPosition, spinner real mientras espera
+─────────
+[Mejores]   — flyTo al siguiente "mejor lugar" (isBest del dataset) en orden aleatorio
+[Favoritos] — flyTo al siguiente favorito del usuario (favorites[] del store) en orden aleatorio
+─────────
+[Lupa]      — abre MapSearch overlay (acepta nombre de ciudad/nido O lat,lon)
+```
+
+### Consecuencias
+
+- Boton Pin (popup coordenadas) **eliminado** — su funcionalidad pasa al campo de busqueda
+- Boton Lupa+ (flyTo activo) **eliminado** — nunca mas deshabilitado; reemplazado por Mejores/Favoritos
+- Boton Mundo mantiene spinner 1200ms (ya implementado)
+- Boton Casa mantiene spinner real GPS (ya implementado)
+- Dos separadores visuales (`border-top`) dentro del grupo para los 3 bloques
+
+### Alternativas descartadas
+
+- **Toggle ciudad/mundo** (un solo boton que cambia icono segun zoom) — descartado. El zoom es continuo (z2-z18), no binario; el icono cambiaria solo mientras el usuario hace scroll. Confuso.
+- **fitBounds sin seleccion** — descartado a favor de rotacion entre mejores/favoritos. Mas util para el caso de uso Pokemon GO que encuadrar todos los pins.
+
+---
+
 ## BUG-001 — LocationFeed no renderiza cuando solo capa Nidos activa (sesion 13)
 
 **Fecha:** Sprint 9 — Sesion 13 (2026-07-22)
