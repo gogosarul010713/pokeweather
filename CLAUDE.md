@@ -6,15 +6,16 @@
 
 ## ESTADO ACTUAL (2026-08-01)
 
-**Sprint 9 — Sesion 33 (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 34 (branch: `sprint-9-nests`)**
 
 **Completado:**
 - US-811 a US-828 + ENH-001/002/003/004/006 + ENH-MAP ✅ — commiteados
 - US-904 ✅ — MapZoomControls v2 (DEC-916): 5 botones, Mejores/Favoritos con setSelectedCity, Lupa abre MapSearch
 - US-904 post-review ✅ — MapSearch: coordenadas lat,lon directas + OSM fallback como item del dropdown, pill duplicado eliminado
+- MapZoomControls ajustes ✅ — disabled variante B (opacity 0.42 + color text-secondary) + pill "Sin favoritos aun" + cursor default + placeholder "Ciudad, nido o coordenadas"
 
 **Siguiente:**
-- Commit de sesion 33 + continuar con US-815 (Leyenda dinamica) — `src/docs/sprints/sprint-9/us/US-815.md`
+- Commit sesion 34 + continuar con US-815 (Leyenda dinamica) — `src/docs/sprints/sprint-9/us/US-815.md`
 
 ---
 

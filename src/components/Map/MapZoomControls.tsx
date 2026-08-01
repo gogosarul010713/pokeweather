@@ -106,7 +106,7 @@ export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoo
         }
         .mzc-btn:last-child { border-bottom: none; }
         .mzc-btn:hover { background: var(--bg-hover); }
-        .mzc-btn:disabled { color: var(--text-tertiary); cursor: default; }
+        .mzc-btn:disabled { color: var(--text-secondary); opacity: 0.42; cursor: default; }
         .mzc-btn:disabled:hover { background: none; }
         .mzc-btn svg { width: 16px; height: 16px; }
         .mzc-sep {
@@ -115,10 +115,22 @@ export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoo
           border-top: 2px solid var(--border-default);
           margin: 0;
         }
+        .mzc-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          padding: 2px 7px;
+          background: rgba(125,133,144,0.09);
+          border: 1px solid rgba(125,133,144,0.14);
+          border-radius: 99px;
+        }
+        .mzc-pill svg { width: 9px; height: 9px; color: var(--text-secondary); opacity: 0.6; }
+        .mzc-pill span { font-size: 10px; color: var(--text-secondary); opacity: 0.6; white-space: nowrap; }
         @keyframes mzc-spin { to { transform: rotate(360deg); } }
       `}</style>
 
       <div className="mzc-root">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
         <div className="mzc-group">
           {/* Bloque 1: Mundo + Casa */}
           <button className="mzc-btn" onClick={handleWorld} title="Vista mundial" disabled={worldLoading}>
@@ -172,6 +184,15 @@ export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoo
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
           </button>
+        </div>
+        {(!hasBest || !hasFavs) && (
+          <div className="mzc-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            <span>{!hasFavs ? 'Sin favoritos aun' : 'Sin destacados'}</span>
+          </div>
+        )}
         </div>
       </div>
     </>

@@ -283,7 +283,7 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Ciudad, nido o lat,lon..."
+            placeholder="Ciudad, nido o coordenadas"
             onKeyDown={e => e.key === 'Escape' && setOpen(false)}
           />
           <button className="ms-close" onClick={() => setOpen(false)}>×</button>
