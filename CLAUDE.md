@@ -4,18 +4,22 @@
 
 ---
 
-## ESTADO ACTUAL (2026-08-01)
+## ESTADO ACTUAL (2026-08-02)
 
 **Sprint 9 — Sesion 34 (branch: `sprint-9-nests`)**
 
 **Completado:**
 - US-811 a US-828 + ENH-001/002/003/004/006 + ENH-MAP ✅ — commiteados
-- US-904 ✅ — MapZoomControls v2 (DEC-916): 5 botones, Mejores/Favoritos con setSelectedCity, Lupa abre MapSearch
-- US-904 post-review ✅ — MapSearch: coordenadas lat,lon directas + OSM fallback como item del dropdown, pill duplicado eliminado
-- MapZoomControls ajustes ✅ — disabled variante B (opacity 0.42 + color text-secondary) + pill "Sin favoritos aun" + cursor default + placeholder "Ciudad, nido o coordenadas"
+- US-904 ✅ — MapZoomControls v2 + MapSearch lat,lon + ajustes disabled/pill
+- US-815 impl v1 ✅ — leyenda sin subtabs, radio exclusivo, borde izq (41aa2be..0b6afaf)
+- US-815 diseño v4 ✅ — mockup aprobado: leyenda unificada Top 10% del dataset (d2fb08f)
 
 **Siguiente:**
-- Commit sesion 34 + continuar con US-815 (Leyenda dinamica) — `src/docs/sprints/sprint-9/us/US-815.md`
+- Reimplementar US-815 segun mockup v4 — leyenda sin tabs, top 10% dinamico con dim (opacity .13 + grayscale), titulo "Leyenda · Top N" — ver `src/docs/mockups/maplegend-categorias/README.md`
+- Ejecutar `/update-doc sync list` para auditoria de docs pendientes
+
+**Backlog critico pendiente:**
+- Estado nido (Verificado/No verificado) mover a Filter Panel como chips — aprobado en sesion pero no implementado
 
 ---
 
