@@ -1,0 +1,475 @@
+<title>Mockup — Home Radar en el Mapa</title>
+<style>
+:root {
+  --bg-primary:   #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary:  #1C2333;
+  --bg-overlay:   #252D3D;
+  --text-primary:   #E6EDF3;
+  --text-secondary: #7D8590;
+  --text-accent:    #FFD700;
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.12);
+  --ui-accent:  #58A6FF;
+  --ui-success: #3FB950;
+  --home:       #FF6B35;
+  --home-dim:   rgba(255,107,53,0.12);
+  --home-mid:   rgba(255,107,53,0.22);
+  --home-glow:  rgba(255,107,53,0.38);
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px;
+  --font-main:    'Exo 2', system-ui, sans-serif;
+  --font-display: 'Rajdhani', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: light) { :root {
+  --bg-primary:#F0F4F8; --bg-secondary:#FFFFFF; --bg-tertiary:#E8EDF2; --bg-overlay:#D8E1EA;
+  --text-primary:#1A2233; --text-secondary:#5A6680; --text-accent:#C89A00;
+  --border-subtle:rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12);
+  --home:#E85520; --home-dim:rgba(232,85,32,0.08); --home-mid:rgba(232,85,32,0.16); --home-glow:rgba(232,85,32,0.28);
+}}
+:root[data-theme="light"] {
+  --bg-primary:#F0F4F8; --bg-secondary:#FFFFFF; --bg-tertiary:#E8EDF2; --bg-overlay:#D8E1EA;
+  --text-primary:#1A2233; --text-secondary:#5A6680; --text-accent:#C89A00;
+  --border-subtle:rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12);
+  --home:#E85520; --home-dim:rgba(232,85,32,0.08); --home-mid:rgba(232,85,32,0.16); --home-glow:rgba(232,85,32,0.28);
+}
+:root[data-theme="dark"] {
+  --bg-primary:#0D1117; --bg-secondary:#161B22; --bg-tertiary:#1C2333; --bg-overlay:#252D3D;
+  --text-primary:#E6EDF3; --text-secondary:#7D8590; --text-accent:#FFD700;
+  --border-subtle:rgba(255,255,255,0.06); --border-default:rgba(255,255,255,0.12);
+  --home:#FF6B35; --home-dim:rgba(255,107,53,0.12); --home-mid:rgba(255,107,53,0.22); --home-glow:rgba(255,107,53,0.38);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-main);
+  background: var(--bg-primary); color: var(--text-primary);
+  min-height: 100vh; padding: 28px 16px 60px;
+  display: flex; flex-direction: column; align-items: center; gap: 32px;
+}
+
+.theme-toggle {
+  position: fixed; top: 14px; right: 14px;
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  color: var(--text-secondary); border-radius: 20px;
+  padding: 5px 13px; font-size: 12px; font-family: var(--font-display);
+  letter-spacing: .06em; cursor: pointer; z-index: 999;
+}
+
+.page-header { text-align: center; max-width: 600px; }
+.eyebrow { font-family: var(--font-display); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; }
+h1 { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.2; text-wrap: balance; }
+.sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; line-height: 1.6; }
+
+.section-label {
+  font-family: var(--font-display); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-secondary); display: flex; align-items: center; gap: 8px;
+  width: 100%; max-width: 900px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+
+/* ══════════════════════════════
+   MAPA PRINCIPAL
+══════════════════════════════ */
+.map-wrap { width: 100%; max-width: 900px; }
+.map-frame {
+  position: relative; width: 100%; aspect-ratio: 16/8;
+  border-radius: var(--radius-lg); overflow: hidden;
+  border: 1px solid var(--border-default);
+  background: #0f1a2a;
+}
+
+/* tiles simulados */
+.map-tiles {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(rgba(88,166,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,.025) 1px, transparent 1px),
+    #0f1a2a;
+  background-size: 48px 48px;
+}
+.map-tiles::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 48% 54%, rgba(88,166,255,.06) 0%, transparent 60%);
+}
+
+/* calles */
+.st { position: absolute; background: rgba(255,255,255,.065); }
+.st.h { height: 2px; left: 0; right: 0; }
+.st.v { width: 2px; top: 0; bottom: 0; }
+.st.main { opacity: 1; }
+.st.sec  { opacity: .5; }
+
+/* ══════════════════════════════
+   HOME RADAR — el efecto clave
+══════════════════════════════ */
+.home-radar {
+  position: absolute;
+  /* centrado en el mapa aprox */
+  top: 50%; left: 46%;
+  transform: translate(-50%, -50%);
+  /* tamanio del radio visual */
+  width: 260px; height: 260px;
+  pointer-events: none;
+}
+
+/* circulo de area (relleno muy tenue) */
+.radar-area {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--home-dim) 0%, transparent 70%);
+}
+
+/* ondas concentricas pulsantes */
+.radar-pulse {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--home);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+}
+.radar-pulse-1 { width: 260px; height: 260px; animation: pulse-out 2.8s ease-out infinite; }
+.radar-pulse-2 { width: 260px; height: 260px; animation: pulse-out 2.8s ease-out infinite .9s; }
+.radar-pulse-3 { width: 260px; height: 260px; animation: pulse-out 2.8s ease-out infinite 1.8s; }
+
+@keyframes pulse-out {
+  0%   { transform: translate(-50%,-50%) scale(0.05); opacity: .9; }
+  100% { transform: translate(-50%,-50%) scale(1);    opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radar-pulse { animation: none; opacity: 0; }
+  .radar-area  { background: radial-gradient(circle, var(--home-dim) 0%, transparent 70%); }
+}
+
+/* borde exterior fijo sutil */
+.radar-border {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1px dashed rgba(255,107,53,0.25);
+}
+
+/* pin home central */
+.home-pin {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -100%);
+  display: flex; flex-direction: column; align-items: center;
+  z-index: 10; pointer-events: auto;
+}
+.home-pin-head {
+  width: 32px; height: 32px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--home);
+  border: 2px solid rgba(255,255,255,.35);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 4px var(--home-dim), 0 0 16px var(--home-glow), 0 4px 10px rgba(0,0,0,.5);
+}
+.home-pin-em { transform: rotate(45deg); font-size: 15px; line-height: 1; }
+.home-pin-tail {
+  width: 2px; height: 8px;
+  background: var(--home);
+  opacity: .6;
+}
+
+/* label flotante sobre el pin */
+.home-label {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(18px, -110%);
+  background: var(--bg-overlay);
+  border: 1px solid var(--home);
+  border-radius: var(--radius-sm);
+  padding: 4px 9px;
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  color: var(--home); letter-spacing: .04em; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  pointer-events: none; z-index: 11;
+}
+.home-label::before {
+  content: '';
+  position: absolute;
+  left: -5px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-right: 5px solid var(--home);
+}
+
+/* ── pins normales en el mapa ── */
+.map-pin {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+  transform: translate(-50%, -100%);
+  z-index: 5;
+}
+.map-pin-head {
+  width: 24px; height: 24px;
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  border: 1.5px solid rgba(255,255,255,.22);
+  display: flex; align-items: center; justify-content: center;
+}
+.map-pin-em { transform: rotate(45deg); font-size: 11px; line-height: 1; }
+.map-pin-tail { width: 2px; height: 6px; opacity: .4; }
+.map-pin.nest .map-pin-head  { background: rgba(88,166,255,.85); }
+.map-pin.nest .map-pin-tail  { background: var(--ui-accent); }
+.map-pin.city .map-pin-head  { background: rgba(63,185,80,.85); }
+.map-pin.city .map-pin-tail  { background: var(--ui-success); }
+
+/* distancia tag bajo el pin */
+.pin-dist {
+  margin-top: 2px;
+  background: var(--bg-overlay); border: 1px solid var(--border-default);
+  border-radius: 10px; padding: 1px 6px;
+  font-family: var(--font-display); font-size: 10px;
+  color: var(--text-accent); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── controles zoom (derecha) ── */
+.zoom-controls {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; flex-direction: column; gap: 4px; z-index: 20;
+}
+.zoom-group {
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
+  display: flex; flex-direction: column; width: 36px;
+}
+.zdivider { height: 1px; background: var(--border-subtle); margin: 0 5px; }
+.zbtn {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-secondary); font-size: 18px; font-weight: 700;
+  transition: background .1s, color .1s;
+}
+.zbtn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.zbtn.home-btn { color: var(--home); font-size: 14px; }
+.zbtn.home-btn:hover { background: var(--home-dim); }
+
+/* ── barra de info bottom ── */
+.map-info-bar {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 8px 14px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+  z-index: 20; white-space: nowrap;
+}
+.info-home-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--home);
+  box-shadow: 0 0 6px var(--home); flex-shrink: 0;
+}
+.info-text { font-family: var(--font-display); font-size: 11px; color: var(--text-secondary); }
+.info-text strong { color: var(--text-primary); }
+.info-sep { width: 1px; height: 14px; background: var(--border-default); }
+.info-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-family: var(--font-display);
+}
+.info-dot { width: 7px; height: 7px; border-radius: 50%; }
+.info-dot.nest { background: var(--ui-accent); }
+.info-dot.city { background: var(--ui-success); }
+
+/* ── search bar ── */
+.map-search {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: min(360px, calc(100% - 120px)); z-index: 20;
+}
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 0 12px; height: 36px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
+}
+.search-ico { color: var(--text-secondary); font-size: 13px; }
+.search-input {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: var(--font-main); font-size: 12px; color: var(--text-primary);
+}
+.search-input::placeholder { color: var(--text-secondary); }
+
+/* ══════════════════════════════
+   ANOTACIONES
+══════════════════════════════ */
+.annotations {
+  width: 100%; max-width: 900px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+}
+.ann-card {
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.ann-indicator {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 2px;
+}
+.ann-indicator.home-color { background: var(--home-dim); }
+.ann-indicator.nest-color { background: rgba(88,166,255,.12); }
+.ann-indicator.city-color { background: rgba(63,185,80,.12); }
+.ann-title { font-family: var(--font-display); font-size: 13px; font-weight: 700; }
+.ann-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+.ann-desc strong { color: var(--text-primary); }
+
+/* radius label en mapa */
+.radius-label {
+  position: absolute;
+  font-family: var(--font-display); font-size: 10px; letter-spacing: .05em;
+  color: rgba(255,107,53,0.55); pointer-events: none;
+}
+</style>
+
+<button class="theme-toggle" onclick="
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  r.setAttribute('data-theme',cur==='dark'?'light':'dark');
+  this.textContent=cur==='dark'?'Light':'Dark';
+">Dark</button>
+
+<div class="page-header">
+  <div class="eyebrow">Mockup — Mi Zona</div>
+  <h1>Radar home sobre el mapa</h1>
+  <p class="sub">El pin naranja es tu home. Las ondas pulsantes muestran el radio de busqueda. Cada nido y ciudad cercana muestra su distancia.</p>
+</div>
+
+<!-- ─── MAPA ─────────────────────────────────────── -->
+<div class="map-wrap">
+  <div class="map-frame">
+    <div class="map-tiles"></div>
+
+    <!-- calles simuladas -->
+    <div class="st h main" style="top:28%"></div>
+    <div class="st h main" style="top:55%"></div>
+    <div class="st h main" style="top:75%"></div>
+    <div class="st h sec"  style="top:40%"></div>
+    <div class="st h sec"  style="top:64%"></div>
+    <div class="st v main" style="left:22%"></div>
+    <div class="st v main" style="left:48%"></div>
+    <div class="st v main" style="left:72%"></div>
+    <div class="st v sec"  style="left:35%"></div>
+    <div class="st v sec"  style="left:60%"></div>
+
+    <!-- ★ RADAR HOME ★ -->
+    <div class="home-radar" style="top:52%;left:46%;">
+      <div class="radar-area"></div>
+      <div class="radar-border"></div>
+      <div class="radar-pulse radar-pulse-1"></div>
+      <div class="radar-pulse radar-pulse-2"></div>
+      <div class="radar-pulse radar-pulse-3"></div>
+      <!-- pin central -->
+      <div class="home-pin">
+        <div class="home-pin-head"><span class="home-pin-em">🏠</span></div>
+        <div class="home-pin-tail"></div>
+      </div>
+      <!-- label -->
+      <div class="home-label">Mi Zona</div>
+      <!-- label radio -->
+      <div class="radius-label" style="bottom:4px;left:50%;transform:translateX(-50%);">~ 5 km</div>
+    </div>
+
+    <!-- pins nidos (dentro del radio) -->
+    <div class="map-pin nest" style="top:38%;left:54%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">0.8 km</div>
+    </div>
+    <div class="map-pin nest" style="top:60%;left:40%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">2.1 km</div>
+    </div>
+    <div class="map-pin nest" style="top:44%;left:35%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">3.4 km</div>
+    </div>
+
+    <!-- pins ciudades (dentro del radio) -->
+    <div class="map-pin city" style="top:33%;left:58%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌧️</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">1.6 km</div>
+    </div>
+    <div class="map-pin city" style="top:65%;left:52%;">
+      <div class="map-pin-head"><span class="map-pin-em">☀️</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">4.2 km</div>
+    </div>
+
+    <!-- pins fuera del radio (sin dist tag, mas apagados) -->
+    <div class="map-pin nest" style="top:20%;left:18%;opacity:.35;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+    </div>
+    <div class="map-pin city" style="top:72%;left:80%;opacity:.35;">
+      <div class="map-pin-head"><span class="map-pin-em">⛅</span></div>
+      <div class="map-pin-tail"></div>
+    </div>
+    <div class="map-pin nest" style="top:18%;left:75%;opacity:.35;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+    </div>
+
+    <!-- search -->
+    <div class="map-search">
+      <div class="search-box">
+        <span class="search-ico">🔍</span>
+        <input class="search-input" placeholder="Ciudad, nido o coordenadas..." readonly />
+      </div>
+    </div>
+
+    <!-- zoom controls -->
+    <div class="zoom-controls">
+      <div class="zoom-group">
+        <button class="zbtn" style="font-size:18px;font-weight:700;">+</button>
+        <div class="zdivider"></div>
+        <button class="zbtn" style="font-size:18px;font-weight:700;">−</button>
+      </div>
+      <div class="zoom-group">
+        <!-- boton para ir al home -->
+        <button class="zbtn home-btn" title="Ir a mi zona">🏠</button>
+      </div>
+    </div>
+
+    <!-- info bar bottom -->
+    <div class="map-info-bar">
+      <div class="info-home-dot"></div>
+      <div class="info-text"><strong>-34.603, -58.381</strong> &mdash; Buenos Aires</div>
+      <div class="info-sep"></div>
+      <div class="info-chip">
+        <div class="info-dot nest"></div>
+        <span class="info-text">3 nidos</span>
+      </div>
+      <div class="info-chip">
+        <div class="info-dot city"></div>
+        <span class="info-text">2 ciudades</span>
+      </div>
+      <div class="info-sep"></div>
+      <span class="info-text" style="color:var(--home);cursor:pointer;">Cambiar</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── ANOTACIONES ──────────────────────────────── -->
+<div class="annotations">
+  <div class="ann-card">
+    <div class="ann-indicator home-color">📍</div>
+    <div class="ann-title">Pin + ondas pulsantes</div>
+    <div class="ann-desc">El pin naranja es tu home. Las <strong>3 ondas concentricas</strong> se expanden y desaparecen en loop — es el efecto "radar" en Leaflet con CSS sobre el DivIcon.</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-indicator nest-color">🌿</div>
+    <div class="ann-title">Dentro del radio = distancia</div>
+    <div class="ann-desc">Los pins <strong>dentro del circulo</strong> muestran su distancia al home. Los de afuera aparecen apagados sin tag. El radio es configurable (ej. 5 km).</div>
+  </div>
+  <div class="ann-card">
+    <div class="ann-indicator home-color">🏠</div>
+    <div class="ann-title">Boton home en controles</div>
+    <div class="ann-desc">El boton 🏠 en los zoom controls hace <strong>fly-to al home</strong>. La barra inferior muestra coords actuales y cuantos elementos estan cerca.</div>
+  </div>
+</div>

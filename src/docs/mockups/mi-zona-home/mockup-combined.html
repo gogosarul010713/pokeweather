@@ -1,0 +1,554 @@
+<title>Mockup — Mi Zona: Sidebar + Radar en Mapa</title>
+<style>
+:root {
+  --bg-primary:   #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary:  #1C2333;
+  --bg-overlay:   #252D3D;
+  --text-primary:   #E6EDF3;
+  --text-secondary: #7D8590;
+  --text-accent:    #FFD700;
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.12);
+  --ui-accent:  #58A6FF;
+  --ui-success: #3FB950;
+  --home:       #FF6B35;
+  --home-dim:   rgba(255,107,53,0.10);
+  --home-mid:   rgba(255,107,53,0.20);
+  --home-glow:  rgba(255,107,53,0.35);
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px;
+  --font-main:    'Exo 2', system-ui, sans-serif;
+  --font-display: 'Rajdhani', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: light) { :root {
+  --bg-primary:#F0F4F8; --bg-secondary:#FFFFFF; --bg-tertiary:#E8EDF2; --bg-overlay:#D8E1EA;
+  --text-primary:#1A2233; --text-secondary:#5A6680; --text-accent:#C89A00;
+  --border-subtle:rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12);
+  --home:#E85520; --home-dim:rgba(232,85,32,0.08); --home-mid:rgba(232,85,32,0.15); --home-glow:rgba(232,85,32,0.25);
+}}
+:root[data-theme="light"] {
+  --bg-primary:#F0F4F8; --bg-secondary:#FFFFFF; --bg-tertiary:#E8EDF2; --bg-overlay:#D8E1EA;
+  --text-primary:#1A2233; --text-secondary:#5A6680; --text-accent:#C89A00;
+  --border-subtle:rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12);
+  --home:#E85520; --home-dim:rgba(232,85,32,0.08); --home-mid:rgba(232,85,32,0.15); --home-glow:rgba(232,85,32,0.25);
+}
+:root[data-theme="dark"] {
+  --bg-primary:#0D1117; --bg-secondary:#161B22; --bg-tertiary:#1C2333; --bg-overlay:#252D3D;
+  --text-primary:#E6EDF3; --text-secondary:#7D8590; --text-accent:#FFD700;
+  --border-subtle:rgba(255,255,255,0.06); --border-default:rgba(255,255,255,0.12);
+  --home:#FF6B35; --home-dim:rgba(255,107,53,0.10); --home-mid:rgba(255,107,53,0.20); --home-glow:rgba(255,107,53,0.35);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-main);
+  background: var(--bg-primary); color: var(--text-primary);
+  min-height: 100vh; padding: 24px 16px 48px;
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+
+.theme-toggle {
+  position: fixed; top: 12px; right: 12px;
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  color: var(--text-secondary); border-radius: 20px;
+  padding: 4px 12px; font-size: 12px; font-family: var(--font-display);
+  letter-spacing: .06em; cursor: pointer; z-index: 999;
+}
+
+.page-header { text-align: center; max-width: 600px; }
+.eyebrow { font-family: var(--font-display); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px; }
+h1 { font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1.2; text-wrap: balance; }
+.sub { font-size: 12px; color: var(--text-secondary); margin-top: 5px; line-height: 1.6; }
+
+/* ══════════════════════════════════════════
+   LAYOUT PRINCIPAL: sidebar + mapa
+══════════════════════════════════════════ */
+.app-shell {
+  width: 100%; max-width: 980px;
+  display: flex; gap: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 280px; flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-default);
+  display: flex; flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sidebar-app-name {
+  font-family: var(--font-display); font-size: 15px; font-weight: 700;
+  letter-spacing: .04em; color: var(--text-primary);
+}
+.sidebar-app-name span { color: var(--text-accent); }
+
+/* home chip en sidebar */
+.home-chip {
+  margin: 12px 12px 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--home-dim); border: 1px solid var(--home-mid);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: background .15s;
+}
+.home-chip:hover { background: var(--home-mid); }
+.home-chip-icon {
+  width: 30px; height: 30px; flex-shrink: 0;
+  background: var(--home); border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 10px var(--home-glow);
+}
+.home-chip-icon span { transform: rotate(45deg); font-size: 14px; }
+.home-chip-info { flex: 1; min-width: 0; }
+.home-chip-coords {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  color: var(--home); font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home-chip-name { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+.home-chip-edit { font-size: 10px; color: var(--text-secondary); font-family: var(--font-display); flex-shrink: 0; }
+
+/* tabs sidebar */
+.sidebar-tabs {
+  display: flex; border-bottom: 1px solid var(--border-subtle);
+  margin-top: 12px;
+}
+.stab {
+  flex: 1; padding: 9px 6px;
+  font-family: var(--font-display); font-size: 11px;
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--text-secondary); text-align: center;
+  border-bottom: 2px solid transparent; cursor: pointer;
+  transition: color .15s;
+}
+.stab.active { color: var(--home); border-bottom-color: var(--home); }
+.stab:hover:not(.active) { color: var(--text-primary); }
+
+/* lista cercanos */
+.nearby-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+.nearby-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; cursor: pointer;
+  transition: background .1s;
+}
+.nearby-item:hover { background: var(--bg-tertiary); }
+.nearby-item.highlighted { background: var(--home-dim); }
+.ndot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+.ndot.nest { background: var(--ui-accent); box-shadow: 0 0 4px var(--ui-accent); }
+.ndot.city { background: var(--ui-success); box-shadow: 0 0 4px var(--ui-success); }
+.nname { flex: 1; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nmeta { font-size: 10px; color: var(--text-secondary); margin-top: 1px; }
+.ndist {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  color: var(--text-accent); font-variant-numeric: tabular-nums;
+  min-width: 44px; text-align: right; flex-shrink: 0;
+}
+.nitem-text { flex: 1; min-width: 0; }
+
+.sidebar-footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px; color: var(--text-secondary);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sidebar-footer strong { color: var(--home); }
+
+/* ── MAPA ── */
+.map-area {
+  flex: 1; position: relative; min-height: 520px;
+  background: #0f1a2a; overflow: hidden;
+}
+
+.map-tiles {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(rgba(88,166,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,.025) 1px, transparent 1px),
+    #0f1a2a;
+  background-size: 48px 48px;
+}
+.map-tiles::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 55%, rgba(88,166,255,.06) 0%, transparent 60%);
+}
+
+.st { position: absolute; background: rgba(255,255,255,.065); }
+.st.h { height: 2px; left: 0; right: 0; }
+.st.v { width: 2px; top: 0; bottom: 0; }
+.st.sec { opacity: .45; }
+
+/* ─ RADAR ─ */
+.home-radar {
+  position: absolute; top: 52%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px; height: 280px;
+  pointer-events: none;
+}
+.radar-area {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle, var(--home-dim) 0%, transparent 68%);
+}
+.radar-border {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 1px dashed rgba(255,107,53,.22);
+}
+.radar-pulse {
+  position: absolute; border-radius: 50%;
+  border: 1.5px solid var(--home);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0); opacity: 0;
+}
+.rp1 { width: 280px; height: 280px; animation: pout 2.8s ease-out infinite; }
+.rp2 { width: 280px; height: 280px; animation: pout 2.8s ease-out infinite .93s; }
+.rp3 { width: 280px; height: 280px; animation: pout 2.8s ease-out infinite 1.86s; }
+@keyframes pout {
+  0%   { transform: translate(-50%,-50%) scale(.04); opacity: .85; }
+  100% { transform: translate(-50%,-50%) scale(1);   opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .radar-pulse { animation: none; } }
+
+/* pin home */
+.home-pin {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -100%);
+  display: flex; flex-direction: column; align-items: center; z-index: 10;
+  pointer-events: auto;
+}
+.home-pin-head {
+  width: 34px; height: 34px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  background: var(--home); border: 2px solid rgba(255,255,255,.3);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 5px var(--home-dim), 0 0 18px var(--home-glow), 0 4px 10px rgba(0,0,0,.5);
+}
+.home-pin-em { transform: rotate(45deg); font-size: 16px; line-height: 1; }
+.home-pin-tail { width: 2px; height: 8px; background: var(--home); opacity: .6; }
+
+.home-label {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(20px, -115%);
+  background: var(--bg-overlay); border: 1px solid var(--home);
+  border-radius: var(--radius-sm); padding: 3px 8px;
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  color: var(--home); white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4); z-index: 11;
+  pointer-events: none;
+}
+.home-label::before {
+  content: ''; position: absolute;
+  left: -5px; top: 50%; transform: translateY(-50%);
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-right: 5px solid var(--home);
+}
+
+.radius-label {
+  position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-display); font-size: 10px; letter-spacing: .04em;
+  color: rgba(255,107,53,.45); pointer-events: none;
+}
+
+/* pins del mapa */
+.map-pin {
+  position: absolute; display: flex; flex-direction: column; align-items: center;
+  transform: translate(-50%,-100%); z-index: 5;
+}
+.map-pin-head {
+  width: 26px; height: 26px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  border: 1.5px solid rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+}
+.map-pin-em { transform: rotate(45deg); font-size: 12px; line-height: 1; }
+.map-pin-tail { width: 2px; height: 6px; opacity: .4; }
+.map-pin.nest .map-pin-head { background: rgba(88,166,255,.85); }
+.map-pin.nest .map-pin-tail { background: var(--ui-accent); }
+.map-pin.city .map-pin-head { background: rgba(63,185,80,.85); }
+.map-pin.city .map-pin-tail { background: var(--ui-success); }
+
+.pin-dist {
+  margin-top: 2px; background: var(--bg-overlay); border: 1px solid var(--border-default);
+  border-radius: 10px; padding: 1px 6px;
+  font-family: var(--font-display); font-size: 10px;
+  color: var(--text-accent); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+
+/* linea conectora pin -> sidebar item (decorativa) */
+.connector-line {
+  position: absolute; pointer-events: none; z-index: 3;
+}
+
+/* search */
+.map-search {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: min(320px, calc(100% - 100px)); z-index: 20;
+}
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 0 12px; height: 36px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
+}
+.search-ico { color: var(--text-secondary); font-size: 13px; }
+.search-input {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: var(--font-main); font-size: 12px; color: var(--text-primary);
+}
+.search-input::placeholder { color: var(--text-secondary); }
+
+/* zoom controls */
+.zoom-controls {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; flex-direction: column; gap: 4px; z-index: 20;
+}
+.zoom-group {
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
+  display: flex; flex-direction: column; width: 36px;
+}
+.zdivider { height: 1px; background: var(--border-subtle); margin: 0 5px; }
+.zbtn {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-secondary); font-size: 18px; font-weight: 700;
+  transition: background .1s, color .1s;
+}
+.zbtn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.zbtn.home-btn { color: var(--home); font-size: 15px; }
+.zbtn.home-btn:hover { background: var(--home-dim); }
+
+/* info bar bottom */
+.map-info-bar {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: 7px 14px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4); z-index: 20; white-space: nowrap;
+}
+.info-home-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--home); box-shadow: 0 0 6px var(--home); flex-shrink: 0; }
+.info-text { font-family: var(--font-display); font-size: 11px; color: var(--text-secondary); }
+.info-text strong { color: var(--text-primary); }
+.info-sep { width: 1px; height: 12px; background: var(--border-default); }
+.info-chip { display: flex; align-items: center; gap: 5px; font-size: 11px; font-family: var(--font-display); }
+.idot { width: 7px; height: 7px; border-radius: 50%; }
+.idot.nest { background: var(--ui-accent); }
+.idot.city { background: var(--ui-success); }
+</style>
+
+<button class="theme-toggle" onclick="
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  r.setAttribute('data-theme',cur==='dark'?'light':'dark');
+  this.textContent=cur==='dark'?'Light':'Dark';
+">Dark</button>
+
+<div class="page-header">
+  <div class="eyebrow">Mockup — Mi Zona</div>
+  <h1>Sidebar + Radar en el mapa juntos</h1>
+  <p class="sub">El radar muestra donde estan los elementos. El sidebar los lista ordenados por distancia. Los dos sincronizan.</p>
+</div>
+
+<!-- ─── APP SHELL ─────────────────────────────────── -->
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-app-name">Poke<span>Weather</span></div>
+    </div>
+
+    <!-- home chip -->
+    <div class="home-chip">
+      <div class="home-chip-icon"><span>🏠</span></div>
+      <div class="home-chip-info">
+        <div class="home-chip-coords">-34.603, -58.381</div>
+        <div class="home-chip-name">Buenos Aires, AR</div>
+      </div>
+      <div class="home-chip-edit">Editar</div>
+    </div>
+
+    <!-- tabs -->
+    <div class="sidebar-tabs">
+      <div class="stab active">Nidos</div>
+      <div class="stab">Ciudades</div>
+      <div class="stab">Todo</div>
+    </div>
+
+    <!-- lista ordenada por distancia -->
+    <div class="nearby-list">
+      <div class="nearby-item highlighted">
+        <div class="ndot nest"></div>
+        <div class="nitem-text">
+          <div class="nname">Bosques de Palermo</div>
+          <div class="nmeta">Machop activo</div>
+        </div>
+        <div class="ndist">0.8 km</div>
+      </div>
+      <div class="nearby-item">
+        <div class="ndot nest"></div>
+        <div class="nitem-text">
+          <div class="nname">Reserva Ecologica</div>
+          <div class="nmeta">Dratini</div>
+        </div>
+        <div class="ndist">2.1 km</div>
+      </div>
+      <div class="nearby-item">
+        <div class="ndot nest"></div>
+        <div class="nitem-text">
+          <div class="nname">Parque Centenario</div>
+          <div class="nmeta">Snorlax</div>
+        </div>
+        <div class="ndist">3.4 km</div>
+      </div>
+      <div class="nearby-item">
+        <div class="ndot city"></div>
+        <div class="nitem-text">
+          <div class="nname">Buenos Aires</div>
+          <div class="nmeta">Lluvia — Agua / Hielo</div>
+        </div>
+        <div class="ndist">4.2 km</div>
+      </div>
+      <div class="nearby-item">
+        <div class="ndot nest"></div>
+        <div class="nitem-text">
+          <div class="nname">Jardin Botanico</div>
+          <div class="nmeta">Bulbasaur</div>
+        </div>
+        <div class="ndist">5.1 km</div>
+      </div>
+      <div class="nearby-item" style="opacity:.45;">
+        <div class="ndot nest"></div>
+        <div class="nitem-text">
+          <div class="nname">Parque Rivadavia</div>
+          <div class="nmeta">Fuera del radio</div>
+        </div>
+        <div class="ndist" style="color:var(--text-secondary);">8.9 km</div>
+      </div>
+      <div class="nearby-item" style="opacity:.45;">
+        <div class="ndot city"></div>
+        <div class="nitem-text">
+          <div class="nname">La Plata</div>
+          <div class="nmeta">Fuera del radio</div>
+        </div>
+        <div class="ndist" style="color:var(--text-secondary);">58 km</div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <span><strong>5</strong> dentro del radio</span>
+      <span>Radio: 5 km</span>
+    </div>
+  </div>
+
+  <!-- MAPA -->
+  <div class="map-area">
+    <div class="map-tiles"></div>
+
+    <!-- calles -->
+    <div class="st h"     style="top:25%"></div>
+    <div class="st h"     style="top:52%"></div>
+    <div class="st h"     style="top:74%"></div>
+    <div class="st h sec" style="top:38%"></div>
+    <div class="st h sec" style="top:63%"></div>
+    <div class="st v"     style="left:20%"></div>
+    <div class="st v"     style="left:50%"></div>
+    <div class="st v"     style="left:76%"></div>
+    <div class="st v sec" style="left:35%"></div>
+    <div class="st v sec" style="left:63%"></div>
+
+    <!-- RADAR HOME -->
+    <div class="home-radar" style="top:52%;left:50%;">
+      <div class="radar-area"></div>
+      <div class="radar-border"></div>
+      <div class="radar-pulse rp1"></div>
+      <div class="radar-pulse rp2"></div>
+      <div class="radar-pulse rp3"></div>
+      <div class="home-pin">
+        <div class="home-pin-head"><span class="home-pin-em">🏠</span></div>
+        <div class="home-pin-tail"></div>
+      </div>
+      <div class="home-label">Mi Zona</div>
+      <div class="radius-label">~ 5 km</div>
+    </div>
+
+    <!-- pins dentro del radio -->
+    <div class="map-pin nest" style="top:36%;left:58%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">0.8 km</div>
+    </div>
+    <div class="map-pin nest" style="top:62%;left:38%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">2.1 km</div>
+    </div>
+    <div class="map-pin nest" style="top:42%;left:34%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">3.4 km</div>
+    </div>
+    <div class="map-pin city" style="top:31%;left:60%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌧️</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">4.2 km</div>
+    </div>
+    <div class="map-pin nest" style="top:67%;left:57%;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+      <div class="pin-dist">5.1 km</div>
+    </div>
+
+    <!-- fuera del radio, apagados -->
+    <div class="map-pin nest" style="top:14%;left:22%;opacity:.28;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+    </div>
+    <div class="map-pin city" style="top:78%;left:80%;opacity:.28;">
+      <div class="map-pin-head"><span class="map-pin-em">⛅</span></div>
+      <div class="map-pin-tail"></div>
+    </div>
+    <div class="map-pin nest" style="top:18%;left:78%;opacity:.28;">
+      <div class="map-pin-head"><span class="map-pin-em">🌿</span></div>
+      <div class="map-pin-tail"></div>
+    </div>
+
+    <!-- search -->
+    <div class="map-search">
+      <div class="search-box">
+        <span class="search-ico">🔍</span>
+        <input class="search-input" placeholder="Ciudad, nido o coordenadas..." readonly />
+      </div>
+    </div>
+
+    <!-- zoom -->
+    <div class="zoom-controls">
+      <div class="zoom-group">
+        <button class="zbtn">+</button>
+        <div class="zdivider"></div>
+        <button class="zbtn">−</button>
+      </div>
+      <div class="zoom-group">
+        <button class="zbtn home-btn">🏠</button>
+      </div>
+    </div>
+
+    <!-- info bar -->
+    <div class="map-info-bar">
+      <div class="info-home-dot"></div>
+      <div class="info-text"><strong>-34.603, -58.381</strong></div>
+      <div class="info-sep"></div>
+      <div class="info-chip"><div class="idot nest"></div><span class="info-text">4 nidos</span></div>
+      <div class="info-chip"><div class="idot city"></div><span class="info-text">1 ciudad</span></div>
+    </div>
+
+  </div><!-- /map-area -->
+</div><!-- /app-shell -->

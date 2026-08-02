@@ -1,0 +1,598 @@
+<title>Mockup — Home Location / Mi Zona</title>
+<style>
+/* ── Design tokens (hereda del sistema existente) ── */
+:root {
+  --bg-primary:   #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary:  #1C2333;
+  --bg-overlay:   #252D3D;
+  --text-primary:   #E6EDF3;
+  --text-secondary: #7D8590;
+  --text-accent:    #FFD700;
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.12);
+  --ui-accent:  #58A6FF;
+  --ui-success: #3FB950;
+  /* nuevo: color semantico "home" — naranja GPS */
+  --home:       #FF6B35;
+  --home-dim:   rgba(255,107,53,0.14);
+  --home-glow:  rgba(255,107,53,0.28);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --font-main:    'Exo 2', system-ui, sans-serif;
+  --font-display: 'Rajdhani', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: light) { :root {
+  --bg-primary:#F0F4F8; --bg-secondary:#FFFFFF; --bg-tertiary:#E8EDF2; --bg-overlay:#D8E1EA;
+  --text-primary:#1A2233; --text-secondary:#5A6680; --text-accent:#C89A00;
+  --border-subtle:rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12);
+  --home:#E85520; --home-dim:rgba(232,85,32,0.10); --home-glow:rgba(232,85,32,0.22);
+}}
+:root[data-theme="light"] {
+  --bg-primary:#F0F4F8; --bg-secondary:#FFFFFF; --bg-tertiary:#E8EDF2; --bg-overlay:#D8E1EA;
+  --text-primary:#1A2233; --text-secondary:#5A6680; --text-accent:#C89A00;
+  --border-subtle:rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12);
+  --home:#E85520; --home-dim:rgba(232,85,32,0.10); --home-glow:rgba(232,85,32,0.22);
+}
+:root[data-theme="dark"] {
+  --bg-primary:#0D1117; --bg-secondary:#161B22; --bg-tertiary:#1C2333; --bg-overlay:#252D3D;
+  --text-primary:#E6EDF3; --text-secondary:#7D8590; --text-accent:#FFD700;
+  --border-subtle:rgba(255,255,255,0.06); --border-default:rgba(255,255,255,0.12);
+  --home:#FF6B35; --home-dim:rgba(255,107,53,0.14); --home-glow:rgba(255,107,53,0.28);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-main);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 28px 16px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+}
+
+/* ── Theme toggle ── */
+.theme-toggle {
+  position: fixed; top: 14px; right: 14px;
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  color: var(--text-secondary); border-radius: 20px;
+  padding: 5px 13px; font-size: 12px; font-family: var(--font-display);
+  letter-spacing: .06em; cursor: pointer; z-index: 99;
+}
+.theme-toggle:hover { color: var(--text-primary); }
+
+/* ── Page header ── */
+.page-header { text-align: center; max-width: 540px; }
+.eyebrow {
+  font-family: var(--font-display); font-size: 11px;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-secondary); margin-bottom: 6px;
+}
+h1 { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.2; text-wrap: balance; }
+.sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; line-height: 1.6; }
+
+/* ── Section label ── */
+.section-label {
+  font-family: var(--font-display); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; max-width: 860px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+
+/* ═══════════════════════════════════════
+   ESCENARIO A — Entry point en sidebar
+   ═══════════════════════════════════════ */
+.sidebar-entry {
+  width: 280px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.sidebar-entry-label {
+  font-family: var(--font-display); font-size: 10px;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-secondary); margin-bottom: 8px;
+}
+.home-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--home-dim);
+  border: 1px solid var(--home-glow);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background .15s;
+}
+.home-chip:hover { background: rgba(255,107,53,0.22); }
+.home-icon {
+  width: 32px; height: 32px; flex-shrink: 0;
+  background: var(--home); border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 10px var(--home-glow);
+}
+.home-icon span { transform: rotate(45deg); font-size: 15px; line-height: 1; }
+.home-info { flex: 1; min-width: 0; }
+.home-coords {
+  font-family: var(--font-display); font-size: 13px; font-weight: 600;
+  color: var(--text-primary); letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home-loc-name { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+.home-chip-edit {
+  font-size: 11px; color: var(--home); font-family: var(--font-display);
+  letter-spacing: .05em; flex-shrink: 0;
+}
+.no-home-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-tertiary);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.no-home-chip:hover { border-color: var(--home); background: var(--home-dim); }
+.no-home-icon { font-size: 22px; line-height: 1; }
+.no-home-text { font-size: 13px; color: var(--text-secondary); }
+.no-home-text strong { color: var(--home); font-weight: 600; }
+
+/* ═══════════════════════════════════════
+   ESCENARIO B — Modal "Mi Zona"
+   ═══════════════════════════════════════ */
+.modal-wrap {
+  width: 100%; max-width: 440px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.modal-header {
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex; align-items: center; gap: 12px;
+}
+.modal-home-badge {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: var(--home); border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 14px var(--home-glow);
+}
+.modal-home-badge span { transform: rotate(45deg); font-size: 17px; }
+.modal-title-block { flex: 1; }
+.modal-title {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  letter-spacing: .02em;
+}
+.modal-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.modal-close {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--bg-tertiary); border: 1px solid var(--border-subtle);
+  color: var(--text-secondary); display: flex; align-items: center;
+  justify-content: center; font-size: 14px; cursor: pointer; flex-shrink: 0;
+}
+
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* GPS button */
+.gps-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--home-dim);
+  border: 1.5px solid var(--home);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background .15s;
+}
+.gps-btn:hover { background: var(--home-glow); }
+.gps-icon-wrap {
+  width: 38px; height: 38px; flex-shrink: 0;
+  background: var(--home); border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.gps-btn-text { flex: 1; }
+.gps-btn-label {
+  font-family: var(--font-display); font-size: 15px; font-weight: 600;
+  color: var(--text-primary);
+}
+.gps-btn-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.gps-btn-arrow { color: var(--home); font-size: 16px; }
+
+/* Divider OR */
+.divider-or {
+  display: flex; align-items: center; gap: 10px;
+}
+.divider-or::before, .divider-or::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-default);
+}
+.divider-or span {
+  font-family: var(--font-display); font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary);
+}
+
+/* Coords input */
+.coords-input-wrap { display: flex; flex-direction: column; gap: 6px; }
+.input-label {
+  font-family: var(--font-display); font-size: 11px;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary);
+}
+.coords-row { display: flex; gap: 8px; align-items: stretch; }
+.coords-input {
+  flex: 1; padding: 10px 12px;
+  background: var(--bg-tertiary); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); color: var(--text-primary);
+  font-family: var(--font-main); font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.coords-input::placeholder { color: var(--text-secondary); }
+.coords-input:focus {
+  outline: none; border-color: var(--home);
+  box-shadow: 0 0 0 3px var(--home-dim);
+}
+.coords-set-btn {
+  padding: 10px 16px;
+  background: var(--ui-accent); border: none; border-radius: var(--radius-md);
+  color: #0D1117; font-family: var(--font-display); font-size: 13px;
+  font-weight: 700; letter-spacing: .04em; cursor: pointer;
+  white-space: nowrap;
+}
+.coords-set-btn:hover { filter: brightness(1.1); }
+.input-hint { font-size: 11px; color: var(--text-secondary); }
+.input-hint code {
+  font-size: 11px; background: var(--bg-tertiary);
+  padding: 1px 5px; border-radius: 4px; color: var(--text-accent);
+}
+
+/* ═══════════════════════════════════════
+   ESCENARIO C — Estado "home set" + radar
+   ═══════════════════════════════════════ */
+.radar-wrap {
+  width: 100%; max-width: 440px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+/* Radar visual */
+.radar-visual {
+  position: relative;
+  width: 100%; aspect-ratio: 1;
+  max-width: 240px; align-self: center;
+}
+.radar-canvas {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--border-default);
+  overflow: hidden;
+  position: relative;
+}
+.radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.radar-sweep {
+  position: absolute; inset: 0;
+  background: conic-gradient(from 0deg, transparent 0%, rgba(255,107,53,0.18) 20%, transparent 20%);
+  border-radius: 50%;
+  animation: sweep 3s linear infinite;
+}
+@keyframes sweep { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .radar-sweep { animation: none; } }
+.radar-crosshair {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.radar-crosshair::before, .radar-crosshair::after {
+  content: ''; position: absolute; background: var(--border-subtle);
+}
+.radar-crosshair::before { width: 1px; height: 100%; left: 50%; transform: translateX(-50%); }
+.radar-crosshair::after  { height: 1px; width: 100%;  top: 50%;  transform: translateY(-50%); }
+.radar-center {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--home);
+  box-shadow: 0 0 10px var(--home), 0 0 24px var(--home-glow);
+  z-index: 2;
+}
+.radar-dot {
+  position: absolute;
+  width: 8px; height: 8px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.radar-dot.nest  { background: var(--ui-accent); }
+.radar-dot.city  { background: var(--ui-success); }
+.radar-dot::after {
+  content: ''; position: absolute; inset: -4px;
+  border-radius: 50%; border: 1px solid currentColor; opacity: .3;
+}
+.radar-dot.nest::after  { color: var(--ui-accent); }
+.radar-dot.city::after  { color: var(--ui-success); }
+
+/* Nearby results */
+.nearby-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.nearby-tabs {
+  display: flex; border-bottom: 1px solid var(--border-subtle);
+}
+.nearby-tab {
+  flex: 1; padding: 10px;
+  font-family: var(--font-display); font-size: 12px;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-secondary); text-align: center;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: color .15s;
+}
+.nearby-tab.active { color: var(--home); border-bottom-color: var(--home); }
+.nearby-list { padding: 8px 0; }
+.nearby-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  transition: background .1s;
+  cursor: pointer;
+}
+.nearby-item:hover { background: var(--bg-tertiary); }
+.nearby-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.nearby-dot.nest  { background: var(--ui-accent); box-shadow: 0 0 5px var(--ui-accent); }
+.nearby-dot.city  { background: var(--ui-success); box-shadow: 0 0 5px var(--ui-success); }
+.nearby-name { flex: 1; font-size: 13px; }
+.nearby-meta { font-size: 11px; color: var(--text-secondary); }
+.nearby-dist {
+  font-family: var(--font-display); font-size: 13px; font-weight: 600;
+  color: var(--text-accent); font-variant-numeric: tabular-nums;
+  min-width: 52px; text-align: right;
+}
+
+.home-set-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--home-dim); border: 1px solid var(--home-glow);
+  border-radius: var(--radius-md);
+}
+.home-set-icon { font-size: 18px; }
+.home-set-text { flex: 1; font-size: 12px; color: var(--text-secondary); }
+.home-set-text strong { color: var(--home); font-size: 13px; font-family: var(--font-display); }
+.home-change-btn {
+  font-size: 11px; color: var(--text-secondary);
+  font-family: var(--font-display); letter-spacing: .05em;
+  cursor: pointer; text-decoration: underline; white-space: nowrap;
+}
+.home-change-btn:hover { color: var(--home); }
+
+/* ═══════════════════════════════════════
+   Anotaciones de flujo
+   ═══════════════════════════════════════ */
+.flow-row {
+  width: 100%; max-width: 860px;
+  display: flex; gap: 24px; align-items: flex-start;
+  flex-wrap: wrap;
+}
+.flow-col { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.flow-arrow {
+  align-self: center;
+  font-size: 22px; color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.flow-note {
+  font-size: 11px; color: var(--text-secondary); line-height: 1.5;
+  max-width: 200px;
+}
+.flow-note strong { color: var(--text-primary); }
+.step-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--home); color: #fff;
+  font-family: var(--font-display); font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════
+   Legend / palette swatch
+   ═══════════════════════════════════════ */
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.swatch { display: flex; align-items: center; gap: 7px; }
+.swatch-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.swatch-label { font-size: 11px; color: var(--text-secondary); }
+</style>
+
+<button class="theme-toggle" onclick="
+  const r = document.documentElement;
+  const cur = r.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+  r.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  this.textContent = cur === 'dark' ? 'Light' : 'Dark';
+">Dark</button>
+
+<div class="page-header">
+  <div class="eyebrow">Mockup — Funcionalidad</div>
+  <h1>Mi Zona &mdash; Home Location</h1>
+  <p class="sub">El jugador fija su posicion GPS o coordenadas manuales. Todo el contenido (nidos, ciudades, recomendaciones) se ordena por distancia desde ese punto.</p>
+</div>
+
+<!-- ─── SWATCHES ────────────────────────────────────── -->
+<div class="swatches">
+  <div class="swatch"><div class="swatch-dot" style="background:#FF6B35;"></div><span class="swatch-label">Home (nuevo)</span></div>
+  <div class="swatch"><div class="swatch-dot" style="background:#58A6FF;"></div><span class="swatch-label">Nidos (ui-accent)</span></div>
+  <div class="swatch"><div class="swatch-dot" style="background:#3FB950;"></div><span class="swatch-label">Ciudades (success)</span></div>
+  <div class="swatch"><div class="swatch-dot" style="background:#FFD700;"></div><span class="swatch-label">Distancia (text-accent)</span></div>
+</div>
+
+<!-- ─── FLUJO COMPLETO ─────────────────────────────── -->
+<div class="flow-row">
+
+  <!-- PASO 1: sin home -->
+  <div class="flow-col">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <div class="step-badge">1</div>
+      <span class="section-label" style="width:auto;max-width:none;">Sin home</span>
+    </div>
+    <div class="sidebar-entry">
+      <div class="sidebar-entry-label">Mi Zona</div>
+      <div class="no-home-chip">
+        <div class="no-home-icon">📍</div>
+        <div class="no-home-text"><strong>Fijar mi zona</strong><br>Ver que hay cerca de mi</div>
+      </div>
+    </div>
+    <p class="flow-note">Chip en el sidebar. Tap abre el modal de configuracion.</p>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- PASO 2: modal setup -->
+  <div class="flow-col">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <div class="step-badge">2</div>
+      <span class="section-label" style="width:auto;max-width:none;">Modal setup</span>
+    </div>
+    <div class="modal-wrap">
+      <div class="modal-header">
+        <div class="modal-home-badge"><span>🏠</span></div>
+        <div class="modal-title-block">
+          <div class="modal-title">Mi Zona</div>
+          <div class="modal-subtitle">Fija tu posicion para ver que hay cerca</div>
+        </div>
+        <div class="modal-close">✕</div>
+      </div>
+      <div class="modal-body">
+        <!-- GPS -->
+        <div class="gps-btn">
+          <div class="gps-icon-wrap">📡</div>
+          <div class="gps-btn-text">
+            <div class="gps-btn-label">Usar mi ubicacion GPS</div>
+            <div class="gps-btn-desc">Detecta tus coordenadas actuales</div>
+          </div>
+          <div class="gps-btn-arrow">→</div>
+        </div>
+
+        <div class="divider-or"><span>o ingresa manualmente</span></div>
+
+        <!-- Manual -->
+        <div class="coords-input-wrap">
+          <div class="input-label">Coordenadas</div>
+          <div class="coords-row">
+            <input class="coords-input" type="text" placeholder="-34.603722, -58.381592" />
+            <button class="coords-set-btn">Fijar</button>
+          </div>
+          <div class="input-hint">Formato: <code>lat, lon</code> &mdash; ej. <code>-34.603722, -58.381592</code></div>
+        </div>
+      </div>
+    </div>
+    <p class="flow-note"><strong>GPS</strong> llama a la Geolocation API. <strong>Manual</strong> acepta el mismo formato lat,lon que MapSearch ya soporta.</p>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- PASO 3: home activo + radar -->
+  <div class="flow-col">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <div class="step-badge">3</div>
+      <span class="section-label" style="width:auto;max-width:none;">Home activo</span>
+    </div>
+    <div class="radar-wrap">
+
+      <!-- Banner home set -->
+      <div class="home-set-banner">
+        <div class="home-set-icon">📍</div>
+        <div class="home-set-text"><strong>-34.603, -58.381</strong><br>Buenos Aires, AR &mdash; 148 elementos cercanos</div>
+        <div class="home-change-btn" onclick="">Cambiar</div>
+      </div>
+
+      <!-- Radar -->
+      <div class="radar-visual">
+        <div class="radar-canvas">
+          <!-- anillos -->
+          <div class="radar-ring" style="width:33%;height:33%;"></div>
+          <div class="radar-ring" style="width:55%;height:55%;"></div>
+          <div class="radar-ring" style="width:77%;height:77%;"></div>
+          <div class="radar-sweep"></div>
+          <div class="radar-crosshair"></div>
+          <div class="radar-center"></div>
+          <!-- puntos nidos -->
+          <div class="radar-dot nest" style="top:38%;left:57%;"></div>
+          <div class="radar-dot nest" style="top:52%;left:44%;"></div>
+          <div class="radar-dot nest" style="top:29%;left:38%;"></div>
+          <div class="radar-dot nest" style="top:61%;left:63%;"></div>
+          <!-- puntos ciudades -->
+          <div class="radar-dot city" style="top:45%;left:70%;"></div>
+          <div class="radar-dot city" style="top:34%;left:55%;"></div>
+        </div>
+      </div>
+
+      <!-- Lista cercanos -->
+      <div class="nearby-section">
+        <div class="nearby-tabs">
+          <div class="nearby-tab active">Nidos</div>
+          <div class="nearby-tab">Ciudades</div>
+          <div class="nearby-tab">Todo</div>
+        </div>
+        <div class="nearby-list">
+          <div class="nearby-item">
+            <div class="nearby-dot nest"></div>
+            <div class="nearby-name">Bosques de Palermo</div>
+            <div class="nearby-meta">Machop activo</div>
+            <div class="nearby-dist">0.8 km</div>
+          </div>
+          <div class="nearby-item">
+            <div class="nearby-dot nest"></div>
+            <div class="nearby-name">Reserva Ecologica</div>
+            <div class="nearby-meta">Dratini</div>
+            <div class="nearby-dist">2.1 km</div>
+          </div>
+          <div class="nearby-item">
+            <div class="nearby-dot nest"></div>
+            <div class="nearby-name">Parque Centenario</div>
+            <div class="nearby-meta">Snorlax</div>
+            <div class="nearby-dist">3.4 km</div>
+          </div>
+          <div class="nearby-item">
+            <div class="nearby-dot city"></div>
+            <div class="nearby-name">Buenos Aires</div>
+            <div class="nearby-meta">Lluvia · Agua/Hielo</div>
+            <div class="nearby-dist">4.2 km</div>
+          </div>
+          <div class="nearby-item">
+            <div class="nearby-dot city"></div>
+            <div class="nearby-name">La Plata</div>
+            <div class="nearby-meta">Nublado · Normal</div>
+            <div class="nearby-dist">58 km</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p class="flow-note">Sidebar muestra chip naranja con coords. La lista de nidos y ciudades ya viene ordenada por distancia.</p>
+  </div>
+
+</div>
+
+<!-- ─── SIDEBAR CON HOME SET ──────────────────────── -->
+<div class="section-label">Sidebar — home ya configurado</div>
+<div class="sidebar-entry">
+  <div class="sidebar-entry-label">Mi Zona</div>
+  <div class="home-chip">
+    <div class="home-icon"><span>🏠</span></div>
+    <div class="home-info">
+      <div class="home-coords">-34.603722, -58.381</div>
+      <div class="home-loc-name">Buenos Aires, AR</div>
+    </div>
+    <div class="home-chip-edit">Editar</div>
+  </div>
+</div>
