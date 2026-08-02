@@ -112,8 +112,7 @@ interface AppStore {
   scrollToFeedTarget: 'city' | 'nest' | null
   favorites: string[]
   badgeFilter: string[] // DEPRECATED: uso en MapLegend eliminado en US-827. Solo FilterPanel lo usa para filtrar ciudades.
-  highlightCategories: string[] // US-827: resaltar pines en mapa sin filtrar. Exclusivo de MapLegend > Categoria.
-  highlightNestRow: string | null // US-815: fila activa en tab Nidos de la leyenda (radio exclusivo)
+  highlightCategories: string[] // US-827/US-815: resaltar pines. Radio exclusivo global. Valores: 'stops'|'gyms'|'community'|'best'|'nest:verified'|'nest:spawn'|'nest:dust'|'nest:top'
   categoryFilter: string[] // US-828: filtrar ciudades por categoria (stops/gyms/community/best) desde FilterPanelClima
   showBadgesOnPins: boolean
   lastUpdated: number | null
@@ -158,7 +157,6 @@ interface AppStore {
   setCategoryFilter: (cats: string[]) => void
   toggleCategory: (cat: string) => void
   toggleHighlightCategory: (cat: string) => void
-  setHighlightNestRow: (row: string | null) => void
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
   setIsFilterPanelOpen: (open: boolean) => void
@@ -222,7 +220,6 @@ export const useStore = create<AppStore>((set, get) => ({
   badgeFilter: ['stops', 'gyms', 'community', 'best'],
   categoryFilter: [],
   highlightCategories: [],
-  highlightNestRow: null,
   showBadgesOnPins: (() => {
     try {
       const saved = localStorage.getItem('pwe-showBadgesOnPins')
@@ -331,12 +328,9 @@ export const useStore = create<AppStore>((set, get) => ({
 
   toggleHighlightCategory: (cat) =>
     set((s) => ({
-      // US-815: radio exclusivo — una sola categoria activa a la vez
+      // US-815: radio exclusivo global — una sola fila activa en toda la leyenda
       highlightCategories: s.highlightCategories.includes(cat) ? [] : [cat],
     })),
-
-  setHighlightNestRow: (row) =>
-    set((s) => ({ highlightNestRow: s.highlightNestRow === row ? null : row })),
 
   setShowBadgesOnPins: (show) => {
     localStorage.setItem('pwe-showBadgesOnPins', JSON.stringify(show))

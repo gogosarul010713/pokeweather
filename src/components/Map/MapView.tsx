@@ -15,6 +15,7 @@ import FlyToNest from './FlyToNest'
 import MapLegend from './MapLegend'
 import MapSearch from './MapSearch'
 import MapZoomControls from './MapZoomControls'
+import NavPin from './NavPin'
 import { Z } from '../../config/zIndex'
 
 // ─── Tile URLs ────────────────────────────────────────────────────────────────
@@ -232,7 +233,8 @@ export default function MapView({ cities }: MapViewProps) {
         <div className="mv-zoom-wrapper">
           <MapZoomControls mapRef={mapRef} cities={cities} onOpenSearch={() => setSearchOpenTick(t => t + 1)} />
         </div>
-        <MapLegend />
+        <MapLegend cities={cities} />
+        <NavPin mapRef={mapRef} />
       </div>
     </>
   )

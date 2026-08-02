@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useStore } from '../../store/useStore'
-import { BADGE_ICONS } from '../../services/weather/weatherService'
+import { BADGE_ICONS, calculateBadges } from '../../services/weather/weatherService'
 import type { BadgeType } from '../../services/weather/weatherService'
+import type { City } from '../../store/useStore'
 
 const BADGE_LABELS: Record<BadgeType, string> = {
   stops: 'Pokestop Hub',
@@ -20,31 +21,36 @@ const CATEGORY_COLORS: Record<BadgeType, string> = {
 
 type NestRow = 'verified' | 'spawn' | 'dust' | 'top'
 
-const NEST_ROWS: { key: NestRow; label: string; icon: string; color: string }[] = [
-  { key: 'verified', label: 'Verificado',     icon: '✅', color: '#A78BFA' },
-  { key: 'spawn',    label: 'Mayor Spawn',    icon: '⭐', color: '#FB923C' },
-  { key: 'dust',     label: 'Mayor Polvo',    icon: '✨', color: '#F472B6' },
-  { key: 'top',      label: 'Mejores Nidos',  icon: '🏆', color: '#34D399' },
+const NEST_ROWS: { key: NestRow; storeKey: string; label: string; icon: string; color: string }[] = [
+  { key: 'verified', storeKey: 'nest:verified', label: 'Verificado',    icon: '✅', color: '#A78BFA' },
+  { key: 'spawn',    storeKey: 'nest:spawn',    label: 'Mayor Spawn',   icon: '⭐', color: '#FB923C' },
+  { key: 'dust',     storeKey: 'nest:dust',     label: 'Mayor Polvo',   icon: '✨', color: '#F472B6' },
+  { key: 'top',      storeKey: 'nest:top',      label: 'Mejores Nidos', icon: '🏆', color: '#34D399' },
 ]
 
 type MainTab = 'clima' | 'nidos'
 
-export default function MapLegend() {
+export default function MapLegend({ cities }: { cities: City[] }) {
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768)
   const [mainTab, setMainTab] = useState<MainTab>('clima')
 
   const highlightCategories = useStore((s) => s.highlightCategories)
   const toggleHighlightCategory = useStore((s) => s.toggleHighlightCategory)
   const nests = useStore((s) => s.nests)
-  const highlightNestRow = useStore((s) => s.highlightNestRow)
-  const setHighlightNestRow = useStore((s) => s.setHighlightNestRow)
 
-  // Conteos globales para tab Clima (categorias de ciudad)
-  // El badge count viene de la data de ciudades — usamos placeholder por ahora
-  // ya que MapLegend no tiene acceso directo a cities con badges
-  const climaCounts: Record<BadgeType, number> = { stops: 0, gyms: 0, community: 0, best: 0 }
+  // Conteos reales de ciudades por categoria de badge
+  const climaCounts = useMemo((): Record<BadgeType, number> => {
+    if (cities.length === 0) return { stops: 0, gyms: 0, community: 0, best: 0 }
+    const calc = calculateBadges(cities)
+    const counts: Record<BadgeType, number> = { stops: 0, gyms: 0, community: 0, best: 0 }
+    cities.forEach((city) => {
+      const badges = calc(city) as BadgeType[]
+      badges.forEach((b) => { counts[b] = (counts[b] || 0) + 1 })
+    })
+    return counts
+  }, [cities])
 
-  // Conteos globales para tab Nidos
+  // Conteos reales de nidos por clasificacion
   const nestCounts: Record<NestRow, number> = {
     verified: nests.filter((n) => n.confirmed).length,
     spawn:    nests.filter((n) => (n.spawnRate ?? 0) > 60).length,
@@ -52,7 +58,7 @@ export default function MapLegend() {
     top:      nests.filter((n) => n.confirmed && (n.spawnRate ?? 0) > 60).length,
   }
 
-  const activeCount = highlightCategories.length + (highlightNestRow ? 1 : 0)
+  const activeKey = highlightCategories[0] ?? null
 
   return (
     <>
@@ -132,30 +138,6 @@ export default function MapLegend() {
           padding: 4px 0;
         }
 
-        /* Tipo clima: sprite + label (solo referencia visual, sin interaccion) */
-        .ml-clima-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 4px 10px;
-        }
-
-        .ml-sprite {
-          width: 22px;
-          height: 22px;
-          border-radius: 4px;
-          overflow: hidden;
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .ml-sprite img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
         .ml-label {
           font-family: 'Exo 2', sans-serif;
           font-size: 12px;
@@ -164,7 +146,6 @@ export default function MapLegend() {
           flex: 1;
         }
 
-        /* Filas interactivas con radio exclusivo */
         .ml-row {
           display: flex;
           align-items: center;
@@ -208,13 +189,13 @@ export default function MapLegend() {
         <div className="ml-header" onClick={() => setCollapsed((c) => !c)}>
           <span className="ml-title">Leyenda</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {activeCount > 0 && (
+            {activeKey && (
               <span style={{
                 fontSize: 9, fontWeight: 700, fontFamily: "'Exo 2', sans-serif",
                 background: 'var(--ui-accent)', color: '#fff',
                 borderRadius: 8, padding: '1px 5px', lineHeight: 1.4,
               }}>
-                {activeCount}
+                1
               </span>
             )}
             <span className={`ml-chevron ${collapsed ? '' : 'open'}`}>&#9660;</span>
@@ -241,52 +222,42 @@ export default function MapLegend() {
             </div>
 
             <div className="ml-body">
-              {mainTab === 'clima' && (
-                <>
-                  {BADGE_ORDER.map((badge) => {
-                    const active = highlightCategories.includes(badge)
-                    const color = CATEGORY_COLORS[badge]
-                    return (
-                      <div
-                        key={badge}
-                        className="ml-row"
-                        onClick={() => toggleHighlightCategory(badge)}
-                        style={{
-                          borderLeftColor: active ? color : 'transparent',
-                          background: active ? `${color}18` : undefined,
-                        }}
-                      >
-                        <span className="ml-row-icon">{BADGE_ICONS[badge]}</span>
-                        <span
-                          className="ml-label"
-                          style={active ? { color, fontWeight: 600 } : undefined}
-                        >
-                          {BADGE_LABELS[badge]}
-                        </span>
-                        <span className="ml-row-count">{climaCounts[badge]}</span>
-                      </div>
-                    )
-                  })}
-                </>
-              )}
+              {mainTab === 'clima' && BADGE_ORDER.map((badge) => {
+                const active = activeKey === badge
+                const color = CATEGORY_COLORS[badge]
+                return (
+                  <div
+                    key={badge}
+                    className="ml-row"
+                    onClick={() => toggleHighlightCategory(badge)}
+                    style={{
+                      borderLeftColor: active ? color : 'transparent',
+                      background: active ? `${color}18` : undefined,
+                    }}
+                  >
+                    <span className="ml-row-icon">{BADGE_ICONS[badge]}</span>
+                    <span className="ml-label" style={active ? { color, fontWeight: 600 } : undefined}>
+                      {BADGE_LABELS[badge]}
+                    </span>
+                    <span className="ml-row-count">{climaCounts[badge]}</span>
+                  </div>
+                )
+              })}
 
-              {mainTab === 'nidos' && NEST_ROWS.map(({ key, label, icon, color }) => {
-                const active = highlightNestRow === key
+              {mainTab === 'nidos' && NEST_ROWS.map(({ key, storeKey, label, icon, color }) => {
+                const active = activeKey === storeKey
                 return (
                   <div
                     key={key}
                     className="ml-row"
-                    onClick={() => setHighlightNestRow(key)}
+                    onClick={() => toggleHighlightCategory(storeKey)}
                     style={{
                       borderLeftColor: active ? color : 'transparent',
                       background: active ? `${color}18` : undefined,
                     }}
                   >
                     <span className="ml-row-icon">{icon}</span>
-                    <span
-                      className="ml-label"
-                      style={active ? { color, fontWeight: 600 } : undefined}
-                    >
+                    <span className="ml-label" style={active ? { color, fontWeight: 600 } : undefined}>
                       {label}
                     </span>
                     <span className="ml-row-count">{nestCounts[key]}</span>
