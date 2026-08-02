@@ -613,6 +613,44 @@ Rediseno a 5 botones agrupados en 3 bloques visuales:
 
 ---
 
+## DEC-917 — MapLegend: resaltado exclusivo por tab, visual borde izquierdo (sesion 34)
+
+**Fecha:** Sprint 9 — Sesion 34 (2026-08-01)
+**Estado:** Aprobada
+**Afecta:** `src/components/Map/MapLegend.tsx`
+
+### Contexto
+
+Rediseno de US-815. La leyenda tenia 4 niveles de navegacion (2 tabs + 2 subtabs cada una) para llegar a 8 filas de contenido. Los checkboxes de `highlightCategories` eran multi-seleccion, lo que diluia el resaltado cuando habia varios activos.
+
+### Decision
+
+**Estructura:** dos tabs (Clima / Nidos), sin subtabs. Cada tab muestra sus filas de resaltado directamente.
+
+**Filas por tab:**
+- Clima: Pokestop Hub, Gym Hub, Comunidad Activa, Mejores Lugares
+- Nidos: Verificado, Mayor Spawn, Mayor Polvo, Mejores Nidos
+
+**Visual de fila activa (Opcion A):** borde izquierdo 3px del color de categoria + fondo semitransparente. Toda la fila es el control (sin checkbox).
+
+**Comportamiento:** radio exclusivo por tab — una sola fila activa a la vez dentro de cada tab. Click en la activa = toggle-off. Las dos tabs son independientes.
+
+**Conteo:** global del dataset, no del viewport. Siempre visible en todas las filas.
+
+### Consecuencias
+
+- `highlightCategories: string[]` del store cambia a logica exclusiva por seccion (o se reemplaza por dos campos `highlightClima / highlightNido: string | null`)
+- Subtabs eliminados — estado local `climaSubtab` y `nidosSubtab` desaparecen
+- Leyenda de colores (7 climas, 18 tipos) se mueve a seccion colapsable o se elimina — los pins ya los muestran visualmente
+
+### Alternativas descartadas
+
+- **Multi-seleccion** — resaltar 4/4 categorias no resalta nada en la practica
+- **Exclusividad cruzada entre tabs** — Clima y Nidos son capas ortogonales, no compiten
+- **Conteo en viewport** — recalculo en cada `moveend` con debounce; riesgo de jank en pan del mapa
+
+---
+
 ## BUG-001 — LocationFeed no renderiza cuando solo capa Nidos activa (sesion 13)
 
 **Fecha:** Sprint 9 — Sesion 13 (2026-07-22)
