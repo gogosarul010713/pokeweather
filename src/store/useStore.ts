@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Nest } from '../types/nest'
+import type { NavPinState } from '../types/navPin'
 
 // ─── Layer Types ──────────────────────────────────────────────────────────────
 
@@ -112,6 +113,7 @@ interface AppStore {
   favorites: string[]
   badgeFilter: string[] // DEPRECATED: uso en MapLegend eliminado en US-827. Solo FilterPanel lo usa para filtrar ciudades.
   highlightCategories: string[] // US-827: resaltar pines en mapa sin filtrar. Exclusivo de MapLegend > Categoria.
+  highlightNestRow: string | null // US-815: fila activa en tab Nidos de la leyenda (radio exclusivo)
   categoryFilter: string[] // US-828: filtrar ciudades por categoria (stops/gyms/community/best) desde FilterPanelClima
   showBadgesOnPins: boolean
   lastUpdated: number | null
@@ -124,6 +126,7 @@ interface AppStore {
   nestTypeFilter: string[]
   nestSortBy: 'name' | 'type' | 'spawnRate'
   nestSortDirection: 'asc' | 'desc'
+  navPin: NavPinState | null
 
   // Migration countdown
   now: number
@@ -155,6 +158,7 @@ interface AppStore {
   setCategoryFilter: (cats: string[]) => void
   toggleCategory: (cat: string) => void
   toggleHighlightCategory: (cat: string) => void
+  setHighlightNestRow: (row: string | null) => void
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
   setIsFilterPanelOpen: (open: boolean) => void
@@ -170,6 +174,8 @@ interface AppStore {
   toggleNestType: (type: string) => void
   setNestSortBy: (mode: 'name' | 'type' | 'spawnRate') => void
   setNestSortDirection: (direction: 'asc' | 'desc') => void
+  setNavPin: (pin: NavPinState | null) => void
+  clearNavPin: () => void
 
   // Filter panel actions
   openFilterPanel: () => void
@@ -216,6 +222,7 @@ export const useStore = create<AppStore>((set, get) => ({
   badgeFilter: ['stops', 'gyms', 'community', 'best'],
   categoryFilter: [],
   highlightCategories: [],
+  highlightNestRow: null,
   showBadgesOnPins: (() => {
     try {
       const saved = localStorage.getItem('pwe-showBadgesOnPins')
@@ -242,6 +249,7 @@ export const useStore = create<AppStore>((set, get) => ({
   nestTypeFilter: [],
   nestSortBy: 'name',
   nestSortDirection: 'asc',
+  navPin: null,
   now: Date.now(),
   filterPanelOpen: false,
   accordionState: {
@@ -278,7 +286,7 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ sortDirection: direction })
   },
 
-  setSelectedCity: (city) => set({ selectedCity: city, selectedNest: null, nestPopupOpen: false }),
+  setSelectedCity: (city) => set({ selectedCity: city, selectedNest: null, nestPopupOpen: false, navPin: null }),
 
   toggleTheme: () => {
     const next = get().theme === 'dark' ? 'light' : 'dark'
@@ -323,10 +331,12 @@ export const useStore = create<AppStore>((set, get) => ({
 
   toggleHighlightCategory: (cat) =>
     set((s) => ({
-      highlightCategories: s.highlightCategories.includes(cat)
-        ? s.highlightCategories.filter((c) => c !== cat)
-        : [...s.highlightCategories, cat],
+      // US-815: radio exclusivo — una sola categoria activa a la vez
+      highlightCategories: s.highlightCategories.includes(cat) ? [] : [cat],
     })),
+
+  setHighlightNestRow: (row) =>
+    set((s) => ({ highlightNestRow: s.highlightNestRow === row ? null : row })),
 
   setShowBadgesOnPins: (show) => {
     localStorage.setItem('pwe-showBadgesOnPins', JSON.stringify(show))
@@ -390,6 +400,9 @@ export const useStore = create<AppStore>((set, get) => ({
   setNestSortBy: (mode) => set({ nestSortBy: mode }),
 
   setNestSortDirection: (direction) => set({ nestSortDirection: direction }),
+
+  setNavPin: (pin) => set({ navPin: pin }),
+  clearNavPin: () => set({ navPin: null }),
 
   tickNow: () => set({ now: Date.now() }),
 
