@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
-import { CONDITION_COLORS, CONDITION_LABEL, BADGE_ICONS } from '../../services/weather/weatherService'
-import { WEATHER_IMAGES, type WeatherCondition } from '../../config/weatherImages'
+import { BADGE_ICONS } from '../../services/weather/weatherService'
 import type { BadgeType } from '../../services/weather/weatherService'
-
-const CONDITIONS: WeatherCondition[] = ['sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy']
 
 const BADGE_LABELS: Record<BadgeType, string> = {
   stops: 'Pokestop Hub',
@@ -246,23 +243,6 @@ export default function MapLegend() {
             <div className="ml-body">
               {mainTab === 'clima' && (
                 <>
-                  {/* Referencia visual de tipos de clima */}
-                  {CONDITIONS.map((cond) => (
-                    <div key={cond} className="ml-clima-row">
-                      <div
-                        className="ml-sprite"
-                        style={{ background: `${CONDITION_COLORS[cond]}30` }}
-                      >
-                        <img src={WEATHER_IMAGES[cond]} alt={cond} />
-                      </div>
-                      <span className="ml-label" style={{ fontSize: 11 }}>{CONDITION_LABEL[cond]}</span>
-                    </div>
-                  ))}
-
-                  {/* Separador */}
-                  <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 0' }} />
-
-                  {/* Categorias interactivas con radio exclusivo */}
                   {BADGE_ORDER.map((badge) => {
                     const active = highlightCategories.includes(badge)
                     const color = CATEGORY_COLORS[badge]
