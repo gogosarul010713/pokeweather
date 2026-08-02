@@ -55,3 +55,34 @@ Orden de columnas corregido. Checkboxes son clickeables para ver el fade del bot
 
 - [ ] Elegir entre propuesta 1 o 3
 - [ ] Implementar diseno elegido en `MapLegend.tsx`
+
+---
+
+## Mockup 3 — Leyenda Unificada Top 10% (sesion 34, 2026-08-02)
+
+**Artifact:** https://claude.ai/code/artifact/c286ce9a-4262-4fa9-a8e7-449ba3e1e390
+
+Rediseno completo post-analisis de densidad (100 ciudades + 100 nidos). Abandona tabs y subtabs.
+
+### Concepto
+
+- Leyenda sin tabs — una sola lista de propiedades del lugar (Pokestop Hub, Gym Hub, Comunidad Activa, Mayor Spawn, Mejor Lugar)
+- Click en una fila activa el modo **Top 10% del dataset**: los mejores 10 pins se destacan, el resto se atenua con `opacity: 0.13 + grayscale(1)`
+- El titulo cambia a "Leyenda · Top N" donde N = 10% del total actual (ej: 100 pins = Top 10, 200 pins = Top 20)
+- Radio exclusivo: una sola fila activa a la vez. Click en fila activa = toggle-off
+
+### Comportamiento de pins
+
+| Estado | opacity | filter | scale | z-index |
+|--------|---------|--------|-------|---------|
+| Normal | 1 | none | 1 | 10 |
+| Top 10% | 1 | none | 1.18 | 20 + borde blanco |
+| Dim (resto) | 0.13 | grayscale(1) | 0.88 | 1 |
+
+### Columnas de cada fila
+
+`[icono] [Titulo] [Conteo global]`
+
+### Estado
+
+Aprobado — pendiente implementacion en `MapLegend.tsx` y `MapView.tsx`
