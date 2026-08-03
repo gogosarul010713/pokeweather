@@ -15,9 +15,9 @@
       "rarity": "uncommon",
       "hasShiny": true,
       "evolutionLine": "Squirtle → Wartortle → Blastoise",
-      "spawnRate": 45,
+      "spawnRate": 70,
       "stardust": 1800,
-      "stops": 14,
+      "stops": 15,
       "gyms": 3,
       "confirmed": true,
       "confirmedAt": "2026-07-20T14:30:00Z"

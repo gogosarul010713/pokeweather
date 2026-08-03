@@ -73,14 +73,17 @@ function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], s
 export default function MapPin({ city, badges = [], dimmed = false }: MapPinProps) {
   const selectedCity = useStore((s) => s.selectedCity)
   const setSelectedCity = useStore((s) => s.setSelectedCity)
-  const showBadgesOnPins = useStore((s) => s.showBadgesOnPins)
+  const highlightCategories = useStore((s) => s.highlightCategories)
+
+  // Badges solo cuando hay una categoria activa en la leyenda
+  const activeBadges = highlightCategories.length > 0 ? badges : []
 
   const isSelected = selectedCity?.id === city.id
   const color = CONDITION_COLORS[city.condition]
   const markerRef = useRef<L.Marker>(null)
 
   const weatherImg = WEATHER_IMAGES[city.condition as keyof typeof WEATHER_IMAGES]
-  const icon = useMemo(() => buildIcon(color, isSelected, badges, showBadgesOnPins, dimmed, weatherImg), [color, isSelected, badges, showBadgesOnPins, dimmed, weatherImg])
+  const icon = useMemo(() => buildIcon(color, isSelected, activeBadges, true, dimmed, weatherImg), [color, isSelected, activeBadges, dimmed, weatherImg])
 
   useEffect(() => {
     if (isSelected) markerRef.current?.openPopup()

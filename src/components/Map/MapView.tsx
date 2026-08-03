@@ -12,11 +12,11 @@ import MapPin from './MapPin'
 import NestPin from './NestPin'
 import FlyToCity from './FlyToCity'
 import FlyToNest from './FlyToNest'
-import MapLegend from './MapLegend'
 import MapSearch from './MapSearch'
 import MapZoomControls from './MapZoomControls'
 import NavPin from './NavPin'
 import { Z } from '../../config/zIndex'
+import { NEST_THRESHOLDS } from '../../config/nestThresholds'
 
 // ─── Tile URLs ────────────────────────────────────────────────────────────────
 // dark_matter bloqueado por ORB en Chromium → usamos positron + CSS invert para dark mode.
@@ -95,6 +95,8 @@ export default function MapView({ cities }: MapViewProps) {
     })
   }, [cities, categoryFilter, badgesByCity])
 
+  const highlightNestRow = useStore((s) => s.highlightNestRow)
+
   // US-827: set de ids resaltados (highlight, no filtro)
   const highlightedCityIds = useMemo(() => {
     if (highlightCategories.length === 0) return null
@@ -107,6 +109,18 @@ export default function MapView({ cities }: MapViewProps) {
     })
     return ids
   }, [cities, highlightCategories, badgesByCity])
+
+  // US-815: nidos que cumplen el umbral de la fila activa
+  const highlightedNestIds = useMemo(() => {
+    if (!highlightNestRow) return null
+    const ids = new Set<string>()
+    nests.forEach(n => {
+      if (highlightNestRow === 'spawn' && (n.spawnRate ?? 0) >= NEST_THRESHOLDS.spawnRate) ids.add(n.id)
+      if (highlightNestRow === 'stops' && (n.stops ?? 0) >= NEST_THRESHOLDS.stops) ids.add(n.id)
+      if (highlightNestRow === 'gyms'  && (n.gyms  ?? 0) >= NEST_THRESHOLDS.gyms)  ids.add(n.id)
+    })
+    return ids
+  }, [highlightNestRow, nests])
 
   return (
     <>
@@ -220,7 +234,11 @@ export default function MapView({ cities }: MapViewProps) {
           {/* NestPin (Nidos) */}
           {activeLayers.nidos &&
             nests.map((nest) => (
-              <NestPin key={nest.id} nest={nest} />
+              <NestPin
+                key={nest.id}
+                nest={nest}
+                dimmed={highlightedNestIds !== null && !highlightedNestIds.has(nest.id)}
+              />
             ))
           }
 
@@ -233,7 +251,6 @@ export default function MapView({ cities }: MapViewProps) {
         <div className="mv-zoom-wrapper">
           <MapZoomControls mapRef={mapRef} cities={cities} onOpenSearch={() => setSearchOpenTick(t => t + 1)} />
         </div>
-        <MapLegend cities={cities} />
         <NavPin mapRef={mapRef} />
       </div>
     </>

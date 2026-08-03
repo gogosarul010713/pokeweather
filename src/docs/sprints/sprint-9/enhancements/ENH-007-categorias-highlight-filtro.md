@@ -2,7 +2,7 @@
 
 **Tipo:** Enhancement / UX
 **Sprint:** 9
-**Estado:** Disenado, aprobado — pendiente implementacion
+**Estado:** Implementado (sesion 35)
 **Mockup aprobado:** https://claude.ai/code/artifact/b4bd63f4-3aac-480d-873d-28582a242009
 **US derivadas:** US-827, US-828
 
@@ -33,7 +33,7 @@ dos controles con responsabilidades separadas:
 | Capa  | MapLegend highlight | FilterPanel filtro |
 |-------|--------------------|--------------------|
 | Clima | US-827             | US-828             |
-| Nidos | pendiente spec     | pendiente spec     |
+| Nidos | Implementado — highlightNestRow + NEST_THRESHOLDS (DEC-918) | pendiente spec |
 
 ## Estructura MapLegend aprobada (2026-07-28)
 

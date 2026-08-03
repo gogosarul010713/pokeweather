@@ -4,9 +4,11 @@ import L from 'leaflet'
 import { useStore } from '../../store/useStore'
 import type { Nest } from '../../types/nest'
 import NestPopup from '../Nests/NestPopup'
+import { NEST_THRESHOLDS } from '../../config/nestThresholds'
 
 interface NestPinProps {
   nest: Nest
+  dimmed?: boolean
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -57,24 +59,25 @@ function buildNestIcon(color: string, selected: boolean, badges: string[], pokem
   })
 }
 
-export default function NestPin({ nest }: NestPinProps) {
+export default function NestPin({ nest, dimmed = false }: NestPinProps) {
   const setSelectedNest = useStore((s) => s.setSelectedNest)
   const selectedNest = useStore((s) => s.selectedNest)
   const scrollToFeed = useStore((s) => s.scrollToFeed)
+  const highlightNestRow = useStore((s) => s.highlightNestRow)
 
   const isSelected = selectedNest?.id === nest.id
   const color = TYPE_COLORS[nest.types[0]?.toLowerCase() || 'normal'] || '#999999'
   const markerRef = useRef<L.Marker>(null)
 
   const badges: string[] = []
-  if ((nest.spawnRate ?? 0) > 0) badges.push('🌿')
-  if ((nest.stops ?? 0) > 0) badges.push('🎯')
-  if ((nest.gyms ?? 0) > 0) badges.push('💪')
+  if (highlightNestRow === 'spawn' && (nest.spawnRate ?? 0) >= NEST_THRESHOLDS.spawnRate) badges.push('🌿')
+  if (highlightNestRow === 'stops' && (nest.stops ?? 0) >= NEST_THRESHOLDS.stops) badges.push('🎯')
+  if (highlightNestRow === 'gyms' && (nest.gyms ?? 0) >= NEST_THRESHOLDS.gyms) badges.push('💪')
 
   const icon = useMemo(
     () => buildNestIcon(color, isSelected, badges, nest.pokemonId),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [color, isSelected, nest.spawnRate, nest.stops, nest.gyms]
+    [color, isSelected, highlightNestRow, nest.spawnRate, nest.stops, nest.gyms]
   )
 
   useEffect(() => {
@@ -87,7 +90,8 @@ export default function NestPin({ nest }: NestPinProps) {
       ref={markerRef}
       position={[nest.lat, nest.lng]}
       icon={icon}
-      zIndexOffset={isSelected ? 1000 : 0}
+      zIndexOffset={isSelected ? 1000 : dimmed ? -5 : 0}
+      opacity={dimmed ? 0.13 : 1}
       eventHandlers={{ click: () => setSelectedNest(nest) }}
     >
       <Popup autoPan={false} closeButton={false} minWidth={290} maxWidth={290} className="leaflet-popup-nest">

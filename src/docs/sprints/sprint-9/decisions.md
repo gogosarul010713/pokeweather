@@ -651,6 +651,77 @@ Rediseno de US-815. La leyenda tenia 4 niveles de navegacion (2 tabs + 2 subtabs
 
 ---
 
+## DEC-918 — Umbrales de densidad para badges de nidos en MapLegend (sesion 35)
+
+**Fecha:** Sprint 9 — Sesion 35 (2026-08-02)
+**Estado:** Aprobada
+**Afecta:** `src/components/Map/NestPin.tsx`, `src/components/Map/MapLegend.tsx`, `src/config/nestThresholds.ts`
+
+### Contexto
+
+Los badges emoji en `NestPin` usaban `> 0` como umbral para `stops`, `gyms` y `spawnRate`. Con el dataset actual casi todos los nidos tienen `stops > 0` y `gyms > 0`, por lo que el badge aparecia en ~90% de los pines y no discriminaba nada.
+
+Se investigo la metrica de densidad usada por la comunidad de Pokemon GO (fuente: CHI17 "The Geography of Pokemon GO", r/TheSilphRoad, ESRI Interactive Legend pattern). La comunidad no usa densidad por km2 sino conteo local por radio, con el cooldown de 5 min por stop como limitante practica.
+
+**Referencia clave:** 10+ stops en radio de 500m = "hub farmeable" (loop sin esperar cooldown).
+Para gyms, el limitante tecnico del juego (celdas S2 L14): 3 gyms = zona de 20+ wayspots, considerado premium.
+
+### Decision
+
+Umbrales definitivos para activar badge/resaltado en cada categoria:
+
+| Campo JSON | Umbral badge | Label en leyenda | Emoji |
+|---|---|---|---|
+| `stops` | **>= 15** | Pokestop Hub | 🎯 |
+| `gyms` | **>= 3** | Gym Hub | 💪 |
+| `spawnRate` | **>= 65** | Mayor Spawn | 🌿 |
+
+**Umbral `stops >= 15`** — la comunidad define "hub farmeable" como 10+ stops a 500m. El dataset usa conteo por parque (no por radio), que tiende a ser mayor. Se sube a 15 para alinear con parques grandes urbanos tipo Central Park (22), Golden Gate (14, queda en medio — correcto para un parque mediano) vs. Sydney Opera House (8, no hub — correcto).
+
+**Umbral `gyms >= 3`** — el limite tecnico de Niantic es 3 gyms cuando la celda L14 tiene 20+ wayspots. Un parque con 3+ gyms es zona premium confirmada. La mayoria del dataset tiene 2-3; el umbral en 3 discrimina correctamente los parques densos.
+
+**Umbral `spawnRate >= 65`** — ya definido en `NestPopup` como badge `HOT`. Se unifica con ese valor existente para no tener dos definiciones del mismo concepto.
+
+### Consecuencias
+
+- `NestPin.tsx`: cambiar condiciones de `> 0` a los umbrales definidos arriba
+- `MapLegend.tsx`: usar los mismos umbrales en los conteos de cada fila
+- Centralizar en `src/config/nestThresholds.ts` para evitar drift entre componentes:
+  ```ts
+  export const NEST_THRESHOLDS = { stops: 15, gyms: 3, spawnRate: 65 }
+  ```
+
+### Alternativas descartadas
+
+- **Umbral `> 0`** — descartado. Aparece en 90%+ de pines, no discrimina nada.
+- **Densidad por km2** — descartado. El JSON no tiene campo `radius` ni `areaKm2`. La comunidad usa conteo local, no km2.
+- **Top 10% dinamico del dataset** — considerado (ya se usa en MapLegend para otras filas). Descartado para stops/gyms porque el conteo es absoluto y tiene significado real (cooldown de stops, limite de gyms Niantic). Un top-10% cambia si se agrega un parque con 50 stops, afectando la clasificacion de los otros. Los umbrales fijos son mas predecibles para el usuario.
+
+---
+
+## DEC-919 — Badges de MapPin condicionales a highlightCategories (sesion 35)
+
+**Fecha:** Sprint 9 — Sesion 35 (2026-08-02)
+**Estado:** Aprobada
+**Afecta:** `src/components/Map/MapPin.tsx`
+
+### Contexto
+
+`MapPin` mostraba badges (🎯 🏆 👥 💪) siempre que `showBadgesOnPins` fuera `true` (default). Esto causaba que al cargar la app los pines de clima ya tuvieran badges visibles, aunque ninguna categoria estuviera activa en la leyenda — ruido visual sin contexto de seleccion.
+
+### Decision
+
+`MapPin` lee `highlightCategories` del store. Si el array esta vacio (ninguna fila activa en la leyenda), `activeBadges = []` — el pin no muestra ningun badge. Solo cuando hay una categoria activa se muestran los badges filtrados por esa categoria.
+
+`showBadgesOnPins` queda obsoleto para el pin del mapa; puede eliminarse en limpieza posterior si ningun otro consumidor lo usa.
+
+### Alternativas descartadas
+
+- **Mantener `showBadgesOnPins` como toggle** — descartado. Tener dos controles (toggle global + leyenda) para el mismo comportamiento es confuso.
+- **Mostrar todos los badges cuando hay highlight activo** — descartado. Solo los badges de la categoria activa son relevantes para el usuario en ese momento.
+
+---
+
 ## BUG-001 — LocationFeed no renderiza cuando solo capa Nidos activa (sesion 13)
 
 **Fecha:** Sprint 9 — Sesion 13 (2026-07-22)

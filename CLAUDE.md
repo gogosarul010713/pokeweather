@@ -6,20 +6,20 @@
 
 ## ESTADO ACTUAL (2026-08-02)
 
-**Sprint 9 — Sesion 34 (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 35 (branch: `sprint-9-nests`)**
 
 **Completado:**
 - US-811 a US-828 + ENH-001/002/003/004/006 + ENH-MAP ✅ — commiteados
 - US-904 ✅ — MapZoomControls v2 + MapSearch lat,lon + ajustes disabled/pill
-- US-815 impl v1 ✅ — leyenda sin subtabs, radio exclusivo, borde izq (41aa2be..0b6afaf)
-- US-815 diseño v4 ✅ — mockup aprobado: leyenda unificada Top 10% del dataset (d2fb08f)
+- US-815 ✅ — badges condicionales por leyenda, umbrales DEC-918/919, ENH-007 nidos cerrado
+- DEC-918/919 documentadas, sync apply ejecutado — docs al dia
 
 **Siguiente:**
-- Reimplementar US-815 segun mockup v4 — leyenda sin tabs, top 10% dinamico con dim (opacity .13 + grayscale), titulo "Leyenda · Top N" — ver `src/docs/mockups/maplegend-categorias/README.md`
-- Ejecutar `/update-doc sync list` para auditoria de docs pendientes
+- Commit de sesion 35 (badges condicionales + nestThresholds + docs sync)
+- Sidebar: badges correspondientes en NestCard cuando highlightNestRow activo
 
 **Backlog critico pendiente:**
-- Estado nido (Verificado/No verificado) mover a Filter Panel como chips — aprobado en sesion pero no implementado
+- Estado nido (Verificado/No verificado) mover a Filter Panel como chips — aprobado pero no implementado
 
 ---
 
