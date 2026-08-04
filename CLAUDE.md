@@ -4,19 +4,18 @@
 
 ---
 
-## ESTADO ACTUAL (2026-08-02)
+## ESTADO ACTUAL (2026-08-04)
 
-**Sprint 9 — Sesion 35 (branch: `sprint-9-nests`)**
+**Sprint 9 — Sesion 38 (branch: `sprint-9-nests`)**
 
 **Completado:**
 - US-811 a US-828 + ENH-001/002/003/004/006 + ENH-MAP ✅ — commiteados
 - US-904 ✅ — MapZoomControls v2 + MapSearch lat,lon + ajustes disabled/pill
-- US-815 ✅ — badges condicionales por leyenda, umbrales DEC-918/919, ENH-007 nidos cerrado
-- DEC-918/919 documentadas, sync apply ejecutado — docs al dia
+- US-815 ✅ — badges separados nidos vs ciudades, chip reset, highlight row, fix stroke pin
+- US-906 ✅ — MapSearch Enter dispara OSM cuando no hay resultados locales (b11cdff)
 
 **Siguiente:**
-- Commit de sesion 35 (badges condicionales + nestThresholds + docs sync)
-- Sidebar: badges correspondientes en NestCard cuando highlightNestRow activo
+- Backlog: Estado nido (Verificado/No verificado) mover a Filter Panel como chips
 
 **Backlog critico pendiente:**
 - Estado nido (Verificado/No verificado) mover a Filter Panel como chips — aprobado pero no implementado
