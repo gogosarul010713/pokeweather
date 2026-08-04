@@ -24,11 +24,13 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
   const [results, setResults] = useState<Result[]>([])
   const [nomOption, setNomOption] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [nomError, setNomError] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const nests = useStore((s) => s.nests)
   const setSelectedCity = useStore((s) => s.setSelectedCity)
   const setSelectedNest = useStore((s) => s.setSelectedNest)
+  const setNavPin = useStore((s) => s.setNavPin)
 
   // Boton Lupa en MapZoomControls
   useEffect(() => { if (openTick) setOpen(true) }, [openTick])
@@ -75,6 +77,7 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
 
   const search = useCallback((q: string) => {
     const lq = q.toLowerCase().trim()
+    setNomError(false)
     if (!lq) { setResults([]); setNomOption(false); return }
 
     // Coordenadas directas
@@ -105,10 +108,17 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
   async function searchNominatim() {
     if (!query.trim()) return
     setLoading(true)
+    setNomError(false)
     try {
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`
-      const res = await fetch(url, { headers: { 'Accept-Language': 'es' } })
+      const res = await fetch(url, {
+        headers: {
+          'Accept-Language': 'es',
+          'User-Agent': 'PokeWeatherExplorer/1.0 (pokegoninjabob@gmail.com)',
+        },
+      })
       const data = await res.json()
+      if (data.length === 0) { setNomError(true); return }
       const hits: Result[] = data.map((d: any) => ({
         kind: 'nominatim',
         label: d.display_name,
@@ -118,7 +128,7 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
       setResults(hits)
       setNomOption(false)
     } catch {
-      // silent
+      setNomError(true)
     } finally {
       setLoading(false)
     }
@@ -131,6 +141,7 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
       setSelectedNest(r.item)
     } else {
       mapRef.current?.flyTo([r.lat, r.lon], FLY_ZOOM, { duration: FLY_DURATION })
+      setNavPin({ lat: r.lat, lon: r.lon, type: 'search', label: r.label })
     }
     setOpen(false)
   }
@@ -284,7 +295,13 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Ciudad, nido o coordenadas"
-            onKeyDown={e => e.key === 'Escape' && setOpen(false)}
+            onKeyDown={e => {
+              if (e.key === 'Escape') { setOpen(false); return }
+              if (e.key === 'Enter') {
+                if (results.length > 0) { selectResult(results[0]); return }
+                if (nomOption) searchNominatim()
+              }
+            }}
           />
           <button className="ms-close" onClick={() => setOpen(false)}>×</button>
         </div>
@@ -316,7 +333,11 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
             </>
           )}
 
-          {query && results.length === 0 && !nomOption && !loading && (
+          {nomError && (
+            <div className="ms-empty">No se encontro "{query}" en OpenStreetMap</div>
+          )}
+
+          {query && results.length === 0 && !nomOption && !loading && !nomError && (
             <div className="ms-empty">Sin resultados</div>
           )}
         </div>
