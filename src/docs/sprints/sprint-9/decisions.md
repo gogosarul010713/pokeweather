@@ -654,7 +654,7 @@ Rediseno de US-815. La leyenda tenia 4 niveles de navegacion (2 tabs + 2 subtabs
 ## DEC-918 — Umbrales de densidad para badges de nidos en MapLegend (sesion 35)
 
 **Fecha:** Sprint 9 — Sesion 35 (2026-08-02)
-**Estado:** Aprobada
+**Estado:** ~~Aprobada~~ **Reemplazada por DEC-920** (sesion 36 — umbrales fijos eliminados, pool dinamico top 25%)
 **Afecta:** `src/components/Map/NestPin.tsx`, `src/components/Map/MapLegend.tsx`, `src/config/nestThresholds.ts`
 
 ### Contexto
@@ -722,6 +722,37 @@ Umbrales definitivos para activar badge/resaltado en cada categoria:
 
 ---
 
+## DEC-920 — Pool combinado ciudad+nido para umbrales top 25% unificados (sesion 36)
+
+**Fecha:** Sprint 9 — Sesion 36 (2026-08-03)
+**Estado:** ~~Aprobada~~ **Reemplazada por DEC-921** (sesion 37 — pools separados por tipo)
+**Reemplaza:** DEC-918 (umbrales fijos `nestThresholds.ts`)
+**Afecta:** `src/services/weather/weatherService.ts`, `src/components/Map/MapView.tsx`, `src/components/Map/MapLegend.tsx`, `src/components/Sidebar/LocationFeed.tsx`, `src/components/Map/MapZoomControls.tsx`, `src/components/Map/NestPin.tsx`
+
+### Contexto
+
+Las ciudades y los nidos son ambos celdas S2 del mismo nivel — la escala de `stops` y `gyms` es comparable. Usar umbrales fijos separados (DEC-918) creaba inconsistencia: una ciudad con 15 stops y un nido con 15 stops recibían tratamiento diferente.
+
+### Decision
+
+`calculateBadges` recibe un pool combinado `PlaceForBadge[]` que incluye ciudades y nidos. Los umbrales top 25% se calculan dinamicamente sobre el total combinado. Cada lugar compite en la misma escala.
+
+- `stops` y `gyms`: top 25% del pool combinado
+- `community` (`rating >= 4.0`): exclusivo ciudades
+- `spawn` (`spawnRate > 0`): exclusivo nidos
+- `best`: ciudad con stops + gyms + community simultaneamente
+
+`src/config/nestThresholds.ts` eliminado — ya no hay umbrales fijos.
+
+La leyenda y el sidebar aplican el mismo `badgesById` derivado del pool combinado — un click en "Pokestop Hub" resalta ciudades Y nidos que cumplen el umbral al mismo tiempo.
+
+### Alternativas descartadas
+
+- **Umbrales fijos separados (DEC-918)** — descartado. Ciudad y nido son la misma unidad S2; umbrales distintos son arbitrarios.
+- **Pool separado por tipo** — descartado. Pierde la comparabilidad directa entre lugares.
+
+---
+
 ## BUG-001 — LocationFeed no renderiza cuando solo capa Nidos activa (sesion 13)
 
 **Fecha:** Sprint 9 — Sesion 13 (2026-07-22)
@@ -753,3 +784,77 @@ El componente nunca se montaba cuando solo Nidos estaba activo. El DOM confirmab
 ### Nota
 
 El componente `LocationFeed` ya manejaba internamente la logica de que mostrar segun `activeLayers` — el bug estaba un nivel arriba, en `Sidebar`, que lo impedia montarse. El conteo en el header ("• 8") si aparecia porque ese texto es parte del `FilterPanel`, no del `LocationFeed`.
+
+---
+
+## DEC-921 — Pools separados por tipo para badges (sesion 37)
+
+**Fecha:** Sprint 9 — Sesion 37 (2026-08-04)
+**Estado:** Aprobada
+**Reemplaza:** DEC-920 (pool combinado ciudad+nido)
+**Afecta:** `src/components/Map/MapView.tsx`, `src/components/Map/MapLegend.tsx`, `src/components/Sidebar/LocationFeed.tsx`, `src/services/weather/weatherService.ts`
+
+### Contexto
+
+Con DEC-920 (pool combinado), los nidos nunca calificaban para `stops` ni `best` porque el umbral top 25% del pool combinado lo fijaban las ciudades (q1Stops=640 vs max nido=200). Ningun nido tenia Pokestop Hub ni Mejor Lugar.
+
+### Decision
+
+`calculateBadges` se llama dos veces con pools separados: ciudades entre ciudades, nidos entre nidos. Cada grupo compite internamente — la misma formula, umbrales propios.
+
+- Ciudades: `stops`, `gyms`, `community`, `best` calculados sobre pool de ciudades
+- Nidos: `stops`, `gyms`, `spawn`, `best` calculados sobre pool de nidos
+- `best`: ciudad o nido con stops + gyms + community/spawn simultaneamente (top 25% de su propio pool)
+
+### Razon del cambio
+
+Las escalas reales son incomparables: ciudades tienen 500-3000 stops, nidos tienen 45-200. El pool combinado hacia que los nidos nunca llegaran al top 25% — los badges eran inutiles para nidos.
+
+### Alternativas descartadas
+
+- **Pool combinado (DEC-920)** — descartado. Umbral de ciudades aplasta a nidos; ningun nido califica para stops/best.
+
+---
+
+## ENH-009 — Chip reset "Top N x" en MapZoomControls (sesion 37)
+
+**Fecha:** Sprint 9 — Sesion 37 (2026-08-04)
+**Estado:** Implementado
+**Afecta:** `src/components/Map/MapZoomControls.tsx`
+
+### Decision
+
+El header del popover de Resaltar muestra un chip "Top N x" cuando hay filas activas. Click en el chip limpia `highlightCategories` y `highlightNestRow` sin cerrar el popover. Cuando no hay seleccion, muestra "Top N" en opacidad reducida como referencia del dataset.
+
+### Razon
+
+Con multi-select activo, limpiar todas las filas una por una es molesto. El chip es el patron establecido (ver chip de conteo en FilterPanel) y no agrega nueva UI — reutiliza el elemento de conteo existente.
+
+---
+
+## DEC-922 — MapSearch: Enter dispara busqueda OSM cuando no hay resultados locales (sesion 38)
+
+**Fecha:** Sprint 9 — Sesion 38 (2026-08-04)
+**Estado:** Aprobada
+**Afecta:** `src/components/Map/MapSearch.tsx`
+
+### Contexto
+
+El buscador ya tenia fallback a Nominatim via un boton manual ("Buscar en OpenStreetMap"). La friccion: al no encontrar resultados locales, el usuario tiene que mover la mano al mouse para presionar el boton. El dataset local es finito — el fallback a OSM es el caso comun cuando se busca una ciudad que no esta en el JSON de clima/nidos.
+
+### Decision
+
+Cuando `onKeyDown` detecta `Enter` y no hay resultados locales (`filteredCities.length === 0` y `filteredNests.length === 0`), se llama `searchNominatim()` directamente. El usuario presiona Enter una vez, la busqueda se ejecuta.
+
+La busqueda sigue siendo **user-triggered** (Enter, no keystroke) — cumple la politica de uso de Nominatim que prohibe el autocomplete automatico.
+
+### Consecuencias
+
+- `onKeyDown` en `MapSearch.tsx` necesita un nuevo caso: `if (noLocalResults) searchNominatim()`
+- El flujo visual existente (spinner, mensaje de error) ya funciona — no requiere cambios adicionales
+- Si hay resultados locales, Enter sigue seleccionando el primero (comportamiento actual sin cambios)
+
+### Alternativas descartadas
+
+- **Auto-fallback por keystroke con debounce** — descartado. Viola la politica de Nominatim (prohibe autocomplete) y hace que la misma tecla haga dos cosas distintas segun un estado invisible para el usuario.
+- **Segundo Enter para confirmar** — considerado. Dos teclas en vez de una no agrega claridad cuando la UI ya muestra "no hay resultados locales".
