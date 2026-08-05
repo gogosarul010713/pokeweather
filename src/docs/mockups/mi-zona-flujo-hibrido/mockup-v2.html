@@ -1,0 +1,391 @@
+<title>Mi Zona v2 — Flujo Hibrido | PokeWeather Nests</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-primary:   #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary:  #1C2333;
+  --bg-overlay:   #252D3D;
+  --text-primary:   #E6EDF3;
+  --text-secondary: #7D8590;
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.12);
+  --border-strong:  rgba(255,255,255,0.24);
+  --ui-accent:   #58A6FF;
+  --ui-success:  #3FB950;
+  --ui-error:    #F85149;
+  --home:        #FF6B35;
+  --home-dim:    rgba(255,107,53,0.14);
+  --home-glow:   rgba(255,107,53,0.32);
+  --accent-dim:  rgba(88,166,255,0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg-primary:   #F0F2F5;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary:  #EBEDF0;
+    --bg-overlay:   #F8F9FA;
+    --text-primary:   #1A202C;
+    --text-secondary: #6B7280;
+    --border-subtle:  rgba(0,0,0,0.06);
+    --border-default: rgba(0,0,0,0.12);
+    --border-strong:  rgba(0,0,0,0.20);
+    --ui-accent:   #1D6FB8;
+    --ui-success:  #15803D;
+    --ui-error:    #B91C1C;
+    --home:        #C84B00;
+    --home-dim:    rgba(200,75,0,0.10);
+    --home-glow:   rgba(200,75,0,0.28);
+    --accent-dim:  rgba(29,111,184,0.10);
+  }
+}
+:root[data-theme="light"] {
+  --bg-primary:   #F0F2F5;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary:  #EBEDF0;
+  --bg-overlay:   #F8F9FA;
+  --text-primary:   #1A202C;
+  --text-secondary: #6B7280;
+  --border-subtle:  rgba(0,0,0,0.06);
+  --border-default: rgba(0,0,0,0.12);
+  --border-strong:  rgba(0,0,0,0.20);
+  --ui-accent:   #1D6FB8;
+  --ui-success:  #15803D;
+  --ui-error:    #B91C1C;
+  --home:        #C84B00;
+  --home-dim:    rgba(200,75,0,0.10);
+  --home-glow:   rgba(200,75,0,0.28);
+  --accent-dim:  rgba(29,111,184,0.10);
+}
+:root[data-theme="dark"] {
+  --bg-primary:   #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary:  #1C2333;
+  --bg-overlay:   #252D3D;
+  --text-primary:   #E6EDF3;
+  --text-secondary: #7D8590;
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.12);
+  --border-strong:  rgba(255,255,255,0.24);
+  --ui-accent:   #58A6FF;
+  --ui-success:  #3FB950;
+  --ui-error:    #F85149;
+  --home:        #FF6B35;
+  --home-dim:    rgba(255,107,53,0.14);
+  --home-glow:   rgba(255,107,53,0.32);
+  --accent-dim:  rgba(88,166,255,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Exo 2', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 20px;
+}
+
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.page-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); }
+.page-title em { color: var(--home); font-style: normal; }
+.theme-btn { background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 5px; color: var(--text-secondary); font-family: inherit; font-size: 11px; padding: 4px 10px; cursor: pointer; }
+
+.flow-title { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-secondary); padding: 18px 0 10px; display: flex; align-items: center; gap: 10px; }
+.flow-title::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+.flow-title em { color: var(--home); font-style: normal; }
+.flow-title.blue em { color: var(--ui-accent); }
+
+.steps { display: flex; gap: 10px; align-items: flex-start; }
+.step { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.step-arrow { flex-shrink: 0; padding-top: 48px; color: var(--text-secondary); font-size: 18px; line-height: 1; }
+
+.frame { background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 10px; overflow: hidden; height: 260px; display: flex; position: relative; }
+.frame.highlighted { border-color: var(--home); box-shadow: 0 0 0 1px var(--home-glow); }
+.frame.highlighted-blue { border-color: var(--ui-accent); box-shadow: 0 0 0 1px var(--accent-dim); }
+
+.sb { width: 150px; flex-shrink: 0; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; }
+.sb-head { padding: 8px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+.sb-sort { padding: 5px 8px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.sb-sort-lbl { font-size: 9px; color: var(--text-secondary); }
+.sb-sort-val { font-size: 9px; font-weight: 700; color: var(--text-secondary); }
+.sb-sort-val.active { color: var(--home); }
+.sb-list { flex: 1; overflow: hidden; }
+.sb-row { display: flex; align-items: center; gap: 5px; padding: 5px 8px; border-bottom: 1px solid var(--border-subtle); }
+.sb-row.sel { background: var(--accent-dim); }
+.sb-emoji { font-size: 11px; flex-shrink: 0; }
+.sb-info { flex: 1; min-width: 0; }
+.sb-name { font-size: 9px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-sub  { font-size: 8px; color: var(--text-secondary); margin-top: 1px; }
+.sb-dist { font-size: 9px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--home); flex-shrink: 0; }
+.sb-dist.dim { color: var(--text-secondary); opacity: 0.4; }
+
+.chip-empty { display: flex; align-items: center; gap: 6px; border: 1px dashed var(--border-strong); border-radius: 16px; padding: 4px 8px; cursor: pointer; font-size: 9px; color: var(--text-secondary); transition: background 0.15s; }
+.chip-empty:hover { background: var(--bg-tertiary); }
+.chip-active { display: flex; align-items: center; gap: 6px; background: var(--home-dim); border: 1px solid var(--home-glow); border-radius: 16px; padding: 4px 8px; cursor: pointer; }
+.chip-active-coords { font-size: 9px; font-weight: 700; color: var(--home); font-variant-numeric: tabular-nums; }
+.chip-active-sub { font-size: 8px; color: var(--text-secondary); }
+
+.map { flex: 1; position: relative; overflow: hidden; }
+canvas.mc { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.zc { position: absolute; right: 6px; top: 6px; display: flex; flex-direction: column; gap: 3px; z-index: 10; }
+.zb { width: 24px; height: 24px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 5px; color: var(--text-primary); font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: inherit; }
+.zb.home-zb { color: var(--home); border-color: var(--home-glow); background: var(--home-dim); }
+.zb.home-zb.on { background: var(--home); color: #fff; }
+
+.search-bar { position: absolute; left: 6px; top: 6px; right: 36px; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 6px; padding: 5px 8px; font-size: 9px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; z-index: 10; }
+.search-bar.typing { border-color: var(--ui-accent); color: var(--text-primary); }
+.search-bar-icon { flex-shrink: 0; opacity: 0.5; }
+
+.mn { position: absolute; width: 26px; height: 29px; display: flex; align-items: center; justify-content: center; z-index: 8; }
+.mn svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mn span { position: relative; z-index: 1; font-size: 10px; }
+.mn.nearby { animation: nhp 1.5s ease-in-out infinite; }
+@keyframes nhp { 0%,100% { filter: drop-shadow(0 0 3px var(--home)); } 50% { filter: drop-shadow(0 0 8px var(--home)); } }
+
+.pin-home { position: absolute; z-index: 20; }
+.pin-core { width: 12px; height: 12px; border-radius: 50%; background: var(--home); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--home); position: relative; z-index: 2; }
+.radar-r { position: absolute; border-radius: 50%; border: 1.5px solid var(--home); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: rexp 2s ease-out infinite; opacity: 0; }
+.radar-r:nth-child(2) { animation-delay: 0s; }
+.radar-r:nth-child(3) { animation-delay: 0.65s; }
+.radar-r:nth-child(4) { animation-delay: 1.3s; }
+@keyframes rexp { 0% { width:12px; height:12px; opacity:0.85; } 100% { width:70px; height:70px; opacity:0; } }
+.radar-sw { position: absolute; width: 50px; height: 50px; top: 50%; left: 50%; transform: translate(-50%,-50%); border-radius: 50%; overflow: hidden; animation: swrot 2s linear infinite; z-index: 1; }
+@keyframes swrot { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+.radar-sw::after { content: ''; position: absolute; inset: 0; background: conic-gradient(from 0deg, transparent 65%, rgba(255,107,53,0.55) 100%); }
+
+.pin-search { position: absolute; z-index: 20; display: flex; flex-direction: column; align-items: center; }
+.ps-drop { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 12px solid var(--ui-accent); position: relative; }
+.ps-drop::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: var(--ui-accent); position: absolute; top: -19px; left: -6px; }
+.ps-dot { width:3px; height:3px; border-radius:50%; background:var(--ui-accent); opacity:.4; margin-top:2px; }
+
+.popup { position: absolute; background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 8px; padding: 6px 8px; font-size: 9px; white-space: nowrap; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%); box-shadow: 0 4px 14px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 4px; z-index: 30; }
+.popup::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid var(--border-default); }
+.popup-name { font-weight: 700; color: var(--text-primary); }
+.popup-coords { color: var(--text-secondary); font-size: 8px; font-variant-numeric: tabular-nums; }
+.popup-action { margin-top: 2px; background: var(--home-dim); border: 1px solid var(--home-glow); border-radius: 5px; padding: 4px 7px; font-size: 8px; font-weight: 700; color: var(--home); cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+
+.modal-ov { position: absolute; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(2px); }
+.modal { background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: 12px; padding: 16px; width: 170px; box-shadow: 0 16px 48px rgba(0,0,0,.5); }
+.modal-title { font-size: 11px; font-weight: 700; color: var(--home); margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
+.modal-btn { width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--home-glow); background: var(--home-dim); color: var(--home); font-family: inherit; font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.modal-divider { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 9px; letter-spacing: .05em; margin: 8px 0; }
+.modal-divider::before, .modal-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+.modal-input { width: 100%; background: var(--bg-primary); border: 1px solid var(--border-default); border-radius: 6px; padding: 7px 8px; font-family: inherit; font-size: 10px; color: var(--text-primary); outline: none; }
+.modal-input::placeholder { color: var(--text-secondary); }
+.modal-input:focus { border-color: var(--home); }
+.modal-confirm { width: 100%; margin-top: 6px; padding: 7px 10px; border-radius: 6px; border: none; background: var(--home); color: #fff; font-family: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+
+.gps-spin { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--ui-accent); margin-top: 6px; }
+.spinner { width: 10px; height: 10px; border: 2px solid var(--accent-dim); border-top-color: var(--ui-accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ann { font-size: 9px; color: var(--text-secondary); text-align: center; line-height: 1.5; padding: 4px 0; }
+.ann .o { color: var(--home); font-weight: 700; }
+.ann .b { color: var(--ui-accent); font-weight: 700; }
+.ann .g { color: var(--ui-success); font-weight: 700; }
+
+.flow-divider { border: none; border-top: 1px solid var(--border-subtle); margin: 8px 0 0; }
+
+@media (max-width: 700px) {
+  .steps { flex-direction: column; }
+  .step-arrow { padding-top: 0; text-align: center; transform: rotate(90deg); align-self: center; }
+}
+</style>
+
+<div class="page-header">
+  <div class="page-title">PokeWeather Nests &mdash; <em>Mi Zona v2</em> &mdash; Flujo Hibrido</div>
+  <button class="theme-btn" onclick="(function(){var d=document.documentElement;d.dataset.theme=d.dataset.theme==='light'?'dark':'light';setTimeout(redrawAll,50)})()">Tema</button>
+</div>
+
+<div class="flow-title"><em>Camino A</em> &mdash; Jugador casual (GPS)</div>
+<div class="steps">
+  <div class="step">
+    <div class="frame">
+      <div class="sb">
+        <div class="sb-head"><div class="chip-empty"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Fijar mi zona...</div></div>
+        <div class="sb-sort"><span class="sb-sort-lbl">Ordenar</span><span class="sb-sort-val">Nombre</span></div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div><div class="sb-sub">Bulbasaur</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div><div class="sb-sub">Psyduck</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div><div class="sb-sub">Charmander</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">⚡</span><div class="sb-info"><div class="sb-name">Metro Reforma</div><div class="sb-sub">Pikachu</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌸</span><div class="sb-info"><div class="sb-name">Plaza Rosario</div><div class="sb-sub">Jigglypuff</div></div><span class="sb-dist dim">—</span></div>
+        </div>
+      </div>
+      <div class="map"><canvas class="mc" id="mA1"></canvas>
+        <div class="zc"><button class="zb">+</button><button class="zb">−</button><button class="zb home-zb"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button></div>
+        <div class="mn" style="left:28%;top:30%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:52%;top:22%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+        <div class="mn" style="left:38%;top:54%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🔥</span></div>
+        <div class="mn" style="left:62%;top:55%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>⚡</span></div>
+      </div>
+    </div>
+    <div class="ann">Toca <span class="o">boton Home</span> en el mapa o el chip vacio</div>
+  </div>
+  <div class="step-arrow">→</div>
+  <div class="step">
+    <div class="frame highlighted">
+      <div class="sb">
+        <div class="sb-head"><div class="chip-empty"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Fijar mi zona...</div></div>
+        <div class="sb-sort"><span class="sb-sort-lbl">Ordenar</span><span class="sb-sort-val">Nombre</span></div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div></div><span class="sb-dist dim">—</span></div>
+        </div>
+      </div>
+      <div class="map"><canvas class="mc" id="mA2"></canvas>
+        <div class="zc"><button class="zb">+</button><button class="zb">−</button><button class="zb home-zb on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button></div>
+        <div class="modal-ov" style="position:absolute">
+          <div class="modal">
+            <div class="modal-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Fijar mi zona</div>
+            <button class="modal-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>Usar GPS</button>
+            <div class="gps-spin"><div class="spinner"></div>Detectando...</div>
+            <div class="modal-divider">o ingresa</div>
+            <input class="modal-input" placeholder="lat, lon" readonly/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Modal: <span class="o">GPS primario</span> + campo manual<br>Browser pide permiso</div>
+  </div>
+  <div class="step-arrow">→</div>
+  <div class="step">
+    <div class="frame highlighted">
+      <div class="sb">
+        <div class="sb-head"><div class="chip-active"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--home)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><div><div class="chip-active-coords">19.4326, -99.1332</div><div class="chip-active-sub">CDMX &bull; Tap editar</div></div></div></div>
+        <div class="sb-sort"><span class="sb-sort-lbl">Ordenar</span><span class="sb-sort-val active">Distancia</span></div>
+        <div class="sb-list">
+          <div class="sb-row sel"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div><div class="sb-sub">Charmander</div></div><span class="sb-dist">0.4km</span></div>
+          <div class="sb-row"><span class="sb-emoji">⚡</span><div class="sb-info"><div class="sb-name">Metro Reforma</div><div class="sb-sub">Pikachu</div></div><span class="sb-dist">1.1km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div><div class="sb-sub">Bulbasaur</div></div><span class="sb-dist">2.3km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div><div class="sb-sub">Psyduck</div></div><span class="sb-dist">4.7km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌸</span><div class="sb-info"><div class="sb-name">Plaza Rosario</div><div class="sb-sub">Jigglypuff</div></div><span class="sb-dist">6.1km</span></div>
+        </div>
+      </div>
+      <div class="map"><canvas class="mc" id="mA3"></canvas>
+        <div class="zc"><button class="zb">+</button><button class="zb">−</button><button class="zb home-zb on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button></div>
+        <div class="pin-home" style="left:calc(48% - 6px);top:calc(46% - 6px)"><div class="radar-r"></div><div class="radar-r"></div><div class="radar-r"></div><div class="radar-sw"></div><div class="pin-core"></div></div>
+        <div class="mn nearby" style="left:35%;top:38%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(255,107,53,0.2)" stroke="#FF6B35" stroke-width="2"/></svg><span>🔥</span></div>
+        <div class="mn nearby" style="left:57%;top:44%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(255,107,53,0.15)" stroke="#FF6B35" stroke-width="1.5"/></svg><span>⚡</span></div>
+        <div class="mn" style="left:22%;top:25%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:64%;top:22%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+      </div>
+    </div>
+    <div class="ann"><span class="o">Pin naranja</span> + radar ~3s<br>Lista ordenada por distancia<br><span class="g">Persiste al recargar</span></div>
+  </div>
+</div>
+
+<hr class="flow-divider">
+
+<div class="flow-title blue"><em>Camino B</em> &mdash; Spoofer (coordenadas manuales)</div>
+<div class="steps">
+  <div class="step">
+    <div class="frame">
+      <div class="sb">
+        <div class="sb-head"><div class="chip-empty"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Fijar mi zona...</div></div>
+        <div class="sb-sort"><span class="sb-sort-lbl">Ordenar</span><span class="sb-sort-val">Nombre</span></div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div></div><span class="sb-dist dim">—</span></div>
+        </div>
+      </div>
+      <div class="map"><canvas class="mc" id="mB1"></canvas>
+        <div class="zc"><button class="zb">+</button><button class="zb">−</button><button class="zb home-zb"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button></div>
+        <div class="search-bar typing"><svg class="search-bar-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>35.6762, 139.6503|</div>
+        <div class="mn" style="left:28%;top:38%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:55%;top:28%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+        <div class="mn" style="left:40%;top:58%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🔥</span></div>
+      </div>
+    </div>
+    <div class="ann">Pega <span class="b">coords en MapSearch</span><br>(flujo existente, sin cambios)</div>
+  </div>
+  <div class="step-arrow">→</div>
+  <div class="step">
+    <div class="frame highlighted-blue">
+      <div class="sb">
+        <div class="sb-head"><div class="chip-empty"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Fijar mi zona...</div></div>
+        <div class="sb-sort"><span class="sb-sort-lbl">Ordenar</span><span class="sb-sort-val">Nombre</span></div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div></div><span class="sb-dist dim">—</span></div>
+        </div>
+      </div>
+      <div class="map"><canvas class="mc" id="mB2"></canvas>
+        <div class="zc"><button class="zb">+</button><button class="zb">−</button><button class="zb home-zb"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button></div>
+        <div class="pin-search" style="left:calc(44% - 7px);top:calc(40% - 14px)">
+          <div style="position:relative">
+            <div class="popup"><div class="popup-name">35.6762, 139.6503</div><div class="popup-coords">Tokyo, Japon</div><button class="popup-action"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Fijar como mi zona</button></div>
+            <div class="ps-drop"></div>
+          </div>
+          <div class="ps-dot"></div>
+        </div>
+        <div class="mn" style="left:22%;top:32%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:60%;top:24%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+        <div class="mn" style="left:55%;top:60%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🔥</span></div>
+      </div>
+    </div>
+    <div class="ann"><span class="b">Pin azul</span> aparece (como hoy)<br>Popup agrega <span class="o">"Fijar como mi zona"</span></div>
+  </div>
+  <div class="step-arrow">→</div>
+  <div class="step">
+    <div class="frame highlighted">
+      <div class="sb">
+        <div class="sb-head"><div class="chip-active"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--home)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><div><div class="chip-active-coords">35.6762, 139.6503</div><div class="chip-active-sub">Tokyo &bull; Tap editar</div></div></div></div>
+        <div class="sb-sort"><span class="sb-sort-lbl">Ordenar</span><span class="sb-sort-val active">Distancia</span></div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div><div class="sb-sub">Psyduck</div></div><span class="sb-dist">0.8km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌸</span><div class="sb-info"><div class="sb-name">Plaza Rosario</div><div class="sb-sub">Jigglypuff</div></div><span class="sb-dist">1.9km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div><div class="sb-sub">Bulbasaur</div></div><span class="sb-dist">3.4km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div><div class="sb-sub">Charmander</div></div><span class="sb-dist">5.2km</span></div>
+          <div class="sb-row"><span class="sb-emoji">⚡</span><div class="sb-info"><div class="sb-name">Metro Reforma</div><div class="sb-sub">Pikachu</div></div><span class="sb-dist">7.8km</span></div>
+        </div>
+      </div>
+      <div class="map"><canvas class="mc" id="mB3"></canvas>
+        <div class="zc"><button class="zb">+</button><button class="zb">−</button><button class="zb home-zb on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button></div>
+        <div class="pin-home" style="left:calc(44% - 6px);top:calc(40% - 6px)"><div class="radar-r"></div><div class="radar-r"></div><div class="radar-r"></div><div class="radar-sw"></div><div class="pin-core"></div></div>
+        <div class="mn nearby" style="left:22%;top:25%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(255,107,53,0.18)" stroke="#FF6B35" stroke-width="1.8"/></svg><span>🌊</span></div>
+        <div class="mn nearby" style="left:58%;top:30%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(255,107,53,0.13)" stroke="#FF6B35" stroke-width="1.5"/></svg><span>🌸</span></div>
+        <div class="mn" style="left:65%;top:60%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🔥</span></div>
+        <div class="mn" style="left:28%;top:62%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>⚡</span></div>
+      </div>
+    </div>
+    <div class="ann"><span class="b">Pin azul</span> -> <span class="o">naranja</span><br>Lista reordenada desde Tokyo<br><span class="g">Persiste al recargar</span></div>
+  </div>
+</div>
+
+<script>
+function drawMap(id) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  c.width = c.offsetWidth; c.height = c.offsetHeight;
+  const w = c.width, h = c.height;
+  const dk = document.documentElement.dataset.theme !== 'light' && !document.documentElement.classList.contains('light');
+  ctx.fillStyle = dk ? '#1a2233' : '#d8e4f0';
+  ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = dk ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)';
+  ctx.lineWidth = 1;
+  for (let x=0;x<w;x+=35){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for (let y=0;y<h;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  ctx.strokeStyle = dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.13)';
+  ctx.lineWidth = 2;
+  [h*.38,h*.62].forEach(y=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
+  [w*.32,w*.6].forEach(x=>{ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();});
+  [[.08,.1,.15,.22],[.42,.08,.14,.24],[.68,.12,.24,.2],[.08,.45,.16,.12],[.42,.45,.12,.12],[.68,.45,.24,.1],[.09,.68,.14,.24],[.43,.68,.1,.24],[.68,.68,.24,.24]].forEach(([bx,by,bw,bh])=>{
+    ctx.fillStyle = dk ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
+    ctx.fillRect(w*bx,h*by,w*bw,h*bh);
+  });
+  ctx.fillStyle = dk ? 'rgba(63,185,80,0.08)' : 'rgba(63,185,80,0.16)';
+  ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(w*.34,h*.38,w*.08,h*.18,3); else ctx.rect(w*.34,h*.38,w*.08,h*.18); ctx.fill();
+}
+function redrawAll(){['mA1','mA2','mA3','mB1','mB2','mB3'].forEach(drawMap);}
+window.addEventListener('load', redrawAll);
+window.addEventListener('resize', redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','class']});
+</script>
