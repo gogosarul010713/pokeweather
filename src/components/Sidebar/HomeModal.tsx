@@ -143,24 +143,31 @@ export default function HomeModal({ onClose }: HomeModalProps) {
           align-items: center;
           gap: 6px;
           font-family: 'Exo 2', sans-serif;
+          white-space: nowrap;
         }
-        .hm-gps-btn {
-          width: 100%;
-          padding: 10px 12px;
-          border-radius: 8px;
-          border: 1px solid var(--home-glow);
-          background: var(--home-dim);
-          color: var(--home);
+        .hm-gps-link {
+          padding: 3px 8px;
+          border: 1px solid var(--border-default);
+          border-radius: 20px;
+          background: transparent;
+          color: var(--text-secondary);
           font-family: 'Exo 2', sans-serif;
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 600;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 8px;
-          transition: opacity 0.15s;
+          gap: 4px;
+          transition: color 0.15s, border-color 0.15s, background 0.15s;
+          white-space: nowrap;
+          flex-shrink: 0;
         }
-        .hm-gps-btn:disabled {
+        .hm-gps-link:hover {
+          color: var(--home);
+          border-color: var(--home-glow);
+          background: var(--home-dim);
+        }
+        .hm-gps-link:disabled {
           opacity: 0.4;
           cursor: not-allowed;
         }
@@ -194,22 +201,6 @@ export default function HomeModal({ onClose }: HomeModalProps) {
           color: var(--text-secondary);
           margin-top: 7px;
           font-family: 'Exo 2', sans-serif;
-        }
-        .hm-divider {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: var(--text-secondary);
-          font-size: 11px;
-          letter-spacing: .05em;
-          margin: 12px 0;
-          font-family: 'Exo 2', sans-serif;
-        }
-        .hm-divider::before, .hm-divider::after {
-          content: '';
-          flex: 1;
-          height: 1px;
-          background: var(--border-default);
         }
         .hm-input {
           width: 100%;
@@ -265,30 +256,20 @@ export default function HomeModal({ onClose }: HomeModalProps) {
       {createPortal(
         <div className="hm-overlay" ref={overlayRef} onClick={handleOverlayClick}>
           <div className="hm-modal">
-            <div className="hm-title"><HomeIcon /> Fijar mi zona</div>
+            <div className="hm-title">
+              <HomeIcon /> Fijar mi zona
+              <button
+                className="hm-gps-link"
+                onClick={handleGps}
+                disabled={gpsDisabled || gpsState === 'loading'}
+                type="button"
+                style={{ marginLeft: 'auto' }}
+              >
+                <GpsIcon /> GPS
+              </button>
+            </div>
 
-            <button
-              className="hm-gps-btn"
-              onClick={handleGps}
-              disabled={gpsDisabled || gpsState === 'loading'}
-              type="button"
-            >
-              <GpsIcon />
-              Usar GPS
-            </button>
-
-            {gpsState === 'loading' && (
-              <div className="hm-spin"><div className="hm-spinner" />Detectando...</div>
-            )}
-            {gpsState === 'error' && (
-              <div className="hm-error">{gpsError}</div>
-            )}
-            {gpsState === 'approximate' && (
-              <div className="hm-approx">Ubicacion aproximada (precision baja). Puedes confirmar o ingresar coords.</div>
-            )}
-
-            <div className="hm-divider">o ingresa</div>
-
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 5, fontFamily: "'Exo 2', sans-serif" }}>Ingresa coordenadas</div>
             <input
               className="hm-input"
               placeholder="lat, lon — ej: 19.4326, -99.1332"
@@ -301,6 +282,16 @@ export default function HomeModal({ onClose }: HomeModalProps) {
             <button className="hm-confirm" onClick={handleCoordsConfirm} type="button">
               Fijar ubicacion
             </button>
+
+            {gpsState === 'loading' && (
+              <div className="hm-spin"><div className="hm-spinner" />Detectando...</div>
+            )}
+            {gpsState === 'error' && (
+              <div className="hm-error">{gpsError}</div>
+            )}
+            {gpsState === 'approximate' && (
+              <div className="hm-approx">Ubicacion aproximada (precision baja). Puedes confirmar o ingresar coords.</div>
+            )}
 
             {homeLocation && (
               <button className="hm-clear" onClick={handleClear} type="button">
