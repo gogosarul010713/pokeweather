@@ -1,0 +1,833 @@
+<title>Pin System v3 — Mi Zona | PokeWeather Nests</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap');
+
+:root {
+  --bg-primary:   #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary:  #1C2333;
+  --bg-overlay:   #252D3D;
+  --text-primary:   #E6EDF3;
+  --text-secondary: #7D8590;
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.12);
+  --border-strong:  rgba(255,255,255,0.24);
+  --ui-accent:   #58A6FF;
+  --ui-success:  #3FB950;
+  --home:        #22D3EE;
+  --home-dim:    rgba(34,211,238,0.14);
+  --home-glow:   rgba(34,211,238,0.32);
+  --accent-dim:  rgba(88,166,255,0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg-primary:   #F0F2F5;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary:  #EBEDF0;
+    --bg-overlay:   #F8F9FA;
+    --text-primary:   #1A202C;
+    --text-secondary: #6B7280;
+    --border-subtle:  rgba(0,0,0,0.06);
+    --border-default: rgba(0,0,0,0.12);
+    --border-strong:  rgba(0,0,0,0.20);
+    --ui-accent:   #1D6FB8;
+    --ui-success:  #15803D;
+    --home:        #0891B2;
+    --home-dim:    rgba(8,145,178,0.12);
+    --home-glow:   rgba(8,145,178,0.28);
+    --accent-dim:  rgba(29,111,184,0.10);
+  }
+}
+:root[data-theme="light"] {
+  --bg-primary:   #F0F2F5;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary:  #EBEDF0;
+  --bg-overlay:   #F8F9FA;
+  --text-primary:   #1A202C;
+  --text-secondary: #6B7280;
+  --border-subtle:  rgba(0,0,0,0.06);
+  --border-default: rgba(0,0,0,0.12);
+  --border-strong:  rgba(0,0,0,0.20);
+  --ui-accent:   #1D6FB8;
+  --ui-success:  #15803D;
+  --home:        #0891B2;
+  --home-dim:    rgba(8,145,178,0.12);
+  --home-glow:   rgba(8,145,178,0.28);
+  --accent-dim:  rgba(29,111,184,0.10);
+}
+:root[data-theme="dark"] {
+  --bg-primary:   #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary:  #1C2333;
+  --bg-overlay:   #252D3D;
+  --text-primary:   #E6EDF3;
+  --text-secondary: #7D8590;
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.12);
+  --border-strong:  rgba(255,255,255,0.24);
+  --ui-accent:   #58A6FF;
+  --ui-success:  #3FB950;
+  --home:        #22D3EE;
+  --home-dim:    rgba(34,211,238,0.14);
+  --home-glow:   rgba(34,211,238,0.32);
+  --accent-dim:  rgba(88,166,255,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Exo 2', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 24px 20px 40px;
+  min-height: 100vh;
+}
+
+/* --- PAGE HEADER --- */
+.ph {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+}
+.ph-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.ph-title em { color: var(--home); font-style: normal; }
+.ph-sub {
+  font-size: 11px; color: var(--text-secondary);
+  margin-top: 2px; font-weight: 400;
+}
+.theme-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px; padding: 5px 12px; cursor: pointer;
+}
+.theme-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
+
+/* --- SECTION LABEL --- */
+.section-lbl {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-secondary);
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.section-lbl::after { content:''; flex:1; height:1px; background: var(--border-subtle); }
+.section-lbl em { color: var(--home); font-style: normal; }
+.section-lbl.blue em { color: var(--ui-accent); }
+
+/* --- GRID DE ESTADOS --- */
+.states-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.state-col { display: flex; flex-direction: column; gap: 8px; }
+.state-frame {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  overflow: hidden;
+  height: 220px;
+  position: relative;
+}
+.state-frame.active-border {
+  border-color: var(--home);
+  box-shadow: 0 0 0 1px var(--home-glow);
+}
+.state-frame.blue-border {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 1px rgba(88,166,255,0.2);
+}
+.state-ann {
+  font-size: 9px; color: var(--text-secondary);
+  text-align: center; line-height: 1.6;
+  padding: 2px 4px;
+}
+.state-ann .o { color: var(--home); font-weight: 700; }
+.state-ann .b { color: var(--ui-accent); font-weight: 700; }
+.state-ann .g { color: var(--ui-success); font-weight: 700; }
+.state-ann .d { opacity: 0.5; }
+.state-tag {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  text-align: center; color: var(--text-secondary);
+}
+
+/* --- MAP CANVAS --- */
+canvas.mc { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* --- ZOOM CONTROLS --- */
+.zc {
+  position: absolute; right: 6px; top: 6px;
+  display: flex; flex-direction: column; gap: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+.zb {
+  width: 32px; height: 32px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-family: inherit;
+}
+.zb:last-child { border-bottom: none; }
+.zb.home-off {
+  color: var(--home);
+  background: var(--home-dim);
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+.zb.home-idle {
+  color: var(--home);
+  background: var(--home-dim);
+  border-top: 2px solid var(--border-default);
+}
+.zb.home-on {
+  color: #fff;
+  background: var(--home);
+  border-top: 2px solid var(--border-default);
+}
+
+/* --- SIDEBAR MINI --- */
+.sb {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 130px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-subtle);
+  display: flex; flex-direction: column;
+  z-index: 5;
+}
+.sb-chip-wrap { padding: 7px 7px 6px; border-bottom: 1px solid var(--border-subtle); }
+.chip-empty {
+  display: flex; align-items: center; gap: 5px;
+  border: 1px dashed var(--border-strong); border-radius: 14px;
+  padding: 3px 7px; height: 22px;
+  font-size: 9px; color: var(--text-secondary); cursor: pointer;
+}
+.chip-active {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--home-dim); border: 1px solid var(--home-glow);
+  border-radius: 14px; padding: 3px 7px; height: 22px; cursor: pointer;
+}
+.chip-active .c-coord { font-size: 9px; font-weight: 700; color: var(--home); font-variant-numeric: tabular-nums; }
+.chip-active .c-sub { font-size: 7.5px; color: var(--text-secondary); }
+.sb-list { flex: 1; overflow: hidden; }
+.sb-row {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 7px; border-bottom: 1px solid var(--border-subtle);
+}
+.sb-emoji { font-size: 10px; flex-shrink: 0; }
+.sb-info { flex: 1; min-width: 0; }
+.sb-name { font-size: 8.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-dist { font-size: 8.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--home); flex-shrink: 0; }
+.sb-dist.dim { color: var(--text-secondary); opacity: 0.4; }
+
+/* --- MAP AREA --- */
+.map-area { position: absolute; left: 130px; right: 0; top: 0; bottom: 0; overflow: hidden; }
+
+/* --- HOME PIN --- */
+.hp {
+  position: absolute; z-index: 20;
+  width: 0; height: 0;
+  /* center the pin visually */
+}
+.hp-core {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--home); border: 2px solid #fff;
+  box-shadow: 0 0 0 2px var(--home);
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* radar rings — animated */
+.hp-ring {
+  position: absolute; border-radius: 50%;
+  border: 1.5px solid var(--home);
+  transform: translate(-50%, -50%);
+  animation: rexp 2s ease-out infinite;
+  opacity: 0;
+}
+.hp-ring:nth-child(1) { animation-delay: 0s; }
+.hp-ring:nth-child(2) { animation-delay: 0.65s; }
+.hp-ring:nth-child(3) { animation-delay: 1.3s; }
+@keyframes rexp {
+  0%   { width: 12px; height: 12px; opacity: 0.85; }
+  100% { width: 64px; height: 64px; opacity: 0; }
+}
+
+/* radar sweep */
+.hp-sweep {
+  position: absolute;
+  width: 46px; height: 46px;
+  border-radius: 50%; overflow: hidden;
+  transform: translate(-50%, -50%);
+  animation: swrot 2s linear infinite;
+  z-index: 1;
+}
+@keyframes swrot { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+.hp-sweep::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: conic-gradient(from 0deg, transparent 65%, rgba(255,107,53,0.55) 100%);
+}
+
+/* static state — no animation */
+.hp.static .hp-ring,
+.hp.static .hp-sweep { display: none; }
+
+/* label callout on static pin */
+.hp-label {
+  position: absolute;
+  bottom: calc(100% + 10px); left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: 7px;
+  padding: 6px 9px;
+  white-space: nowrap;
+  display: flex; flex-direction: column; gap: 1px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  min-width: 110px;
+}
+.hp-label::after {
+  content: '';
+  position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--border-default);
+}
+.hp-label-title {
+  font-size: 9px; font-weight: 700; color: var(--home);
+  display: flex; align-items: center; gap: 4px;
+}
+.hp-label-place {
+  font-size: 8px; color: var(--text-primary); font-weight: 600;
+}
+.hp-label-coords {
+  font-size: 7.5px; color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- NAV PIN (search) --- */
+.np-search {
+  position: absolute; z-index: 20;
+  display: flex; flex-direction: column; align-items: center;
+}
+.nps-head {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--ui-accent);
+  box-shadow: 0 0 0 2px rgba(88,166,255,0.3);
+}
+.nps-body {
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid var(--ui-accent);
+  margin-top: -2px;
+}
+.nps-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ui-accent); opacity: 0.4; margin-top: 2px; }
+
+/* search popup */
+.nps-popup {
+  position: absolute;
+  bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 6px 8px;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+  display: flex; flex-direction: column; gap: 4px;
+  z-index: 30;
+}
+.nps-popup::after {
+  content: '';
+  position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid var(--border-default);
+}
+.nps-name { font-weight: 700; font-size: 9px; color: var(--text-primary); }
+.nps-sub { font-size: 8px; color: var(--text-secondary); }
+.nps-btn {
+  background: var(--home-dim); border: 1px solid var(--home-glow);
+  border-radius: 5px; padding: 4px 7px;
+  font-size: 8px; font-weight: 700; color: var(--home);
+  cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; gap: 4px;
+  white-space: nowrap;
+}
+
+/* --- NEST PINS --- */
+.mn {
+  position: absolute;
+  width: 24px; height: 27px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 8;
+}
+.mn svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mn span { position: relative; z-index: 1; font-size: 9px; }
+.mn.nearby { animation: nhp 1.5s ease-in-out infinite; }
+@keyframes nhp {
+  0%,100% { filter: drop-shadow(0 0 3px var(--home)); }
+  50%      { filter: drop-shadow(0 0 8px var(--home)); }
+}
+
+/* --- DISABLED OVERLAY TAG --- */
+.disabled-tag {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.55);
+  border: 1px solid var(--border-default);
+  border-radius: 8px; padding: 6px 10px;
+  font-size: 9px; color: var(--text-secondary);
+  text-align: center; line-height: 1.6;
+  backdrop-filter: blur(2px);
+  z-index: 30; white-space: nowrap;
+}
+
+/* --- SEARCH BAR MINI --- */
+.search-bar {
+  position: absolute; left: 138px; top: 6px; right: 42px;
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: 6px; padding: 4px 8px; font-size: 9px;
+  color: var(--text-secondary); display: flex; align-items: center; gap: 5px;
+  z-index: 10;
+}
+.search-bar.typing { border-color: var(--ui-accent); color: var(--text-primary); }
+
+/* --- TIMER BAR (3s indicator) --- */
+.timer-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: var(--border-subtle); z-index: 50;
+}
+.timer-fill {
+  height: 100%;
+  background: var(--home);
+  border-radius: 0 2px 2px 0;
+  animation: tfill 3s linear forwards;
+  width: 0;
+}
+@keyframes tfill { from { width: 0; } to { width: 100%; } }
+
+/* --- COMPARISON TABLE --- */
+.cmp-section { margin-top: 8px; }
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.cmp-table th {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-secondary);
+  text-align: left; padding: 6px 10px;
+  border-bottom: 1px solid var(--border-default);
+}
+.cmp-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+.cmp-table td:first-child { color: var(--text-primary); font-weight: 600; }
+.cmp-table tr:last-child td { border-bottom: none; }
+.tag-del {
+  display: inline-block;
+  background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.25);
+  color: #F85149; border-radius: 4px; padding: 1px 5px;
+  font-size: 8px; font-weight: 700;
+}
+.tag-keep {
+  display: inline-block;
+  background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.25);
+  color: #3FB950; border-radius: 4px; padding: 1px 5px;
+  font-size: 8px; font-weight: 700;
+}
+.tag-new {
+  display: inline-block;
+  background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.25);
+  color: #58A6FF; border-radius: 4px; padding: 1px 5px;
+  font-size: 8px; font-weight: 700;
+}
+
+@media (max-width: 680px) {
+  .states-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="ph">
+  <div>
+    <div class="ph-title">PokeWeather Nests &mdash; <em>Pin System v3</em></div>
+    <div class="ph-sub">Sistema unificado de pines — Mi Zona + Busqueda</div>
+  </div>
+  <button class="theme-btn" onclick="(()=>{const d=document.documentElement;d.dataset.theme=d.dataset.theme==='light'?'dark':'light';setTimeout(redrawAll,30)})()">Tema</button>
+</div>
+
+<!-- SECCION 1: HOME PIN STATES -->
+<div class="section-lbl"><em>HomePin</em> &mdash; 3 estados en secuencia</div>
+<div class="states-grid">
+
+  <!-- ESTADO 1: Sin zona -->
+  <div class="state-col">
+    <div class="state-tag">Sin Mi Zona</div>
+    <div class="state-frame">
+      <canvas class="mc" id="c1"></canvas>
+      <div class="sb">
+        <div class="sb-chip-wrap">
+          <div class="chip-empty">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Fijar mi zona...
+          </div>
+        </div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">⚡</span><div class="sb-info"><div class="sb-name">Metro Reforma</div></div><span class="sb-dist dim">—</span></div>
+        </div>
+      </div>
+      <div class="map-area">
+        <div class="zc">
+          <button class="zb">+</button>
+          <button class="zb">−</button>
+          <button class="zb home-off" title="Fijar mi zona primero">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+        </div>
+        <div class="mn" style="left:18%;top:28%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:48%;top:20%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+        <div class="mn" style="left:32%;top:55%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🔥</span></div>
+        <div class="mn" style="left:58%;top:52%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>⚡</span></div>
+        <div class="disabled-tag">Boton deshabilitado<br>hasta fijar Mi Zona</div>
+      </div>
+    </div>
+    <div class="state-ann">
+      Boton <span class="o">Home deshabilitado</span> (opacity 0.42)<br>
+      Sin pin en el mapa
+    </div>
+  </div>
+
+  <!-- ESTADO 2: Radar 3s -->
+  <div class="state-col">
+    <div class="state-tag">Fijando &mdash; 3 segundos</div>
+    <div class="state-frame active-border" id="frame2">
+      <canvas class="mc" id="c2"></canvas>
+      <div class="sb">
+        <div class="sb-chip-wrap">
+          <div class="chip-empty">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Fijar mi zona...
+          </div>
+        </div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div></div><span class="sb-dist dim">—</span></div>
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div></div><span class="sb-dist dim">—</span></div>
+        </div>
+      </div>
+      <div class="map-area">
+        <div class="zc">
+          <button class="zb">+</button>
+          <button class="zb">−</button>
+          <button class="zb home-on">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+        </div>
+        <!-- HOME PIN con radar activo -->
+        <div class="hp" style="left:46%;top:44%">
+          <div class="hp-ring"></div>
+          <div class="hp-ring"></div>
+          <div class="hp-ring"></div>
+          <div class="hp-sweep"></div>
+          <div class="hp-core"></div>
+        </div>
+        <div class="mn" style="left:18%;top:28%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:48%;top:20%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+        <div class="mn" style="left:32%;top:55%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🔥</span></div>
+        <!-- timer bar -->
+        <div class="timer-bar" id="timerBar"><div class="timer-fill" id="timerFill"></div></div>
+      </div>
+    </div>
+    <div class="state-ann">
+      Radar activo <span class="o">3 segundos</span><br>
+      Al terminar -> pin estatico
+    </div>
+  </div>
+
+  <!-- ESTADO 3: Pin estatico -->
+  <div class="state-col">
+    <div class="state-tag">Mi Zona activa</div>
+    <div class="state-frame active-border">
+      <canvas class="mc" id="c3"></canvas>
+      <div class="sb">
+        <div class="sb-chip-wrap">
+          <div class="chip-active">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--home)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <div><div class="c-coord">19.43, -99.13</div><div class="c-sub">CDMX · Tap editar</div></div>
+          </div>
+        </div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div></div><span class="sb-dist">0.4km</span></div>
+          <div class="sb-row"><span class="sb-emoji">⚡</span><div class="sb-info"><div class="sb-name">Metro Reforma</div></div><span class="sb-dist">1.1km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div></div><span class="sb-dist">2.3km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div></div><span class="sb-dist">4.7km</span></div>
+        </div>
+      </div>
+      <div class="map-area">
+        <div class="zc">
+          <button class="zb">+</button>
+          <button class="zb">−</button>
+          <button class="zb home-on" title="Ir a Mi Zona">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+        </div>
+        <!-- HOME PIN estatico con label -->
+        <div class="hp static" style="left:46%;top:52%">
+          <div class="hp-label">
+            <div class="hp-label-title">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Mi Zona
+            </div>
+            <div class="hp-label-place">Insurgentes, CDMX</div>
+            <div class="hp-label-coords">19.4326, -99.1332</div>
+          </div>
+          <div class="hp-core"></div>
+        </div>
+        <div class="mn nearby" style="left:32%;top:55%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(34,211,238,0.18)" stroke="#22D3EE" stroke-width="2"/></svg><span>🔥</span></div>
+        <div class="mn nearby" style="left:58%;top:52%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(34,211,238,0.13)" stroke="#22D3EE" stroke-width="1.5"/></svg><span>⚡</span></div>
+        <div class="mn" style="left:18%;top:28%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:48%;top:20%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+      </div>
+    </div>
+    <div class="state-ann">
+      <span class="o">Pin naranja</span> estatico + label "Mi Zona"<br>
+      Boton Home hace <span class="o">flyTo</span> · <span class="g">Persiste</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- SECCION 2: NavPin busqueda (sin cambios) -->
+<div class="section-lbl blue"><em>NavPin Search</em> &mdash; sin cambios · Camino B (Spoofer)</div>
+<div class="states-grid" style="grid-template-columns: repeat(2,1fr); max-width: 580px;">
+
+  <div class="state-col">
+    <div class="state-tag">Resultado en mapa</div>
+    <div class="state-frame blue-border">
+      <canvas class="mc" id="c4"></canvas>
+      <div class="map-area" style="left:0">
+        <div class="search-bar typing">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Metepec, Mexico|
+        </div>
+        <div class="zc">
+          <button class="zb">+</button>
+          <button class="zb">−</button>
+          <button class="zb home-idle">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+        </div>
+        <!-- NAV PIN search -->
+        <div class="np-search" style="left:calc(44% - 6px);top:calc(38%)">
+          <div style="position:relative">
+            <div class="nps-popup">
+              <div class="nps-name">Metepec</div>
+              <div class="nps-sub">Estado de Mexico, Mexico</div>
+              <button class="nps-btn">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Fijar como mi zona
+              </button>
+            </div>
+          </div>
+          <div class="nps-head"></div>
+          <div class="nps-body"></div>
+          <div class="nps-dot"></div>
+        </div>
+        <div class="mn" style="left:20%;top:30%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:60%;top:55%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+        <div class="mn" style="left:55%;top:22%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🔥</span></div>
+      </div>
+    </div>
+    <div class="state-ann">
+      <span class="b">Pin azul</span> temporal con popup<br>
+      Boton naranja fija la zona
+    </div>
+  </div>
+
+  <div class="state-col">
+    <div class="state-tag">Despues de fijar</div>
+    <div class="state-frame active-border">
+      <canvas class="mc" id="c5"></canvas>
+      <div class="sb">
+        <div class="sb-chip-wrap">
+          <div class="chip-active">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--home)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <div><div class="c-coord">19.28, -99.63</div><div class="c-sub">Metepec · Tap editar</div></div>
+          </div>
+        </div>
+        <div class="sb-list">
+          <div class="sb-row"><span class="sb-emoji">🌿</span><div class="sb-info"><div class="sb-name">Parque Central</div></div><span class="sb-dist">0.9km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🔥</span><div class="sb-info"><div class="sb-name">Insurgentes</div></div><span class="sb-dist">2.1km</span></div>
+          <div class="sb-row"><span class="sb-emoji">🌊</span><div class="sb-info"><div class="sb-name">Lago Norte</div></div><span class="sb-dist">3.8km</span></div>
+        </div>
+      </div>
+      <div class="map-area">
+        <div class="zc">
+          <button class="zb">+</button>
+          <button class="zb">−</button>
+          <button class="zb home-on">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+        </div>
+        <div class="hp static" style="left:44%;top:48%">
+          <div class="hp-label">
+            <div class="hp-label-title">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Mi Zona
+            </div>
+            <div class="hp-label-place">Metepec, Mexico</div>
+            <div class="hp-label-coords">19.2828, -99.6347</div>
+          </div>
+          <div class="hp-core"></div>
+        </div>
+        <div class="mn nearby" style="left:20%;top:30%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(34,211,238,0.18)" stroke="#22D3EE" stroke-width="1.8"/></svg><span>🌿</span></div>
+        <div class="mn" style="left:60%;top:55%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/></svg><span>🌊</span></div>
+        <div class="mn nearby" style="left:55%;top:22%"><svg viewBox="0 0 26 29"><polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(34,211,238,0.13)" stroke="#22D3EE" stroke-width="1.5"/></svg><span>🔥</span></div>
+      </div>
+    </div>
+    <div class="state-ann">
+      <span class="b">Pin azul</span> desaparece → <span class="o">pin naranja estatico</span><br>
+      Lista reordenada desde Metepec · <span class="g">Persiste</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- TABLA RESUMEN -->
+<div class="cmp-section">
+  <div class="section-lbl" style="margin-top:12px"><em>Cambios</em> &mdash; v2 vs v3</div>
+  <div style="overflow-x:auto">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Elemento</th>
+          <th>Antes</th>
+          <th>Ahora</th>
+          <th>Accion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>HomePin radar</td>
+          <td>Permanente, infinito</td>
+          <td>Solo 3s al fijar, luego se apaga</td>
+          <td><span class="tag-new">Cambio</span></td>
+        </tr>
+        <tr>
+          <td>HomePin estatico</td>
+          <td>No existia</td>
+          <td>Circulo naranja + label "Mi Zona"</td>
+          <td><span class="tag-new">Nuevo</span></td>
+        </tr>
+        <tr>
+          <td>Boton Home sin zona</td>
+          <td>Abria modal de ubicacion</td>
+          <td>Deshabilitado (opacity 0.42, no-click)</td>
+          <td><span class="tag-new">Cambio</span></td>
+        </tr>
+        <tr>
+          <td>Boton Home con zona</td>
+          <td>Abria modal / comportamiento mixto</td>
+          <td>flyTo(homeLocation) unicamente</td>
+          <td><span class="tag-new">Cambio</span></td>
+        </tr>
+        <tr>
+          <td>NavPin radar (PIN 3)</td>
+          <td>Pin decorativo al tocar Home</td>
+          <td>Eliminado</td>
+          <td><span class="tag-del">Eliminar</span></td>
+        </tr>
+        <tr>
+          <td>NavPin search (PIN 2)</td>
+          <td>Gota azul + popup "Fijar como mi zona"</td>
+          <td>Sin cambios</td>
+          <td><span class="tag-keep">Sin cambios</span></td>
+        </tr>
+        <tr>
+          <td>Modal "Fijar mi zona"</td>
+          <td>GPS + coords input</td>
+          <td>Sin cambios (se abre desde HomeChip)</td>
+          <td><span class="tag-keep">Sin cambios</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function drawMap(id) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  c.width = c.offsetWidth; c.height = c.offsetHeight;
+  const w = c.width, h = c.height;
+  const dk = document.documentElement.dataset.theme !== 'light' &&
+             !window.matchMedia('(prefers-color-scheme: light)').matches ||
+             document.documentElement.dataset.theme === 'dark';
+  ctx.fillStyle = dk ? '#151c28' : '#d4dfe8';
+  ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = dk ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
+  ctx.lineWidth = 1;
+  for (let x=0;x<w;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for (let y=0;y<h;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  ctx.strokeStyle = dk ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.10)';
+  ctx.lineWidth = 1.5;
+  [[h*.35,h*.65],[h*.6,h*.6]].forEach(([y])=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();});
+  [[w*.3,w*.55]].forEach(([x])=>{ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();});
+  [[.05,.08,.18,.2],[.38,.06,.16,.22],[.62,.10,.22,.18],[.05,.42,.14,.14],[.40,.42,.14,.12],[.64,.42,.22,.12],[.06,.65,.15,.26],[.42,.65,.12,.26],[.65,.65,.22,.26]].forEach(([bx,by,bw,bh])=>{
+    ctx.fillStyle = dk ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)';
+    ctx.fillRect(w*bx,h*by,w*bw,h*bh);
+  });
+  // little park
+  ctx.fillStyle = dk ? 'rgba(63,185,80,0.07)' : 'rgba(63,185,80,0.14)';
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(w*.30,h*.35,w*.07,h*.18,3) : ctx.rect(w*.30,h*.35,w*.07,h*.18); ctx.fill();
+}
+function redrawAll(){['c1','c2','c3','c4','c5'].forEach(drawMap);}
+window.addEventListener('load', redrawAll);
+window.addEventListener('resize', redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// Restart timer bar animation on load
+function restartTimer() {
+  const fill = document.getElementById('timerFill');
+  if (!fill) return;
+  fill.style.animation = 'none';
+  fill.offsetHeight; // reflow
+  fill.style.animation = '';
+  setTimeout(restartTimer, 3200);
+}
+window.addEventListener('load', () => setTimeout(restartTimer, 500));
+</script>
