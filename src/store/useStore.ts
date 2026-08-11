@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Nest } from '../types/nest'
 import type { NavPinState } from '../types/navPin'
+import type { HomeLocation } from '../types/homeLocation'
 
 // ─── Layer Types ──────────────────────────────────────────────────────────────
 
@@ -126,6 +127,7 @@ interface AppStore {
   nestSortBy: 'name' | 'type' | 'spawnRate'
   nestSortDirection: 'asc' | 'desc'
   navPin: NavPinState | null
+  homeLocation: HomeLocation | null
 
   // Migration countdown
   now: number
@@ -174,6 +176,8 @@ interface AppStore {
   setNestSortDirection: (direction: 'asc' | 'desc') => void
   setNavPin: (pin: NavPinState | null) => void
   clearNavPin: () => void
+  setHomeLocation: (loc: HomeLocation) => void
+  clearHomeLocation: () => void
 
   // Filter panel actions
   openFilterPanel: () => void
@@ -247,6 +251,14 @@ export const useStore = create<AppStore>((set, get) => ({
   nestSortBy: 'name',
   nestSortDirection: 'asc',
   navPin: null,
+  homeLocation: (() => {
+    try {
+      const saved = localStorage.getItem('pwe-home-location')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })(),
   now: Date.now(),
   filterPanelOpen: false,
   accordionState: {
@@ -397,6 +409,15 @@ export const useStore = create<AppStore>((set, get) => ({
 
   setNavPin: (pin) => set({ navPin: pin }),
   clearNavPin: () => set({ navPin: null }),
+
+  setHomeLocation: (loc) => {
+    localStorage.setItem('pwe-home-location', JSON.stringify(loc))
+    set({ homeLocation: loc })
+  },
+  clearHomeLocation: () => {
+    localStorage.removeItem('pwe-home-location')
+    set({ homeLocation: null })
+  },
 
   tickNow: () => set({ now: Date.now() }),
 

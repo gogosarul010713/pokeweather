@@ -15,6 +15,7 @@ import FlyToNest from './FlyToNest'
 import MapSearch from './MapSearch'
 import MapZoomControls from './MapZoomControls'
 import NavPin from './NavPin'
+import HomePin from './HomePin'
 import { Z } from '../../config/zIndex'
 import { NEST_THRESHOLDS } from '../../config/nestThresholds'
 
@@ -252,6 +253,7 @@ export default function MapView({ cities }: MapViewProps) {
           <MapZoomControls mapRef={mapRef} cities={cities} onOpenSearch={() => setSearchOpenTick(t => t + 1)} />
         </div>
         <NavPin mapRef={mapRef} />
+        <HomePin mapRef={mapRef} />
       </div>
     </>
   )
