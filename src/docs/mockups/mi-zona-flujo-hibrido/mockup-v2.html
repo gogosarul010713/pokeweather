@@ -15,9 +15,9 @@
   --ui-accent:   #58A6FF;
   --ui-success:  #3FB950;
   --ui-error:    #F85149;
-  --home:        #FF6B35;
-  --home-dim:    rgba(255,107,53,0.14);
-  --home-glow:   rgba(255,107,53,0.32);
+  --home:        #22D3EE;
+  --home-dim:    rgba(34,211,238,0.14);
+  --home-glow:   rgba(34,211,238,0.32);
   --accent-dim:  rgba(88,166,255,0.12);
 }
 
@@ -35,9 +35,9 @@
     --ui-accent:   #1D6FB8;
     --ui-success:  #15803D;
     --ui-error:    #B91C1C;
-    --home:        #C84B00;
-    --home-dim:    rgba(200,75,0,0.10);
-    --home-glow:   rgba(200,75,0,0.28);
+    --home:        #0891B2;
+    --home-dim:    rgba(8,145,178,0.12);
+    --home-glow:   rgba(8,145,178,0.28);
     --accent-dim:  rgba(29,111,184,0.10);
   }
 }
@@ -54,9 +54,9 @@
   --ui-accent:   #1D6FB8;
   --ui-success:  #15803D;
   --ui-error:    #B91C1C;
-  --home:        #C84B00;
-  --home-dim:    rgba(200,75,0,0.10);
-  --home-glow:   rgba(200,75,0,0.28);
+  --home:        #0891B2;
+  --home-dim:    rgba(8,145,178,0.12);
+  --home-glow:   rgba(8,145,178,0.28);
   --accent-dim:  rgba(29,111,184,0.10);
 }
 :root[data-theme="dark"] {
@@ -72,9 +72,9 @@
   --ui-accent:   #58A6FF;
   --ui-success:  #3FB950;
   --ui-error:    #F85149;
-  --home:        #FF6B35;
-  --home-dim:    rgba(255,107,53,0.14);
-  --home-glow:   rgba(255,107,53,0.32);
+  --home:        #22D3EE;
+  --home-dim:    rgba(34,211,238,0.14);
+  --home-glow:   rgba(34,211,238,0.32);
   --accent-dim:  rgba(88,166,255,0.12);
 }
 
@@ -121,9 +121,9 @@ body {
 .sb-dist { font-size: 9px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--home); flex-shrink: 0; }
 .sb-dist.dim { color: var(--text-secondary); opacity: 0.4; }
 
-.chip-empty { display: flex; align-items: center; gap: 6px; border: 1px dashed var(--border-strong); border-radius: 16px; padding: 4px 8px; cursor: pointer; font-size: 9px; color: var(--text-secondary); transition: background 0.15s; }
+.chip-empty { display: flex; align-items: center; gap: 6px; border: 1px dashed var(--border-strong); border-radius: 17px; padding: 0 8px; height: 22px; cursor: pointer; font-size: 9px; color: var(--text-secondary); transition: background 0.15s; box-sizing: border-box; }
 .chip-empty:hover { background: var(--bg-tertiary); }
-.chip-active { display: flex; align-items: center; gap: 6px; background: var(--home-dim); border: 1px solid var(--home-glow); border-radius: 16px; padding: 4px 8px; cursor: pointer; }
+.chip-active { display: flex; align-items: center; gap: 6px; background: var(--home-dim); border: 1px solid var(--home-glow); border-radius: 17px; padding: 0 8px; height: 22px; cursor: pointer; box-sizing: border-box; }
 .chip-active-coords { font-size: 9px; font-weight: 700; color: var(--home); font-variant-numeric: tabular-nums; }
 .chip-active-sub { font-size: 8px; color: var(--text-secondary); }
 
@@ -242,15 +242,16 @@ canvas.mc { position: absolute; inset: 0; width: 100%; height: 100%; }
         <div class="modal-ov" style="position:absolute">
           <div class="modal">
             <div class="modal-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Fijar mi zona</div>
-            <button class="modal-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>Usar GPS</button>
-            <div class="gps-spin"><div class="spinner"></div>Detectando...</div>
-            <div class="modal-divider">o ingresa</div>
+            <div style="font-size:9px;color:var(--text-secondary);margin-bottom:4px;">Ingresa coordenadas</div>
             <input class="modal-input" placeholder="lat, lon" readonly/>
+            <div class="modal-divider">o</div>
+            <button class="modal-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>GPS</button>
+            <div class="gps-spin"><div class="spinner"></div>Detectando...</div>
           </div>
         </div>
       </div>
     </div>
-    <div class="ann">Modal: <span class="o">GPS primario</span> + campo manual<br>Browser pide permiso</div>
+    <div class="ann">Modal: campo <span class="o">lat, lon</span> primario + GPS alternativo<br>Al confirmar: flyTo al punto</div>
   </div>
   <div class="step-arrow">→</div>
   <div class="step">
@@ -388,4 +389,52 @@ function redrawAll(){['mA1','mA2','mA3','mB1','mB2','mB3'].forEach(drawMap);}
 window.addEventListener('load', redrawAll);
 window.addEventListener('resize', redrawAll);
 new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','class']});
+
+// flyTo demo: animates a dot from edge to target on the canvas
+function flyToDemo(canvasId, targetX, targetY) {
+  const c = document.getElementById(canvasId);
+  if (!c) return;
+  const w = c.width, h = c.height;
+  const tx = w * targetX, ty = h * targetY;
+  const sx = w * 0.1, sy = h * 0.9;
+  let t = 0;
+  const dur = 60;
+  function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function step() {
+    drawMap(canvasId);
+    const p = easeInOut(Math.min(t / dur, 1));
+    const cx = sx + (tx - sx) * p;
+    const cy = sy + (ty - sy) * p;
+    const ctx = c.getContext('2d');
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'var(--home)';
+    ctx.fill();
+    // crosshair ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10 * (1 - p) + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = 'var(--home)';
+    ctx.globalAlpha = 1 - p;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (t < dur) { t++; requestAnimationFrame(step); }
+  }
+  step();
+}
+
+// wire flyTo to the confirm buttons in the mockup steps
+document.addEventListener('DOMContentLoaded', function() {
+  // Camino A step 3 — GPS confirm
+  var btnA = document.querySelector('#mA3')?.closest('.map')?.querySelector('.pin-home');
+  if (btnA) btnA.addEventListener('click', function() { flyToDemo('mA3', 0.48, 0.46); });
+
+  // Camino B step 3 — coords confirm
+  var btnB = document.querySelector('#mB3')?.closest('.map')?.querySelector('.pin-home');
+  if (btnB) btnB.addEventListener('click', function() { flyToDemo('mB3', 0.44, 0.40); });
+
+  // Modal confirm button (mA2 frame)
+  var modalConfirm = document.querySelector('#mA2')?.closest('.map')?.previousElementSibling?.querySelector('.modal-confirm');
+  if (modalConfirm) modalConfirm.addEventListener('click', function() { flyToDemo('mA2', 0.48, 0.46); });
+});
 </script>
