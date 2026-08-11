@@ -103,17 +103,24 @@ export default function HomePin({ mapRef }: HomePinProps) {
     // Label flotante lateral como en el mockup
     marker.bindPopup(
       `<span style="font-size:12px;font-family:'Exo 2',sans-serif;color:var(--home,#FF6B35);font-weight:600">🏠 ${label}</span>`,
-      { offset: [50, -10], closeButton: false, className: 'hp-popup', autoClose: false, closeOnClick: false }
+      { offset: [0, -44], closeButton: false, className: 'hp-popup', autoClose: false, closeOnClick: false }
     )
 
     marker.addTo(map)
     setTimeout(() => marker.openPopup(), 300)
     markerRef.current = marker
 
-    // Despues de 3s: pin estatico, popup sigue abierto
+    // Despues de 3s: pin estatico, reposicionar popup
     radarTimerRef.current = setTimeout(() => {
       if (markerRef.current) {
         markerRef.current.setIcon(makeIcon(HOME_SVG, [32, 44], [16, 44]))
+        markerRef.current.closePopup()
+        markerRef.current.unbindPopup()
+        markerRef.current.bindPopup(
+          `<span style="font-size:12px;font-family:'Exo 2',sans-serif;color:var(--home,#FF6B35);font-weight:600">🏠 ${label}</span>`,
+          { offset: [0, -44], closeButton: false, className: 'hp-popup', autoClose: false, closeOnClick: false }
+        )
+        markerRef.current.openPopup()
       }
     }, 3000)
 

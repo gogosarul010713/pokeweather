@@ -24,12 +24,14 @@ function flyWithOffset(map: Map, lat: number, lng: number, offsetPx: number, dir
 export default function FlyToCity() {
   const selectedCity       = useStore((s) => s.selectedCity)
   const selectedNest       = useStore((s) => s.selectedNest)
+  const homeLocation       = useStore((s) => s.homeLocation)
   const scrollToFeedTick   = useStore((s) => s.scrollToFeedTick)
   const scrollToFeedTarget = useStore((s) => s.scrollToFeedTarget)
   const map                = useMap()
   const prevCityIdRef      = useRef<string | null>(null)
   const prevNestIdRef      = useRef<string | null>(null)
   const prevTickRef        = useRef<number>(0)
+  const prevHomeKeyRef     = useRef<string | null>(null)
 
   // Volar a ciudad seleccionada
   useEffect(() => {
@@ -41,6 +43,15 @@ export default function FlyToCity() {
     prevTickRef.current   = scrollToFeedTick
     flyWithOffset(map, selectedCity.lat, selectedCity.lon, OFFSET_CITY_PX, -1)
   }, [selectedCity, scrollToFeedTick, scrollToFeedTarget, map])
+
+  // Volar a home fijado
+  useEffect(() => {
+    if (!homeLocation) { prevHomeKeyRef.current = null; return }
+    const key = `${homeLocation.lat},${homeLocation.lon}`
+    if (key === prevHomeKeyRef.current) return
+    prevHomeKeyRef.current = key
+    flyWithOffset(map, homeLocation.lat, homeLocation.lon, OFFSET_CITY_PX, -1)
+  }, [homeLocation, map])
 
   // Volar a nido seleccionado
   useEffect(() => {

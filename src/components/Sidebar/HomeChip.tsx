@@ -1,6 +1,6 @@
 import { useStore } from '../../store/useStore'
 import HomeModal from './HomeModal'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const HomeIcon = () => (
   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -9,9 +9,31 @@ const HomeIcon = () => (
   </svg>
 )
 
+async function reverseGeocode(lat: number, lon: number): Promise<string> {
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+    { headers: { 'Accept-Language': 'es' } }
+  )
+  const data = await res.json()
+  return data.address?.city || data.address?.town || data.address?.village || data.address?.county || data.address?.country || ''
+}
+
 export default function HomeChip() {
   const homeLocation = useStore((s) => s.homeLocation)
+  const setHomeLocation = useStore((s) => s.setHomeLocation)
+  const clearHomeLocation = useStore((s) => s.clearHomeLocation)
   const [modalOpen, setModalOpen] = useState(false)
+  const [resolvedLabel, setResolvedLabel] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!homeLocation) { setResolvedLabel(null); return }
+    if (homeLocation.label) { setResolvedLabel(homeLocation.label); return }
+    setResolvedLabel('')
+    reverseGeocode(homeLocation.lat, homeLocation.lon).then((name) => {
+      setResolvedLabel(name)
+      if (name) setHomeLocation({ ...homeLocation, label: name })
+    })
+  }, [homeLocation?.lat, homeLocation?.lon])
 
   return (
     <>
@@ -61,6 +83,21 @@ export default function HomeChip() {
           font-weight: 700;
           color: var(--home);
           font-variant-numeric: tabular-nums;
+          flex-shrink: 0;
+          white-space: nowrap;
+        }
+
+        .hc-sep {
+          width: 1px;
+          height: 14px;
+          background: var(--border-strong);
+          flex-shrink: 0;
+          opacity: 0.5;
+        }
+
+        .hc-active-label {
+          font-size: 11px;
+          color: var(--text-secondary);
           flex: 1;
           min-width: 0;
           overflow: hidden;
@@ -68,23 +105,42 @@ export default function HomeChip() {
           white-space: nowrap;
         }
 
-        .hc-active-sub {
-          font-size: 10px;
-          color: var(--text-secondary);
-          white-space: nowrap;
+        .hc-clear {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           flex-shrink: 0;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          border: none;
+          background: transparent;
+          color: var(--text-secondary);
+          cursor: pointer;
+          padding: 0;
+          font-size: 14px;
+          line-height: 1;
+          transition: background 0.15s;
         }
+        .hc-clear:hover { background: var(--bg-tertiary); }
       `}</style>
 
       {homeLocation ? (
         <button className="hc-active" onClick={() => setModalOpen(true)} type="button">
           <span className="hc-active-icon"><HomeIcon /></span>
           <span className="hc-active-coords">
-            {homeLocation.lat.toFixed(4)}, {homeLocation.lon.toFixed(4)}
+            {homeLocation.lat.toFixed(2)}, {homeLocation.lon.toFixed(2)}
           </span>
-          <span className="hc-active-sub">
-            {homeLocation.label ? `${homeLocation.label} · ` : ''}Tap editar
+          <span className="hc-sep" />
+          <span className="hc-active-label">
+            {resolvedLabel === '' ? '...' : (resolvedLabel ?? '')}
           </span>
+          <button
+            className="hc-clear"
+            type="button"
+            onClick={(e) => { e.stopPropagation(); clearHomeLocation() }}
+            aria-label="Quitar zona"
+          >x</button>
         </button>
       ) : (
         <button className="hc-empty" onClick={() => setModalOpen(true)} type="button">
