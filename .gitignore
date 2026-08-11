@@ -44,3 +44,6 @@ node_modules/pokeweather
 
 # context-snapshot (local, no versionar)
 .context/
+
+# Claude skills (viven en ~/.claude, no son del proyecto)
+.claude/skills/
