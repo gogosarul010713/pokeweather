@@ -31,6 +31,8 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
   const setSelectedCity = useStore((s) => s.setSelectedCity)
   const setSelectedNest = useStore((s) => s.setSelectedNest)
   const setNavPin = useStore((s) => s.setNavPin)
+  const setHomeLocation = useStore((s) => s.setHomeLocation)
+  const [fixedHome, setFixedHome] = useState<string | null>(null)
 
   // Boton Lupa en MapZoomControls
   useEffect(() => { if (openTick) setOpen(true) }, [openTick])
@@ -132,6 +134,13 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
     } finally {
       setLoading(false)
     }
+  }
+
+  function fixHome(r: Extract<Result, { kind: 'nominatim' }>, e: React.MouseEvent) {
+    e.stopPropagation()
+    setHomeLocation({ lat: r.lat, lon: r.lon })
+    setFixedHome(r.label)
+    setTimeout(() => setFixedHome(null), 2000)
   }
 
   function selectResult(r: Result) {
@@ -283,6 +292,34 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0; font-size: 12px;
         }
+        .ms-home-btn {
+          flex-shrink: 0;
+          background: none;
+          border: 1px solid var(--home-glow);
+          border-radius: 6px;
+          color: var(--home);
+          font-size: 11px;
+          padding: 2px 7px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background 0.1s;
+          line-height: 1.6;
+        }
+        .ms-home-btn:hover { background: var(--home-dim); }
+        .ms-home-btn.ms-home-done {
+          border-color: var(--home);
+          background: var(--home-dim);
+          color: var(--home);
+        }
+        .ms-home-toast {
+          padding: 8px 14px;
+          font-size: 11px;
+          color: var(--home);
+          background: var(--home-dim);
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
       `}</style>
 
       <div className="ms-panel">
@@ -320,6 +357,16 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
               <span className="ms-result-tag">
                 {r.kind === 'city' ? 'ciudad' : r.kind === 'nest' ? 'nido' : 'coordenadas'}
               </span>
+              {r.kind === 'nominatim' && (
+                <button
+                  className={`ms-home-btn${fixedHome === r.label ? ' ms-home-done' : ''}`}
+                  onClick={(e) => fixHome(r, e)}
+                  title="Fijar como mi zona"
+                  type="button"
+                >
+                  {fixedHome === r.label ? '✓ fijado' : '⌂ mi zona'}
+                </button>
+              )}
             </button>
           ))}
 
@@ -335,6 +382,12 @@ export default function MapSearch({ cities, mapRef, openTick }: MapSearchProps) 
 
           {nomError && (
             <div className="ms-empty">No se encontro "{query}" en OpenStreetMap</div>
+          )}
+
+          {fixedHome && (
+            <div className="ms-home-toast">
+              <span>🏠</span> Mi zona fijada
+            </div>
           )}
 
           {query && results.length === 0 && !nomOption && !loading && !nomError && (
