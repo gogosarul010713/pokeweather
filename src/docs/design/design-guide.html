@@ -1,0 +1,2265 @@
+<title>Pokemon Weather Explorer — Design Guide</title>
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg-primary:    #0D1117;
+  --bg-secondary:  #161B22;
+  --bg-tertiary:   #1C2333;
+  --bg-overlay:    #252D3D;
+  --text-primary:  #E6EDF3;
+  --text-secondary:#7D8590;
+  --text-accent:   #FFD700;
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-default:rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.24);
+  --ui-accent:     #58A6FF;
+  --ui-accent-rgb: 88,166,255;
+  --ui-success:    #3FB950;
+  --ui-warning:    #D29922;
+  --ui-error:      #F85149;
+  /* mi zona */
+  --home:          #FF6B35;
+  --home-dim:      rgba(255,107,53,0.14);
+  --home-glow:     rgba(255,107,53,0.32);
+  /* conditions */
+  --c-sunny:   #FFB347; --c-partly:  #87CEEB; --c-cloudy:  #9E9E9E;
+  --c-fog:     #C8C8C8; --c-rain:    #5B9BD5; --c-snow:    #B0E0E6;
+  --c-windy:   #78C896;
+  /* types */
+  --t-fire:#FF6B35; --t-water:#6890F0; --t-grass:#78C850; --t-electric:#F8D030;
+  --t-ice:#98D8D8; --t-dragon:#7038F8; --t-psychic:#F85888; --t-fairy:#EE99AC;
+  --t-ghost:#705898; --t-dark:#705848; --t-steel:#B8B8D0; --t-rock:#B6A136;
+  --t-ground:#C2A062; --t-normal:#A8A878; --t-flying:#7EC8E3; --t-poison:#A33EA1;
+  --t-bug:#A8B820; --t-fighting:#C03028;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary:    #F0F2F5;
+    --bg-secondary:  #FFFFFF;
+    --bg-tertiary:   #EBEDF0;
+    --bg-overlay:    #F8F9FA;
+    --text-primary:  #1A202C;
+    --text-secondary:#6B7280;
+    --text-accent:   #D97706;
+    --border-subtle: rgba(0,0,0,0.06);
+    --border-default:rgba(0,0,0,0.12);
+    --border-strong: rgba(0,0,0,0.20);
+    --ui-accent:     #1D6FB8;
+    --ui-accent-rgb: 29,111,184;
+    --ui-success:    #15803D;
+    --ui-warning:    #92400E;
+    --ui-error:      #B91C1C;
+    --home:          #C84B00;
+    --home-dim:      rgba(200,75,0,0.10);
+    --home-glow:     rgba(200,75,0,0.28);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-primary:    #0D1117; --bg-secondary:  #161B22; --bg-tertiary:   #1C2333; --bg-overlay:    #252D3D;
+  --text-primary:  #E6EDF3; --text-secondary:#7D8590; --text-accent:   #FFD700;
+  --border-subtle: rgba(255,255,255,0.06); --border-default:rgba(255,255,255,0.12); --border-strong: rgba(255,255,255,0.24);
+  --ui-accent:     #58A6FF; --ui-accent-rgb: 88,166,255;
+  --ui-success:    #3FB950; --ui-warning:    #D29922; --ui-error:      #F85149;
+  --home:          #FF6B35; --home-dim: rgba(255,107,53,0.14); --home-glow: rgba(255,107,53,0.32);
+}
+
+:root[data-theme="light"] {
+  --bg-primary:    #F0F2F5; --bg-secondary:  #FFFFFF; --bg-tertiary:   #EBEDF0; --bg-overlay:    #F8F9FA;
+  --text-primary:  #1A202C; --text-secondary:#6B7280; --text-accent:   #D97706;
+  --border-subtle: rgba(0,0,0,0.06); --border-default:rgba(0,0,0,0.12); --border-strong: rgba(0,0,0,0.20);
+  --ui-accent:     #1D6FB8; --ui-accent-rgb: 29,111,184;
+  --ui-success:    #15803D; --ui-warning:    #92400E; --ui-error:      #B91C1C;
+  --home:          #C84B00; --home-dim: rgba(200,75,0,0.10); --home-glow: rgba(200,75,0,0.28);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── LAYOUT ── */
+body {
+  font-family: 'Exo 2', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  font-size: 22px;
+}
+
+.brand-title {
+  font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.brand-badge {
+  background: rgba(var(--ui-accent-rgb), 0.12);
+  border: 1px solid rgba(var(--ui-accent-rgb), 0.3);
+  color: var(--ui-accent);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 0 10px;
+  height: 32px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-family: inherit;
+}
+.theme-toggle:hover { border-color: var(--border-strong); color: var(--text-primary); }
+
+/* ── SIDEBAR NAV ── */
+.sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-default);
+  padding: 24px 0;
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
+.nav-section {
+  padding: 0 16px 8px;
+}
+
+.nav-label {
+  font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 0 8px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.nav-link {
+  display: block;
+  padding: 7px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 120ms ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.nav-link:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.nav-link.active { background: rgba(var(--ui-accent-rgb), 0.1); color: var(--ui-accent); }
+
+.nav-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 12px 16px;
+}
+
+/* ── CONTENT ── */
+.content {
+  padding: 40px 48px;
+  max-width: 900px;
+}
+
+.section {
+  margin-bottom: 60px;
+}
+
+.section-eyebrow {
+  font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ui-accent);
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+
+.section-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.rule {
+  height: 1px;
+  background: var(--border-subtle);
+  margin-bottom: 28px;
+}
+
+/* ── TABLES ── */
+.tbl-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+th {
+  text-align: left;
+  padding: 8px 12px;
+  font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-default);
+}
+
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg-tertiary); }
+
+.token-name {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--ui-accent);
+  background: rgba(var(--ui-accent-rgb), 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border-default);
+  vertical-align: middle;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.hex-val {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ── COLOR GRID ── */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.color-card {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+}
+
+.color-swatch {
+  height: 48px;
+}
+
+.color-info {
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+}
+
+.color-label {
+  font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+}
+
+.color-hex {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* ── COMPONENT DEMOS ── */
+.demo-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.demo-label {
+  font-size: 11px;
+  font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+/* FilterChip demo */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.chip:hover { border-color: var(--ui-accent); color: var(--text-primary); }
+.chip.chip-active {
+  border-color: var(--ui-accent);
+  background: rgba(var(--ui-accent-rgb), 0.08);
+  color: var(--text-primary);
+}
+
+/* Card demo */
+.card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  user-select: none;
+  width: 260px;
+}
+.card:hover { background: var(--bg-tertiary); border-color: var(--border-strong); }
+.card.card-active {
+  background: rgba(var(--ui-accent-rgb), 0.08);
+  border-color: var(--ui-accent);
+  border-left: 3px solid var(--ui-accent);
+  padding-left: 10px;
+}
+.card-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.card-body { flex: 1; min-width: 0; }
+.card-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-sub { font-size: 12px; color: var(--text-secondary); }
+
+/* NestCard active */
+.card.card-nest-active {
+  background: rgba(34,197,94,.08);
+  border-color: #22c55e;
+  border-left: 3px solid #22c55e;
+  padding-left: 10px;
+}
+
+/* Badges */
+.badge {
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.badge-confirmed { background: rgba(34,197,94,.15); color: #22c55e; }
+.badge-unconfirmed { background: rgba(128,128,128,.12); color: var(--text-secondary); }
+.badge-hot { background: rgba(255,100,0,.15); color: #ff6400; }
+.badge-new { background: rgba(100,180,255,.12); color: #64b4ff; }
+.badge-success { background: rgba(63,185,80,.15); color: var(--ui-success); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.badge-warning { background: rgba(210,153,34,.15); color: var(--ui-warning); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.badge-error { background: rgba(248,81,73,.15); color: var(--ui-error); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+
+/* Toast demo */
+.toast-demo {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  width: fit-content;
+}
+.toast-msg { font-size: 14px; color: var(--text-primary); }
+.toast-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 0.12s;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.toast-close:hover { color: var(--text-primary); }
+
+/* Icon button */
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-size: 15px;
+  font-family: inherit;
+}
+.icon-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-strong); }
+
+/* Z-index scale visual */
+.zindex-stack {
+  position: relative;
+  height: 200px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.zindex-layer {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border-default);
+}
+
+/* Type chip */
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+/* Condition pill */
+.cond-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+/* Typography scale demo */
+.type-scale { display: flex; flex-direction: column; gap: 16px; }
+.type-row { border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; }
+.type-row:last-child { border-bottom: none; }
+.type-meta { font-size: 11px; color: var(--text-secondary); font-family: 'Courier New', monospace; margin-bottom: 4px; }
+
+/* Code block */
+.code {
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--ui-accent);
+  overflow-x: auto;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* Anim preview */
+@keyframes cardIn { from { opacity:0; transform:translateX(-8px);} to { opacity:1; transform:translateX(0);} }
+@keyframes popIn { from { opacity:0; transform:scale(0.9) translateY(4px);} to { opacity:1; transform:scale(1) translateY(0);} }
+@keyframes glowPulse { 0%,100%{box-shadow:0 0 6px rgba(88,166,255,0.3);} 50%{box-shadow:0 0 14px rgba(88,166,255,0.6);} }
+
+.anim-demo { display:flex; gap:12px; flex-wrap:wrap; }
+.anim-pill {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border-default);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: none;
+}
+
+.anim-pill.playing-cardin { animation: cardIn 0.4s ease; }
+.anim-pill.playing-popin  { animation: popIn 0.35s ease; }
+.anim-pill.playing-glow   { animation: glowPulse 1.2s ease-in-out infinite; }
+
+/* ── Tokens fantasma warning ── */
+.ghost-token {
+  display: inline-block;
+  background: rgba(248,81,73,0.12);
+  border: 1px solid rgba(248,81,73,0.3);
+  color: var(--ui-error);
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ── Pin shapes ── */
+.pin-demo { display: flex; gap: 24px; align-items: flex-end; }
+.pin-label { font-size: 11px; color: var(--text-secondary); text-align: center; margin-top: 8px; }
+
+/* ── Layer tab demo ── */
+.lt-demo-nav {
+  display: flex;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 56px;
+}
+.lt-demo-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  font-size: 12px;
+  font-family: inherit;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.lt-demo-tab:hover { color: var(--text-primary); }
+.lt-demo-tab.clima-active { color: #58A6FF; border-bottom-color: #58A6FF; }
+.lt-demo-tab.nidos-active { color: #3FB950; border-bottom-color: #3FB950; }
+.lt-demo-tab.disabled { opacity: 0.35; cursor: default; }
+.lt-icon-wrap {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  background: var(--bg-tertiary);
+  transition: background 0.15s;
+}
+.lt-demo-tab.clima-active .lt-icon-wrap { background: rgba(88,166,255,0.18); }
+.lt-demo-tab.nidos-active .lt-icon-wrap { background: rgba(63,185,80,0.18); }
+.lt-badge-pronto {
+  font-size: 9px; padding: 1px 5px; border-radius: 8px;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+}
+
+/* ── MapSearch demo ── */
+.ms-demo {
+  width: 340px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  overflow: hidden;
+  max-width: 100%;
+}
+.ms-demo-input-row {
+  display: flex; align-items: center; padding: 8px 12px; gap: 8px;
+  border-bottom: 1px solid var(--border-default);
+}
+.ms-demo-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-size: 14px; font-family: inherit;
+}
+.ms-demo-result {
+  display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+  font-size: 13px; color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ms-demo-result:last-child { border-bottom: none; }
+.ms-demo-result:hover { background: var(--bg-tertiary); }
+.ms-demo-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-demo-tag {
+  font-size: 10px; color: var(--text-secondary);
+  background: var(--bg-tertiary); padding: 1px 5px; border-radius: 4px;
+}
+.ms-demo-section {
+  padding: 5px 14px 3px;
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-secondary); border-bottom: 1px solid var(--border-default);
+}
+.ms-demo-osm {
+  display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+  font-size: 13px; color: var(--text-secondary);
+}
+.ms-demo-osm-icon {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(248,208,48,0.12);
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+}
+
+/* ── Popup demo ── */
+.popup-demo {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  width: 290px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  overflow: hidden;
+  max-width: 100%;
+  animation: popIn 0.3s ease;
+}
+.popup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px 8px; border-bottom: 1px solid var(--border-default); gap: 6px;
+}
+.popup-title { font-weight: 700; font-size: 13px; color: var(--text-primary); }
+.popup-sub { font-size: 11px; color: var(--text-secondary); }
+.popup-close {
+  background: none; border: none; cursor: pointer; font-size: 14px;
+  color: var(--text-secondary); border-radius: 4px; padding: 2px;
+  transition: background 150ms;
+}
+.popup-close:hover { background: var(--bg-tertiary); }
+.popup-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.popup-pokemon-row { display: flex; align-items: center; gap: 10px; }
+.popup-sprite {
+  width: 56px; height: 56px;
+  background: var(--bg-overlay); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 32px;
+  flex-shrink: 0;
+}
+.popup-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-top: 1px solid var(--border-default);
+}
+.popup-coords { font-family: monospace; font-size: 10px; color: var(--text-secondary); }
+.popup-detail-btn {
+  width: 100%; background: none; border: 1px solid var(--border-default);
+  border-radius: 4px; padding: 6px; font-size: 11px; font-weight: 600;
+  color: var(--ui-accent); cursor: pointer; transition: background 150ms;
+  font-family: inherit; margin: 0 12px 10px;
+}
+.popup-detail-btn:hover { background: var(--bg-tertiary); }
+
+/* ── BottomSheet ── */
+.bsheet-demo {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+.bsheet-handle-area {
+  padding: 8px 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab; background: var(--bg-primary);
+}
+.bsheet-handle {
+  width: 40px; height: 4px;
+  background: var(--border-default);
+  border-radius: 2px;
+}
+.bsheet-snap-bar {
+  display: flex; gap: 6px; padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.bsheet-snap-btn {
+  flex: 1; padding: 5px; font-size: 10px; font-weight: 700;
+  border-radius: 5px; border: 1px solid var(--border-default);
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  cursor: pointer; font-family: inherit;
+}
+.bsheet-snap-btn.active {
+  background: rgba(var(--ui-accent-rgb),0.12);
+  border-color: var(--ui-accent); color: var(--ui-accent);
+}
+
+/* ── FilterPanelModal ── */
+.fpm-demo {
+  width: 340px; max-width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+}
+.fpm-demo-handle {
+  width: 40px; height: 4px;
+  background: var(--border-default);
+  border-radius: 2px; margin: 12px auto;
+}
+.fpm-demo-section {
+  margin: 0 12px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px; overflow: hidden;
+}
+.fpm-demo-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: var(--bg-tertiary);
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.fpm-demo-badge {
+  margin-left: auto; font-size: 10px; font-weight: 600;
+  background: var(--ui-accent); color: var(--bg-primary);
+  padding: 2px 8px; border-radius: 10px;
+}
+.fpm-demo-content {
+  padding: 12px 14px; background: var(--bg-secondary);
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.fpm-demo-pill {
+  padding: 6px 14px; border: 1.5px solid transparent;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  border-radius: 999px; font-size: 12px; cursor: pointer; font-family: inherit;
+}
+.fpm-demo-pill.active {
+  border-color: var(--ui-accent); color: var(--ui-accent);
+  background: var(--bg-secondary);
+}
+.fpm-demo-footer {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-primary);
+}
+.fpm-demo-btn-p {
+  flex: 1; padding: 10px; border: none; border-radius: 6px;
+  background: var(--ui-accent); color: var(--bg-primary);
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.fpm-demo-btn-s {
+  flex: 1; padding: 10px; border: 1px solid var(--border-default);
+  border-radius: 6px; background: var(--bg-tertiary); color: var(--text-primary);
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+
+/* ── CustomSelect ── */
+.cs-demo-trigger {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: var(--bg-tertiary);
+  border: 1px solid var(--border-default); border-radius: 6px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  min-width: 160px; justify-content: space-between; font-family: inherit;
+  color: var(--text-primary);
+}
+.cs-demo-trigger.open { border-color: var(--ui-accent); background: var(--bg-overlay); }
+.cs-demo-popup {
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  min-width: 160px; margin-top: 4px; overflow: hidden;
+}
+.cs-demo-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; font-size: 13px; cursor: pointer;
+  color: var(--text-primary); border: none; background: transparent;
+  width: 100%; text-align: left; font-family: inherit;
+}
+.cs-demo-option:hover { background: var(--bg-tertiary); }
+.cs-demo-option.selected {
+  background: rgba(var(--ui-accent-rgb),0.1);
+  color: var(--ui-accent); font-weight: 600;
+}
+
+/* ── LocationDetail modal ── */
+.ld-demo {
+  width: 340px; max-width: 100%;
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  animation: popIn 0.2s ease;
+}
+.ld-demo-hdr {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border-default);
+}
+.ld-demo-weather { font-size: 36px; flex-shrink: 0; }
+.ld-demo-info { flex: 1; min-width: 0; }
+.ld-demo-name { font-weight: 700; font-size: 15px; color: var(--text-primary); }
+.ld-demo-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+.ld-demo-coords { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-family: monospace; }
+.ld-demo-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.ld-demo-action-btn {
+  background: none; border: none; font-size: 16px;
+  cursor: pointer; padding: 4px; color: var(--text-secondary);
+}
+.ld-demo-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.ld-demo-section-title {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-secondary); margin-bottom: 4px;
+}
+.ld-demo-climate-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; background: var(--bg-tertiary);
+  border: 1px solid var(--border-default); border-radius: 8px;
+}
+.ld-demo-stats {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 6px;
+}
+.ld-demo-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 4px; background: var(--bg-tertiary);
+  border: 1px solid var(--border-default); border-radius: 8px;
+}
+.ld-demo-stat-val { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.ld-demo-stat-lbl { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
+.ld-demo-footer { padding: 10px 16px; border-top: 1px solid var(--border-default); }
+.ld-demo-footer-btn {
+  width: 100%; padding: 8px; border-radius: 6px;
+  border: 1px solid var(--border-default); background: transparent;
+  color: var(--text-primary); font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ── MapLegend demo ── */
+.legend-demo {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px; width: 192px; overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.legend-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-bottom: 1px solid var(--border-default);
+  cursor: pointer;
+}
+.legend-header:hover { background: var(--bg-tertiary); }
+.legend-title {
+  font-family: inherit; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary);
+}
+.legend-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px 6px 8px; cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 150ms, border-color 150ms;
+}
+.legend-row:hover { background: rgba(var(--ui-accent-rgb), 0.08); }
+.legend-row.active { border-left-color: var(--row-color); background: rgba(var(--ui-accent-rgb), 0.06); }
+.legend-row-label {
+  font-size: 12px; font-weight: 500; color: var(--text-primary); flex: 1;
+}
+.legend-row.active .legend-row-label { font-weight: 600; color: var(--row-color); }
+.legend-count { font-size: 10px; font-weight: 700; color: var(--text-secondary); }
+
+/* NavPin demo */
+.navpin-demo { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.navpin-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+@keyframes np-pulse { 0%,100%{transform:scale(1);opacity:.45} 50%{transform:scale(1.35);opacity:.2} }
+@keyframes np-ripple { 0%{transform:scale(.6);opacity:.5} 100%{transform:scale(3.2);opacity:0} }
+@keyframes np-spin { to{transform:rotate(360deg)} }
+
+@media (max-width: 700px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .content { padding: 24px 20px; }
+}
+
+/* ── MI ZONA — tokens & componentes (US-907) ── */
+
+/* HomeChip */
+.hchip-empty {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px dashed var(--border-strong); border-radius: 16px;
+  padding: 4px 8px; cursor: pointer; font-size: 9px;
+  color: var(--text-secondary); transition: background 0.15s;
+}
+.hchip-empty:hover { background: var(--bg-tertiary); }
+.hchip-active {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--home-dim); border: 1px solid var(--home-glow);
+  border-radius: 16px; padding: 4px 8px; cursor: pointer;
+}
+.hchip-coords { font-size: 9px; font-weight: 700; color: var(--home); font-variant-numeric: tabular-nums; }
+.hchip-sub { font-size: 8px; color: var(--text-secondary); }
+
+/* HomeButton en ZoomControls */
+.home-zb {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 1px solid var(--home-glow);
+  background: var(--home-dim); color: var(--home);
+  cursor: pointer; transition: all 150ms;
+}
+.home-zb.home-on { background: var(--home); color: #fff; border-color: var(--home); }
+
+/* Modal Fijar mi zona */
+.mz-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px); z-index: 100;
+}
+.mz-modal {
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: 12px; padding: 16px; width: 200px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+}
+.mz-title {
+  font-size: 11px; font-weight: 700; color: var(--home);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 5px;
+}
+.mz-btn-gps {
+  width: 100%; padding: 8px 10px; border-radius: 7px;
+  border: 1px solid var(--home-glow); background: var(--home-dim);
+  color: var(--home); font-size: 10px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  margin-bottom: 8px; font-family: inherit;
+}
+.mz-divider {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text-secondary); font-size: 9px; margin: 8px 0;
+}
+.mz-divider::before, .mz-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-default);
+}
+.mz-input {
+  width: 100%; background: var(--bg-primary); border: 1px solid var(--border-default);
+  border-radius: 6px; padding: 7px 8px; font-size: 10px; color: var(--text-primary);
+  outline: none; font-family: inherit;
+}
+.mz-input:focus { border-color: var(--home); }
+.mz-confirm {
+  width: 100%; margin-top: 6px; padding: 7px 10px; border-radius: 6px;
+  border: none; background: var(--home); color: #fff;
+  font-size: 10px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.mz-spinner {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 9px; color: var(--ui-accent); margin-top: 6px;
+}
+.mz-spin-ico {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 2px solid var(--home-dim); border-top-color: var(--ui-accent);
+  animation: mz-spin 0.8s linear infinite;
+}
+@keyframes mz-spin { to { transform: rotate(360deg); } }
+
+/* HomePin (radar) */
+.hp-wrap { position: relative; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; }
+.hp-core {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--home); border: 2px solid #fff;
+  box-shadow: 0 0 0 2px var(--home);
+  position: relative; z-index: 2;
+}
+.hp-ring {
+  position: absolute; border-radius: 50%;
+  border: 1.5px solid var(--home);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  animation: hp-rexp 2s ease-out infinite; opacity: 0;
+}
+.hp-ring:nth-child(2) { animation-delay: 0s; }
+.hp-ring:nth-child(3) { animation-delay: 0.65s; }
+.hp-ring:nth-child(4) { animation-delay: 1.3s; }
+@keyframes hp-rexp { 0%{width:12px;height:12px;opacity:.85} 100%{width:70px;height:70px;opacity:0} }
+.hp-sweep {
+  position: absolute; width: 50px; height: 50px;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  border-radius: 50%; overflow: hidden;
+  animation: hp-swrot 2s linear infinite; z-index: 1;
+}
+@keyframes hp-swrot { from{transform:translate(-50%,-50%) rotate(0deg)} to{transform:translate(-50%,-50%) rotate(360deg)} }
+.hp-sweep::after {
+  content: ''; position: absolute; inset: 0;
+  background: conic-gradient(from 0deg, transparent 65%, rgba(255,107,53,0.55) 100%);
+}
+
+/* NestPin nearby */
+@keyframes nhp { 0%,100%{filter:drop-shadow(0 0 3px var(--home))} 50%{filter:drop-shadow(0 0 8px var(--home))} }
+.nest-nearby { animation: nhp 1.5s ease-in-out infinite; }
+
+/* NestSortBar */
+.sort-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 8px; border-bottom: 1px solid var(--border-subtle);
+  font-size: 9px;
+}
+.sort-lbl { color: var(--text-secondary); }
+.sort-val { font-weight: 700; color: var(--text-secondary); }
+.sort-val.home-active { color: var(--home); }
+.sb-dist { font-size: 9px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--home); }
+.sb-dist.dim { color: var(--text-secondary); opacity: 0.4; }
+</style>
+
+<div class="app">
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">⛅</span>
+      <span class="brand-title">PokeWeather Explorer</span>
+      <span class="brand-badge">Design Guide</span>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-txt">Light</span>
+    </button>
+  </header>
+
+  <!-- SIDEBAR NAV -->
+  <nav class="sidebar" aria-label="Secciones">
+    <div class="nav-section">
+      <span class="nav-label">Base</span>
+      <button class="nav-link active" onclick="scrollTo('tipografia')">Tipografia</button>
+      <button class="nav-link" onclick="scrollTo('colores')">Colores</button>
+      <button class="nav-link" onclick="scrollTo('bordes')">Bordes & Fondos</button>
+      <button class="nav-link" onclick="scrollTo('ghost-tokens')">Tokens Fantasma ⚠️</button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <span class="nav-label">Semantica</span>
+      <button class="nav-link" onclick="scrollTo('ui-semantica')">UI Semantica</button>
+      <button class="nav-link" onclick="scrollTo('condiciones')">Condiciones Clima</button>
+      <button class="nav-link" onclick="scrollTo('tipos')">Tipos Pokemon</button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <span class="nav-label">Sistema</span>
+      <button class="nav-link" onclick="scrollTo('zindex')">Z-Index</button>
+      <button class="nav-link" onclick="scrollTo('animaciones')">Animaciones</button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <span class="nav-label">Header / Nav</span>
+      <button class="nav-link" onclick="scrollTo('brand')">Brand</button>
+      <button class="nav-link" onclick="scrollTo('layer-toggles')">Layer Toggles</button>
+      <button class="nav-link" onclick="scrollTo('botones')">Botones Icon</button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <span class="nav-label">Sidebar</span>
+      <button class="nav-link" onclick="scrollTo('chips')">FilterChip</button>
+      <button class="nav-link" onclick="scrollTo('cards')">Cards</button>
+      <button class="nav-link" onclick="scrollTo('home-chip')">HomeChip</button>
+      <button class="nav-link" onclick="scrollTo('location-detail')">LocationDetail</button>
+      <button class="nav-link" onclick="scrollTo('filter-modal')">FilterPanelModal</button>
+      <button class="nav-link" onclick="scrollTo('badges')">Badges</button>
+      <button class="nav-link" onclick="scrollTo('toast')">Toast</button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <span class="nav-label">Mapa</span>
+      <button class="nav-link" onclick="scrollTo('pins')">Pins (Ciudad/Nido)</button>
+      <button class="nav-link" onclick="scrollTo('nav-pin')">NavPin (GPS/Search)</button>
+      <button class="nav-link" onclick="scrollTo('popups')">Popups</button>
+      <button class="nav-link" onclick="scrollTo('map-legend')">Map Legend</button>
+      <button class="nav-link" onclick="scrollTo('map-search')">Map Search</button>
+      <button class="nav-link" onclick="scrollTo('bottom-sheet')">BottomSheet (mobile)</button>
+      <button class="nav-link" onclick="scrollTo('custom-select')">CustomSelect</button>
+      <div class="nav-divider"></div>
+      <div class="nav-section">
+        <span class="nav-label" style="color:var(--home)">Mi Zona US-907</span>
+        <button class="nav-link" onclick="scrollTo('mi-zona')" style="color:var(--home)">HomeChip / HomeButton / Modal / HomePin / Nearby</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- TIPOGRAFIA -->
+    <section class="section" id="tipografia">
+      <div class="section-eyebrow">Fundamentos</div>
+      <h2 class="section-title">Tipografia</h2>
+      <p class="section-desc">Dos familias — sin excepcion. Rajdhani para estructura, Exo 2 para contenido.</p>
+      <div class="rule"></div>
+      <div class="type-scale">
+        <div class="type-row">
+          <div class="type-meta">Rajdhani 700 · display · headings, labels de seccion</div>
+          <div style="font-family:'Rajdhani','Segoe UI',system-ui,sans-serif; font-weight:700; font-size:32px; color:var(--text-primary); text-wrap:balance;">Pokemon Weather Explorer</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">Rajdhani 600 · subheading · 18px · letter-spacing 0.02em</div>
+          <div style="font-family:'Rajdhani','Segoe UI',system-ui,sans-serif; font-weight:600; font-size:18px; color:var(--text-primary); letter-spacing:0.02em;">CAPAS ACTIVAS · CLIMA + NIDOS</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">Exo 2 700 · body bold · 14px · card names</div>
+          <div style="font-weight:700; font-size:14px; color:var(--text-primary);">Tokyo, Japan</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">Exo 2 400 · body regular · 12px · metadata</div>
+          <div style="font-weight:400; font-size:12px; color:var(--text-secondary);">Kanto · 05/08 · 03:24 PM</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">Exo 2 500 · caption · 10px · datetime, secondary info</div>
+          <div style="font-weight:500; font-size:10px; color:var(--text-secondary);">Ultima actualizacion: hace 3 min</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLORES -->
+    <section class="section" id="colores">
+      <div class="section-eyebrow">Tokens</div>
+      <h2 class="section-title">Fondos</h2>
+      <p class="section-desc">Jerarquia de 4 niveles. Siempre via <code class="token-name">var(--bg-*)</code>.</p>
+      <div class="rule"></div>
+      <div class="color-grid">
+        <div class="color-card">
+          <div class="color-swatch" style="background:var(--bg-primary);"></div>
+          <div class="color-info"><span class="color-label">Primary</span><span class="color-hex">--bg-primary</span></div>
+        </div>
+        <div class="color-card">
+          <div class="color-swatch" style="background:var(--bg-secondary);"></div>
+          <div class="color-info"><span class="color-label">Secondary</span><span class="color-hex">--bg-secondary</span></div>
+        </div>
+        <div class="color-card">
+          <div class="color-swatch" style="background:var(--bg-tertiary);"></div>
+          <div class="color-info"><span class="color-label">Tertiary</span><span class="color-hex">--bg-tertiary</span></div>
+        </div>
+        <div class="color-card">
+          <div class="color-swatch" style="background:var(--bg-overlay);"></div>
+          <div class="color-info"><span class="color-label">Overlay</span><span class="color-hex">--bg-overlay</span></div>
+        </div>
+      </div>
+
+      <h2 class="section-title" style="margin-top:32px;">Texto</h2>
+      <p class="section-desc">Tres niveles de jerarquia de texto.</p>
+      <div class="rule"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Token</th><th>Uso</th><th>Muestra</th></tr></thead>
+          <tbody>
+            <tr><td><span class="token-name">--text-primary</span></td><td>Nombres, titulos, contenido principal</td><td style="color:var(--text-primary); font-weight:700;">Texto primario</td></tr>
+            <tr><td><span class="token-name">--text-secondary</span></td><td>Metadata, subtitulos, labels de ayuda</td><td style="color:var(--text-secondary);">Texto secundario</td></tr>
+            <tr><td><span class="token-name">--text-accent</span></td><td>Brand, highlights — usar con moderacion</td><td style="color:var(--text-accent); font-weight:700;">⚡ Accent</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- BORDES -->
+    <section class="section" id="bordes">
+      <div class="section-eyebrow">Tokens</div>
+      <h2 class="section-title">Bordes</h2>
+      <p class="section-desc">Tres intensidades. Basados en rgba para funcionar en ambos temas.</p>
+      <div class="rule"></div>
+      <div class="demo-row" style="gap:16px; flex-direction:column; align-items:flex-start;">
+        <div style="width:100%; height:40px; border-radius:6px; border:1px solid var(--border-subtle); background:var(--bg-tertiary); display:flex; align-items:center; padding:0 12px; font-size:13px; color:var(--text-secondary);">border-subtle — separadores decorativos</div>
+        <div style="width:100%; height:40px; border-radius:6px; border:1px solid var(--border-default); background:var(--bg-tertiary); display:flex; align-items:center; padding:0 12px; font-size:13px; color:var(--text-secondary);">border-default — estandar de cards e inputs</div>
+        <div style="width:100%; height:40px; border-radius:6px; border:1px solid var(--border-strong); background:var(--bg-tertiary); display:flex; align-items:center; padding:0 12px; font-size:13px; color:var(--text-primary);">border-strong — hover, focus, activo</div>
+      </div>
+    </section>
+
+    <!-- UI SEMANTICA -->
+    <section class="section" id="ui-semantica">
+      <div class="section-eyebrow">Tokens</div>
+      <h2 class="section-title">UI Semantica</h2>
+      <p class="section-desc">Accent, exito, alerta, error. Cada uno con version de fondo via rgba.</p>
+      <div class="rule"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Token</th><th>Dark</th><th>Light</th><th>Uso</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="token-name">--ui-accent</span></td>
+              <td><span class="swatch" style="background:#58A6FF;"></span><span class="hex-val">#58A6FF</span></td>
+              <td><span class="swatch" style="background:#1D6FB8;"></span><span class="hex-val">#1D6FB8</span></td>
+              <td>Links, botones activos, chips activos, highlights</td>
+            </tr>
+            <tr>
+              <td><span class="token-name">--ui-success</span></td>
+              <td><span class="swatch" style="background:#3FB950;"></span><span class="hex-val">#3FB950</span></td>
+              <td><span class="swatch" style="background:#15803D;"></span><span class="hex-val">#15803D</span></td>
+              <td>Nidos confirmados, estados exitosos</td>
+            </tr>
+            <tr>
+              <td><span class="token-name">--ui-warning</span></td>
+              <td><span class="swatch" style="background:#D29922;"></span><span class="hex-val">#D29922</span></td>
+              <td><span class="swatch" style="background:#92400E;"></span><span class="hex-val">#92400E</span></td>
+              <td>Alertas, advertencias, migraciones proximas</td>
+            </tr>
+            <tr>
+              <td><span class="token-name">--ui-error</span></td>
+              <td><span class="swatch" style="background:#F85149;"></span><span class="hex-val">#F85149</span></td>
+              <td><span class="swatch" style="background:#B91C1C;"></span><span class="hex-val">#B91C1C</span></td>
+              <td>Errores, badges de error, acciones destructivas</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CONDICIONES -->
+    <section class="section" id="condiciones">
+      <div class="section-eyebrow">Tokens</div>
+      <h2 class="section-title">Condiciones Climaticas</h2>
+      <p class="section-desc">Cada condicion tiene token de color + variante <code class="token-name">*-rgb</code> para transparencias.</p>
+      <div class="rule"></div>
+      <div class="color-grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));">
+        <div class="color-card"><div class="color-swatch" style="background:var(--c-sunny);"></div><div class="color-info"><span class="color-label">Sunny</span><span class="color-hex">#FFB347</span></div></div>
+        <div class="color-card"><div class="color-swatch" style="background:var(--c-partly);"></div><div class="color-info"><span class="color-label">Partly</span><span class="color-hex">#87CEEB</span></div></div>
+        <div class="color-card"><div class="color-swatch" style="background:var(--c-cloudy);"></div><div class="color-info"><span class="color-label">Cloudy</span><span class="color-hex">#9E9E9E</span></div></div>
+        <div class="color-card"><div class="color-swatch" style="background:var(--c-fog);"></div><div class="color-info"><span class="color-label">Fog</span><span class="color-hex">#C8C8C8</span></div></div>
+        <div class="color-card"><div class="color-swatch" style="background:var(--c-rain);"></div><div class="color-info"><span class="color-label">Rain</span><span class="color-hex">#5B9BD5</span></div></div>
+        <div class="color-card"><div class="color-swatch" style="background:var(--c-snow);"></div><div class="color-info"><span class="color-label">Snow</span><span class="color-hex">#B0E0E6</span></div></div>
+        <div class="color-card"><div class="color-swatch" style="background:var(--c-windy);"></div><div class="color-info"><span class="color-label">Windy</span><span class="color-hex">#78C896</span></div></div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="demo-label">Uso con transparencia</div>
+        <div class="anim-demo" style="flex-wrap:wrap;">
+          <div class="cond-pill" style="background:rgba(255,179,71,0.15); color:var(--c-sunny);">☀️ Sunny</div>
+          <div class="cond-pill" style="background:rgba(135,206,235,0.15); color:var(--c-partly);">⛅ Partly</div>
+          <div class="cond-pill" style="background:rgba(158,158,158,0.15); color:var(--c-cloudy);">☁️ Cloudy</div>
+          <div class="cond-pill" style="background:rgba(91,155,213,0.15); color:var(--c-rain);">🌧 Rain</div>
+          <div class="cond-pill" style="background:rgba(176,224,230,0.15); color:var(--c-snow);">❄️ Snow</div>
+          <div class="cond-pill" style="background:rgba(120,200,150,0.15); color:var(--c-windy);">💨 Windy</div>
+        </div>
+        <div class="code">background: rgba(var(--condition-sunny-rgb), 0.15);</div>
+      </div>
+    </section>
+
+    <!-- TIPOS -->
+    <section class="section" id="tipos">
+      <div class="section-eyebrow">Tokens</div>
+      <h2 class="section-title">Tipos Pokemon</h2>
+      <p class="section-desc">18 tipos. No cambian entre dark/light.</p>
+      <div class="rule"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div class="type-chip" style="background:rgba(255,107,53,0.15); color:var(--t-fire);">Fire</div>
+        <div class="type-chip" style="background:rgba(104,144,240,0.15); color:var(--t-water);">Water</div>
+        <div class="type-chip" style="background:rgba(120,200,80,0.15); color:var(--t-grass);">Grass</div>
+        <div class="type-chip" style="background:rgba(248,208,48,0.15); color:var(--t-electric);">Electric</div>
+        <div class="type-chip" style="background:rgba(152,216,216,0.15); color:var(--t-ice);">Ice</div>
+        <div class="type-chip" style="background:rgba(112,56,248,0.15); color:var(--t-dragon);">Dragon</div>
+        <div class="type-chip" style="background:rgba(248,88,136,0.15); color:var(--t-psychic);">Psychic</div>
+        <div class="type-chip" style="background:rgba(238,153,172,0.15); color:var(--t-fairy);">Fairy</div>
+        <div class="type-chip" style="background:rgba(112,88,152,0.15); color:var(--t-ghost);">Ghost</div>
+        <div class="type-chip" style="background:rgba(112,88,72,0.20); color:var(--t-dark);">Dark</div>
+        <div class="type-chip" style="background:rgba(184,184,208,0.15); color:var(--t-steel);">Steel</div>
+        <div class="type-chip" style="background:rgba(182,161,54,0.15); color:var(--t-rock);">Rock</div>
+        <div class="type-chip" style="background:rgba(194,160,98,0.15); color:var(--t-ground);">Ground</div>
+        <div class="type-chip" style="background:rgba(168,168,120,0.15); color:var(--t-normal);">Normal</div>
+        <div class="type-chip" style="background:rgba(126,200,227,0.15); color:var(--t-flying);">Flying</div>
+        <div class="type-chip" style="background:rgba(163,62,161,0.15); color:var(--t-poison);">Poison</div>
+        <div class="type-chip" style="background:rgba(168,184,32,0.15); color:var(--t-bug);">Bug</div>
+        <div class="type-chip" style="background:rgba(192,48,40,0.15); color:var(--t-fighting);">Fighting</div>
+      </div>
+    </section>
+
+    <!-- Z-INDEX -->
+    <section class="section" id="zindex">
+      <div class="section-eyebrow">Sistema</div>
+      <h2 class="section-title">Z-Index</h2>
+      <p class="section-desc">Escala formal en <code class="token-name">src/config/zIndex.ts</code>. Nunca usar valores magicos.</p>
+      <div class="rule"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Constante</th><th>Valor</th><th>Uso</th></tr></thead>
+          <tbody>
+            <tr><td><span class="token-name">Z.mapBase</span></td><td style="font-variant-numeric:tabular-nums;">0</td><td>Tiles de Leaflet</td></tr>
+            <tr><td><span class="token-name">Z.mapPins</span></td><td style="font-variant-numeric:tabular-nums;">10</td><td>MapPin, NestPin, NavPin (default)</td></tr>
+            <tr><td><span class="token-name">Z.mapOverlay</span></td><td style="font-variant-numeric:tabular-nums;">15</td><td>MapLegend, ZoomControls, MapSearch</td></tr>
+            <tr><td><span class="token-name">Z.sidebar</span></td><td style="font-variant-numeric:tabular-nums;">20</td><td>Panel lateral</td></tr>
+            <tr><td><span class="token-name">Z.header</span></td><td style="font-variant-numeric:tabular-nums;">30</td><td>Barra superior</td></tr>
+            <tr><td><span class="token-name">Z.modal</span></td><td style="font-variant-numeric:tabular-nums;">100</td><td>Modales, FilterPanelModal</td></tr>
+            <tr><td><span class="token-name">Z.navPin</span></td><td style="font-variant-numeric:tabular-nums;">2000</td><td>NavPin activo (animacion GPS)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code">import { Z } from '../../config/zIndex'
+// en JSX inline style: zIndex: Z.header
+// en CSS-in-JS: z-index: ${Z.modal}</div>
+    </section>
+
+    <!-- ANIMACIONES -->
+    <section class="section" id="animaciones">
+      <div class="section-eyebrow">Sistema</div>
+      <h2 class="section-title">Animaciones</h2>
+      <p class="section-desc">Definidas en <code class="token-name">src/index.css</code>. Reutilizar — no reinventar.</p>
+      <div class="rule"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Keyframe</th><th>Duracion tipica</th><th>Uso</th></tr></thead>
+          <tbody>
+            <tr><td><span class="token-name">cardIn</span></td><td>200ms ease</td><td>Cards entrando al feed</td></tr>
+            <tr><td><span class="token-name">popIn</span></td><td>300ms ease</td><td>Tooltips, modales</td></tr>
+            <tr><td><span class="token-name">glowPulse</span></td><td>1.2s infinite</td><td>Pin activo en mapa (requiere --glow-rgb)</td></tr>
+            <tr><td><span class="token-name">pokeBallSpin</span></td><td>0.8s linear infinite</td><td>Loading screen</td></tr>
+            <tr><td><span class="token-name">fadeOut</span></td><td>200ms ease</td><td>Elementos desapareciendo</td></tr>
+            <tr><td><span class="token-name">.fade-refresh</span></td><td>200ms ease-in-out</td><td>Clase CSS para refresco suave de datos</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:20px;">
+        <div class="demo-label">Probar animaciones</div>
+        <div class="anim-demo">
+          <button class="anim-pill" id="btn-cardin" onclick="playAnim('cardin')">cardIn →</button>
+          <button class="anim-pill" id="btn-popin" onclick="playAnim('popin')">popIn ↑</button>
+          <button class="anim-pill" id="btn-glow" onclick="playAnim('glow')">glowPulse ✦</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHIP -->
+    <section class="section" id="chips">
+      <div class="section-eyebrow">Componentes</div>
+      <h2 class="section-title">FilterChip</h2>
+      <p class="section-desc">Filtros de condicion, tipo, region. Tres estados.</p>
+      <div class="rule"></div>
+      <div class="demo-label">Estados</div>
+      <div class="demo-row">
+        <button class="chip">Default</button>
+        <button class="chip chip-active">Activo</button>
+        <button class="chip" onmouseover="this.style.borderColor='var(--ui-accent)'; this.style.color='var(--text-primary)'" onmouseout="this.style.borderColor=''; this.style.color=''">Hover me</button>
+      </div>
+      <div class="demo-label">Ejemplo: filtros de region</div>
+      <div class="demo-row">
+        <button class="chip chip-active">America</button>
+        <button class="chip">Europa</button>
+        <button class="chip">Asia</button>
+        <button class="chip">Oceania</button>
+        <button class="chip">Africa</button>
+      </div>
+      <div class="code">height: 28px | padding: 0 12px | border-radius: 14px
+font-size: 12px | font-weight: 500
+transition: border-color 0.15s, background 0.15s, color 0.15s</div>
+    </section>
+
+    <!-- CARDS -->
+    <section class="section" id="cards">
+      <div class="section-eyebrow">Componentes</div>
+      <h2 class="section-title">Cards</h2>
+      <p class="section-desc">LocationCard y NestCard comparten el mismo patron de interaccion. El color del estado activo difiere.</p>
+      <div class="rule"></div>
+
+      <div class="demo-label">LocationCard</div>
+      <div class="demo-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+        <div class="card">
+          <div class="card-img">🌤</div>
+          <div class="card-body">
+            <div class="card-name">Tokyo</div>
+            <div class="card-sub">Japan · 05/08 · 03:24 PM</div>
+          </div>
+        </div>
+        <div class="card card-active">
+          <div class="card-img">☀️</div>
+          <div class="card-body">
+            <div class="card-name">Paris</div>
+            <div class="card-sub">France · 05/08 · 10:24 AM</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-label" style="margin-top:16px;">NestCard</div>
+      <div class="demo-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+        <div class="card">
+          <div class="card-img">🌿</div>
+          <div class="card-body">
+            <div class="card-name" style="display:flex; gap:6px; align-items:center;">Parque Chapultepec <span class="badge badge-unconfirmed">?</span></div>
+            <div class="card-sub">Ciudad de Mexico · Bulbasaur</div>
+          </div>
+        </div>
+        <div class="card card-nest-active">
+          <div class="card-img">🌿</div>
+          <div class="card-body">
+            <div class="card-name" style="display:flex; gap:6px; align-items:center;">Central Park <span class="badge badge-confirmed">✓</span> <span class="badge badge-hot">HOT</span></div>
+            <div class="card-sub">New York · Chikorita</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code">/* Ciudad activa — accent azul */
+border-left: 3px solid var(--ui-accent);
+background: rgba(var(--ui-accent-rgb), 0.08);
+
+/* Nido activo — verde confirmado */
+border-left: 3px solid #22c55e;
+background: rgba(34,197,94,.08);</div>
+    </section>
+
+    <!-- BADGES -->
+    <section class="section" id="badges">
+      <div class="section-eyebrow">Componentes</div>
+      <h2 class="section-title">Badges</h2>
+      <p class="section-desc">Indicadores de estado compactos. 8px / 10px segun contexto.</p>
+      <div class="rule"></div>
+      <div class="demo-row" style="flex-direction:column; align-items:flex-start; gap:16px;">
+        <div>
+          <div class="demo-label">Nidos (8px / 7px bold)</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="badge badge-confirmed">✓ Confirmado</span>
+            <span class="badge badge-unconfirmed">? Sin confirmar</span>
+            <span class="badge badge-hot">HOT</span>
+            <span class="badge badge-new">NEW</span>
+          </div>
+        </div>
+        <div>
+          <div class="demo-label">UI Semantica (10px)</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="badge badge-success">Sincronizado</span>
+            <span class="badge badge-warning">Actualizando</span>
+            <span class="badge badge-error">Error de red</span>
+          </div>
+        </div>
+      </div>
+      <div class="code">/* Nido badges */
+font-size: 8px | font-weight: 700 | padding: 2px 6px | border-radius: 5px</div>
+    </section>
+
+    <!-- TOAST -->
+    <section class="section" id="toast">
+      <div class="section-eyebrow">Componentes</div>
+      <h2 class="section-title">Toast</h2>
+      <p class="section-desc">Notificacion efimera. Fixed bottom-right. Animacion slideIn.</p>
+      <div class="rule"></div>
+      <div class="demo-row">
+        <div class="toast-demo">
+          <p class="toast-msg">Ciudad actualizada correctamente</p>
+          <button class="toast-close" aria-label="Cerrar">✕</button>
+        </div>
+      </div>
+      <div class="code">position: fixed | bottom: 24px | right: 24px
+border-radius: 8px | padding: 12px 16px
+animation: slideIn 0.3s ease-out (translateX 100px → 0)</div>
+    </section>
+
+    <!-- TOKENS FANTASMA -->
+    <section class="section" id="ghost-tokens">
+      <div class="section-eyebrow">Deuda Tecnica</div>
+      <h2 class="section-title">Tokens Fantasma</h2>
+      <p class="section-desc">Usados en el codigo pero NO definidos en <code class="token-name">src/index.css</code>. Pueden fallar en algunos temas. Resolver o reemplazar.</p>
+      <div class="rule"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Token usado</th><th>Reemplazar con</th><th>Componentes afectados</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ghost-token">--text-muted</span></td><td><span class="token-name">--text-secondary</span></td><td>Brand .br-sub, HomeChip, FilterPanel</td></tr>
+            <tr><td><span class="ghost-token">--text-tertiary</span></td><td><span class="token-name">--text-secondary opacity:0.6</span></td><td>NestPopup coords, MapSearch labels, ZoomControls</td></tr>
+            <tr><td><span class="ghost-token">--bg-hover</span></td><td><span class="token-name">--bg-tertiary</span></td><td>MapSearch results, ZoomControls btn hover</td></tr>
+            <tr><td><span class="ghost-token">--bg-elevated</span></td><td><span class="token-name">--bg-overlay</span></td><td>FilterPanel mini-toast, FilterPanel back btn hover</td></tr>
+            <tr><td><span class="ghost-token">--accent-primary</span></td><td><span class="token-name">--ui-accent</span></td><td>MapSearch trigger hover, MapSearch OSM btn bg</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- BRAND -->
+    <section class="section" id="brand">
+      <div class="section-eyebrow">Header / Nav</div>
+      <h2 class="section-title">Brand</h2>
+      <p class="section-desc">Logo PokeBall SVG + texto apilado. Click resetea a home. Animacion idle pausada, activa en hover o click.</p>
+      <div class="rule"></div>
+      <div class="demo-row">
+        <div style="display:flex;align-items:center;gap:10px;padding:4px;border-radius:6px;cursor:pointer;">
+          <svg width="34" height="34" viewBox="0 0 34 34" fill="none" style="animation:pokeBallSpin 8s linear infinite">
+            <path d="M2.5 17 A14.5 14.5 0 0 1 31.5 17 Z" fill="var(--ui-error)" />
+            <path d="M2.5 17 A14.5 14.5 0 0 0 31.5 17 Z" fill="var(--bg-tertiary)" />
+            <circle cx="17" cy="17" r="14.5" stroke="var(--border-default)" stroke-width="1.5" fill="none" />
+            <line x1="2.5" y1="17" x2="31.5" y2="17" stroke="var(--border-default)" stroke-width="1.5" />
+            <circle cx="17" cy="17" r="5" fill="var(--bg-secondary)" stroke="var(--border-default)" stroke-width="1.5" />
+            <circle cx="17" cy="17" r="2.5" fill="var(--text-secondary)" />
+          </svg>
+          <div style="display:flex;flex-direction:column;line-height:1;gap:2px;">
+            <span style="font-family:'Rajdhani','Segoe UI',sans-serif;font-weight:700;font-size:20px;color:var(--text-primary);letter-spacing:0.01em;">PokéWeather</span>
+            <span style="font-family:inherit;font-weight:400;font-size:10px;color:var(--text-secondary);letter-spacing:0.06em;text-transform:uppercase;">Map Tracker</span>
+          </div>
+        </div>
+      </div>
+      <div class="code">Logo: PokeBall SVG 34px | Titulo: Rajdhani 700/20px | Subtitulo: Exo 2 400/10px uppercase
+Hover: opacity 0.85 | Click: pokeBallSpin 0.6s | Idle: pausado</div>
+    </section>
+
+    <!-- LAYER TOGGLES -->
+    <section class="section" id="layer-toggles">
+      <div class="section-eyebrow">Header / Nav</div>
+      <h2 class="section-title">Layer Toggles</h2>
+      <p class="section-desc">Tabs de capa con borde inferior coloreado por capa. Cada capa tiene su propio color de acento.</p>
+      <div class="rule"></div>
+      <div class="demo-label">Estados (Clima activo, Nidos inactivo, Gyms deshabilitado)</div>
+      <div class="demo-row" style="padding:0;">
+        <div class="lt-demo-nav">
+          <button class="lt-demo-tab clima-active">
+            <span class="lt-icon-wrap">☁️</span>
+            Clima
+          </button>
+          <button class="lt-demo-tab">
+            <span class="lt-icon-wrap">🌿</span>
+            Nidos
+          </button>
+          <button class="lt-demo-tab disabled">
+            <span class="lt-icon-wrap">🏛️</span>
+            Gyms
+            <span class="lt-badge-pronto">pronto</span>
+          </button>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="margin-top:16px;">
+        <table>
+          <thead><tr><th>Capa</th><th>Color activo</th><th>Alpha bg icon</th></tr></thead>
+          <tbody>
+            <tr><td>Clima</td><td><span class="swatch" style="background:#58A6FF;"></span><span class="hex-val">#58A6FF</span></td><td><span class="hex-val">rgba(88,166,255,0.18)</span></td></tr>
+            <tr><td>Nidos</td><td><span class="swatch" style="background:#3FB950;"></span><span class="hex-val">#3FB950</span></td><td><span class="hex-val">rgba(63,185,80,0.18)</span></td></tr>
+            <tr><td>Gyms</td><td><span class="swatch" style="background:#F97316;"></span><span class="hex-val">#F97316</span></td><td><span class="hex-val">rgba(249,115,22,0.18)</span></td></tr>
+            <tr><td>Paradas</td><td><span class="swatch" style="background:#A78BFA;"></span><span class="hex-val">#A78BFA</span></td><td><span class="hex-val">rgba(167,139,250,0.18)</span></td></tr>
+            <tr><td>Rutas</td><td><span class="swatch" style="background:#F59E0B;"></span><span class="hex-val">#F59E0B</span></td><td><span class="hex-val">rgba(245,158,11,0.18)</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code">Tab: align-self:stretch | border-bottom: 2px solid [color-capa] cuando activo
+Icon-wrap: 22px circulo | bg-tertiary default → colorAlpha activo
+Disabled: opacity 0.35 | Mobile: display none</div>
+    </section>
+
+    <!-- BOTONES -->
+    <section class="section" id="botones">
+      <div class="section-eyebrow">Componentes</div>
+      <h2 class="section-title">Botones Icon</h2>
+      <p class="section-desc">Botones de accion del header. 32x32px. Sin label, con aria-label.</p>
+      <div class="rule"></div>
+      <div class="demo-row">
+        <button class="icon-btn" title="Toggle tema" aria-label="Cambiar tema">🌙</button>
+        <button class="icon-btn" title="Refrescar" aria-label="Refrescar datos">↻</button>
+        <button class="icon-btn" title="Testing" aria-label="Abrir testing tools">🧪</button>
+        <button class="icon-btn" style="opacity:.5; cursor:not-allowed;" aria-disabled="true" title="Deshabilitado">⊘</button>
+      </div>
+      <div class="code">width: 32px | height: 32px | border-radius: 6px
+border: 1px solid var(--border-default)
+disabled: opacity 0.5 | cursor: not-allowed</div>
+    </section>
+
+    <!-- HOME CHIP -->
+    <section class="section" id="home-chip">
+      <div class="section-eyebrow">Sidebar</div>
+      <h2 class="section-title">HomeChip</h2>
+      <p class="section-desc">Solo visible en capa Nidos. Fija la zona base para ordenar por distancia.</p>
+      <div class="rule"></div>
+      <div class="demo-label">Sin zona fijada</div>
+      <div class="demo-row">
+        <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bg-secondary);border-radius:8px;width:260px;">
+          <button style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;flex:1;border:1.5px dashed var(--border-default);background:transparent;color:var(--text-secondary);font-family:inherit;">
+            <span>📍</span><span>Fijar mi zona...</span>
+          </button>
+        </div>
+      </div>
+      <div class="demo-label">Con zona activa</div>
+      <div class="demo-row">
+        <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bg-secondary);border-radius:8px;width:260px;">
+          <button style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;flex:1;background:#FF6B35;color:#fff;border:1.5px solid transparent;font-family:inherit;">
+            <span>📍</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">19.4326, -99.1332</span>
+          </button>
+          <button style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:14px;line-height:1;">✕</button>
+        </div>
+      </div>
+      <div class="code">Vacio: border 1.5px dashed --border-default | Con zona: bg #FF6B35 (naranja home)
+Border-radius: 20px | Font: Exo 2 12px/500</div>
+    </section>
+
+    <!-- PINS DEL MAPA -->
+    <section class="section" id="pins">
+      <div class="section-eyebrow">Mapa</div>
+      <h2 class="section-title">Pins del Mapa</h2>
+      <p class="section-desc">Dos formas distintas segun el tipo. Coloreados por condicion climatica (ciudad) o tipo Pokemon (nido).</p>
+      <div class="rule"></div>
+      <div class="pin-demo" style="padding:20px;background:var(--bg-secondary);border:1px solid var(--border-default);border-radius:10px;">
+        <!-- Teardrop ciudad -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <svg width="36" height="36" viewBox="0 0 36 36" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.7));">
+            <path d="M18,1 A15,15 0 1,1 17.99,1 L18,35 Z" fill="var(--c-sunny)"/>
+            <circle cx="18" cy="15" r="6" fill="rgba(255,255,255,0.9)"/>
+          </svg>
+          <span class="pin-label">Ciudad<br>Sunny · 28px</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <svg width="36" height="36" viewBox="0 0 36 36" style="filter:drop-shadow(0 0 8px rgba(255,255,255,0.95)) drop-shadow(0 0 16px rgba(255,255,255,0.6));">
+            <path d="M18,1 A15,15 0 1,1 17.99,1 L18,35 Z" fill="var(--c-rain)"/>
+            <circle cx="18" cy="15" r="6" fill="rgba(255,255,255,0.9)"/>
+          </svg>
+          <span class="pin-label">Ciudad<br>Rain · 36px seleccionado</span>
+        </div>
+        <!-- Hexagono nido -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <svg width="28" height="28" viewBox="0 0 28 28" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.7));">
+            <polygon points="14,2 26,7.6 26,20.4 14,26 2,20.4 2,7.6" fill="var(--t-grass)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <text x="14" y="18" text-anchor="middle" font-size="12">🌿</text>
+          </svg>
+          <span class="pin-label">Nido<br>Grass · 28px</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <svg width="36" height="36" viewBox="0 0 36 36" style="filter:drop-shadow(0 0 8px rgba(255,255,255,0.95));">
+            <polygon points="18,2 34,9.8 34,26.2 18,34 2,26.2 2,9.8" fill="var(--t-water)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <text x="18" y="23" text-anchor="middle" font-size="16">💧</text>
+          </svg>
+          <span class="pin-label">Nido<br>Water · 36px seleccionado</span>
+        </div>
+        <!-- NavPin search -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <svg width="28" height="40" viewBox="0 0 28 40" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.45));">
+            <path d="M14 0 C6.27 0 0 6.27 0 14 C0 24.5 14 40 14 40 C14 40 28 24.5 28 14 C28 6.27 21.73 0 14 0Z" fill="var(--ui-accent)" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/>
+            <circle cx="14" cy="14" r="5" fill="rgba(255,255,255,0.92)"/>
+          </svg>
+          <span class="pin-label">NavPin<br>Search</span>
+        </div>
+        <!-- NavPin radar -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle style="animation:np-ripple 2s ease-out infinite;transform-origin:24px 24px" cx="24" cy="24" r="10" fill="none" stroke="rgba(88,166,255,0.4)" stroke-width="1.5"/>
+            <circle style="animation:np-pulse 1.6s ease-in-out infinite;transform-origin:24px 24px" cx="24" cy="24" r="12" fill="rgba(88,166,255,0.45)"/>
+            <g style="animation:np-spin 3s linear infinite;transform-origin:24px 24px">
+              <path d="M24 24 L24 6 A18 18 0 0 1 36.7 11.3 Z" fill="rgba(88,166,255,0.3)"/>
+            </g>
+            <circle cx="24" cy="24" r="7" fill="#58A6FF" stroke="rgba(255,255,255,1)" stroke-width="2.5" style="filter:drop-shadow(0 0 4px rgba(88,166,255,0.6))"/>
+          </svg>
+          <span class="pin-label">NavPin<br>GPS Radar</span>
+        </div>
+      </div>
+      <div class="code">Ciudad: teardrop SVG | color = CONDITION_COLORS[condition]
+Nido: hexagono SVG | color = tipo Pokemon (hardcoded en NestPin.tsx)
+Seleccionado: 36px + drop-shadow blanco brillante
+Dimmed: ciudad opacity:0.25 | nido opacity:0.13</div>
+    </section>
+
+    <!-- NAV PIN -->
+    <section class="section" id="nav-pin">
+      <div class="section-eyebrow">Mapa</div>
+      <h2 class="section-title">NavPin</h2>
+      <p class="section-desc">Z-index 2000 (por encima de todo). Dos modos: busqueda (teardrop azul) y GPS (radar animado).</p>
+      <div class="rule"></div>
+      <div class="demo-row" style="gap:32px; flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <div style="background:var(--bg-overlay);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;font-size:13px;color:var(--text-primary);">19.4326, -99.1332</div>
+          <div class="demo-label">Popup search</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <div style="background:var(--bg-overlay);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;gap:6px;">
+            <span style="font-size:13px;color:var(--text-primary);">Mi ubicacion</span>
+            <button style="padding:4px 8px;background:#FF6B35;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;">📍 Fijar como mi zona</button>
+          </div>
+          <div class="demo-label">Popup con accion "Fijar zona"</div>
+        </div>
+      </div>
+      <div class="code">Popup: --bg-overlay | border rgba(255,255,255,0.1) | border-radius 8px
+Boton fijar: #FF6B35 bg | Exo 2 12px</div>
+    </section>
+
+    <!-- POPUPS -->
+    <section class="section" id="popups">
+      <div class="section-eyebrow">Mapa</div>
+      <h2 class="section-title">Popups del Mapa</h2>
+      <p class="section-desc">CityTooltip (ciudad) y NestPopup (nido) tienen estructuras distintas. Ambos dentro de un Leaflet Popup.</p>
+      <div class="rule"></div>
+
+      <div class="demo-label">CityTooltip — popup ciudad (minWidth 240px)</div>
+      <div class="demo-row" style="align-items:flex-start;">
+        <div style="font-family:inherit;min-width:240px;padding:10px 12px;background:var(--bg-secondary);border:1px solid var(--border-default);border-radius:8px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;font-weight:600;">
+            <span style="font-size:20px;">☀️</span>
+            <span style="color:var(--text-primary);">Tokyo, Japan</span>
+            <span style="color:var(--text-secondary);font-size:11px;">Soleado</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11px;color:var(--text-secondary);">
+            <span>Tipos</span>
+            <span style="display:flex;gap:2px;">🔥⚡🌿</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11px;">
+            <span style="color:var(--text-secondary);">35.6762, 139.6503</span>
+            <button style="padding:2px 4px;border-radius:3px;border:1px solid var(--border-default);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:9px;font-weight:600;font-family:inherit;">📋</button>
+          </div>
+          <button style="width:100%;padding:6px;border-radius:4px;border:1px solid var(--border-default);background:transparent;color:var(--ui-accent);cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">Ver detalle →</button>
+        </div>
+      </div>
+
+      <div class="demo-label" style="margin-top:20px;">NestPopup — popup nido (290px, mas rico)</div>
+      <div class="demo-row" style="align-items:flex-start;">
+        <div class="popup-demo">
+          <div class="popup-header">
+            <div style="flex:1;min-width:0;">
+              <span class="popup-title">Parque Chapultepec</span>
+              <span class="popup-sub" style="margin-left:5px;">Ciudad de Mexico</span>
+            </div>
+            <button class="popup-close">✕</button>
+          </div>
+          <div class="popup-body">
+            <div class="popup-pokemon-row">
+              <div class="popup-sprite">🌿</div>
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);">Bulbasaur</div>
+                <div style="display:flex;align-items:center;gap:3px;margin-top:3px;">
+                  <span style="font-size:14px;">🌿</span>
+                  <span class="badge badge-confirmed">✓</span>
+                  <span class="badge badge-hot">HOT</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary);">
+              <span style="color:#f59e0b;letter-spacing:-1px;">★★★</span>
+              <span>rare</span>
+              <span>·</span>
+              <span style="font-weight:600;color:#22c55e;">Spawn 72%</span>
+            </div>
+          </div>
+          <div class="popup-footer">
+            <span class="popup-coords">19.4157, -99.1929</span>
+            <button style="padding:2px 4px;border-radius:3px;border:1px solid var(--border-default);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:9px;font-family:inherit;">📋</button>
+          </div>
+          <button class="popup-detail-btn">Ver detalle →</button>
+        </div>
+      </div>
+      <div class="code">NestPopup: width 290px | --bg-primary | border --border-strong | border-radius 12px
+Shadow: 0 8px 24px rgba(0,0,0,0.3) | Animacion: np-enter 200ms scale 0.97→1
+Puntero: diamond 17px rotado 45deg, --bg-primary, abajo centrado</div>
+    </section>
+
+    <!-- MAP LEGEND -->
+    <section class="section" id="map-legend">
+      <div class="section-eyebrow">Mapa</div>
+      <h2 class="section-title">Map Legend</h2>
+      <p class="section-desc">Panel collapsible bottom-right. Permite resaltar categorias en el mapa. Comparte logica visual con el popover de ZoomControls.</p>
+      <div class="rule"></div>
+      <div class="demo-row" style="align-items:flex-start;gap:24px;flex-wrap:wrap;">
+        <div>
+          <div class="demo-label">Panel expandido con fila activa</div>
+          <div class="legend-demo">
+            <div class="legend-header">
+              <span class="legend-title" style="color:var(--ui-accent);">Leyenda · Activo</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:9px;font-weight:700;color:var(--ui-accent);background:rgba(var(--ui-accent-rgb),0.12);border:1px solid rgba(var(--ui-accent-rgb),0.3);border-radius:10px;padding:1px 6px;">Top 1 ×</span>
+                <span style="font-size:9px;color:var(--text-secondary);">&#9650;</span>
+              </div>
+            </div>
+            <div class="legend-row active" style="--row-color:#58A6FF;">
+              <span style="font-size:14px;width:20px;text-align:center;">🎯</span>
+              <span class="legend-row-label" style="color:#58A6FF;font-weight:600;">Pokestop Hub</span>
+              <span class="legend-count" style="color:#58A6FF;">12</span>
+            </div>
+            <div class="legend-row">
+              <span style="font-size:14px;width:20px;text-align:center;">💪</span>
+              <span class="legend-row-label">Gym Hub</span>
+              <span class="legend-count">8</span>
+            </div>
+            <div class="legend-row">
+              <span style="font-size:14px;width:20px;text-align:center;">👥</span>
+              <span class="legend-row-label">Comunidad Activa</span>
+              <span class="legend-count">5</span>
+            </div>
+            <div class="legend-row">
+              <span style="font-size:14px;width:20px;text-align:center;">🏆</span>
+              <span class="legend-row-label">Mejor Lugar</span>
+              <span class="legend-count">3</span>
+            </div>
+            <div class="legend-row">
+              <span style="font-size:14px;width:20px;text-align:center;">🌿</span>
+              <span class="legend-row-label">Mayor Spawn</span>
+              <span class="legend-count">19</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="code">Position: absolute bottom 28px right 50px | Width: 192px | border-radius: 8px
+Fila activa: border-left 3px solid [color-categoria]
+Hover fila: rgba(--ui-accent-rgb, 0.08) | Mobile: bottom 75px right 8px</div>
+    </section>
+
+    <!-- MAP SEARCH -->
+    <section class="section" id="map-search">
+      <div class="section-eyebrow">Mapa</div>
+      <h2 class="section-title">Map Search</h2>
+      <p class="section-desc">Modal flotante sobre el mapa. Busca ciudades, nidos o coordenadas. Si no hay resultados locales, ofrece buscar en OpenStreetMap.</p>
+      <div class="rule"></div>
+      <div class="demo-label">Con resultados locales</div>
+      <div class="demo-row" style="align-items:flex-start;">
+        <div class="ms-demo">
+          <div class="ms-demo-input-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="ms-demo-input" value="Tokyo" placeholder="Ciudad, nido o coordenadas" readonly />
+            <button style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;">×</button>
+          </div>
+          <div class="ms-demo-section">En el dataset</div>
+          <div class="ms-demo-result">
+            <span class="ms-demo-label">Tokyo, Japan</span>
+            <span class="ms-demo-tag">ciudad</span>
+          </div>
+          <div class="ms-demo-result">
+            <span class="ms-demo-label">Parque Ueno — Tokyo</span>
+            <span class="ms-demo-tag">nido</span>
+          </div>
+        </div>
+      </div>
+      <div class="demo-label" style="margin-top:16px;">Sin resultados locales — fallback OSM</div>
+      <div class="demo-row" style="align-items:flex-start;">
+        <div class="ms-demo">
+          <div class="ms-demo-input-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="ms-demo-input" value="Kyoto Arashiyama" placeholder="Ciudad, nido o coordenadas" readonly />
+            <button style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;">×</button>
+          </div>
+          <div class="ms-demo-section">No encontrado localmente</div>
+          <div class="ms-demo-osm">
+            <div class="ms-demo-osm-icon">🌐</div>
+            <span>Buscar "Kyoto Arashiyama" en OpenStreetMap</span>
+          </div>
+        </div>
+      </div>
+      <div class="code">Panel: width 340px | border-radius 12px | shadow 0 8px 24px rgba(0,0,0,0.4)
+Atajos: / para abrir | Escape para cerrar | Enter selecciona primer resultado o dispara OSM
+OSM icon: 22px circulo rgba(248,208,48,0.12) — amarillo OSM
+Max resultados visibles: 260px scrollable</div>
+    </section>
+
+    <!-- BOTTOM SHEET -->
+    <section class="section" id="bottom-sheet">
+      <div class="section-eyebrow">Mobile</div>
+      <h2 class="section-title">BottomSheet</h2>
+      <p class="section-desc">Reemplaza el sidebar en mobile (max-width 767px). Draggable con 3 snap points: 5%, 40%, 80% del viewport.</p>
+      <div class="rule"></div>
+      <div class="demo-row" style="flex-direction:column;align-items:flex-start;gap:12px;">
+        <div class="demo-label">Estructura</div>
+        <div class="bsheet-demo">
+          <div class="bsheet-handle-area">
+            <div class="bsheet-handle"></div>
+          </div>
+          <div style="padding:8px 12px;color:var(--text-secondary);font-size:12px;text-align:center;">
+            — contenido del sidebar (FilterPanel + LocationFeed) —
+          </div>
+          <div class="bsheet-snap-bar">
+            <button class="bsheet-snap-btn">5% — collapsed</button>
+            <button class="bsheet-snap-btn active">40% — middle</button>
+            <button class="bsheet-snap-btn">80% — expanded</button>
+          </div>
+        </div>
+      </div>
+      <div class="code">position: fixed | bottom: 0 | left+right: 0 | z-index: 1001
+Handle: 40px x 4px | border-default bg | border-radius 2px
+Snap: 5% / 40% / 80% | transition height 0.3s ease (deshabilitado en drag)
+Border-top: 1px solid --border-default | bg: --bg-primary</div>
+    </section>
+
+    <!-- CUSTOM SELECT -->
+    <section class="section" id="custom-select">
+      <div class="section-eyebrow">UI</div>
+      <h2 class="section-title">CustomSelect</h2>
+      <p class="section-desc">Dropdown reutilizable. Dos modos: single (radio) y multi (checkboxes). Cierra al hacer click afuera.</p>
+      <div class="rule"></div>
+      <div class="demo-label">Single select (cerrado / abierto)</div>
+      <div class="demo-row" style="gap:24px;align-items:flex-start;flex-wrap:wrap;">
+        <button class="cs-demo-trigger">
+          <span>Ordenar: Nombre</span>
+          <span style="font-size:10px;">▼</span>
+        </button>
+        <div>
+          <button class="cs-demo-trigger open">
+            <span>Ordenar: Nombre</span>
+            <span style="font-size:10px;transform:rotate(180deg);display:inline-block;">▼</span>
+          </button>
+          <div class="cs-demo-popup">
+            <button class="cs-demo-option selected">🔤 Nombre</button>
+            <button class="cs-demo-option">📊 Densidad</button>
+            <button class="cs-demo-option">⭐ Rating</button>
+            <button class="cs-demo-option">🕐 Hora Local</button>
+          </div>
+        </div>
+      </div>
+      <div class="code">Trigger: min-width 120px | border-radius 6px | --bg-tertiary default
+Open: border-color --ui-accent | --bg-overlay bg
+Popup: z-index 1001 | box-shadow 0 4px 12px rgba(0,0,0,0.3) | popIn 150ms
+Option selected: rgba(--ui-accent-rgb, 0.1) bg | --ui-accent color | 600 weight</div>
+    </section>
+
+    <!-- FILTER PANEL MODAL -->
+    <section class="section" id="filter-modal">
+      <div class="section-eyebrow">Sidebar</div>
+      <h2 class="section-title">FilterPanelModal</h2>
+      <p class="section-desc">Sheet modal que sube desde el fondo (mobile). Secciones colapsables con accordion. Backdrop semi-transparente z-1100.</p>
+      <div class="rule"></div>
+      <div class="demo-row" style="align-items:flex-start;">
+        <div class="fpm-demo">
+          <div class="fpm-demo-handle"></div>
+          <div class="fpm-demo-section">
+            <div class="fpm-demo-hdr">
+              <span>🌍</span><span>Regiones</span>
+              <span class="fpm-demo-badge">ASIA</span>
+              <span style="margin-left:4px;font-size:10px;color:var(--text-secondary);">▼</span>
+            </div>
+          </div>
+          <div class="fpm-demo-section">
+            <div class="fpm-demo-hdr">
+              <span>🌤️</span><span>Clima</span>
+              <span class="fpm-demo-badge">2 SELEC.</span>
+              <span style="margin-left:4px;font-size:10px;color:var(--text-secondary);">▲</span>
+            </div>
+            <div class="fpm-demo-content">
+              <button class="fpm-demo-pill active">Soleado</button>
+              <button class="fpm-demo-pill active">Lluvia</button>
+              <button class="fpm-demo-pill">Nublado</button>
+              <button class="fpm-demo-pill">Nieve</button>
+            </div>
+          </div>
+          <div class="fpm-demo-section">
+            <div class="fpm-demo-hdr">
+              <span>⚡</span><span>Tipos</span>
+              <span class="fpm-demo-badge">TODOS</span>
+              <span style="margin-left:4px;font-size:10px;color:var(--text-secondary);">▼</span>
+            </div>
+          </div>
+          <div class="fpm-demo-footer">
+            <button class="fpm-demo-btn-p">✓ Aplicar</button>
+            <button class="fpm-demo-btn-s">✕ Cancelar</button>
+          </div>
+        </div>
+      </div>
+      <div class="code">Modal: fixed bottom 0 | max-height 90vh | border-radius 16px 16px 0 0
+Backdrop: rgba(0,0,0,0.5) z-1100 | Modal: z-1101
+Animacion: slideUp 300ms (translateY 100%→0) + fadeIn 200ms
+Section header: --bg-tertiary | hover: --bg-overlay
+Badge activo: --ui-accent bg | --bg-primary color | border-radius 12px
+Footer: --bg-primary | border-top --border-default
+Btn primary: --ui-accent bg | Btn clear: dashed border, hover → --ui-error</div>
+    </section>
+
+    <!-- LOCATION DETAIL -->
+    <section class="section" id="location-detail">
+      <div class="section-eyebrow">Sidebar</div>
+      <h2 class="section-title">LocationDetail</h2>
+      <p class="section-desc">Modal centrado (max 520px) que muestra el detalle completo de una ciudad. Se abre al hacer click en "Ver detalle" del popup o la card.</p>
+      <div class="rule"></div>
+      <div class="demo-row" style="align-items:flex-start;">
+        <div class="ld-demo">
+          <div class="ld-demo-hdr">
+            <div class="ld-demo-weather">☀️</div>
+            <div class="ld-demo-info">
+              <div class="ld-demo-name">Tokyo</div>
+              <div class="ld-demo-sub">Japan · Asia</div>
+              <div class="ld-demo-coords">35.6762, 139.6503</div>
+            </div>
+            <div class="ld-demo-actions">
+              <button class="ld-demo-action-btn" style="color:#ff4757;">❤️</button>
+              <button class="ld-demo-action-btn">⚠️</button>
+              <button class="ld-demo-action-btn">✕</button>
+            </div>
+          </div>
+          <div class="ld-demo-body">
+            <div>
+              <div class="ld-demo-section-title">Clima</div>
+              <div class="ld-demo-climate-row">
+                <span style="font-size:24px;">☀️</span>
+                <div>
+                  <div style="font-weight:600;font-size:13px;color:var(--text-primary);">Soleado</div>
+                  <div style="font-size:11px;color:var(--text-secondary);">31°C · Sensacion 34°C</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="ld-demo-section-title">Tipos Potenciados</div>
+              <div style="display:flex;gap:6px;font-size:20px;">🔥⚡🌿</div>
+            </div>
+            <div>
+              <div class="ld-demo-section-title">Datos Pokemon GO</div>
+              <div class="ld-demo-stats">
+                <div class="ld-demo-stat"><span class="ld-demo-stat-val">9.2</span><span class="ld-demo-stat-lbl">Densidad</span></div>
+                <div class="ld-demo-stat"><span class="ld-demo-stat-val">42</span><span class="ld-demo-stat-lbl">Stops</span></div>
+                <div class="ld-demo-stat"><span class="ld-demo-stat-val">18</span><span class="ld-demo-stat-lbl">Gyms</span></div>
+                <div class="ld-demo-stat"><span class="ld-demo-stat-val">⭐4.5</span><span class="ld-demo-stat-lbl">Rating</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="ld-demo-footer">
+            <button class="ld-demo-footer-btn">Ver en lista</button>
+          </div>
+        </div>
+      </div>
+      <div class="code">Modal: width min(520px, 92vw) | max-height 80vh | border-radius 16px
+Animacion: ld-popIn 200ms (scale 0.97→1 centrado en viewport)
+Backdrop: rgba(0,0,0,0.4) z-1100 | Modal: z-1101
+Header: weather img 48px | Exo 2 700/16px nombre | 600/12px sub
+Stats grid: 4 columnas | --bg-tertiary | border-radius 8px
+Favorito activo: #ff4757 | Copiado: --ui-accent bg en copy-btn</div>
+    </section>
+
+    <!-- ── MI ZONA (US-907) ── -->
+    <section class="section" id="mi-zona">
+      <div class="section-eyebrow">Componentes Nuevos — US-907</div>
+      <div class="section-title">Mi Zona</div>
+      <p class="section-desc">Tokens y componentes para fijar el punto base del jugador. Usa <code>var(--home)</code>, <code>var(--home-dim)</code>, <code>var(--home-glow)</code> en lugar del antiguo <code>#FF6B35</code> hardcodeado.</p>
+      <hr class="rule">
+
+      <!-- Tokens -->
+      <div class="demo-label">Tokens --home</div>
+      <div class="demo-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="swatch" style="background:var(--home);width:24px;height:24px;border-radius:5px;"></div>
+          <code class="token-name">--home</code>
+          <span class="hex-val">#FF6B35 / #C84B00</span>
+          <span style="font-size:12px;color:var(--text-secondary)">Color base naranja Mi Zona</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="swatch" style="background:var(--home-dim);width:24px;height:24px;border-radius:5px;border:1px solid var(--border-default);"></div>
+          <code class="token-name">--home-dim</code>
+          <span class="hex-val">rgba(255,107,53,0.14)</span>
+          <span style="font-size:12px;color:var(--text-secondary)">Fondo suave: chip, modal botones</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="swatch" style="background:var(--home-glow);width:24px;height:24px;border-radius:5px;"></div>
+          <code class="token-name">--home-glow</code>
+          <span class="hex-val">rgba(255,107,53,0.32)</span>
+          <span style="font-size:12px;color:var(--text-secondary)">Borde activo: chip, modal, HomeButton</span>
+        </div>
+      </div>
+
+      <!-- HomeChip -->
+      <div class="demo-label" style="margin-top:20px;">HomeChip — estados</div>
+      <div class="demo-row" style="gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <button class="hchip-empty">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Fijar mi zona...
+          </button>
+          <span style="font-size:10px;color:var(--text-secondary)">Vacio</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div class="hchip-active">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--home)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <div>
+              <div class="hchip-coords">19.4326, -99.1332</div>
+              <div class="hchip-sub">CDMX &bull; Tap editar</div>
+            </div>
+          </div>
+          <span style="font-size:10px;color:var(--text-secondary)">Activo</span>
+        </div>
+      </div>
+
+      <!-- HomeButton -->
+      <div class="demo-label" style="margin-top:20px;">HomeButton (en MapZoomControls)</div>
+      <div class="demo-row" style="gap:16px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <button class="home-zb">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+          <span style="font-size:10px;color:var(--text-secondary)">Sin zona</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <button class="home-zb home-on">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+          <span style="font-size:10px;color:var(--text-secondary)">Activo</span>
+        </div>
+      </div>
+
+      <!-- Modal -->
+      <div class="demo-label" style="margin-top:20px;">Modal "Fijar mi zona"</div>
+      <div class="demo-row">
+        <div class="mz-modal">
+          <div class="mz-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Fijar mi zona
+          </div>
+          <button class="mz-btn-gps">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            Usar GPS
+          </button>
+          <div class="mz-spinner"><div class="mz-spin-ico"></div>Detectando...</div>
+          <div class="mz-divider">o ingresa</div>
+          <input class="mz-input" placeholder="lat, lon" readonly/>
+          <button class="mz-confirm">Confirmar</button>
+        </div>
+      </div>
+      <div class="code">Prefijo: .mz- | Width: ~200px | Border-radius: 12px | Shadow: 0 16px 48px rgba(0,0,0,0.5)
+Titulo: --home 11px/700 | Boton GPS: --home-dim bg, --home-glow border, --home color
+Spinner: border-top-color --ui-accent | Input focus: border-color --home
+Confirmar: --home bg solido, #fff color</div>
+
+      <!-- HomePin radar -->
+      <div class="demo-label" style="margin-top:20px;">HomePin (radar en mapa)</div>
+      <div class="demo-row">
+        <div class="hp-wrap">
+          <div class="hp-ring"></div>
+          <div class="hp-ring"></div>
+          <div class="hp-ring"></div>
+          <div class="hp-sweep"></div>
+          <div class="hp-core"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);max-width:260px;">
+          Pin naranja en el mapa cuando Mi Zona esta activa. Core 12px + 3 rings <code>hp-rexp</code> escalonados + barrido conic <code>hp-swrot</code>.
+        </div>
+      </div>
+      <div class="code">Prefijo: .hp- | Core: 12px, --home bg, 2px #fff border, box-shadow 0 0 0 2px --home
+Rings: border 1.5px --home, 0→70px, delays: 0s / 0.65s / 1.3s, 2s ease-out infinite
+Sweep: 50px, conic-gradient transparent 65% → rgba(255,107,53,0.55), 2s linear infinite</div>
+
+      <!-- NestPin nearby -->
+      <div class="demo-label" style="margin-top:20px;">NestPin — estado Nearby</div>
+      <div class="demo-row" style="gap:24px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <svg width="28" height="32" viewBox="0 0 26 29">
+            <polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(88,166,255,0.18)" stroke="#58A6FF" stroke-width="1.5"/>
+          </svg>
+          <span style="font-size:10px;color:var(--text-secondary)">Default (azul)</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <svg class="nest-nearby" width="28" height="32" viewBox="0 0 26 29">
+            <polygon points="13,2 24,8 24,21 13,27 2,21 2,8" fill="rgba(255,107,53,0.20)" stroke="#FF6B35" stroke-width="2"/>
+          </svg>
+          <span style="font-size:10px;color:var(--text-secondary)">Nearby (naranja)</span>
+        </div>
+      </div>
+      <div class="code">Estado nearby: stroke --home, fill rgba(255,107,53,0.15-0.20)
+Animacion nhp: drop-shadow 0 0 3px/8px --home, 1.5s ease-in-out infinite</div>
+
+      <!-- NestSortBar -->
+      <div class="demo-label" style="margin-top:20px;">NestSortBar</div>
+      <div class="demo-row" style="flex-direction:column;gap:0;padding:0;background:var(--bg-secondary);">
+        <div class="sort-bar">
+          <span class="sort-lbl">Ordenar</span>
+          <span class="sort-val">Nombre</span>
+        </div>
+        <div class="sort-bar">
+          <span class="sort-lbl">Ordenar</span>
+          <span class="sort-val home-active">Distancia</span>
+        </div>
+      </div>
+      <div class="code">Prefijo: .sort- | Label: 9px --text-secondary | Valor default: 9px/700 --text-secondary
+Valor distancia activa: color --home | Columna dist en lista: sb-dist, --home, 9px/700 tabular-nums</div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+// Theme toggle
+function toggleTheme() {
+  const root = document.documentElement
+  const current = root.getAttribute('data-theme')
+  const next = current === 'light' ? 'dark' : 'light'
+  root.setAttribute('data-theme', next)
+  document.getElementById('theme-icon').textContent = next === 'light' ? '🌙' : '☀️'
+  document.getElementById('theme-txt').textContent = next === 'light' ? 'Dark' : 'Light'
+}
+
+// Scroll to section + active nav
+function scrollTo(id) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'))
+  event.target.classList.add('active')
+}
+
+// Animation demos
+function playAnim(name) {
+  const map = { cardin: 'btn-cardin', popin: 'btn-popin', glow: 'btn-glow' }
+  const classMap = { cardin: 'playing-cardin', popin: 'playing-popin', glow: 'playing-glow' }
+  const btn = document.getElementById(map[name])
+  if (!btn) return
+  btn.classList.remove(classMap[name])
+  void btn.offsetWidth
+  btn.classList.add(classMap[name])
+  if (name !== 'glow') {
+    btn.addEventListener('animationend', () => btn.classList.remove(classMap[name]), { once: true })
+  } else {
+    // toggle glow off on second click
+    if (btn._glowTimer) { clearTimeout(btn._glowTimer); btn.classList.remove(classMap[name]); btn._glowTimer = null; return; }
+    btn._glowTimer = setTimeout(() => { btn.classList.remove(classMap[name]); btn._glowTimer = null; }, 3600)
+  }
+}
+
+// Init theme from OS
+if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+  document.documentElement.setAttribute('data-theme', 'light')
+  document.getElementById('theme-icon').textContent = '🌙'
+  document.getElementById('theme-txt').textContent = 'Dark'
+}
+</script>
