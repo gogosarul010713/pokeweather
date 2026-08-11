@@ -22,6 +22,9 @@
 | Sesion 23 | ENH-006 — Sidebar oculto con transicion suave cuando no hay capa activa (UX empty state) | ✅ Completada |
 | Siguiente | US-815 — Leyenda dinamica por capas | ⏳ Pendiente |
 | Sesión N (US-901/902/903) | Validación y testing | ⏳ Pendiente |
+| Sesiones 33-35 | US-904 MapZoomControls v2 + MapSearch lat,lon — US-815 leyenda dinamica badges | ✅ Completada |
+| Sesion 38 | US-906 MapSearch Enter → OSM fallback | 🔄 En proceso (implementado, validacion pendiente) |
+| Sesion 39 | Design Guide — tokens + componentes Mi Zona (US-907) documentados | ✅ Completada |
 
 ---
 
@@ -216,6 +219,20 @@ En orden:
 |---|---|
 | US-816 | Descartada — reemplazada por US-819 |
 | *(agregar aquí US descartadas en sesión 3 si aplica)* | |
+
+---
+
+## Capas planificadas
+
+---
+
+## Artefactos de diseno
+
+| Archivo | Descripcion | Estado |
+|---|---|---|
+| `src/docs/design/design-guide.md` | Design system completo — tokens, componentes, reglas | ✅ Actualizado sesion 39 — incluye tokens Mi Zona |
+| `src/docs/design/design-guide.html` | Version visual interactiva con demos en vivo | ✅ Actualizado sesion 39 |
+| `src/docs/mockups/mi-zona-flujo-hibrido/mockup-v2.html` | Flujo hibrido Mi Zona (GPS + coords) — aprobado | ✅ Aprobado sesion 39 |
 
 ---
 

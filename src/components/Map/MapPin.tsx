@@ -48,8 +48,8 @@ function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], s
 
   const opacity = dimmed ? 'opacity:0.25;' : ''
   const svgInner = weatherImg
-    ? `<path d="${path}" fill="${color}" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>`
-    : `<path d="${path}" fill="${color}" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+    ? `<path d="${path}" fill="${color}"/>`
+    : `<path d="${path}" fill="${color}"/>
        <circle cx="${cx}" cy="${cy}" r="${Math.round(r * 0.42)}" fill="rgba(255,255,255,0.9)"/>`
 
   const html = `
@@ -75,8 +75,10 @@ export default function MapPin({ city, badges = [], dimmed = false }: MapPinProp
   const setSelectedCity = useStore((s) => s.setSelectedCity)
   const highlightCategories = useStore((s) => s.highlightCategories)
 
-  // Badges solo cuando hay una categoria activa en la leyenda
-  const activeBadges = highlightCategories.length > 0 ? badges : []
+  // Badges: solo mostrar los que coinciden con la categoria seleccionada en la leyenda
+  const activeBadges = highlightCategories.length > 0
+    ? badges.filter(b => highlightCategories.includes(b))
+    : []
 
   const isSelected = selectedCity?.id === city.id
   const color = CONDITION_COLORS[city.condition]

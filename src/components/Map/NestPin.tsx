@@ -2,12 +2,13 @@ import { useMemo, useRef, useEffect } from 'react'
 import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { useStore } from '../../store/useStore'
+import { BADGE_ICONS } from '../../services/weather/weatherService'
 import type { Nest } from '../../types/nest'
 import NestPopup from '../Nests/NestPopup'
-import { NEST_THRESHOLDS } from '../../config/nestThresholds'
 
 interface NestPinProps {
   nest: Nest
+  badges?: string[]
   dimmed?: boolean
 }
 
@@ -35,7 +36,7 @@ function buildNestIcon(color: string, selected: boolean, badges: string[], pokem
 
   const positions = ['top:-6px;left:-6px', 'top:-6px;right:-6px', 'bottom:-2px;right:-6px']
   const badgesHtml = badges.slice(0, 3).map((b, i) =>
-    `<div style="position:absolute;${positions[i]};font-size:12px;line-height:1;z-index:10;">${b}</div>`
+    `<div style="position:absolute;${positions[i]};font-size:12px;line-height:1;z-index:10;">${BADGE_ICONS[b as keyof typeof BADGE_ICONS] ?? b}</div>`
   ).join('')
 
   const html = `
@@ -59,25 +60,18 @@ function buildNestIcon(color: string, selected: boolean, badges: string[], pokem
   })
 }
 
-export default function NestPin({ nest, dimmed = false }: NestPinProps) {
+export default function NestPin({ nest, badges = [], dimmed = false }: NestPinProps) {
   const setSelectedNest = useStore((s) => s.setSelectedNest)
   const selectedNest = useStore((s) => s.selectedNest)
   const scrollToFeed = useStore((s) => s.scrollToFeed)
-  const highlightNestRow = useStore((s) => s.highlightNestRow)
 
   const isSelected = selectedNest?.id === nest.id
   const color = TYPE_COLORS[nest.types[0]?.toLowerCase() || 'normal'] || '#999999'
   const markerRef = useRef<L.Marker>(null)
 
-  const badges: string[] = []
-  if (highlightNestRow === 'spawn' && (nest.spawnRate ?? 0) >= NEST_THRESHOLDS.spawnRate) badges.push('🌿')
-  if (highlightNestRow === 'stops' && (nest.stops ?? 0) >= NEST_THRESHOLDS.stops) badges.push('🎯')
-  if (highlightNestRow === 'gyms' && (nest.gyms ?? 0) >= NEST_THRESHOLDS.gyms) badges.push('💪')
-
   const icon = useMemo(
     () => buildNestIcon(color, isSelected, badges, nest.pokemonId),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [color, isSelected, highlightNestRow, nest.spawnRate, nest.stops, nest.gyms]
+    [color, isSelected, badges, nest.pokemonId]
   )
 
   useEffect(() => {

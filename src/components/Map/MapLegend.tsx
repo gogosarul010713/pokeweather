@@ -1,10 +1,9 @@
 import { useStore } from '../../store/useStore'
 import { calculateBadges } from '../../services/weather/weatherService'
 import type { BadgeType } from '../../services/weather/weatherService'
-import { useState } from 'react'
-import { NEST_THRESHOLDS } from '../../config/nestThresholds'
+import { useState, useMemo } from 'react'
 
-type LegendRowKey = BadgeType | 'spawn' | 'verified'
+type LegendRowKey = BadgeType | 'verified'
 
 interface LegendRow {
   key: LegendRowKey
@@ -19,52 +18,48 @@ const ROWS: LegendRow[] = [
   { key: 'gyms',      icon: '💪', label: 'Gym Hub',          color: '#F85149', kind: 'clima' },
   { key: 'community', icon: '👥', label: 'Comunidad Activa', color: '#3FB950', kind: 'clima' },
   { key: 'best',      icon: '🏆', label: 'Mejor Lugar',      color: '#FFD700', kind: 'clima' },
-  { key: 'spawn',     icon: '🌿', label: 'Mayor Spawn',      color: '#FB923C', kind: 'nido' },
+  { key: 'spawn',     icon: '🌿', label: 'Mayor Spawn',      color: '#FB923C', kind: 'clima' },
 ]
 
 export default function MapLegend({ cities = [] }: { cities?: any[] }) {
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768)
 
   const highlightCategories = useStore((s) => s.highlightCategories)
-  const highlightNestRow    = useStore((s) => s.highlightNestRow)
   const setHighlightCategories = useStore((s) => s.setHighlightCategories)
-  const setHighlightNestRow    = useStore((s) => s.setHighlightNestRow)
+  const setHighlightNestRow = useStore((s) => s.setHighlightNestRow)
   const nests = useStore((s) => s.nests)
 
-  const activeKey: LegendRowKey | null =
-    highlightCategories.length > 0 ? (highlightCategories[0] as LegendRowKey)
-    : highlightNestRow ? (highlightNestRow as LegendRowKey)
-    : null
+  const activeKeys = new Set(highlightCategories as LegendRowKey[])
+  const title = activeKeys.size > 0 ? 'Leyenda · Activo' : 'Leyenda'
 
-  const title = activeKey ? 'Leyenda · Activo' : 'Leyenda'
-
-  // Conteos por fila
-  const badgesByCity = cities.length > 0 ? (() => {
-    const calc = calculateBadges(cities)
-    return new Map(cities.map(c => [c.id, calc(c)]))
-  })() : new Map()
+  // Badges por separado: ciudades entre ciudades, nidos entre nidos
+  const badgesById = useMemo(() => {
+    const map = new Map<string, string[]>()
+    if (cities.length > 0) {
+      const cityPool = cities.map((c: any) => ({ id: c.id, stops: c.stops, gyms: c.gyms, rating: c.rating }))
+      const calcCity = calculateBadges(cityPool)
+      cityPool.forEach((p: any) => map.set(p.id, calcCity(p)))
+    }
+    if (nests.length > 0) {
+      const nestPool = nests.map(n => ({ id: n.id, stops: n.stops ?? 0, gyms: n.gyms ?? 0, rating: n.rating, spawnRate: n.spawnRate }))
+      const calcNest = calculateBadges(nestPool)
+      nestPool.forEach(p => map.set(p.id, calcNest(p)))
+    }
+    return map
+  }, [cities, nests])
 
   function getCount(row: LegendRow): number {
-    if (row.kind === 'clima') {
-      let count = 0
-      badgesByCity.forEach(badges => { if (badges.includes(row.key)) count++ })
-      return count
-    }
-    if (row.key === 'spawn') return nests.filter(n => (n.spawnRate ?? 0) >= NEST_THRESHOLDS.spawnRate).length
-    if (row.key === 'stops') return nests.filter(n => (n.stops ?? 0) >= NEST_THRESHOLDS.stops).length
-    if (row.key === 'gyms')  return nests.filter(n => (n.gyms  ?? 0) >= NEST_THRESHOLDS.gyms).length
-    return 0
+    let count = 0
+    badgesById.forEach(badges => { if (badges.includes(row.key)) count++ })
+    return count
   }
 
   function handleClick(row: LegendRow) {
-    const isActive = activeKey === row.key
-    // Limpiar ambos primero
-    setHighlightCategories([])
+    const next = activeKeys.has(row.key)
+      ? highlightCategories.filter(k => k !== row.key)
+      : [...highlightCategories, row.key as string]
+    setHighlightCategories(next)
     setHighlightNestRow(null)
-    if (!isActive) {
-      if (row.kind === 'clima') setHighlightCategories([row.key as string])
-      else setHighlightNestRow(row.key as string)
-    }
   }
 
   return (
@@ -112,6 +107,21 @@ export default function MapLegend({ cities = [] }: { cities?: any[] }) {
           transition: transform 200ms ease;
         }
         .ml-chevron.open { transform: rotate(180deg); }
+        .ml-reset-chip {
+          font-family: 'Exo 2', sans-serif;
+          font-size: 9px;
+          font-weight: 700;
+          color: var(--ui-accent);
+          background: rgba(var(--ui-accent-rgb), 0.12);
+          border: 1px solid rgba(var(--ui-accent-rgb), 0.3);
+          border-radius: 10px;
+          padding: 1px 6px;
+          cursor: pointer;
+          user-select: none;
+          transition: background 150ms ease;
+          white-space: nowrap;
+        }
+        .ml-reset-chip:hover { background: rgba(var(--ui-accent-rgb), 0.22); }
         .ml-body {
           overflow-y: auto;
           flex: 1;
@@ -126,7 +136,8 @@ export default function MapLegend({ cities = [] }: { cities?: any[] }) {
           border-left: 3px solid transparent;
           transition: background 150ms ease, border-color 150ms ease;
         }
-        .ml-row:hover { background: var(--bg-tertiary); }
+        .ml-row:hover { background: rgba(var(--ui-accent-rgb), 0.08); }
+        .ml-row-active { background: rgba(var(--ui-accent-rgb), 0.06); }
         .ml-row-icon {
           font-size: 14px;
           width: 20px;
@@ -162,33 +173,42 @@ export default function MapLegend({ cities = [] }: { cities?: any[] }) {
 
       <div className="ml-root">
         <div className="ml-header" onClick={() => setCollapsed(c => !c)}>
-          <span className={`ml-title${activeKey ? ' active' : ''}`}>{title}</span>
-          <span className={`ml-chevron${collapsed ? '' : ' open'}`}>&#9660;</span>
+          <span className={`ml-title${activeKeys.size > 0 ? ' active' : ''}`}>{title}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {activeKeys.size > 0 && (
+              <span
+                className="ml-reset-chip"
+                onClick={e => { e.stopPropagation(); setHighlightCategories([]); setHighlightNestRow(null) }}
+              >
+                Top {activeKeys.size} ×
+              </span>
+            )}
+            <span className={`ml-chevron${collapsed ? '' : ' open'}`}>&#9660;</span>
+          </div>
         </div>
 
         {!collapsed && (
           <div className="ml-body">
             {ROWS.map(row => {
-              const active = activeKey === row.key
+              const active = activeKeys.has(row.key)
               const count = getCount(row)
               return (
                 <div
                   key={row.key}
-                  className="ml-row"
+                  className={`ml-row${active ? ' ml-row-active' : ''}`}
                   onClick={() => handleClick(row)}
                   style={{
                     borderLeftColor: active ? row.color : 'transparent',
-                    background: active ? `${row.color}18` : undefined,
                   }}
                 >
                   <span className="ml-row-icon">{row.icon}</span>
                   <span
                     className="ml-label"
-                    style={active ? { color: row.color, fontWeight: 600 } : undefined}
+                    style={active ? { color: row.color, fontWeight: 600 } : { color: 'var(--text-primary)' }}
                   >
                     {row.label}
                   </span>
-                  <span className="ml-row-count">{count}</span>
+                  <span className="ml-row-count" style={{ color: 'var(--text-primary)' }}>{count}</span>
                 </div>
               )
             })}

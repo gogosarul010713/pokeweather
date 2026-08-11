@@ -6,6 +6,7 @@ import AccordionSection from './filters/AccordionSection'
 import PillsGrid from './filters/PillsGrid'
 import PillsWrap from './filters/PillsWrap'
 import RadioList from './filters/RadioList'
+import HomeChip from './HomeChip'
 
 const CONDITION_ITEMS = [
   { value: '',       label: 'Todos',    img: '/weather/all.png' },
@@ -122,8 +123,6 @@ export default function FilterPanel() {
   const sortMode = useStore((s) => s.sortMode)
   const nestTypeFilter = useStore((s) => s.nestTypeFilter)
   const nestSortBy = useStore((s) => s.nestSortBy)
-  const searchQuery = useStore((s) => s.searchQuery)
-  const setSearchQuery = useStore((s) => s.setSearchQuery)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setTypeFilter = useStore((s) => s.setTypeFilter)
@@ -304,7 +303,7 @@ export default function FilterPanel() {
   return (
     <>
       <style>{`
-        /* ── Search + filter row ── */
+        /* ── Mi Zona + filter row ── */
         .fsp-search-row {
           display: flex;
           align-items: center;
@@ -312,34 +311,6 @@ export default function FilterPanel() {
           padding: 8px 10px;
           flex-shrink: 0;
         }
-        .fsp-search-wrap {
-          flex: 1;
-          position: relative;
-          display: flex;
-          align-items: center;
-          min-width: 0;
-        }
-        .fsp-search-icon {
-          position: absolute;
-          left: 10px;
-          color: var(--text-muted);
-          pointer-events: none;
-          display: flex;
-        }
-        .fsp-search {
-          width: 100%;
-          height: 34px;
-          border-radius: 8px;
-          border: 1px solid var(--border-default);
-          background: var(--bg-primary);
-          color: var(--text-primary);
-          font-size: 12px;
-          padding: 0 10px 0 30px;
-          outline: none;
-          box-sizing: border-box;
-        }
-        .fsp-search::placeholder { color: var(--text-muted); }
-        .fsp-search:focus { border-color: #58a6ff; }
         .fsp-filter-btn {
           position: relative;
           display: flex;
@@ -586,21 +557,10 @@ export default function FilterPanel() {
         }
       `}</style>
 
-      {/* Search + filtros inline */}
+      {/* Mi Zona chip + filtros inline */}
       <div className="fsp-search-row">
-        <div className="fsp-search-wrap">
-          <span className="fsp-search-icon">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.4"/>
-              <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-            </svg>
-          </span>
-          <input
-            className="fsp-search"
-            placeholder="Buscar ciudad..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <HomeChip />
         </div>
         <button className="fsp-filter-btn" onClick={openFilterPanel} title="Filtros" type="button">
           {FILTER_ICON}

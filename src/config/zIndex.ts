@@ -5,5 +5,6 @@ export const Z = {
   mapOverlay: 15,
   sidebar: 20,
   header: 30,
-  modal: 100,
+  modal: 1100,
+  navPin: 2000,
 } as const

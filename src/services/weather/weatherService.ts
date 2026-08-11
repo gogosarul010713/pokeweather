@@ -106,29 +106,30 @@ export const CONDITION_LABEL: Record<WeatherCondition, string> = {
 // Retorna: 0-100 (normalizado)
 // Usado por MapPin (tamaño+color), CityTooltip (breakdown), MapLegend (leyenda)
 
-export type BadgeType = 'stops' | 'gyms' | 'community' | 'best'
+export type BadgeType = 'stops' | 'gyms' | 'community' | 'best' | 'spawn'
 
-export const calculateBadges = (cities: Array<{ density: number; gyms: number; rating: number }>) => {
-  const densities = cities.map(c => c.density).sort((a, b) => b - a)
-  const gymsArray = cities.map(c => c.gyms).sort((a, b) => b - a)
-  const q1Density = densities[Math.floor(densities.length * 0.25)]
-  const q1Gyms = gymsArray[Math.floor(gymsArray.length * 0.25)]
+export type PlaceForBadge = { stops: number; gyms: number; rating?: number; spawnRate?: number }
 
-  return (city: { density: number; gyms: number; rating: number }): BadgeType[] => {
-    const hasStops = city.density >= q1Density
-    const hasGyms = city.gyms >= q1Gyms
-    const hasCommunity = city.rating >= 4.0
+// Pool combinado ciudades+nidos — umbrales top 25% sobre stops y gyms compartidos
+export const calculateBadges = (pool: PlaceForBadge[]) => {
+  const stopsArr = pool.map(p => p.stops).sort((a, b) => b - a)
+  const gymsArr  = pool.map(p => p.gyms).sort((a, b) => b - a)
+  const q1Stops = stopsArr[Math.floor(stopsArr.length * 0.25)]
+  const q1Gyms  = gymsArr[Math.floor(gymsArr.length * 0.25)]
 
-    // Si tiene TODOS, retorna 'best' (Mejores lugares)
-    if (hasStops && hasGyms && hasCommunity) {
-      return ['best']
-    }
+  return (place: PlaceForBadge): BadgeType[] => {
+    const hasStops     = place.stops >= q1Stops
+    const hasGyms      = place.gyms >= q1Gyms
+    const hasCommunity = (place.rating ?? 0) >= 4.0
+    const hasSpawn     = (place.spawnRate ?? 0) > 0
 
-    // Si no tiene todos, retorna los badges individuales
+    if (hasStops && hasGyms && hasCommunity) return ['best']
+
     const badges: BadgeType[] = []
-    if (hasStops) badges.push('stops')
-    if (hasGyms) badges.push('gyms')
+    if (hasStops)     badges.push('stops')
+    if (hasGyms)      badges.push('gyms')
     if (hasCommunity) badges.push('community')
+    if (hasSpawn)     badges.push('spawn')
     return badges
   }
 }
@@ -138,6 +139,7 @@ export const BADGE_ICONS: Record<BadgeType, string> = {
   gyms: '💪',
   community: '👥',
   best: '✨',
+  spawn: '🌿',
 }
 
 // ─── Funciones de cálculo ─────────────────────────────────────────────────────
