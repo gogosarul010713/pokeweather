@@ -858,3 +858,42 @@ La busqueda sigue siendo **user-triggered** (Enter, no keystroke) — cumple la 
 
 - **Auto-fallback por keystroke con debounce** — descartado. Viola la politica de Nominatim (prohibe autocomplete) y hace que la misma tecla haga dos cosas distintas segun un estado invisible para el usuario.
 - **Segundo Enter para confirmar** — considerado. Dos teclas en vez de una no agrega claridad cuando la UI ya muestra "no hay resultados locales".
+
+---
+
+### DEC-923: Color --home cambiado a cian #22D3EE
+
+**Contexto:** Color original `#FF6B35` era identico a `--type-fire`, causando colision semantica visual en el mapa entre el pin de Mi Zona y nidos de tipo Fuego.
+
+**Decision:** `--home: #22D3EE` (cian electrico). Unico hueco cromatico libre en la paleta — los cianes existentes (ice, snow, flying) son pasteles desaturados, este es saturado y se distingue a simple vista. Contraste 10.9:1 sobre fondo oscuro.
+
+**Tokens actualizados:** `--home`, `--home-dim`, `--home-glow` en `src/index.css` (dark y light).
+
+---
+
+### DEC-925 — Pin System v3: HomePin circulo cian + boton Home flyTo (sesion 40)
+
+**Fecha:** Sprint 9 — Sesion 40 (2026-08-11)
+**Estado:** Aprobada
+**Afecta:** `src/components/Map/HomePin.tsx`, `src/components/Map/MapZoomControls.tsx`
+**Mockup:** `src/docs/mockups/prototypes/01-pin-system-v3.html`
+
+**Decision:**
+
+1. **HomePin pin estatico:** de teardrop naranja rotado a circulo cian 12px + border blanco 2px. Mas legible a cualquier zoom, sin confusion con la forma de los pins de busqueda (gota azul).
+
+2. **Radar:** mantiene 3 ondas concentricas, cambia de naranja a cian — consistente con DEC-923.
+
+3. **Label callout 3 renglones** (antes era 1 linea plana): renglon 1 "Mi Zona" cian 9px + icono casa, renglon 2 lugar/ciudad blanco 8px, renglon 3 lat,lon gris tabular 7.5px. Mismo diseno del mockup v3.
+
+4. **Boton Home en MapZoomControls:** ya no usa GPS (`getCurrentPosition`). Ahora hace `flyTo(homeLocation)` si hay zona fijada. Sin zona: fondo `--home-dim`, opacity 0.42, `cursor:not-allowed`. Con zona: fondo `--home` solido, icono blanco.
+
+**Por que:** El boton GPS estaba duplicando la funcionalidad del HomeChip del sidebar (ambos pedian ubicacion GPS). Con Mi Zona ya fijada desde el chip, el boton en el mapa solo necesita navegar a esa zona.
+
+---
+
+### DEC-924: Z.modal = 1100 (Leaflet conflict)
+
+**Contexto:** Leaflet usa z-index internos de 200-600 en sus capas (markers hasta 600). El modal con `z-index: 100` quedaba tapado por el mapa.
+
+**Decision:** `Z.modal = 1100` en `src/config/zIndex.ts`. Garantiza que cualquier modal/dialog de la app aparezca sobre todas las capas de Leaflet sin hardcodear valores por componente.

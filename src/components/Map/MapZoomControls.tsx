@@ -1,7 +1,19 @@
-import { useState, useRef, useCallback, type RefObject } from 'react'
+import { useState, useRef, useCallback, useEffect, type RefObject } from 'react'
 import type { Map as LeafletMap } from 'leaflet'
 import { useStore } from '../../store/useStore'
 import type { City } from '../../store/useStore'
+import { calculateBadges } from '../../services/weather/weatherService'
+import type { BadgeType } from '../../services/weather/weatherService'
+
+type HlKey = BadgeType | 'spawn'
+
+const HL_ROWS: { key: HlKey; icon: string; label: string; color: string; kind: 'clima' | 'nido' }[] = [
+  { key: 'stops',     icon: '🎯', label: 'Pokestop Hub',     color: '#58A6FF', kind: 'clima' },
+  { key: 'gyms',      icon: '💪', label: 'Gym Hub',          color: '#F85149', kind: 'clima' },
+  { key: 'community', icon: '👥', label: 'Comunidad Activa', color: '#3FB950', kind: 'clima' },
+  { key: 'spawn',     icon: '⭐', label: 'Mayor Spawn',      color: '#FB923C', kind: 'nido'  },
+  { key: 'best',      icon: '🏆', label: 'Mejor Lugar',      color: '#FFD700', kind: 'clima' },
+]
 
 const FLY_DURATION = 1.2
 
@@ -13,10 +25,66 @@ interface MapZoomControlsProps {
 
 export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoomControlsProps) {
   const [worldLoading, setWorldLoading] = useState(false)
-  const [gpsLoading, setGpsLoading] = useState(false)
+  const [hlOpen, setHlOpen] = useState(false)
 
   const favorites = useStore((s) => s.favorites)
   const setSelectedCity = useStore((s) => s.setSelectedCity)
+  const homeLocation = useStore((s) => s.homeLocation)
+  const highlightCategories = useStore((s) => s.highlightCategories)
+  const highlightNestRow    = useStore((s) => s.highlightNestRow)
+  const setHighlightCategories = useStore((s) => s.setHighlightCategories)
+  const setHighlightNestRow    = useStore((s) => s.setHighlightNestRow)
+  const nests = useStore((s) => s.nests)
+
+  const activeHlKeys = new Set([...highlightCategories, ...(highlightNestRow ? [highlightNestRow] : [])] as HlKey[])
+
+  const hlBtnRef = useRef<HTMLButtonElement>(null)
+  const hlPopRef = useRef<HTMLDivElement>(null)
+
+  // Conteos por fila
+  const badgesByCity = useRef(new Map<string, string[]>())
+  if (cities.length > 0) {
+    const calc = calculateBadges(cities)
+    cities.forEach(c => { badgesByCity.current.set(c.id, calc(c)) })
+  }
+
+  function getCount(row: typeof HL_ROWS[0]): number {
+    if (row.kind === 'clima') {
+      let n = 0
+      badgesByCity.current.forEach(b => { if (b.includes(row.key)) n++ })
+      return n
+    }
+    return nests.filter(n => (n.spawnRate ?? 0) > 60).length
+  }
+
+  function handleHlRow(key: HlKey, kind: 'clima' | 'nido') {
+    const next = activeHlKeys.has(key)
+      ? highlightCategories.filter(k => k !== key)
+      : [...highlightCategories, key as string]
+    setHighlightCategories(next)
+    setHighlightNestRow(null)
+  }
+
+  // Cerrar con ESC o click fuera
+  useEffect(() => {
+    if (!hlOpen) return
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setHlOpen(false) }
+    function onOutside(e: MouseEvent) {
+      if (
+        !hlBtnRef.current?.contains(e.target as Node) &&
+        !hlPopRef.current?.contains(e.target as Node)
+      ) setHlOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onOutside)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onOutside)
+    }
+  }, [hlOpen])
+
+  const totalPins = cities.length + nests.length
+  const topN = Math.max(1, Math.ceil(totalPins * 0.1))
 
   // Indices de rotacion para Mejores y Favoritos
   const bestIdxRef = useRef(0)
@@ -34,16 +102,9 @@ export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoo
   }, [worldLoading, mapRef])
 
   const handleHome = useCallback(() => {
-    if (!navigator.geolocation || gpsLoading) return
-    setGpsLoading(true)
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        mapRef.current?.flyTo([pos.coords.latitude, pos.coords.longitude], 13, { duration: FLY_DURATION })
-        setGpsLoading(false)
-      },
-      () => setGpsLoading(false)
-    )
-  }, [gpsLoading, mapRef])
+    if (!homeLocation) return
+    mapRef.current?.flyTo([homeLocation.lat, homeLocation.lon], 13, { duration: FLY_DURATION })
+  }, [homeLocation, mapRef])
 
   const handleBest = useCallback(() => {
     if (bestCities.length === 0) return
@@ -79,6 +140,7 @@ export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoo
           flex-direction: column;
           gap: 6px;
           align-items: flex-end;
+          position: relative;
         }
         .mzc-group {
           display: flex;
@@ -127,6 +189,121 @@ export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoo
         .mzc-pill svg { width: 9px; height: 9px; color: var(--text-secondary); opacity: 0.6; }
         .mzc-pill span { font-size: 10px; color: var(--text-secondary); opacity: 0.6; white-space: nowrap; }
         @keyframes mzc-spin { to { transform: rotate(360deg); } }
+
+        .mzc-btn--hl { color: var(--text-secondary); position: relative; }
+        .mzc-btn--hl.hl-active { color: var(--ui-accent); }
+        .mzc-btn--hl.hl-active svg { filter: drop-shadow(0 0 4px rgba(88,166,255,0.5)); }
+        .mzc-hl-dot {
+          display: none;
+          position: absolute;
+          top: 5px; right: 5px;
+          width: 5px; height: 5px;
+          border-radius: 50%;
+          background: var(--ui-accent);
+          box-shadow: 0 0 5px rgba(88,166,255,0.9);
+        }
+        .mzc-btn--hl.hl-active .mzc-hl-dot { display: block; }
+
+        .mzc-hl-pop {
+          position: absolute;
+          right: calc(100% + 8px);
+          bottom: 0;
+          /* mzc-root es position:static — el ancestro posicionado es mv-zoom-wrapper */
+          width: 210px;
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-default);
+          border-radius: 10px;
+          box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+          padding-bottom: 6px;
+          opacity: 0;
+          transform: translateX(8px) scale(0.96);
+          pointer-events: none;
+          transition: opacity 0.15s, transform 0.15s;
+          transform-origin: right bottom;
+          z-index: 50;
+        }
+        .mzc-hl-pop.open {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+          pointer-events: all;
+        }
+        .mzc-hl-pop::after {
+          content: '';
+          position: absolute;
+          right: -5px; bottom: 11px;
+          width: 8px; height: 8px;
+          background: var(--bg-secondary);
+          border-right: 1px solid var(--border-default);
+          border-top: 1px solid var(--border-default);
+          transform: rotate(45deg);
+        }
+        .mzc-hl-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 9px 12px;
+          border-bottom: 1px solid var(--border-default);
+          margin-bottom: 4px;
+        }
+        .mzc-hl-title {
+          font-family: 'Exo 2', sans-serif;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+        }
+        .mzc-hl-n {
+          font-family: 'Exo 2', sans-serif;
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--ui-accent);
+          background: rgba(88,166,255,0.1);
+          border: 1px solid rgba(88,166,255,0.2);
+          border-radius: 99px;
+          padding: 1px 8px;
+        }
+        .mzc-hl-row {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          padding: 7px 12px 7px 10px;
+          cursor: pointer;
+          position: relative;
+          transition: background 0.1s;
+        }
+        .mzc-hl-row:hover { background: var(--bg-tertiary); }
+        .mzc-hl-row::before {
+          content: '';
+          position: absolute;
+          left: 0; top: 5px; bottom: 5px;
+          width: 2px;
+          border-radius: 0 2px 2px 0;
+          background: transparent;
+          transition: background 0.15s;
+        }
+        .mzc-hl-row.active::before { background: var(--hl-clr); }
+        .mzc-hl-icon {
+          font-size: 14px; width: 18px; text-align: center; flex-shrink: 0;
+          transition: filter 0.15s, opacity 0.15s;
+        }
+        .mzc-hl-label {
+          flex: 1;
+          font-family: 'Exo 2', sans-serif;
+          font-size: 12px; font-weight: 500;
+          color: var(--text-primary);
+          transition: color 0.15s;
+        }
+        .mzc-hl-row.active .mzc-hl-label { color: var(--text-primary); font-weight: 600; }
+        .mzc-hl-count {
+          font-family: 'Exo 2', sans-serif;
+          font-size: 10px; font-weight: 700;
+          color: var(--text-tertiary);
+          font-variant-numeric: tabular-nums;
+          min-width: 16px; text-align: right;
+          transition: color 0.15s;
+        }
+        .mzc-hl-row.active .mzc-hl-count { color: var(--hl-clr); }
       `}</style>
 
       <div className="mzc-root">
@@ -142,13 +319,17 @@ export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoo
               </svg>
             )}
           </button>
-          <button className="mzc-btn" onClick={handleHome} title="Mi ubicacion (GPS)" disabled={gpsLoading}>
-            {gpsLoading ? spinnerSvg : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
-            )}
+          <button
+            className="mzc-btn"
+            onClick={handleHome}
+            disabled={!homeLocation}
+            title={homeLocation ? 'Ir a Mi Zona' : 'Sin Mi Zona fijada'}
+            style={homeLocation ? { color: '#fff', background: 'var(--home)' } : { color: 'var(--home)', background: 'var(--home-dim)', opacity: 0.42, cursor: 'not-allowed' }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
           </button>
 
           <hr className="mzc-sep" />
@@ -184,6 +365,53 @@ export default function MapZoomControls({ mapRef, cities, onOpenSearch }: MapZoo
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
           </button>
+
+          <hr className="mzc-sep" />
+
+          {/* Bloque 4: Resaltar — dentro del grupo, popover escapa via portal-like wrapper */}
+          <button
+            ref={hlBtnRef}
+            className={`mzc-btn mzc-btn--hl${activeHlKeys.size > 0 ? ' hl-active' : ''}`}
+            onClick={() => setHlOpen(o => !o)}
+            title="Resaltar categoria"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+            </svg>
+            <span className="mzc-hl-dot" />
+          </button>
+        </div>
+
+        {/* Popover fuera del grupo para no quedar clippeado por overflow:hidden */}
+        <div ref={hlPopRef} className={`mzc-hl-pop${hlOpen ? ' open' : ''}`}>
+          <div className="mzc-hl-head">
+            <span className="mzc-hl-title">Resaltar</span>
+            {activeHlKeys.size > 0 ? (
+              <span
+                className="mzc-hl-n"
+                style={{ cursor: 'pointer' }}
+                onClick={() => { setHighlightCategories([]); setHighlightNestRow(null) }}
+                title="Limpiar seleccion"
+              >
+                Top {activeHlKeys.size} ×
+              </span>
+            ) : (
+              <span className="mzc-hl-n" style={{ opacity: 0.5 }}>Top {topN}</span>
+            )}
+          </div>
+          {HL_ROWS.map(row => (
+            <div
+              key={row.key}
+              className={`mzc-hl-row${activeHlKeys.has(row.key) ? ' active' : ''}`}
+              style={{ '--hl-clr': row.color } as React.CSSProperties}
+              onClick={() => handleHlRow(row.key, row.kind)}
+            >
+              <span className="mzc-hl-icon">{row.icon}</span>
+              <span className="mzc-hl-label">{row.label}</span>
+              <span className="mzc-hl-count">{getCount(row)}</span>
+            </div>
+          ))}
         </div>
         {(!hasBest || !hasFavs) && (
           <div className="mzc-pill">

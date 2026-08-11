@@ -7,29 +7,14 @@ interface HomePinProps {
   mapRef: React.RefObject<LeafletMap | null>
 }
 
-// Pin estatico: teardrop naranja rotado, emoji casa centrado
+// Pin estatico: circulo cian 12px + border blanco (v3 mockup)
 const HOME_SVG = `
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
-  <defs>
-    <filter id="hp-shadow" x="-40%" y="-20%" width="180%" height="160%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,0.5)"/>
-    </filter>
-  </defs>
-  <!-- teardrop rotado 45deg segun mockup: circulo arriba-izq, punta abajo-der -->
-  <g transform="translate(16,16) rotate(-45) translate(-14,-14)">
-    <path d="M14 0 C6.27 0 0 6.27 0 14 C0 21.73 14 28 14 28 C14 28 28 21.73 28 14 C28 6.27 21.73 0 14 0Z"
-      fill="var(--home,#FF6B35)"
-      stroke="rgba(255,255,255,0.35)"
-      stroke-width="2"
-      filter="url(#hp-shadow)"
-      style="filter:drop-shadow(0 0 8px var(--home-glow,rgba(255,107,53,0.5)))"/>
-  </g>
-  <text x="16" y="20" text-anchor="middle" font-size="13" fill="rgba(255,255,255,0.95)">🏠</text>
-  <!-- cola -->
-  <rect x="15" y="38" width="2" height="6" rx="1" fill="var(--home,#FF6B35)" opacity="0.6"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+  <circle cx="10" cy="10" r="6" fill="var(--home,#22D3EE)" stroke="#fff" stroke-width="2"/>
+  <circle cx="10" cy="10" r="9" fill="none" stroke="var(--home,#22D3EE)" stroke-width="1" opacity="0.35"/>
 </svg>`
 
-// Radar: 3 ondas concentricas naranjas + pin central
+// Radar: 3 ondas concentricas cian + pin central (activo 3s al fijar zona)
 const HOME_RADAR_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
   <defs>
@@ -43,26 +28,15 @@ const HOME_RADAR_SVG = `
       }
     </style>
     <filter id="hp-glow">
-      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="var(--home-glow,rgba(255,107,53,0.5))"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="var(--home-glow,rgba(34,211,238,0.32))"/>
     </filter>
   </defs>
-  <!-- area tenue -->
-  <circle cx="40" cy="40" r="38" fill="var(--home-dim,rgba(255,107,53,0.08))"/>
-  <!-- borde punteado exterior -->
-  <circle cx="40" cy="40" r="37" fill="none" stroke="rgba(255,107,53,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
-  <!-- 3 ondas -->
-  <circle class="hp-w1" cx="40" cy="40" r="36" fill="none" stroke="var(--home,#FF6B35)" stroke-width="1.5"/>
-  <circle class="hp-w2" cx="40" cy="40" r="36" fill="none" stroke="var(--home,#FF6B35)" stroke-width="1.5"/>
-  <circle class="hp-w3" cx="40" cy="40" r="36" fill="none" stroke="var(--home,#FF6B35)" stroke-width="1.5"/>
-  <!-- pin central: teardrop rotado -->
-  <g transform="translate(40,40) rotate(-45) translate(-8,-8)">
-    <path d="M8 0 C3.58 0 0 3.58 0 8 C0 12.42 8 16 8 16 C8 16 16 12.42 16 8 C16 3.58 12.42 0 8 0Z"
-      fill="var(--home,#FF6B35)"
-      stroke="rgba(255,255,255,0.35)"
-      stroke-width="1.5"
-      filter="url(#hp-glow)"/>
-  </g>
-  <text x="40" y="44" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.95)">🏠</text>
+  <circle cx="40" cy="40" r="38" fill="var(--home-dim,rgba(34,211,238,0.14))"/>
+  <circle cx="40" cy="40" r="37" fill="none" stroke="rgba(34,211,238,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+  <circle class="hp-w1" cx="40" cy="40" r="36" fill="none" stroke="var(--home,#22D3EE)" stroke-width="1.5"/>
+  <circle class="hp-w2" cx="40" cy="40" r="36" fill="none" stroke="var(--home,#22D3EE)" stroke-width="1.5"/>
+  <circle class="hp-w3" cx="40" cy="40" r="36" fill="none" stroke="var(--home,#22D3EE)" stroke-width="1.5"/>
+  <circle cx="40" cy="40" r="6" fill="var(--home,#22D3EE)" stroke="#fff" stroke-width="2" filter="url(#hp-glow)"/>
 </svg>`
 
 export default function HomePin({ mapRef }: HomePinProps) {
@@ -93,33 +67,40 @@ export default function HomePin({ mapRef }: HomePinProps) {
         iconAnchor: anchor,
       })
 
-    const label = homeLocation.label ?? 'Mi Zona'
+    const place = homeLocation.label ?? ''
+    const coords = `${homeLocation.lat.toFixed(4)}, ${homeLocation.lon.toFixed(4)}`
+
+    const makeCallout = () => `
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <span style="font-size:9px;font-weight:700;color:var(--home,#22D3EE);display:flex;align-items:center;gap:4px">
+          <span>&#127968;</span> Mi Zona
+        </span>
+        ${place ? `<span style="font-size:8px;font-weight:600;color:var(--text-primary,#E6EDF3)">${place}</span>` : ''}
+        <span style="font-size:7.5px;color:var(--text-secondary,#7D8590);font-variant-numeric:tabular-nums">${coords}</span>
+      </div>`
 
     const marker = L.marker([homeLocation.lat, homeLocation.lon], {
       icon: makeIcon(HOME_RADAR_SVG, [80, 80], [40, 40]),
       zIndexOffset: 1500,
     })
 
-    // Label flotante lateral como en el mockup
-    marker.bindPopup(
-      `<span style="font-size:12px;font-family:'Exo 2',sans-serif;color:var(--home,#FF6B35);font-weight:600">🏠 ${label}</span>`,
-      { offset: [0, -44], closeButton: false, className: 'hp-popup', autoClose: false, closeOnClick: false }
-    )
+    marker.bindPopup(makeCallout(), {
+      offset: [0, -44], closeButton: false, className: 'hp-popup', autoClose: false, closeOnClick: false
+    })
 
     marker.addTo(map)
     setTimeout(() => marker.openPopup(), 300)
     markerRef.current = marker
 
-    // Despues de 3s: pin estatico, reposicionar popup
+    // Despues de 3s: pin estatico circulo cian
     radarTimerRef.current = setTimeout(() => {
       if (markerRef.current) {
-        markerRef.current.setIcon(makeIcon(HOME_SVG, [32, 44], [16, 44]))
+        markerRef.current.setIcon(makeIcon(HOME_SVG, [20, 20], [10, 10]))
         markerRef.current.closePopup()
         markerRef.current.unbindPopup()
-        markerRef.current.bindPopup(
-          `<span style="font-size:12px;font-family:'Exo 2',sans-serif;color:var(--home,#FF6B35);font-weight:600">🏠 ${label}</span>`,
-          { offset: [0, -44], closeButton: false, className: 'hp-popup', autoClose: false, closeOnClick: false }
-        )
+        markerRef.current.bindPopup(makeCallout(), {
+          offset: [0, -18], closeButton: false, className: 'hp-popup', autoClose: false, closeOnClick: false
+        })
         markerRef.current.openPopup()
       }
     }, 3000)
@@ -135,15 +116,14 @@ export default function HomePin({ mapRef }: HomePinProps) {
     <style>{`
       .hp-popup .leaflet-popup-content-wrapper {
         background: var(--bg-overlay, #252D3D);
-        color: var(--home, #FF6B35);
-        border-radius: 6px;
-        padding: 3px 9px;
-        font-size: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-        border: 1px solid var(--home, #FF6B35);
+        border-radius: 7px;
+        padding: 6px 9px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        border: 1px solid var(--border-default, rgba(255,255,255,0.12));
+        min-width: 110px;
       }
       .hp-popup .leaflet-popup-tip { background: var(--bg-overlay, #252D3D); }
-      .hp-popup .leaflet-popup-content { margin: 5px 0; }
+      .hp-popup .leaflet-popup-content { margin: 0; }
     `}</style>
   )
 }
