@@ -55,16 +55,13 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
       <style>{`
         .lc-root {
           position: relative;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 12px;
           background: var(--bg-primary);
           border: 1px solid var(--border-default);
           border-radius: 8px;
           cursor: pointer;
           transition: all 200ms ease;
           user-select: none;
+          overflow: hidden;
         }
 
         .lc-root:hover {
@@ -76,7 +73,38 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           background: rgba(var(--ui-accent-rgb, 88, 166, 255), 0.08);
           border-color: var(--ui-accent);
           border-left: 3px solid var(--ui-accent);
-          padding-left: 10px;
+        }
+
+        .lc-main {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 12px;
+          position: relative;
+        }
+        .lc-root.active .lc-main { padding-left: 10px; }
+
+        /* Barra inferior */
+        .lc-bar {
+          display: flex;
+          align-items: center;
+          padding: 5px 12px 5px 54px;
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-tertiary);
+          gap: 10px;
+        }
+        .lc-root.active .lc-bar { padding-left: 52px; }
+        .lc-bar-item { display: flex; align-items: center; gap: 5px; }
+        .lc-bar-val {
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--home);
+          font-variant-numeric: tabular-nums;
+        }
+        .lc-bar-divider {
+          width: 1px;
+          height: 11px;
+          background: var(--border-default);
         }
 
         .lc-weather {
@@ -172,83 +200,71 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           white-space: nowrap;
         }
 
-        /* Meta row: distancia + ETA */
-        .lc-meta-row {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          margin-top: 1px;
-        }
-        .lc-dist {
-          font-size: 10px;
-          font-weight: 700;
-          color: var(--home);
-          font-variant-numeric: tabular-nums;
-        }
-        .lc-sep { font-size: 10px; color: var(--border-strong); }
-        .lc-eta {
-          font-size: 10px;
-          font-weight: 600;
-          color: var(--text-secondary);
-          font-variant-numeric: tabular-nums;
-        }
       `}</style>
 
       <div className={`lc-root ${isActive ? 'active' : ''}`} onClick={handleCardClick}>
 
-        {/* Weather icon */}
-        <img
-          className="lc-weather"
-          src={`/weather/${city.condition}.png`}
-          alt={city.condition}
-          onError={(e) => { e.currentTarget.style.display = 'none' }}
-        />
+        <div className="lc-main">
+          <img
+            className="lc-weather"
+            src={`/weather/${city.condition}.png`}
+            alt={city.condition}
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
+          />
 
-        <div className="lc-body">
-          {/* Row 1: nombre | tipos | ❤️ */}
-          <div className="lc-row1">
-            <span className="lc-name" title={city.name}>{city.name}</span>
-            <div className="lc-types-row">
-              {city.boostedTypes.slice(0, 4).map((type) => {
-                const src = TYPE_ICON[type.toLowerCase()]
-                if (!src) return null
-                return (
-                  <img
-                    key={type}
-                    className="lc-type-icon"
-                    src={src}
-                    alt={type}
-                    title={type}
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
-                  />
-                )
-              })}
+          <div className="lc-body">
+            <div className="lc-row1">
+              <span className="lc-name" title={city.name}>{city.name}</span>
+              <div className="lc-types-row">
+                {city.boostedTypes.slice(0, 4).map((type) => {
+                  const src = TYPE_ICON[type.toLowerCase()]
+                  if (!src) return null
+                  return (
+                    <img
+                      key={type}
+                      className="lc-type-icon"
+                      src={src}
+                      alt={type}
+                      title={type}
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  )
+                })}
+              </div>
+              <button
+                className={`lc-favorite ${isFavorite ? 'active' : ''}`}
+                onClick={handleFavoriteClick}
+                type="button"
+                title={isFavorite ? 'Quitar favorito' : 'Agregar favorito'}
+              >
+                {isFavorite ? '❤️' : '🤍'}
+              </button>
             </div>
-            <button
-              className={`lc-favorite ${isFavorite ? 'active' : ''}`}
-              onClick={handleFavoriteClick}
-              type="button"
-              title={isFavorite ? 'Quitar favorito' : 'Agregar favorito'}
-            >
-              {isFavorite ? '❤️' : '🤍'}
-            </button>
-          </div>
 
-          {/* Row 2: país | fecha·hora */}
-          <div className="lc-row2">
-            <span className="lc-country">{city.country}</span>
-            <span className="lc-datetime">{localDate} · {localTime}</span>
-          </div>
-
-          {/* Meta row: distancia + ETA (solo con zona) */}
-          {distInfo && (
-            <div className="lc-meta-row">
-              <span className="lc-dist">{distInfo.dist}</span>
-              <span className="lc-sep">·</span>
-              <span className="lc-eta">~{distInfo.eta} min</span>
+            <div className="lc-row2">
+              <span className="lc-country">{city.country}</span>
+              <span className="lc-datetime">{localDate} · {localTime}</span>
             </div>
-          )}
+          </div>
         </div>
+
+        {distInfo && (
+          <div className="lc-bar">
+            <div className="lc-bar-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              </svg>
+              <span className="lc-bar-val">{distInfo.dist}</span>
+            </div>
+            <div className="lc-bar-divider"/>
+            <div className="lc-bar-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5" style={{opacity:.8}}>
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+              </svg>
+              <span className="lc-bar-val">~{distInfo.eta} min</span>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )

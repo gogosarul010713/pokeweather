@@ -38,16 +38,13 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
       <style>{`
         .nc-root {
           position: relative;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 9px 12px;
           background: var(--bg-primary);
           border: 1px solid var(--border-default);
           border-radius: 8px;
           cursor: pointer;
           transition: all 200ms ease;
           user-select: none;
+          overflow: hidden;
         }
         .nc-root:hover {
           background: var(--bg-tertiary);
@@ -57,9 +54,16 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           background: rgba(34,197,94,.08);
           border-color: #22c55e;
           border-left: 3px solid #22c55e;
-          padding-left: 10px;
         }
         .nc-root.unconfirmed { opacity: 0.7; }
+
+        .nc-main {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 9px 12px;
+        }
+        .nc-root.active .nc-main { padding-left: 10px; }
 
         .nc-sprite {
           width: 40px;
@@ -115,25 +119,28 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           flex-shrink: 0;
         }
 
-        /* Row 4: distancia + ETA */
-        .nc-r4 {
+        /* Barra inferior: distancia + ETA */
+        .nc-bar {
           display: flex;
           align-items: center;
-          gap: 3px;
-          margin-top: 1px;
+          padding: 5px 12px 5px 62px;
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-tertiary);
+          gap: 10px;
+          border-radius: 0 0 8px 8px;
         }
-        .nc-dist {
-          font-size: 10px;
+        .nc-root.active .nc-bar { padding-left: 60px; }
+        .nc-bar-item { display: flex; align-items: center; gap: 5px; }
+        .nc-bar-val {
+          font-size: 11px;
           font-weight: 700;
           color: var(--home);
           font-variant-numeric: tabular-nums;
         }
-        .nc-sep { font-size: 10px; color: var(--border-strong); }
-        .nc-eta {
-          font-size: 10px;
-          font-weight: 600;
-          color: var(--text-secondary);
-          font-variant-numeric: tabular-nums;
+        .nc-bar-divider {
+          width: 1px;
+          height: 11px;
+          background: var(--border-default);
         }
 
         /* Columna derecha */
@@ -211,70 +218,75 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
         className={`nc-root${isActive ? ' active' : ''}${!isConfirmedActive ? ' unconfirmed' : ''}`}
         onClick={() => onSelect(nest)}
       >
-        <img
-          className="nc-sprite"
-          src={spriteUrl}
-          alt={nest.pokemonName}
-          onError={(e) => { e.currentTarget.style.display = 'none' }}
-        />
+        <div className="nc-main">
+          <img
+            className="nc-sprite"
+            src={spriteUrl}
+            alt={nest.pokemonName}
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
+          />
 
-        <div className="nc-body">
-          <div className="nc-info">
-            {/* Row 1: lugar + bandera */}
-            <div className="nc-r1">
-              <span className="nc-place">{nest.name}</span>
-              <span className="nc-flag">{flag}</span>
-            </div>
-
-            {/* Row 2: ciudad */}
-            <span className="nc-city">{nest.city}, {nest.country}</span>
-
-            {/* Row 3: pokemon + tipos (iconos igual que LocationCard) */}
-            <div className="nc-r3">
-              <span className="nc-pokemon">{nest.pokemonName}</span>
-              {nest.types.map((type) => {
-                const src = TYPE_ICON[type]
-                if (!src) return null
-                return (
-                  <img
-                    key={type}
-                    className="nc-type-icon"
-                    src={src}
-                    alt={type}
-                    title={type}
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
-                  />
-                )
-              })}
-            </div>
-
-            {/* Row 4: distancia + ETA (solo con zona) */}
-            {distInfo && (
-              <div className="nc-r4">
-                <span className="nc-dist">{distInfo.dist}</span>
-                <span className="nc-sep">·</span>
-                <span className="nc-eta">~{distInfo.eta} min</span>
+          <div className="nc-body">
+            <div className="nc-info">
+              <div className="nc-r1">
+                <span className="nc-place">{nest.name}</span>
+                <span className="nc-flag">{flag}</span>
               </div>
-            )}
-          </div>
-
-          {/* Columna derecha: fila1 (✓/? + HOT), fila2 (NEW + spawn badge) */}
-          <div className="nc-right">
-            <div className="nc-badges-row">
-              {isConfirmedActive
-                ? <span className="nc-badge nc-badge-confirmed" title="Confirmado por la comunidad">✓</span>
-                : <span className="nc-badge nc-badge-unconfirmed" title="Sin confirmar">?</span>
-              }
-              {isHot && <span className="nc-badge nc-badge-hot" title="Spawn rate >= 65%">HOT</span>}
+              <span className="nc-city">{nest.city}, {nest.country}</span>
+              <div className="nc-r3">
+                <span className="nc-pokemon">{nest.pokemonName}</span>
+                {nest.types.map((type) => {
+                  const src = TYPE_ICON[type]
+                  if (!src) return null
+                  return (
+                    <img
+                      key={type}
+                      className="nc-type-icon"
+                      src={src}
+                      alt={type}
+                      title={type}
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                  )
+                })}
+              </div>
             </div>
-            <div className="nc-badges-row2">
-              {isNew && <span className="nc-badge nc-badge-new" title="Confirmado en las ultimas 48h">NEW</span>}
-              <span className={`nc-spawn-badge${!isConfirmedActive ? ' unconf' : ''}`}>
-                {'\u{1F43E}'} {isConfirmedActive ? '' : '~'}{nest.spawnRate}%
-              </span>
+
+            <div className="nc-right">
+              <div className="nc-badges-row">
+                {isConfirmedActive
+                  ? <span className="nc-badge nc-badge-confirmed" title="Confirmado por la comunidad">✓</span>
+                  : <span className="nc-badge nc-badge-unconfirmed" title="Sin confirmar">?</span>
+                }
+                {isHot && <span className="nc-badge nc-badge-hot" title="Spawn rate >= 65%">HOT</span>}
+              </div>
+              <div className="nc-badges-row2">
+                {isNew && <span className="nc-badge nc-badge-new" title="Confirmado en las ultimas 48h">NEW</span>}
+                <span className={`nc-spawn-badge${!isConfirmedActive ? ' unconf' : ''}`}>
+                  {'\u{1F43E}'} {isConfirmedActive ? '' : '~'}{nest.spawnRate}%
+                </span>
+              </div>
             </div>
           </div>
         </div>
+
+        {distInfo && (
+          <div className="nc-bar">
+            <div className="nc-bar-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              </svg>
+              <span className="nc-bar-val">{distInfo.dist}</span>
+            </div>
+            <div className="nc-bar-divider"/>
+            <div className="nc-bar-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5" style={{opacity:.8}}>
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+              </svg>
+              <span className="nc-bar-val">~{distInfo.eta} min</span>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )
