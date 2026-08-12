@@ -1,0 +1,822 @@
+<title>Sidebar Cards — Distancia + ETA | PokeWeather Nests</title>
+<style>
+/* ── TOKENS ─────────────────────────────────────── */
+:root {
+  --bg-primary:    #0D1117;
+  --bg-secondary:  #161B22;
+  --bg-tertiary:   #1C2333;
+  --bg-overlay:    #252D3D;
+  --text-primary:  #E6EDF3;
+  --text-secondary:#7D8590;
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-default:rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.24);
+  --ui-accent:     #58A6FF;
+  --ui-success:    #3FB950;
+  --home:          #FF6B35;
+  --home-dim:      rgba(255,107,53,0.14);
+  --home-glow:     rgba(255,107,53,0.32);
+  --accent-dim:    rgba(88,166,255,0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg-primary:    #F0F2F5;
+    --bg-secondary:  #FFFFFF;
+    --bg-tertiary:   #EBEDF0;
+    --bg-overlay:    #F8F9FA;
+    --text-primary:  #1A202C;
+    --text-secondary:#6B7280;
+    --border-subtle: rgba(0,0,0,0.06);
+    --border-default:rgba(0,0,0,0.12);
+    --border-strong: rgba(0,0,0,0.20);
+    --ui-accent:     #1D6FB8;
+    --ui-success:    #15803D;
+    --home:          #C84B00;
+    --home-dim:      rgba(200,75,0,0.10);
+    --home-glow:     rgba(200,75,0,0.28);
+    --accent-dim:    rgba(29,111,184,0.10);
+  }
+}
+:root[data-theme="light"] {
+  --bg-primary:    #F0F2F5;
+  --bg-secondary:  #FFFFFF;
+  --bg-tertiary:   #EBEDF0;
+  --bg-overlay:    #F8F9FA;
+  --text-primary:  #1A202C;
+  --text-secondary:#6B7280;
+  --border-subtle: rgba(0,0,0,0.06);
+  --border-default:rgba(0,0,0,0.12);
+  --border-strong: rgba(0,0,0,0.20);
+  --ui-accent:     #1D6FB8;
+  --ui-success:    #15803D;
+  --home:          #C84B00;
+  --home-dim:      rgba(200,75,0,0.10);
+  --home-glow:     rgba(200,75,0,0.28);
+  --accent-dim:    rgba(29,111,184,0.10);
+}
+:root[data-theme="dark"] {
+  --bg-primary:    #0D1117;
+  --bg-secondary:  #161B22;
+  --bg-tertiary:   #1C2333;
+  --bg-overlay:    #252D3D;
+  --text-primary:  #E6EDF3;
+  --text-secondary:#7D8590;
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-default:rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.24);
+  --ui-accent:     #58A6FF;
+  --ui-success:    #3FB950;
+  --home:          #FF6B35;
+  --home-dim:      rgba(255,107,53,0.14);
+  --home-glow:     rgba(255,107,53,0.32);
+  --accent-dim:    rgba(88,166,255,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Exo 2', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 24px 20px 40px;
+  min-height: 100vh;
+}
+
+/* ── PAGE HEADER ──────────────────────────────────── */
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.page-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.page-label em { color: var(--home); font-style: normal; }
+
+.theme-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: border-color 150ms;
+}
+.theme-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+
+/* ── SECTION LABEL ────────────────────────────────── */
+.section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+/* ── ZONA CHIP (contexto) ─────────────────────────── */
+.zona-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--home-dim);
+  border: 1px solid var(--home-glow);
+  border-radius: 16px;
+  padding: 4px 10px 4px 8px;
+  margin-bottom: 20px;
+}
+.zona-chip svg { color: var(--home); flex-shrink: 0; }
+.zona-chip-coords { font-size: 9px; font-weight: 700; color: var(--home); font-variant-numeric: tabular-nums; }
+.zona-chip-sub { font-size: 8px; color: var(--text-secondary); }
+
+/* ── GRID DE COMPARACION ─────────────────────────── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+@media (max-width: 640px) {
+  .compare-grid { grid-template-columns: 1fr; }
+}
+
+.col-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── LOCATION CARD ────────────────────────────────── */
+.lc-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  user-select: none;
+}
+.lc-root:hover { background: var(--bg-tertiary); border-color: var(--border-strong); }
+.lc-root.active {
+  background: var(--accent-dim);
+  border-color: var(--ui-accent);
+  border-left: 3px solid var(--ui-accent);
+  padding-left: 10px;
+}
+.lc-weather {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.lc-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 22px;
+}
+.lc-row1 { display: flex; align-items: center; gap: 6px; }
+.lc-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lc-types { display: flex; gap: 3px; flex-shrink: 0; align-items: center; }
+.lc-type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.lc-fav {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Row 2 — pais */
+.lc-row2 {
+  display: flex;
+  align-items: center;
+}
+.lc-country {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── META ROW — patron unificado (ultima fila siempre) ── */
+/* clima usa .lc-meta-row / nidos usa .nc-r4 — mismos tokens */
+.lc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 14px; /* reserva altura aunque este vacia */
+}
+.lc-dist, .nc-dist {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--home);
+  font-variant-numeric: tabular-nums;
+}
+.lc-sep, .nc-sep {
+  font-size: 10px;
+  color: var(--border-strong);
+}
+.lc-eta, .nc-eta {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.nc-spawn-inline {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ui-success);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+.nc-spawn-inline.unconf {
+  color: var(--text-secondary);
+  opacity: 0.4;
+}
+/* dim: sin zona */
+.lc-meta-row.dim .lc-dist,
+.lc-meta-row.dim .lc-sep,
+.lc-meta-row.dim .lc-eta,
+.nc-r4.dim .nc-dist,
+.nc-r4.dim .nc-sep,
+.nc-r4.dim .nc-eta {
+  color: var(--text-secondary);
+  opacity: 0.35;
+  font-weight: 400;
+}
+
+/* ── NEST CARD ────────────────────────────────────── */
+.nc-root {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 200ms ease;
+  user-select: none;
+}
+.nc-root:hover { background: var(--bg-tertiary); border-color: var(--border-strong); }
+.nc-root.active {
+  background: rgba(34,197,94,.08);
+  border-color: #22c55e;
+  border-left: 3px solid #22c55e;
+  padding-left: 10px;
+}
+.nc-root.unconfirmed { opacity: 0.7; }
+
+.nc-sprite {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.nc-root.unconfirmed .nc-sprite { opacity: 0.4; filter: grayscale(1); }
+
+.nc-body { flex: 1; min-width: 0; display: flex; gap: 6px; }
+.nc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+/* Row 1: lugar + bandera */
+.nc-r1 { display: flex; align-items: center; gap: 4px; }
+.nc-place {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nc-flag { font-size: 11px; flex-shrink: 0; }
+
+/* Row 2: ciudad */
+.nc-city {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Row 3: pokemon + tipos */
+.nc-r3 { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.nc-pokemon { font-size: 12px; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
+.nc-type-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* Row 4 (NUEVO): distancia + ETA */
+.nc-r4 {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
+}
+.nc-dist {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--home);
+  font-variant-numeric: tabular-nums;
+}
+.nc-sep { font-size: 10px; color: var(--border-strong); }
+.nc-eta {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.nc-r4.dim .nc-dist,
+.nc-r4.dim .nc-sep,
+.nc-r4.dim .nc-eta {
+  color: var(--text-secondary);
+  opacity: 0.35;
+  font-weight: 400;
+}
+
+/* Columna derecha: badges */
+.nc-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+/* Fila 1 badges: ✓ + HOT */
+.nc-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+/* Fila 2: NEW + spawn */
+.nc-badges-row2 {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.nc-spawn-badge {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: rgba(34,197,94,.10);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--ui-success);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.nc-spawn-badge.unconf {
+  background: rgba(128,128,128,.10);
+  color: var(--text-secondary);
+  opacity: .7;
+}
+.nc-badge {
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.nc-badge-confirmed { background: rgba(34,197,94,.15); color: #22c55e; }
+.nc-badge-unconfirmed { background: rgba(128,128,128,.12); color: var(--text-secondary); }
+.nc-badge-hot { background: rgba(255,100,0,.15); color: #ff6400; }
+.nc-badge-new { background: rgba(100,180,255,.12); color: #64b4ff; }
+.nc-spawn {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  opacity: .5;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── ANOTACIONES ──────────────────────────────────── */
+.ann-block {
+  margin-top: 16px;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.ann-block strong { color: var(--home); }
+.ann-block em { color: var(--ui-accent); font-style: normal; }
+.ann-block .ok { color: var(--ui-success); }
+
+/* ── DIVIDER ──────────────────────────────────────── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 28px 0;
+}
+
+/* ── ESTADO SIN ZONA ──────────────────────────────── */
+.state-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+</style>
+
+<div class="page-head">
+  <div class="page-label">PokeWeather Nests &mdash; <em>Mockup</em> &mdash; Cards Distancia + ETA</div>
+  <button class="theme-btn" onclick="(function(){var d=document.documentElement;d.dataset.theme=d.dataset.theme==='light'?'dark':'light'})()">Tema</button>
+</div>
+
+<!-- ZONA ACTIVA -->
+<div class="section-label"><em style="color:var(--home)">Mi Zona activa</em></div>
+<div class="zona-chip">
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  <div>
+    <div class="zona-chip-coords">19.2826, -99.6331</div>
+    <div class="zona-chip-sub">Metepec &bull; Tap editar</div>
+  </div>
+</div>
+
+<!-- CON ZONA: DISTANCIA + ETA VISIBLES -->
+<div class="section-label">Con zona fijada <span style="opacity:.5">&mdash; ordenado por distancia</span></div>
+
+<div class="compare-grid">
+
+  <!-- LOCATION CARDS CON ZONA -->
+  <div>
+    <div class="col-title">Climas</div>
+    <div class="card-list">
+
+      <!-- activo -->
+      <div class="lc-root active">
+        <div class="lc-weather">🌧️</div>
+        <div class="lc-body">
+          <div class="lc-row1">
+            <span class="lc-name">Toluca</span>
+            <div class="lc-types">
+              <span class="lc-type-badge" style="background:rgba(91,155,213,.18);color:#5b9bd5">Agua</span>
+              <span class="lc-type-badge" style="background:rgba(168,184,32,.18);color:#a8b820">Bicho</span>
+            </div>
+          </div>
+          <div class="lc-row2">
+            <span class="lc-country">Mexico</span>
+          </div>
+          <div class="lc-meta-row">
+            <span class="lc-dist">3.2km</span>
+            <span class="lc-sep">·</span>
+            <span class="lc-eta">~38 min</span>
+          </div>
+        </div>
+        <span class="lc-fav">❤️</span>
+      </div>
+
+      <div class="lc-root">
+        <div class="lc-weather">🌤️</div>
+        <div class="lc-body">
+          <div class="lc-row1">
+            <span class="lc-name">Ciudad de Mexico</span>
+            <div class="lc-types">
+              <span class="lc-type-badge" style="background:rgba(255,107,53,.18);color:#ff6b35">Fuego</span>
+              <span class="lc-type-badge" style="background:rgba(120,200,150,.18);color:#78c896">Planta</span>
+            </div>
+          </div>
+          <div class="lc-row2">
+            <span class="lc-country">Mexico</span>
+          </div>
+          <div class="lc-meta-row">
+            <span class="lc-dist">12.4km</span>
+            <span class="lc-sep">·</span>
+            <span class="lc-eta">~18 min</span>
+          </div>
+        </div>
+        <span class="lc-fav">🤍</span>
+      </div>
+
+      <div class="lc-root">
+        <div class="lc-weather">⛈️</div>
+        <div class="lc-body">
+          <div class="lc-row1">
+            <span class="lc-name">Cuernavaca</span>
+            <div class="lc-types">
+              <span class="lc-type-badge" style="background:rgba(248,208,48,.18);color:#f8d030">Electrico</span>
+            </div>
+          </div>
+          <div class="lc-row2">
+            <span class="lc-country">Mexico</span>
+          </div>
+          <div class="lc-meta-row">
+            <span class="lc-dist">67.1km</span>
+            <span class="lc-sep">·</span>
+            <span class="lc-eta">~55 min</span>
+          </div>
+        </div>
+        <span class="lc-fav">🤍</span>
+      </div>
+    </div>
+
+    <div class="ann-block">
+      <strong>lc-meta-row</strong> (nueva, ultima fila) &mdash; <strong>distancia · ETA</strong>.<br>
+      <em>Mismo patron que nidos:</em> meta siempre al fondo.<br>
+      <span class="ok">lc-row2 queda solo con pais.</span>
+    </div>
+  </div>
+
+  <!-- NEST CARDS CON ZONA -->
+  <div>
+    <div class="col-title">Nidos</div>
+    <div class="card-list">
+
+      <!-- confirmado + hot + new -->
+      <div class="nc-root active">
+        <div class="nc-sprite">🐉</div>
+        <div class="nc-body">
+          <div class="nc-info">
+            <div class="nc-r1">
+              <span class="nc-place">Parque Bicentenario</span>
+              <span class="nc-flag">🇲🇽</span>
+            </div>
+            <span class="nc-city">Metepec, Mexico</span>
+            <div class="nc-r3">
+              <span class="nc-pokemon">Dratini</span>
+              <span class="nc-type-badge" style="background:rgba(112,56,248,.18);color:#7038f8">Dragon</span>
+            </div>
+            <div class="nc-r4">
+              <span class="nc-dist">0.8km</span>
+              <span class="nc-sep">·</span>
+              <span class="nc-eta">~10 min</span>
+            </div>
+          </div>
+          <div class="nc-right">
+            <div class="nc-badges-row">
+              <span class="nc-badge nc-badge-confirmed">✓</span>
+              <span class="nc-badge nc-badge-hot">HOT</span>
+            </div>
+            <div class="nc-badges-row2">
+              <span class="nc-badge nc-badge-new">NEW</span>
+              <span class="nc-spawn-badge">🐾 78%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- confirmado + hot -->
+      <div class="nc-root">
+        <div class="nc-sprite">🔥</div>
+        <div class="nc-body">
+          <div class="nc-info">
+            <div class="nc-r1">
+              <span class="nc-place">Plaza Las Americas</span>
+              <span class="nc-flag">🇲🇽</span>
+            </div>
+            <span class="nc-city">Ecatepec, Mexico</span>
+            <div class="nc-r3">
+              <span class="nc-pokemon">Charmander</span>
+              <span class="nc-type-badge" style="background:rgba(255,107,53,.18);color:#ff6b35">Fuego</span>
+            </div>
+            <div class="nc-r4">
+              <span class="nc-dist">4.2km</span>
+              <span class="nc-sep">·</span>
+              <span class="nc-eta">~8 min</span>
+            </div>
+          </div>
+          <div class="nc-right">
+            <div class="nc-badges-row">
+              <span class="nc-badge nc-badge-confirmed">✓</span>
+              <span class="nc-badge nc-badge-hot">HOT</span>
+            </div>
+            <div class="nc-badges-row2">
+              <span class="nc-spawn-badge">🐾 65%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- sin confirmar -->
+      <div class="nc-root unconfirmed">
+        <div class="nc-sprite">🌊</div>
+        <div class="nc-body">
+          <div class="nc-info">
+            <div class="nc-r1">
+              <span class="nc-place">Lago Chiconahuapan</span>
+              <span class="nc-flag">🇲🇽</span>
+            </div>
+            <span class="nc-city">Almoloya, Mexico</span>
+            <div class="nc-r3">
+              <span class="nc-pokemon">Psyduck</span>
+              <span class="nc-type-badge" style="background:rgba(104,144,240,.18);color:#6890f0">Agua</span>
+            </div>
+            <div class="nc-r4">
+              <span class="nc-dist">18.9km</span>
+              <span class="nc-sep">·</span>
+              <span class="nc-eta">~23 min</span>
+            </div>
+          </div>
+          <div class="nc-right">
+            <div class="nc-badges-row">
+              <span class="nc-badge nc-badge-unconfirmed">?</span>
+            </div>
+            <div class="nc-badges-row2">
+              <span class="nc-spawn-badge unconf">🐾 ~41%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ann-block">
+      <strong>nc-r4</strong> &mdash; solo <strong>distancia · ETA</strong>. Spawn% fuera.<br>
+      Columna derecha fila 1: <em>✓ HOT</em> &nbsp;|&nbsp; fila 2: <em>NEW</em> + <strong>🐾 78%</strong><br>
+      <span class="ok">🐾 da contexto visual inmediato de "spawn de Pokemon".</span>
+    </div>
+  </div>
+
+</div>
+
+<hr class="divider">
+
+<!-- SIN ZONA: CTA -->
+<div class="section-label">Sin zona fijada <span style="opacity:.5">&mdash; meta row oculta</span></div>
+
+<!-- CTA banner -->
+<div style="
+  display:flex; align-items:center; gap:10px;
+  background:var(--home-dim); border:1px solid var(--home-glow);
+  border-radius:8px; padding:10px 14px; margin-bottom:20px;
+">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5" flex-shrink="0">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+  <span style="font-size:11px;color:var(--text-primary);flex:1">Fija tu zona para ver distancias y tiempo estimado</span>
+  <button style="
+    background:var(--home); border:none; border-radius:6px;
+    color:#fff; font-family:inherit; font-size:10px; font-weight:700;
+    padding:5px 10px; cursor:pointer; white-space:nowrap;
+  ">Fijar zona</button>
+</div>
+
+<div class="compare-grid">
+
+  <div>
+    <div class="col-title">Climas — sin meta row</div>
+    <div class="card-list">
+      <div class="lc-root">
+        <div class="lc-weather">🌧️</div>
+        <div class="lc-body">
+          <div class="lc-row1">
+            <span class="lc-name">Toluca</span>
+            <div class="lc-types">
+              <span class="lc-type-badge" style="background:rgba(91,155,213,.18);color:#5b9bd5">Agua</span>
+            </div>
+          </div>
+          <div class="lc-row2"><span class="lc-country">Mexico</span></div>
+        </div>
+        <span class="lc-fav">🤍</span>
+      </div>
+      <div class="lc-root">
+        <div class="lc-weather">☀️</div>
+        <div class="lc-body">
+          <div class="lc-row1">
+            <span class="lc-name">Ciudad de Mexico</span>
+            <div class="lc-types">
+              <span class="lc-type-badge" style="background:rgba(255,107,53,.18);color:#ff6b35">Fuego</span>
+            </div>
+          </div>
+          <div class="lc-row2"><span class="lc-country">Mexico</span></div>
+        </div>
+        <span class="lc-fav">❤️</span>
+      </div>
+    </div>
+    <div class="ann-block">
+      Sin zona: meta row <em>no existe</em> &mdash; card mas compacta.<br>
+      CTA arriba explica al usuario que fijar zona desbloquea distancias.
+    </div>
+  </div>
+
+  <div>
+    <div class="col-title">Nidos</div>
+    <div class="card-list">
+      <div class="nc-root">
+        <div class="nc-sprite">🐉</div>
+        <div class="nc-body">
+          <div class="nc-info">
+            <div class="nc-r1">
+              <span class="nc-place">Parque Bicentenario</span>
+              <span class="nc-flag">🇲🇽</span>
+            </div>
+            <span class="nc-city">Metepec, Mexico</span>
+            <div class="nc-r3">
+              <span class="nc-pokemon">Dratini</span>
+              <span class="nc-type-badge" style="background:rgba(112,56,248,.18);color:#7038f8">Dragon</span>
+            </div>
+          </div>
+          <div class="nc-right">
+            <div class="nc-badges-row">
+              <span class="nc-badge nc-badge-confirmed">✓</span>
+              <span class="nc-badge nc-badge-hot">HOT</span>
+            </div>
+            <div class="nc-badges-row2">
+              <span class="nc-badge nc-badge-new">NEW</span>
+              <span class="nc-spawn-badge">🐾 78%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="nc-root">
+        <div class="nc-sprite">🔥</div>
+        <div class="nc-body">
+          <div class="nc-info">
+            <div class="nc-r1">
+              <span class="nc-place">Plaza Las Americas</span>
+              <span class="nc-flag">🇲🇽</span>
+            </div>
+            <span class="nc-city">Ecatepec, Mexico</span>
+            <div class="nc-r3">
+              <span class="nc-pokemon">Charmander</span>
+              <span class="nc-type-badge" style="background:rgba(255,107,53,.18);color:#ff6b35">Fuego</span>
+            </div>
+          </div>
+          <div class="nc-right">
+            <div class="nc-badges-row">
+              <span class="nc-badge nc-badge-confirmed">✓</span>
+              <span class="nc-badge nc-badge-hot">HOT</span>
+            </div>
+            <div class="nc-badges-row2">
+              <span class="nc-spawn-badge">🐾 65%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann-block">
+      Sin zona: <strong>nc-r4 ausente</strong> &mdash; spawn% vuelve a columna derecha bajo badges.<br>
+      <em>Card compacta, sin ruido de guiones.</em>
+    </div>
+  </div>
+
+</div>
