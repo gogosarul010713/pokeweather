@@ -1,0 +1,654 @@
+<title>Mockup 03 — Distancia + ETA Barra Inferior | PokeWeather Nests</title>
+<style>
+/* ── TOKENS ─────────────────────────────────────── */
+:root {
+  --bg-primary:    #0D1117;
+  --bg-secondary:  #161B22;
+  --bg-tertiary:   #1C2333;
+  --bg-overlay:    #252D3D;
+  --text-primary:  #E6EDF3;
+  --text-secondary:#7D8590;
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-default:rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.24);
+  --ui-accent:     #58A6FF;
+  --ui-success:    #3FB950;
+  --home:          #22D3EE;
+  --home-dim:      rgba(34,211,238,0.14);
+  --home-glow:     rgba(34,211,238,0.32);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg-primary:    #F0F2F5;
+    --bg-secondary:  #FFFFFF;
+    --bg-tertiary:   #EBEDF0;
+    --bg-overlay:    #F8F9FA;
+    --text-primary:  #1A202C;
+    --text-secondary:#6B7280;
+    --border-subtle: rgba(0,0,0,0.06);
+    --border-default:rgba(0,0,0,0.12);
+    --border-strong: rgba(0,0,0,0.20);
+    --ui-accent:     #1D6FB8;
+    --ui-success:    #15803D;
+    --home:          #0891B2;
+    --home-dim:      rgba(8,145,178,0.12);
+    --home-glow:     rgba(8,145,178,0.28);
+  }
+}
+:root[data-theme="light"] {
+  --bg-primary:    #F0F2F5;
+  --bg-secondary:  #FFFFFF;
+  --bg-tertiary:   #EBEDF0;
+  --bg-overlay:    #F8F9FA;
+  --text-primary:  #1A202C;
+  --text-secondary:#6B7280;
+  --border-subtle: rgba(0,0,0,0.06);
+  --border-default:rgba(0,0,0,0.12);
+  --border-strong: rgba(0,0,0,0.20);
+  --ui-accent:     #1D6FB8;
+  --ui-success:    #15803D;
+  --home:          #0891B2;
+  --home-dim:      rgba(8,145,178,0.12);
+  --home-glow:     rgba(8,145,178,0.28);
+}
+:root[data-theme="dark"] {
+  --bg-primary:    #0D1117;
+  --bg-secondary:  #161B22;
+  --bg-tertiary:   #1C2333;
+  --bg-overlay:    #252D3D;
+  --text-primary:  #E6EDF3;
+  --text-secondary:#7D8590;
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-default:rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.24);
+  --ui-accent:     #58A6FF;
+  --ui-success:    #3FB950;
+  --home:          #22D3EE;
+  --home-dim:      rgba(34,211,238,0.14);
+  --home-glow:     rgba(34,211,238,0.32);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Exo 2', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 24px 20px 48px;
+  min-height: 100vh;
+}
+
+/* ── PAGE HEADER ─────────────────────────────── */
+.page-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+}
+.page-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-secondary);
+}
+.page-label em { color: var(--home); font-style: normal; }
+.theme-btn {
+  background: var(--bg-secondary); border: 1px solid var(--border-default);
+  border-radius: 6px; color: var(--text-secondary); font-family: inherit;
+  font-size: 11px; padding: 5px 12px; cursor: pointer;
+}
+.theme-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+
+/* ── ZONA CHIP ───────────────────────────────── */
+.zona-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--home-dim); border: 1px solid var(--home-glow);
+  border-radius: 16px; padding: 4px 10px 4px 8px; margin-bottom: 20px;
+}
+.zona-chip svg { color: var(--home); flex-shrink: 0; }
+.zona-coords { font-size: 9px; font-weight: 700; color: var(--home); font-variant-numeric: tabular-nums; }
+.zona-sub { font-size: 8px; color: var(--text-secondary); }
+
+/* ── SECTION LABEL ───────────────────────────── */
+.section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-secondary);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-subtle);
+}
+
+/* ── GRID ────────────────────────────────────── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+
+.col-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-secondary);
+  margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.card-list { display: flex; flex-direction: column; gap: 6px; }
+
+/* ── NEST CARD ───────────────────────────────── */
+.nc {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms;
+}
+.nc:hover { background: var(--bg-tertiary); border-color: var(--border-strong); }
+.nc.active {
+  background: rgba(34,197,94,.07);
+  border-color: #22c55e;
+  border-left: 3px solid #22c55e;
+}
+
+/* sprite=40px, gap=10px → barra empieza en 50px desde borde + 12px padding = offset 62px */
+--nc-body-offset: 62px;
+
+.nc-main {
+  display: flex; align-items: flex-start;
+  gap: 10px; padding: 9px 12px;
+}
+.nc.active .nc-main { padding-left: 10px; }
+
+.nc-sprite {
+  width: 40px; height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+}
+.nc-body-wrap { flex: 1; min-width: 0; display: flex; gap: 6px; }
+.nc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.nc-r1 { display: flex; align-items: center; gap: 4px; }
+.nc-place {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nc-flag { font-size: 11px; flex-shrink: 0; }
+.nc-city {
+  font-size: 12px; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nc-r3 { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.nc-pokemon { font-size: 12px; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
+.nc-type {
+  font-size: 9px; font-weight: 700; padding: 1px 5px;
+  border-radius: 4px; white-space: nowrap;
+}
+
+.nc-right {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 3px; flex-shrink: 0;
+}
+.nc-badges-row, .nc-badges-row2 { display: flex; align-items: center; gap: 3px; }
+
+.badge { padding: 2px 5px; border-radius: 4px; font-size: 8px; font-weight: 700; white-space: nowrap; }
+.badge-ok   { background: rgba(34,197,94,.15); color: #22c55e; }
+.badge-hot  { background: rgba(255,100,0,.15); color: #ff6400; }
+.badge-new  { background: rgba(88,166,255,.12); color: #58a6ff; }
+.badge-spawn {
+  display: flex; align-items: center; gap: 2px; padding: 2px 5px;
+  border-radius: 4px; background: rgba(63,185,80,.12); font-size: 8px;
+  font-weight: 700; color: var(--ui-success); font-variant-numeric: tabular-nums;
+}
+
+/* ── BARRA INFERIOR (variante aprobada) ──────────────────────────
+   Alineada con nc-info: sprite(40) + gap(10) + padding-left(12) = 62px
+   En estado active: padding-left es 10px → 60px
+   ────────────────────────────────────────────────────────────── */
+.nc-bar {
+  display: flex; align-items: center;
+  padding: 5px 12px 5px 62px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-tertiary);
+  gap: 10px;
+}
+.nc.active .nc-bar { padding-left: 60px; }
+
+.bar-item { display: flex; align-items: center; gap: 5px; }
+.bar-val {
+  font-size: 11px; font-weight: 700;
+  color: var(--home); font-variant-numeric: tabular-nums;
+}
+.bar-divider { width: 1px; height: 11px; background: var(--border-default); }
+
+/* ── LOCATION CARD ───────────────────────────── */
+.lc {
+  background: var(--bg-primary); border: 1px solid var(--border-default);
+  border-radius: 8px; overflow: hidden; cursor: pointer;
+  transition: background 150ms, border-color 150ms;
+}
+.lc:hover { background: var(--bg-tertiary); border-color: var(--border-strong); }
+.lc.active {
+  background: rgba(88,166,255,.07); border-color: var(--ui-accent);
+  border-left: 3px solid var(--ui-accent);
+}
+
+/* weather=36px, gap=8px, padding=10px → offset 54px */
+.lc-main {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; position: relative;
+}
+.lc.active .lc-main { padding-left: 10px; }
+
+.lc-weather {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.lc-body {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 3px;
+  padding-right: 22px;
+}
+.lc-r1 { display: flex; align-items: center; gap: 6px; }
+.lc-name {
+  flex: 1; min-width: 0; font-weight: 700; font-size: 14px;
+  color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lc-types { display: flex; gap: 3px; flex-shrink: 0; align-items: center; }
+.lc-fav { position: absolute; top: 8px; right: 8px; font-size: 13px; line-height: 1; }
+.lc-r2 { display: flex; align-items: center; justify-content: space-between; }
+.lc-country { font-size: 12px; color: var(--text-secondary); }
+.lc-datetime { font-size: 9px; color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Barra alineada: weather(36) + gap(8) + padding(10) = 54px */
+.lc-bar {
+  display: flex; align-items: center;
+  padding: 5px 12px 5px 54px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-tertiary);
+  gap: 10px;
+}
+.lc.active .lc-bar { padding-left: 52px; }
+
+/* ── ANOTACION ───────────────────────────────── */
+.ann {
+  margin-top: 14px; padding: 10px 12px;
+  background: var(--bg-secondary); border: 1px solid var(--border-subtle);
+  border-radius: 8px; font-size: 10px; color: var(--text-secondary); line-height: 1.6;
+}
+.ann strong { color: var(--home); }
+.ann em { color: var(--ui-accent); font-style: normal; }
+
+/* ── SIN ZONA ────────────────────────────────── */
+.divider { border: none; border-top: 1px solid var(--border-subtle); margin: 28px 0; }
+</style>
+
+<div class="page-head">
+  <div class="page-label">PokeWeather Nests &mdash; <em>Mockup 03</em> &mdash; Distancia + ETA Barra Inferior</div>
+  <button class="theme-btn" onclick="(function(){var d=document.documentElement;d.dataset.theme=d.dataset.theme==='light'?'dark':'light'})()">Tema</button>
+</div>
+
+<!-- Zona activa -->
+<div class="section-label"><em style="color:var(--home)">Mi Zona activa</em></div>
+<div class="zona-chip">
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+  <div>
+    <div class="zona-coords">19.2826, -99.6331</div>
+    <div class="zona-sub">Metepec &bull; Tap para editar</div>
+  </div>
+</div>
+
+<!-- Con zona -->
+<div class="section-label">Con zona fijada <span style="opacity:.5">&mdash; barra inferior alineada con texto</span></div>
+
+<div class="compare-grid">
+
+  <!-- NIDOS -->
+  <div>
+    <div class="col-title">Nidos</div>
+    <div class="card-list">
+
+      <!-- activo + confirmado + hot + new -->
+      <div class="nc active">
+        <div class="nc-main">
+          <div class="nc-sprite">🐉</div>
+          <div class="nc-body-wrap">
+            <div class="nc-info">
+              <div class="nc-r1">
+                <span class="nc-place">Parque Bicentenario</span>
+                <span class="nc-flag">🇲🇽</span>
+              </div>
+              <span class="nc-city">Metepec, Mexico</span>
+              <div class="nc-r3">
+                <span class="nc-pokemon">Dratini</span>
+                <span class="nc-type" style="background:rgba(112,56,248,.18);color:#7038f8">Dragon</span>
+              </div>
+            </div>
+            <div class="nc-right">
+              <div class="nc-badges-row">
+                <span class="badge badge-ok">✓</span>
+                <span class="badge badge-hot">HOT</span>
+              </div>
+              <div class="nc-badges-row2">
+                <span class="badge badge-new">NEW</span>
+                <span class="badge-spawn">🐾 78%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nc-bar">
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span class="bar-val">0.8 km</span>
+          </div>
+          <div class="bar-divider"></div>
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5" style="opacity:.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span class="bar-val">~10 min</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- confirmado + hot -->
+      <div class="nc">
+        <div class="nc-main">
+          <div class="nc-sprite">🔥</div>
+          <div class="nc-body-wrap">
+            <div class="nc-info">
+              <div class="nc-r1">
+                <span class="nc-place">Plaza Las Americas</span>
+                <span class="nc-flag">🇲🇽</span>
+              </div>
+              <span class="nc-city">Ecatepec, Mexico</span>
+              <div class="nc-r3">
+                <span class="nc-pokemon">Charmander</span>
+                <span class="nc-type" style="background:rgba(255,107,53,.18);color:#ff6b35">Fuego</span>
+              </div>
+            </div>
+            <div class="nc-right">
+              <div class="nc-badges-row">
+                <span class="badge badge-ok">✓</span>
+                <span class="badge badge-hot">HOT</span>
+              </div>
+              <div class="nc-badges-row2">
+                <span class="badge-spawn">🐾 65%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nc-bar">
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span class="bar-val">4.2 km</span>
+          </div>
+          <div class="bar-divider"></div>
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5" style="opacity:.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span class="bar-val">~8 min</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- sin confirmar -->
+      <div class="nc" style="opacity:.7">
+        <div class="nc-main">
+          <div class="nc-sprite" style="opacity:.4;filter:grayscale(1)">🌊</div>
+          <div class="nc-body-wrap">
+            <div class="nc-info">
+              <div class="nc-r1">
+                <span class="nc-place">Lago Chiconahuapan</span>
+                <span class="nc-flag">🇲🇽</span>
+              </div>
+              <span class="nc-city">Almoloya, Mexico</span>
+              <div class="nc-r3">
+                <span class="nc-pokemon">Psyduck</span>
+                <span class="nc-type" style="background:rgba(104,144,240,.18);color:#6890f0">Agua</span>
+              </div>
+            </div>
+            <div class="nc-right">
+              <div class="nc-badges-row">
+                <span class="badge" style="background:rgba(128,128,128,.12);color:var(--text-secondary)">?</span>
+              </div>
+              <div class="nc-badges-row2">
+                <span class="badge-spawn" style="background:rgba(128,128,128,.10);color:var(--text-secondary);opacity:.7">🐾 ~41%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nc-bar">
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span class="bar-val">18.9 km</span>
+          </div>
+          <div class="bar-divider"></div>
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5" style="opacity:.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span class="bar-val">~28 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ann">
+      <strong>nc-bar</strong> — barra inferior separada del body.<br>
+      Alineada con <em>nc-info</em>: offset = sprite(40) + gap(10) + padding(12) = <strong>62px</strong>.<br>
+      Ambos valores en <strong>--home</strong> (cian), misma jerarquia, iconos de pin y reloj.
+    </div>
+  </div>
+
+  <!-- CLIMAS -->
+  <div>
+    <div class="col-title">Climas</div>
+    <div class="card-list">
+
+      <!-- activo -->
+      <div class="lc active">
+        <div class="lc-main">
+          <div class="lc-weather">🌧️</div>
+          <div class="lc-body">
+            <div class="lc-r1">
+              <span class="lc-name">Toluca</span>
+              <div class="lc-types">
+                <span class="nc-type" style="background:rgba(91,155,213,.18);color:#5b9bd5">Agua</span>
+                <span class="nc-type" style="background:rgba(168,184,32,.18);color:#a8b820">Bicho</span>
+              </div>
+            </div>
+            <div class="lc-r2">
+              <span class="lc-country">Mexico</span>
+              <span class="lc-datetime">12/08 · 03:45 PM</span>
+            </div>
+          </div>
+          <span class="lc-fav">❤️</span>
+        </div>
+        <div class="lc-bar">
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span class="bar-val">3.2 km</span>
+          </div>
+          <div class="bar-divider"></div>
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5" style="opacity:.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span class="bar-val">~38 min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lc">
+        <div class="lc-main">
+          <div class="lc-weather">🌤️</div>
+          <div class="lc-body">
+            <div class="lc-r1">
+              <span class="lc-name">Ciudad de Mexico</span>
+              <div class="lc-types">
+                <span class="nc-type" style="background:rgba(255,107,53,.18);color:#ff6b35">Fuego</span>
+                <span class="nc-type" style="background:rgba(120,200,150,.18);color:#78c896">Planta</span>
+              </div>
+            </div>
+            <div class="lc-r2">
+              <span class="lc-country">Mexico</span>
+              <span class="lc-datetime">12/08 · 03:45 PM</span>
+            </div>
+          </div>
+          <span class="lc-fav">🤍</span>
+        </div>
+        <div class="lc-bar">
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span class="bar-val">12.4 km</span>
+          </div>
+          <div class="bar-divider"></div>
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5" style="opacity:.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span class="bar-val">~18 min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lc">
+        <div class="lc-main">
+          <div class="lc-weather">⛈️</div>
+          <div class="lc-body">
+            <div class="lc-r1">
+              <span class="lc-name">Cuernavaca</span>
+              <div class="lc-types">
+                <span class="nc-type" style="background:rgba(248,208,48,.18);color:#f8d030">Electrico</span>
+              </div>
+            </div>
+            <div class="lc-r2">
+              <span class="lc-country">Mexico</span>
+              <span class="lc-datetime">12/08 · 03:46 PM</span>
+            </div>
+          </div>
+          <span class="lc-fav">🤍</span>
+        </div>
+        <div class="lc-bar">
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span class="bar-val">67.1 km</span>
+          </div>
+          <div class="bar-divider"></div>
+          <div class="bar-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" stroke-width="2.5" style="opacity:.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span class="bar-val">~1h 0min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ann">
+      <strong>lc-bar</strong> — mismo patron que nidos.<br>
+      Offset = weather(36) + gap(8) + padding(10) = <strong>54px</strong>.<br>
+      <em>Sin zona:</em> barra ausente — card compacta, sin guiones.
+    </div>
+  </div>
+
+</div>
+
+<!-- Sin zona -->
+<hr class="divider">
+<div class="section-label">Sin zona fijada <span style="opacity:.5">&mdash; barra ausente</span></div>
+<div class="compare-grid">
+  <div>
+    <div class="col-title">Nidos — sin barra</div>
+    <div class="card-list">
+      <div class="nc active">
+        <div class="nc-main">
+          <div class="nc-sprite">🐉</div>
+          <div class="nc-body-wrap">
+            <div class="nc-info">
+              <div class="nc-r1">
+                <span class="nc-place">Parque Bicentenario</span>
+                <span class="nc-flag">🇲🇽</span>
+              </div>
+              <span class="nc-city">Metepec, Mexico</span>
+              <div class="nc-r3">
+                <span class="nc-pokemon">Dratini</span>
+                <span class="nc-type" style="background:rgba(112,56,248,.18);color:#7038f8">Dragon</span>
+              </div>
+            </div>
+            <div class="nc-right">
+              <div class="nc-badges-row">
+                <span class="badge badge-ok">✓</span>
+                <span class="badge badge-hot">HOT</span>
+              </div>
+              <div class="nc-badges-row2">
+                <span class="badge badge-new">NEW</span>
+                <span class="badge-spawn">🐾 78%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- sin nc-bar -->
+      </div>
+      <div class="nc">
+        <div class="nc-main">
+          <div class="nc-sprite">🔥</div>
+          <div class="nc-body-wrap">
+            <div class="nc-info">
+              <div class="nc-r1">
+                <span class="nc-place">Plaza Las Americas</span>
+                <span class="nc-flag">🇲🇽</span>
+              </div>
+              <span class="nc-city">Ecatepec, Mexico</span>
+              <div class="nc-r3">
+                <span class="nc-pokemon">Charmander</span>
+                <span class="nc-type" style="background:rgba(255,107,53,.18);color:#ff6b35">Fuego</span>
+              </div>
+            </div>
+            <div class="nc-right">
+              <div class="nc-badges-row">
+                <span class="badge badge-ok">✓</span>
+              </div>
+              <div class="nc-badges-row2">
+                <span class="badge-spawn">🐾 65%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="col-title">Climas — sin barra</div>
+    <div class="card-list">
+      <div class="lc active">
+        <div class="lc-main">
+          <div class="lc-weather">🌧️</div>
+          <div class="lc-body">
+            <div class="lc-r1">
+              <span class="lc-name">Toluca</span>
+              <div class="lc-types">
+                <span class="nc-type" style="background:rgba(91,155,213,.18);color:#5b9bd5">Agua</span>
+              </div>
+            </div>
+            <div class="lc-r2">
+              <span class="lc-country">Mexico</span>
+              <span class="lc-datetime">12/08 · 03:45 PM</span>
+            </div>
+          </div>
+          <span class="lc-fav">❤️</span>
+        </div>
+      </div>
+      <div class="lc">
+        <div class="lc-main">
+          <div class="lc-weather">☀️</div>
+          <div class="lc-body">
+            <div class="lc-r1">
+              <span class="lc-name">Ciudad de Mexico</span>
+              <div class="lc-types">
+                <span class="nc-type" style="background:rgba(255,107,53,.18);color:#ff6b35">Fuego</span>
+              </div>
+            </div>
+            <div class="lc-r2">
+              <span class="lc-country">Mexico</span>
+              <span class="lc-datetime">12/08 · 03:45 PM</span>
+            </div>
+          </div>
+          <span class="lc-fav">🤍</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
