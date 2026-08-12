@@ -89,26 +89,22 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           display: flex;
           align-items: center;
           padding: 5px 12px 5px 54px;
-          border-top: 1px solid var(--home-glow);
-          background: linear-gradient(90deg, var(--home-dim) 0%, transparent 65%);
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-tertiary);
           gap: 10px;
         }
-        .lc-root.active .lc-bar {
-          padding-left: 52px;
-          background: linear-gradient(90deg, var(--home-glow) 0%, transparent 70%);
-        }
+        .lc-root.active .lc-bar { padding-left: 52px; }
         .lc-bar-item { display: flex; align-items: center; gap: 5px; }
         .lc-bar-val {
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 700;
           color: var(--home);
           font-variant-numeric: tabular-nums;
-          text-shadow: 0 0 8px var(--home-glow);
         }
         .lc-bar-divider {
           width: 1px;
-          height: 12px;
-          background: var(--home-glow);
+          height: 11px;
+          background: var(--border-default);
         }
 
         .lc-weather {

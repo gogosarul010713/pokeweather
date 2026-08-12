@@ -124,27 +124,23 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           display: flex;
           align-items: center;
           padding: 5px 12px 5px 62px;
-          border-top: 1px solid var(--home-glow);
-          background: linear-gradient(90deg, var(--home-dim) 0%, transparent 65%);
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-tertiary);
           gap: 10px;
           border-radius: 0 0 8px 8px;
         }
-        .nc-root.active .nc-bar {
-          padding-left: 60px;
-          background: linear-gradient(90deg, var(--home-glow) 0%, transparent 70%);
-        }
+        .nc-root.active .nc-bar { padding-left: 60px; }
         .nc-bar-item { display: flex; align-items: center; gap: 5px; }
         .nc-bar-val {
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 700;
           color: var(--home);
           font-variant-numeric: tabular-nums;
-          text-shadow: 0 0 8px var(--home-glow);
         }
         .nc-bar-divider {
           width: 1px;
-          height: 12px;
-          background: var(--home-glow);
+          height: 11px;
+          background: var(--border-default);
         }
 
         /* Columna derecha */
