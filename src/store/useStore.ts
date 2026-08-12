@@ -76,7 +76,7 @@ export interface DraftFilters {
   type: string[]
   sortMode: SortMode
   nestType: string[]
-  nestSortBy: 'name' | 'type' | 'spawnRate'
+  nestSortBy: 'name' | 'type' | 'spawnRate' | 'distance'
 }
 
 const DEFAULT_DRAFT: DraftFilters = {
@@ -124,10 +124,11 @@ interface AppStore {
   selectedNest: Nest | null
   nestPopupOpen: boolean
   nestTypeFilter: string[]
-  nestSortBy: 'name' | 'type' | 'spawnRate'
+  nestSortBy: 'name' | 'type' | 'spawnRate' | 'distance'
   nestSortDirection: 'asc' | 'desc'
   navPin: NavPinState | null
   homeLocation: HomeLocation | null
+  homeModalOpen: boolean
 
   // Migration countdown
   now: number
@@ -172,12 +173,13 @@ interface AppStore {
   setNestPopupOpen: (open: boolean) => void
   setNestTypeFilter: (types: string[]) => void
   toggleNestType: (type: string) => void
-  setNestSortBy: (mode: 'name' | 'type' | 'spawnRate') => void
+  setNestSortBy: (mode: 'name' | 'type' | 'spawnRate' | 'distance') => void
   setNestSortDirection: (direction: 'asc' | 'desc') => void
   setNavPin: (pin: NavPinState | null) => void
   clearNavPin: () => void
   setHomeLocation: (loc: HomeLocation) => void
   clearHomeLocation: () => void
+  setHomeModalOpen: (open: boolean) => void
 
   // Filter panel actions
   openFilterPanel: () => void
@@ -190,7 +192,7 @@ interface AppStore {
   setDraftType: (types: string[]) => void
   setDraftSortMode: (mode: SortMode) => void
   setDraftNestType: (types: string[]) => void
-  setDraftNestSortBy: (mode: 'name' | 'type' | 'spawnRate') => void
+  setDraftNestSortBy: (mode: 'name' | 'type' | 'spawnRate' | 'distance') => void
   toggleAccordion: (section: AccordionKey) => void
 
   // Derived
@@ -259,6 +261,7 @@ export const useStore = create<AppStore>((set, get) => ({
       return null
     }
   })(),
+  homeModalOpen: false,
   now: Date.now(),
   filterPanelOpen: false,
   accordionState: {
@@ -418,6 +421,7 @@ export const useStore = create<AppStore>((set, get) => ({
     localStorage.removeItem('pwe-home-location')
     set({ homeLocation: null })
   },
+  setHomeModalOpen: (open: boolean) => set({ homeModalOpen: open }),
 
   tickNow: () => set({ now: Date.now() }),
 

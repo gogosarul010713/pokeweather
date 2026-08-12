@@ -1,6 +1,7 @@
 interface RadioItem {
   value: string
   label: string
+  disabled?: boolean
 }
 
 interface RadioListProps {
@@ -74,6 +75,7 @@ export default function RadioList({ items, selected, onSelect, sortDirection, on
           user-select: none;
         }
         .fp-radio-dir:hover { background: rgba(88,166,255,0.22); }
+        .fp-radio-item.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
       `}</style>
       <div className="fp-radio-list">
         {items.map((item) => {
@@ -81,8 +83,8 @@ export default function RadioList({ items, selected, onSelect, sortDirection, on
           return (
             <div
               key={item.value}
-              className={`fp-radio-item ${isActive ? 'active' : ''}`}
-              onClick={() => isActive && onToggleDirection ? onToggleDirection() : onSelect(item.value)}
+              className={`fp-radio-item ${isActive ? 'active' : ''}${item.disabled ? ' disabled' : ''}`}
+              onClick={() => item.disabled ? undefined : (isActive && onToggleDirection ? onToggleDirection() : onSelect(item.value))}
               role="radio"
               aria-checked={isActive}
             >

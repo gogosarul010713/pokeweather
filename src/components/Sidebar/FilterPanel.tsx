@@ -40,6 +40,7 @@ const SORT_NIDOS_ITEMS = [
   { value: 'name',      label: 'Nombre A-Z' },
   { value: 'type',      label: 'Tipo Pokemon' },
   { value: 'spawnRate', label: 'Tasa de spawn' },
+  { value: 'distance',  label: 'Distancia' },
 ]
 
 const TYPE_ITEMS_ALL = [
@@ -68,7 +69,7 @@ const TYPE_EMOJI: Record<string, string> = {
   ghost: '👻', ground: '🏜', normal: '⭐', fairy: '✨',
 }
 const ORDEN_NIDOS_LABEL: Record<string, string> = {
-  name: 'A-Z', type: 'Tipo', spawnRate: 'Spawn',
+  name: 'A-Z', type: 'Tipo', spawnRate: 'Spawn', distance: 'Distancia',
 }
 
 const FILTER_ICON = (
@@ -123,6 +124,7 @@ export default function FilterPanel() {
   const sortMode = useStore((s) => s.sortMode)
   const nestTypeFilter = useStore((s) => s.nestTypeFilter)
   const nestSortBy = useStore((s) => s.nestSortBy)
+  const homeLocation = useStore((s) => s.homeLocation)
   const setConditionFilter = useStore((s) => s.setConditionFilter)
   const setRegionFilter = useStore((s) => s.setRegionFilter)
   const setTypeFilter = useStore((s) => s.setTypeFilter)
@@ -750,7 +752,9 @@ export default function FilterPanel() {
                   activeLabel={nestSortLabel1}
                 >
                   <RadioList
-                    items={SORT_NIDOS_ITEMS}
+                    items={SORT_NIDOS_ITEMS.map((i) =>
+                      i.value === 'distance' && !homeLocation ? { ...i, disabled: true } : i
+                    )}
                     selected={draftFilters.nestSortBy}
                     onSelect={(v) => setDraftNestSortBy(v as any)}
                   />

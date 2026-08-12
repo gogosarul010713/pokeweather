@@ -2,6 +2,7 @@ import { useStore } from '../../store/useStore'
 import { TYPE_ICON } from '../../config/typeIcons'
 import { NEXT_MIGRATION } from '../../config/nestMigration'
 import { countryFlag } from '../../config/countryFlags'
+import { calculateDistance, formatDistance } from '../../utils/distance'
 import type { Nest } from '../../types/nest'
 
 interface NestCardProps {
@@ -12,6 +13,7 @@ interface NestCardProps {
 
 export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
   const now = useStore((s) => s.now)
+  const homeLocation = useStore((s) => s.homeLocation)
 
   const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nest.pokemonId}.png`
   const migrationMs = new Date(NEXT_MIGRATION).getTime()
@@ -22,6 +24,14 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
     : false
 
   const flag = countryFlag(nest.countryCode)
+
+  const distInfo = homeLocation
+    ? (() => {
+        const m = calculateDistance(homeLocation.lat, homeLocation.lon, nest.lat, nest.lng)
+        const eta = Math.ceil(m / 1000 / 40 * 60)
+        return { dist: formatDistance(m), eta }
+      })()
+    : null
 
   return (
     <>
@@ -105,6 +115,27 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           flex-shrink: 0;
         }
 
+        /* Row 4: distancia + ETA */
+        .nc-r4 {
+          display: flex;
+          align-items: center;
+          gap: 3px;
+          margin-top: 1px;
+        }
+        .nc-dist {
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--home);
+          font-variant-numeric: tabular-nums;
+        }
+        .nc-sep { font-size: 10px; color: var(--border-strong); }
+        .nc-eta {
+          font-size: 10px;
+          font-weight: 600;
+          color: var(--text-secondary);
+          font-variant-numeric: tabular-nums;
+        }
+
         /* Columna derecha */
         .nc-right {
           display: flex;
@@ -112,6 +143,16 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           align-items: flex-end;
           gap: 3px;
           flex-shrink: 0;
+        }
+        .nc-badges-row {
+          display: flex;
+          align-items: center;
+          gap: 3px;
+        }
+        .nc-badges-row2 {
+          display: flex;
+          align-items: center;
+          gap: 3px;
         }
         .nc-badge {
           padding: 2px 6px;
@@ -136,6 +177,25 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
         .nc-badge-new {
           background: rgba(100,180,255,.12);
           color: #64b4ff;
+        }
+        .nc-spawn-badge {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          padding: 2px 5px;
+          border-radius: 5px;
+          background: rgba(34,197,94,.10);
+          font-size: 8px;
+          font-weight: 700;
+          color: var(--ui-success);
+          white-space: nowrap;
+          font-variant-numeric: tabular-nums;
+          font-family: 'Exo 2', sans-serif;
+        }
+        .nc-spawn-badge.unconf {
+          background: rgba(128,128,128,.10);
+          color: var(--text-secondary);
+          opacity: .7;
         }
         .nc-spawn {
           font-family: 'Exo 2', sans-serif;
@@ -187,17 +247,32 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
                 )
               })}
             </div>
+
+            {/* Row 4: distancia + ETA (solo con zona) */}
+            {distInfo && (
+              <div className="nc-r4">
+                <span className="nc-dist">{distInfo.dist}</span>
+                <span className="nc-sep">·</span>
+                <span className="nc-eta">~{distInfo.eta} min</span>
+              </div>
+            )}
           </div>
 
-          {/* Columna derecha: confirmado + badges + spawn */}
+          {/* Columna derecha: fila1 (✓/? + HOT), fila2 (NEW + spawn badge) */}
           <div className="nc-right">
-            {isConfirmedActive
-              ? <span className="nc-badge nc-badge-confirmed" title="Confirmado por la comunidad">✓</span>
-              : <span className="nc-badge nc-badge-unconfirmed" title="Sin confirmar">?</span>
-            }
-            {isHot && <span className="nc-badge nc-badge-hot" title="Spawn rate >= 65%">HOT</span>}
-            {isNew && <span className="nc-badge nc-badge-new" title="Confirmado en las ultimas 48h">NEW</span>}
-            <span className="nc-spawn">{isConfirmedActive ? '' : '~'}{nest.spawnRate}%</span>
+            <div className="nc-badges-row">
+              {isConfirmedActive
+                ? <span className="nc-badge nc-badge-confirmed" title="Confirmado por la comunidad">✓</span>
+                : <span className="nc-badge nc-badge-unconfirmed" title="Sin confirmar">?</span>
+              }
+              {isHot && <span className="nc-badge nc-badge-hot" title="Spawn rate >= 65%">HOT</span>}
+            </div>
+            <div className="nc-badges-row2">
+              {isNew && <span className="nc-badge nc-badge-new" title="Confirmado en las ultimas 48h">NEW</span>}
+              <span className={`nc-spawn-badge${!isConfirmedActive ? ' unconf' : ''}`}>
+                {'\u{1F43E}'} {isConfirmedActive ? '' : '~'}{nest.spawnRate}%
+              </span>
+            </div>
           </div>
         </div>
       </div>

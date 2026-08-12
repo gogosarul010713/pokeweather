@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useRef } from 'react'
 import { useStore, type City } from '../../store/useStore'
 import { calculateBadges } from '../../services/weather/weatherService'
+import { calculateDistance } from '../../utils/distance'
 import LocationCard from './LocationCard'
 import NestCard from '../Nests/NestCard'
 import MigrationBanner from '../Nests/MigrationBanner'
@@ -30,6 +31,8 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
   const setSelectedNest = useStore((s) => s.setSelectedNest)
   const nestTypeFilter = useStore((s) => s.nestTypeFilter)
   const nestSortBy = useStore((s) => s.nestSortBy)
+  const homeLocation = useStore((s) => s.homeLocation)
+  const setHomeModalOpen = useStore((s) => s.setHomeModalOpen)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const activeFilterCount =
@@ -89,11 +92,16 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
       result.sort((a, b) => (a.types[0] ?? '').localeCompare(b.types[0] ?? ''))
     } else if (nestSortBy === 'spawnRate') {
       result.sort((a, b) => b.spawnRate - a.spawnRate)
+    } else if (nestSortBy === 'distance' && homeLocation) {
+      result.sort((a, b) =>
+        calculateDistance(homeLocation.lat, homeLocation.lon, a.lat, a.lng) -
+        calculateDistance(homeLocation.lat, homeLocation.lon, b.lat, b.lng)
+      )
     } else {
       result.sort((a, b) => a.pokemonName.localeCompare(b.pokemonName))
     }
     return result
-  }, [nests, activeLayers.nidos, nestTypeFilter, nestSortBy])
+  }, [nests, activeLayers.nidos, nestTypeFilter, nestSortBy, homeLocation])
 
   // US-827: set de ids resaltados para dim en sidebar
   const highlightedCityIds = useMemo(() => {
@@ -310,6 +318,39 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
           margin-bottom: 8px;
         }
 
+        /* CTA banner sin zona */
+        .lf-cta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: var(--home-dim);
+          border: 1px solid var(--home-glow);
+          border-radius: 8px;
+          padding: 8px 12px;
+          margin: 8px 8px 0;
+          flex-shrink: 0;
+        }
+        .lf-cta-text {
+          font-family: 'Exo 2', sans-serif;
+          font-size: 11px;
+          color: var(--text-primary);
+          flex: 1;
+          line-height: 1.4;
+        }
+        .lf-cta-btn {
+          background: var(--home);
+          border: none;
+          border-radius: 6px;
+          color: #fff;
+          font-family: 'Exo 2', sans-serif;
+          font-size: 10px;
+          font-weight: 700;
+          padding: 5px 10px;
+          cursor: pointer;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+
         /* Scrollbar styling */
         .lf-scroll::-webkit-scrollbar {
           width: 4px;
@@ -341,6 +382,20 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
       `}</style>
 
       <div className="lf-root">
+        {/* CTA banner sin zona (solo si hay nidos visibles) */}
+        {!homeLocation && activeLayers.nidos && displayedNests.length > 0 && (
+          <div className="lf-cta">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span className="lf-cta-text">Fija tu zona para ver distancias y tiempo estimado</span>
+            <button className="lf-cta-btn" type="button" onClick={() => setHomeModalOpen(true)}>
+              Fijar zona
+            </button>
+          </div>
+        )}
+
         {/* Lista o mensaje vacío */}
         {totalCount > 0 ? (
           <div className={`lf-scroll ${loadingStatus === 'loading' ? 'fade-refresh' : ''}`} ref={scrollContainerRef}>

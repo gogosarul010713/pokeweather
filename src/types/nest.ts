@@ -42,5 +42,5 @@ export interface NestFilters {
   type: PokemonType[]
   rarity: PokemonRarity[]
   searchQuery: string
-  sortMode: 'name' | 'type' | 'spawnRate'
+  sortMode: 'name' | 'type' | 'spawnRate' | 'distance'
 }

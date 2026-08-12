@@ -1,5 +1,6 @@
 import { useStore, type City } from '../../store/useStore'
 import { TYPE_ICON } from '../../config/typeIcons'
+import { calculateDistance, formatDistance } from '../../utils/distance'
 
 interface LocationCardProps {
   city: City
@@ -25,6 +26,7 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
   const setSelectedCity = useStore((s) => s.setSelectedCity)
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const favorites = useStore((s) => s.favorites)
+  const homeLocation = useStore((s) => s.homeLocation)
 
   const isFavorite = favorites.includes(city.id)
 
@@ -39,6 +41,14 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
 
   const localDate = getLocalDate(city.timezone)
   const localTime = formatTime(city.localTime)
+
+  const distInfo = homeLocation
+    ? (() => {
+        const m = calculateDistance(homeLocation.lat, homeLocation.lon, city.lat, city.lon)
+        const eta = Math.ceil(m / 1000 / 40 * 60)
+        return { dist: formatDistance(m), eta }
+      })()
+    : null
 
   return (
     <>
@@ -161,6 +171,27 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           color: var(--text-secondary);
           white-space: nowrap;
         }
+
+        /* Meta row: distancia + ETA */
+        .lc-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          margin-top: 1px;
+        }
+        .lc-dist {
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--home);
+          font-variant-numeric: tabular-nums;
+        }
+        .lc-sep { font-size: 10px; color: var(--border-strong); }
+        .lc-eta {
+          font-size: 10px;
+          font-weight: 600;
+          color: var(--text-secondary);
+          font-variant-numeric: tabular-nums;
+        }
       `}</style>
 
       <div className={`lc-root ${isActive ? 'active' : ''}`} onClick={handleCardClick}>
@@ -208,6 +239,15 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
             <span className="lc-country">{city.country}</span>
             <span className="lc-datetime">{localDate} · {localTime}</span>
           </div>
+
+          {/* Meta row: distancia + ETA (solo con zona) */}
+          {distInfo && (
+            <div className="lc-meta-row">
+              <span className="lc-dist">{distInfo.dist}</span>
+              <span className="lc-sep">·</span>
+              <span className="lc-eta">~{distInfo.eta} min</span>
+            </div>
+          )}
         </div>
       </div>
     </>
