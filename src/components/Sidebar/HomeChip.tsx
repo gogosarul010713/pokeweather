@@ -43,21 +43,27 @@ export default function HomeChip() {
           display: flex;
           align-items: center;
           gap: 6px;
-          border: 1px dashed var(--border-strong);
+          border: 1px dashed var(--home);
           border-radius: 17px;
           padding: 0 10px;
           height: 34px;
           cursor: pointer;
           font-size: 11px;
-          color: var(--text-secondary);
-          background: transparent;
+          font-weight: 600;
+          color: var(--home);
+          background: var(--home-dim);
           font-family: 'Exo 2', sans-serif;
-          transition: background 0.15s;
+          transition: background 0.15s, opacity 0.15s;
           width: 100%;
           text-align: left;
           box-sizing: border-box;
+          animation: hc-pulse 2.4s ease-in-out infinite;
         }
-        .hc-empty:hover { background: var(--bg-tertiary); }
+        .hc-empty:hover { opacity: 0.8; animation: none; }
+        @keyframes hc-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 var(--home-glow); }
+          50%       { box-shadow: 0 0 0 4px transparent; }
+        }
 
         .hc-active {
           display: flex;
