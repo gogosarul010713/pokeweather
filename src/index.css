@@ -69,11 +69,9 @@ body {
   --home:      #22D3EE;
   --home-dim:  rgba(34, 211, 238, 0.14);
   --home-glow: rgba(34, 211, 238, 0.32);
-
-  /* Radar bar (distancia+ETA) */
-  --radar:     #F59E0B;
-  --radar-dim: rgba(245, 158, 11, 0.14);
-  --radar-glow:rgba(245, 158, 11, 0.30);
+  --radar:     #84CC16;
+  --radar-dim: rgba(132, 204, 22, 0.13);
+  --radar-glow:rgba(132, 204, 22, 0.28);
 
   /* Tipos Pokémon */
   --type-fire:     #FF6B35; --type-fire-rgb:     255, 107, 53;
@@ -129,11 +127,9 @@ html.light {
   --home:      #0891B2;
   --home-dim:  rgba(8, 145, 178, 0.12);
   --home-glow: rgba(8, 145, 178, 0.28);
-
-  /* Radar bar — light */
-  --radar:     #D97706;
-  --radar-dim: rgba(217, 119, 6, 0.12);
-  --radar-glow:rgba(217, 119, 6, 0.26);
+  --radar:     #65A30D;
+  --radar-dim: rgba(101, 163, 13, 0.11);
+  --radar-glow:rgba(101, 163, 13, 0.24);
 
   /* Condiciones y tipos NO cambian entre temas */
 }

@@ -90,7 +90,7 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           align-items: center;
           padding: 5px 12px 5px 54px;
           border-top: 1px solid var(--radar-dim);
-          background: var(--home-dim);
+          background: linear-gradient(90deg, var(--radar-dim) 0%, transparent 70%);
           gap: 10px;
         }
         .lc-root.active .lc-bar { padding-left: 52px; }
@@ -101,22 +101,20 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           color: var(--radar);
           font-variant-numeric: tabular-nums;
         }
-        .lc-bar-divider {
-          width: 1px;
-          height: 11px;
-          background: var(--radar-dim);
-        }
         .lc-radar-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: var(--radar);
-          box-shadow: 0 0 0 0 var(--radar-glow);
-          animation: radar-pulse 2s ease-out infinite;
-          flex-shrink: 0;
+          background: var(--radar); flex-shrink: 0;
+          animation: radarPulse 2s ease-out infinite;
         }
-        @keyframes radar-pulse {
+        @keyframes radarPulse {
           0%   { box-shadow: 0 0 0 0 var(--radar-glow); }
           60%  { box-shadow: 0 0 0 5px transparent; }
           100% { box-shadow: 0 0 0 0 transparent; }
+        }
+        .lc-bar-divider {
+          width: 1px;
+          height: 11px;
+          background: var(--radar-glow);
         }
 
         .lc-weather {

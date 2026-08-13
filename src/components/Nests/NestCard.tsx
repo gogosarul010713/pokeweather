@@ -125,7 +125,7 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           align-items: center;
           padding: 5px 12px 5px 62px;
           border-top: 1px solid var(--radar-dim);
-          background: var(--home-dim);
+          background: linear-gradient(90deg, var(--radar-dim) 0%, transparent 70%);
           gap: 10px;
           border-radius: 0 0 8px 8px;
         }
@@ -137,22 +137,20 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           color: var(--radar);
           font-variant-numeric: tabular-nums;
         }
-        .nc-radar-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: var(--radar);
-          box-shadow: 0 0 0 0 var(--radar-glow);
-          animation: radar-pulse 2s ease-out infinite;
-          flex-shrink: 0;
-        }
-        @keyframes radar-pulse {
-          0%   { box-shadow: 0 0 0 0 var(--radar-glow); }
-          60%  { box-shadow: 0 0 0 5px transparent; }
-          100% { box-shadow: 0 0 0 0 transparent; }
-        }
         .nc-bar-divider {
           width: 1px;
           height: 11px;
-          background: var(--radar-dim);
+          background: var(--radar-glow);
+        }
+        .nc-radar-dot {
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--radar); flex-shrink: 0;
+          animation: radarPulse 2s ease-out infinite;
+        }
+        @keyframes radarPulse {
+          0%   { box-shadow: 0 0 0 0 var(--radar-glow); }
+          60%  { box-shadow: 0 0 0 5px transparent; }
+          100% { box-shadow: 0 0 0 0 transparent; }
         }
 
         /* Columna derecha */
