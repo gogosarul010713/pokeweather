@@ -1,12 +1,15 @@
 ## Sprint 9 (branch: `sprint-9-nests`)
 
 **Sin commitear:**
-- US-907.md — criterios de aceptacion actualizados con diseno aprobado (mockup 02)
+- HomeChip Opcion C — chip expandido 4s con mensaje "Fija tu zona para ver que tan cerca estas de cada lugar"
+- docs/mockups/prototypes/01-home-chip-sin-zona.md — estado actualizado a implementado
+- src/index.css — cambios pendientes de revisar
 
 **Siguiente:**
-- Commit US-907.md actualizada
-- Implementar: LocationCard meta row (distancia + ETA) + NestCard rediseno columna derecha (badges fila1/fila2 + spawn badge 🐾) + CTA banner sin zona + sort Distancia en LocationFeed
+- Verificar visualmente en browser (npm run dev -- port 5174)
+- MapSearch popup: boton "Fijar como mi zona" en pin azul -> pin cian
 
 **Backlog critico:**
+- Sort "Distancia" seleccionado automaticamente al fijar zona
 - Estado nido (Verificado/No verificado) mover a Filter Panel como chips
-- ETA formula: Math.ceil(km / 40 * 60) min (velocidad auto ~40 km/h)
+- Nidos cercanos resaltados con borde cian pulsante mientras radar activo

@@ -2,7 +2,7 @@
 
 **Sprint:** 9  
 **Componente:** `HomeChip` (sidebar)  
-**Estado:** en diseno
+**Estado:** implementado
 
 ## Problema
 
@@ -20,6 +20,14 @@ Cuando el usuario no tiene zona fijada, el chip no comunica que al fijarlo apare
 ## Recomendacion
 
 **Opcion D** — menor complejidad de estado, sin persistencia, feedback claro.
+
+## Implementado
+
+**Opcion C** — chip expandido temporal.
+- Mensaje: "Fija tu zona para ver que tan cerca estas de cada lugar"
+- Font-weight 500 en estado expandido, 600 en estado colapsado
+- Colapsa a "Fijar mi zona..." a los 4 segundos
+- Sin localStorage, sin store extra — solo `useState` + `setTimeout`
 
 ## Artifact
 

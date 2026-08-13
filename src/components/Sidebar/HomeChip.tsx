@@ -25,6 +25,14 @@ export default function HomeChip() {
   const modalOpen = useStore((s) => s.homeModalOpen)
   const setModalOpen = useStore((s) => s.setHomeModalOpen)
   const [resolvedLabel, setResolvedLabel] = useState<string | null>(null)
+  const [showBanner, setShowBanner] = useState(true)
+
+  useEffect(() => {
+    if (homeLocation) return
+    setShowBanner(true)
+    const t = setTimeout(() => setShowBanner(false), 4000)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     if (!homeLocation) { setResolvedLabel(null); return }
@@ -130,6 +138,7 @@ export default function HomeChip() {
           transition: background 0.15s;
         }
         .hc-clear:hover { background: var(--bg-tertiary); }
+
       `}</style>
 
       {homeLocation ? (
@@ -152,7 +161,9 @@ export default function HomeChip() {
       ) : (
         <button className="hc-empty" onClick={() => setModalOpen(true)} type="button">
           <HomeIcon />
-          Fijar mi zona...
+          {showBanner
+            ? <span style={{fontWeight: 500}}>Fija tu zona para ver que tan cerca estas de cada lugar</span>
+            : 'Fijar mi zona...'}
         </button>
       )}
 
