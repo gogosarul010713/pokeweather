@@ -89,8 +89,8 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           display: flex;
           align-items: center;
           padding: 5px 12px 5px 54px;
-          border-top: 1px solid var(--radar-dim);
-          background: linear-gradient(90deg, var(--radar-dim) 0%, transparent 70%);
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-overlay);
           gap: 10px;
         }
         .lc-root.active .lc-bar { padding-left: 52px; }
@@ -98,23 +98,14 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
         .lc-bar-val {
           font-size: 11px;
           font-weight: 700;
-          color: var(--radar);
+          color: var(--home);
+          text-shadow: 0 0 6px var(--home-glow);
           font-variant-numeric: tabular-nums;
-        }
-        .lc-radar-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: var(--radar); flex-shrink: 0;
-          animation: radarPulse 2s ease-out infinite;
-        }
-        @keyframes radarPulse {
-          0%   { box-shadow: 0 0 0 0 var(--radar-glow); }
-          60%  { box-shadow: 0 0 0 5px transparent; }
-          100% { box-shadow: 0 0 0 0 transparent; }
         }
         .lc-bar-divider {
           width: 1px;
           height: 11px;
-          background: var(--radar-glow);
+          background: var(--border-default);
         }
 
         .lc-weather {
@@ -260,16 +251,15 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
 
         {distInfo && (
           <div className="lc-bar">
-            <div className="lc-radar-dot"/>
             <div className="lc-bar-item">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--radar)" strokeWidth="2.5">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5">
                 <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
               </svg>
               <span className="lc-bar-val">{distInfo.dist}</span>
             </div>
             <div className="lc-bar-divider"/>
             <div className="lc-bar-item">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--radar)" strokeWidth="2.5" style={{opacity:.8}}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5" style={{opacity:.8}}>
                 <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
               </svg>
               <span className="lc-bar-val">~{distInfo.eta} min</span>
