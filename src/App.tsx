@@ -28,6 +28,7 @@ export default function App() {
   const searchQuery = useStore((s) => s.searchQuery)
   const sortMode = useStore((s) => s.sortMode)
   const sortDirection = useStore((s) => s.sortDirection)
+  const homeLocation = useStore((s) => s.homeLocation)
   const { run, toastMessage } = useWeather()
   const tickNow = useStore((s) => s.tickNow)
 
@@ -55,7 +56,7 @@ export default function App() {
       filteredCount: getFilteredCities(cities).length,
     })
     return getFilteredCities(cities)
-  }, [cities, regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection])
+  }, [cities, regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection, homeLocation])
 
   // Ejecutar una sola vez al montar el componente
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { useStore, type City } from '../../store/useStore'
 import { TYPE_ICON } from '../../config/typeIcons'
 import { calculateDistance, formatDistance } from '../../utils/distance'
+import { getCooldown } from '../../utils/cooldown'
 
 interface LocationCardProps {
   city: City
@@ -45,8 +46,7 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
   const distInfo = homeLocation
     ? (() => {
         const m = calculateDistance(homeLocation.lat, homeLocation.lon, city.lat, city.lon)
-        const eta = Math.ceil(m / 1000 / 40 * 60)
-        return { dist: formatDistance(m), eta }
+        return { dist: formatDistance(m), cooldown: getCooldown(m) }
       })()
     : null
 
@@ -262,7 +262,7 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5" style={{opacity:.8}}>
                 <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
               </svg>
-              <span className="lc-bar-val">~{distInfo.eta} min</span>
+              <span className="lc-bar-val">{distInfo.cooldown}</span>
             </div>
           </div>
         )}

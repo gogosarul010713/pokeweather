@@ -11,6 +11,6 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
 }
 
 export function formatDistance(meters: number): string {
-  if (meters < 1000) return `${Math.round(meters)} m`
-  return `${(meters / 1000).toFixed(1)} km`
+  if (meters < 1000) return `${Math.ceil(meters)} m`
+  return `${Math.ceil(meters / 100) / 10} km`
 }

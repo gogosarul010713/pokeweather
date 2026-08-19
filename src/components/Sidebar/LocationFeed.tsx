@@ -91,7 +91,12 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
       result.sort((a, b) => (a.types[0] ?? '').localeCompare(b.types[0] ?? ''))
     } else if (nestSortBy === 'spawnRate') {
       result.sort((a, b) => b.spawnRate - a.spawnRate)
-    } else if (nestSortBy === 'distance' && homeLocation) {
+    } else if ((nestSortBy === 'distance' || nestSortBy === 'cooldown') && homeLocation) {
+      result.sort((a, b) =>
+        calculateDistance(homeLocation.lat, homeLocation.lon, a.lat, a.lng) -
+        calculateDistance(homeLocation.lat, homeLocation.lon, b.lat, b.lng)
+      )
+    } else if (homeLocation) {
       result.sort((a, b) =>
         calculateDistance(homeLocation.lat, homeLocation.lon, a.lat, a.lng) -
         calculateDistance(homeLocation.lat, homeLocation.lon, b.lat, b.lng)

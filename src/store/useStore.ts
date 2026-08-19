@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Nest } from '../types/nest'
 import type { NavPinState } from '../types/navPin'
 import type { HomeLocation } from '../types/homeLocation'
+import { calculateDistance } from '../utils/distance'
 
 // ─── Layer Types ──────────────────────────────────────────────────────────────
 
@@ -173,7 +174,7 @@ interface AppStore {
   setNestPopupOpen: (open: boolean) => void
   setNestTypeFilter: (types: string[]) => void
   toggleNestType: (type: string) => void
-  setNestSortBy: (mode: 'name' | 'type' | 'spawnRate' | 'distance') => void
+  setNestSortBy: (mode: 'name' | 'type' | 'spawnRate' | 'distance' | 'cooldown') => void
   setNestSortDirection: (direction: 'asc' | 'desc') => void
   setNavPin: (pin: NavPinState | null) => void
   clearNavPin: () => void
@@ -192,7 +193,7 @@ interface AppStore {
   setDraftType: (types: string[]) => void
   setDraftSortMode: (mode: SortMode) => void
   setDraftNestType: (types: string[]) => void
-  setDraftNestSortBy: (mode: 'name' | 'type' | 'spawnRate' | 'distance') => void
+  setDraftNestSortBy: (mode: 'name' | 'type' | 'spawnRate' | 'distance' | 'cooldown') => void
   toggleAccordion: (section: AccordionKey) => void
 
   // Derived
@@ -479,7 +480,7 @@ export const useStore = create<AppStore>((set, get) => ({
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {
-    const { regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection } = get()
+    const { regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection, homeLocation } = get()
     let result = [...cities]
 
     if (regionFilter !== 'todas') {
@@ -508,11 +509,9 @@ export const useStore = create<AppStore>((set, get) => ({
       )
     }
 
-    // Aplicar ordenamiento solo si sortMode !== ''
     if (sortMode !== '') {
       result.sort((a, b) => {
         let comparison = 0
-
         if (sortMode === 'name') {
           comparison = a.name.localeCompare(b.name)
         } else if (sortMode === 'density') {
@@ -522,10 +521,13 @@ export const useStore = create<AppStore>((set, get) => ({
         } else if (sortMode === 'time') {
           comparison = a.localTime.localeCompare(b.localTime)
         }
-
-        // Invertir si es descendente
         return sortDirection === 'desc' ? -comparison : comparison
       })
+    } else if (homeLocation) {
+      result.sort((a, b) =>
+        calculateDistance(homeLocation.lat, homeLocation.lon, a.lat, a.lon) -
+        calculateDistance(homeLocation.lat, homeLocation.lon, b.lat, b.lon)
+      )
     }
 
     return result

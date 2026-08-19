@@ -3,6 +3,7 @@ import { TYPE_ICON } from '../../config/typeIcons'
 import { NEXT_MIGRATION } from '../../config/nestMigration'
 import { countryFlag } from '../../config/countryFlags'
 import { calculateDistance, formatDistance } from '../../utils/distance'
+import { getCooldown } from '../../utils/cooldown'
 import type { Nest } from '../../types/nest'
 
 interface NestCardProps {
@@ -28,8 +29,7 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
   const distInfo = homeLocation
     ? (() => {
         const m = calculateDistance(homeLocation.lat, homeLocation.lon, nest.lat, nest.lng)
-        const eta = Math.ceil(m / 1000 / 40 * 60)
-        return { dist: formatDistance(m), eta }
+        return { dist: formatDistance(m), cooldown: getCooldown(m) }
       })()
     : null
 
@@ -280,11 +280,11 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
               <span className="nc-bar-val">{distInfo.dist}</span>
             </div>
             <div className="nc-bar-divider"/>
-            <div className="nc-bar-item">
+            <div className="nc-bar-item" title="Cooldown requerido antes de cazar">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5" style={{opacity:.8}}>
-                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
               </svg>
-              <span className="nc-bar-val">~{distInfo.eta} min</span>
+              <span className="nc-bar-val">{distInfo.cooldown}</span>
             </div>
           </div>
         )}
