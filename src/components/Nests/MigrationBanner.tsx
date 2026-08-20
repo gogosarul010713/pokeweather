@@ -1,8 +1,8 @@
 import { useStore } from '../../store/useStore'
-import { NEXT_MIGRATION } from '../../config/nestMigration'
+import { getNextMigration } from '../../config/nestMigration'
 
 function formatCountdown(now: number): { label: string; expired: boolean } {
-  const target = new Date(NEXT_MIGRATION).getTime()
+  const target = getNextMigration(now).getTime()
   const diff = target - now
   if (diff <= 0) return { label: 'Migrado', expired: true }
   const days = Math.floor(diff / 86400000)

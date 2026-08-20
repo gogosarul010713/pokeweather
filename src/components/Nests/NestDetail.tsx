@@ -1,6 +1,6 @@
 import { useStore } from '../../store/useStore'
 import { TYPE_ICON } from '../../config/typeIcons'
-import { NEXT_MIGRATION } from '../../config/nestMigration'
+import { getNextMigration } from '../../config/nestMigration'
 import { getMigrationStatus } from '../../utils/timeUtils'
 import type { Nest } from '../../types/nest'
 
@@ -38,9 +38,9 @@ export default function NestDetail({ nest, onClose, onViewInList }: NestDetailPr
   const now = useStore((s) => s.now)
 
   const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nest.pokemonId}.png`
-  const migrationMs = new Date(NEXT_MIGRATION).getTime()
-  const isConfirmedActive = nest.confirmed && now < migrationMs
-  const countdown = getMigrationStatus(NEXT_MIGRATION, now)
+  const nextMigration = getNextMigration(now)
+  const isConfirmedActive = nest.confirmed && now < nextMigration.getTime()
+  const countdown = getMigrationStatus(nextMigration.toISOString(), now)
 
   const isHot = nest.spawnRate >= 65
   const isNew = nest.confirmedAt

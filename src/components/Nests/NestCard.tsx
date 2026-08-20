@@ -1,6 +1,6 @@
 import { useStore } from '../../store/useStore'
 import { TYPE_ICON } from '../../config/typeIcons'
-import { NEXT_MIGRATION } from '../../config/nestMigration'
+import { getNextMigration } from '../../config/nestMigration'
 import { countryFlag } from '../../config/countryFlags'
 import { calculateDistance, formatDistance } from '../../utils/distance'
 import { getCooldown } from '../../utils/cooldown'
@@ -17,8 +17,7 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
   const homeLocation = useStore((s) => s.homeLocation)
 
   const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${nest.pokemonId}.png`
-  const migrationMs = new Date(NEXT_MIGRATION).getTime()
-  const isConfirmedActive = nest.confirmed && now < migrationMs
+  const isConfirmedActive = nest.confirmed && now < getNextMigration(now).getTime()
   const isHot = nest.spawnRate >= 65
   const isNew = nest.confirmedAt
     ? Date.now() - new Date(nest.confirmedAt).getTime() < 48 * 60 * 60 * 1000
@@ -55,8 +54,6 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           border-color: #22c55e;
           border-left: 3px solid #22c55e;
         }
-        .nc-root.unconfirmed { opacity: 0.7; }
-
         .nc-main {
           display: flex;
           align-items: center;
@@ -71,10 +68,6 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           flex-shrink: 0;
           object-fit: contain;
         }
-        .nc-root.unconfirmed .nc-sprite {
-          filter: grayscale(1) opacity(0.5);
-        }
-
         .nc-body { flex: 1; min-width: 0; display: flex; gap: 6px; }
         .nc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 
@@ -199,11 +192,6 @@ export default function NestCard({ nest, isActive, onSelect }: NestCardProps) {
           white-space: nowrap;
           font-variant-numeric: tabular-nums;
           font-family: 'Exo 2', sans-serif;
-        }
-        .nc-spawn-badge.unconf {
-          background: rgba(128,128,128,.10);
-          color: var(--text-secondary);
-          opacity: .7;
         }
         .nc-spawn {
           font-family: 'Exo 2', sans-serif;
