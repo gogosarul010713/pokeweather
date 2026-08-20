@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { MapContainer, useMap, ZoomControl } from 'react-leaflet'
+import { MapContainer, useMap, useMapEvents, ZoomControl } from 'react-leaflet'
 import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -16,6 +16,7 @@ import MapSearch from './MapSearch'
 import MapZoomControls from './MapZoomControls'
 import NavPin from './NavPin'
 import HomePin from './HomePin'
+import MapContextMenu from './MapContextMenu'
 import { Z } from '../../config/zIndex'
 import { NEST_THRESHOLDS } from '../../config/nestThresholds'
 
@@ -54,6 +55,24 @@ function MapRefCapture({ mapRef }: { mapRef: { current: LeafletMap | null } }) {
   return null
 }
 
+// ─── ContextMenuCapture — captura contextmenu de Leaflet ─────────────────────
+interface ContextMenuState { x: number; y: number; lat: number; lon: number }
+
+function ContextMenuCapture({ onOpen }: { onOpen: (s: ContextMenuState) => void }) {
+  useMapEvents({
+    contextmenu(e) {
+      e.originalEvent.preventDefault()
+      onOpen({
+        x: e.originalEvent.clientX,
+        y: e.originalEvent.clientY,
+        lat: e.latlng.lat,
+        lon: e.latlng.lng,
+      })
+    },
+  })
+  return null
+}
+
 // ─── MapView ──────────────────────────────────────────────────────────────────
 
 interface MapViewProps {
@@ -63,6 +82,7 @@ interface MapViewProps {
 export default function MapView({ cities }: MapViewProps) {
   const mapRef = useRef<LeafletMap | null>(null)
   const [searchOpenTick, setSearchOpenTick] = useState(0)
+  const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null)
   const activeLayers = useStore((s) => s.activeLayers)
   const highlightCategories = useStore((s) => s.highlightCategories)
   const categoryFilter = useStore((s) => s.categoryFilter)
@@ -215,6 +235,7 @@ export default function MapView({ cities }: MapViewProps) {
           worldCopyJump={true}
         >
           <MapRefCapture mapRef={mapRef} />
+          <ContextMenuCapture onOpen={setCtxMenu} />
           <ZoomControl position="topright" />
           <TileSwitcher />
           <FlyToCity />
@@ -254,6 +275,15 @@ export default function MapView({ cities }: MapViewProps) {
         </div>
         <NavPin mapRef={mapRef} />
         <HomePin mapRef={mapRef} />
+        {ctxMenu && (
+          <MapContextMenu
+            x={ctxMenu.x}
+            y={ctxMenu.y}
+            lat={ctxMenu.lat}
+            lon={ctxMenu.lon}
+            onClose={() => setCtxMenu(null)}
+          />
+        )}
       </div>
     </>
   )
