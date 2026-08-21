@@ -7,15 +7,10 @@ import SyncBadge from '../UI/SyncBadge'
 import FilterPanel from './FilterPanel'
 import FilterPanelModal from '../UI/FilterPanelModal'
 import TestingButton from './TestingButton'
+// BUG-020 (C1): TestingTools solo en DEV
 import TestingTools from '../TestingTools/TestingTools'
-import type { City } from '../../store/useStore'
 
-interface HeaderProps {
-  cities?: City[]
-  onRefresh?: () => void
-}
-
-export default function Header({ cities = [] }: HeaderProps) {
+export default function Header() {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
 
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
@@ -253,7 +248,10 @@ export default function Header({ cities = [] }: HeaderProps) {
               {sidebarOpen ? '☰' : '›'}
             </button>
 
-            <TestingButton onClick={() => setIsTestingOpen(true)} />
+            {/* US-1114: DEV local siempre; Vercel preview/prod via VITE_ENABLE_TESTING_TOOLS=true */}
+            {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TESTING_TOOLS === 'true') && (
+              <TestingButton onClick={() => setIsTestingOpen(true)} />
+            )}
             <SyncBadge />
             <ThemeToggle />
           </div>
@@ -270,7 +268,9 @@ export default function Header({ cities = [] }: HeaderProps) {
         onClose={() => setIsFilterPanelOpen(false)}
       />
 
-      <TestingTools cities={cities} isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
+      {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TESTING_TOOLS === 'true') && (
+        <TestingTools isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
+      )}
     </>
   )
 }

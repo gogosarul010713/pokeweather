@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useStore } from '../../store/useStore'
+import { useStore, type SortMode, type SortDirection, type Region } from '../../store/useStore'
 import CustomSelect from '../UI/CustomSelect'
 import type { SelectOption } from '../UI/CustomSelect'
 import SortDropdown from './SortDropdown'
@@ -44,13 +44,14 @@ const REGION_OPTIONS: SelectOption[] = [
 ]
 
 const CLIMATE_OPTIONS: SelectOption[] = [
-  { label: 'Sunny',  value: 'sunny',  icon: '/weather/sunny.png'  },
-  { label: 'Partly', value: 'partly', icon: '/weather/partly.png' },
-  { label: 'Cloudy', value: 'cloudy', icon: '/weather/cloudy.png' },
-  { label: 'Fog',    value: 'fog',    icon: '/weather/fog.png'    },
-  { label: 'Rain',   value: 'rain',   icon: '/weather/rain.png'   },
-  { label: 'Snow',   value: 'snow',   icon: '/weather/snow.png'   },
-  { label: 'Windy',  value: 'windy',  icon: '/weather/windy.png'  },
+  { label: 'Sunny',     value: 'sunny',  icon: '/weather/sunny.png'  },
+  { label: 'Despejado', value: 'clear',  icon: '/weather/clear.png'  },
+  { label: 'Partly',    value: 'partly', icon: '/weather/partly.png' },
+  { label: 'Cloudy',    value: 'cloudy', icon: '/weather/cloudy.png' },
+  { label: 'Fog',       value: 'fog',    icon: '/weather/fog.png'    },
+  { label: 'Rain',      value: 'rain',   icon: '/weather/rain.png'   },
+  { label: 'Snow',      value: 'snow',   icon: '/weather/snow.png'   },
+  { label: 'Windy',     value: 'windy',  icon: '/weather/windy.png'  },
 ]
 
 
@@ -72,8 +73,8 @@ export default function FilterPanel() {
 
   // Handler para cambios de ordenamiento (criterio + dirección)
   const handleSortChange = useCallback((mode: string, direction: string) => {
-    setSortMode(mode as any)
-    setSortDirection(direction as any)
+    setSortMode(mode as SortMode)
+    setSortDirection(direction as SortDirection)
   }, [setSortMode, setSortDirection])
 
   const activeFilterCount =
@@ -88,7 +89,7 @@ export default function FilterPanel() {
     setRegionFilter('todas')
     setConditionFilter([])
     setTypeFilter([])
-    setSortMode('' as any)
+    setSortMode('')
     setSortDirection('asc')
   }
 
@@ -184,7 +185,7 @@ export default function FilterPanel() {
           label="Continente"
           value={regionFilter}
           options={REGION_OPTIONS}
-          onChange={(v) => setRegionFilter(v as any)}
+          onChange={(v) => setRegionFilter(v as Region)}
           isMulti={false}
         />
 

@@ -1,7 +1,9 @@
 # 📚 Documentación — Pokémon Weather Explorer
 
-Guía de navegación por categoría.  
-**Última actualización:** 2026-04-08
+Guía centralizada de navegación.  
+**Última actualización:** 2026-04-12
+
+**👉 EMPIEZA AQUÍ:** [📖 ROADMAP.md](ROADMAP.md) — Visión de Sprints 8-12 | [📊 Sprint Status](sprints/) — Historial completo
 
 ---
 
@@ -23,44 +25,31 @@ Guía de navegación por categoría.
 - [06-geospatial-cache-optimization.md](architecture/06-geospatial-cache-optimization.md) — Optimización geoespacial con S2 Level 10
 - [07-implementacion-geospatial-cache.md](architecture/07-implementacion-geospatial-cache.md) — Implementación de caché geoespacial
 - [08-technical-debt.md](architecture/08-technical-debt.md) — Deuda técnica identificada y prioridades
-- [09-weather-persistence-backend.md](architecture/09-weather-persistence-backend.md) — **NUEVO** Arquitectura Firestore para persistencia de datos climáticos (Sprint 8)
+- [09-weather-persistence-backend.md](architecture/09-weather-persistence-backend.md) — Arquitectura Firestore (Sprint 8)
+- [10-firestore-data-schema.md](architecture/10-firestore-data-schema.md) — **NUEVO** Data dictionary completo (tipos, relaciones, esquemas Firestore)
 
 ---
 
 ## 🎯 [sprints/](sprints/) — Planificación y seguimiento
 
-- [01-backlog.md](sprints/01-backlog.md) — Product backlog con criterios de aceptación
-- [02-sprints.md](sprints/02-sprints.md) — Cronograma de sprints y fases
-- [03-sprint7-checkpoint.md](sprints/03-sprint7-checkpoint.md) — Checkpoint Sprint 7 (completado)
-- [04-sprint-6-completion.md](sprints/04-sprint-6-completion.md) — Resumen Sprint 6
-- [05-sprint8.md](sprints/05-sprint8.md) — **NUEVO** Sprint 8: Bottom Sheet + Weather Backend
+**Guía rápida:**
+- [00-INDEX.md](sprints/00-INDEX.md) — Índice de todos los sprints
+- [sprint-8/](sprints/sprint-8/) — Sprint 8 (✅ COMPLETADO: 7 US, 22 SP)
+- [sprint-9/](sprints/sprint-9/) — Sprint 9 (Planificado: Bundle Optimization)
+- Sprint 1-7: Histórico en archivos individuales
 
 ---
 
-## ✨ [features/](features/) — User Stories por sprint
+## ✨ [features/](features/) — Características por sprint
 
-### Sprint 6
-- [01-us606-cache-inspector.md](features/01-us606-cache-inspector.md) — US-606: Inspector Visual de Caché
-- [02-us606-testing.md](features/02-us606-testing.md) — Testing para US-606
-- [03-us608-history-dashboard.md](features/03-us608-history-dashboard.md) — US-608: Dashboard de Historial
-- [04-us608-button-fix-verification.md](features/04-us608-button-fix-verification.md) — Verificación fix US-608
-- [05-us609-testing.md](features/05-us609-testing.md) — US-609: Testing y métricas
+**Sprint 1-7** (histórico):
+- Detalles en [features/](features/) (16 archivos)
+- Resumen: Mapa + Búsqueda + Filtros + Responsive
 
-### Sprint 7
-- [06-us702-mobile-responsive.md](features/06-us702-mobile-responsive.md) — US-702: Mobile responsive
-- [07-mobile-filters-architecture.md](features/07-mobile-filters-architecture.md) — Arquitectura filtros mobile
-- [08-badges-system.md](features/08-badges-system.md) — Sistema de badges (categorías)
-- [09-unified-sort-dropdown.md](features/09-unified-sort-dropdown.md) — US-703: SortDropdown unificado
-- [10-us701-tablet-layout.md](features/10-us701-tablet-layout.md) — US-701: Tablet layout colapsable
-- [11-us705-filter-panel-redesign.md](features/11-us705-filter-panel-redesign.md) — US-705: FilterPanelModal V2
-
-### Sprint 8 — [sprint8/](features/sprint8/)
-- [us-804-firebase-setup.md](features/sprint8/us-804-firebase-setup.md) — **P0** US-804: Setup Firebase + Firestore
-- [us-801-persistir-pronostico.md](features/sprint8/us-801-persistir-pronostico.md) — **P1** US-801: Persistir pronóstico por ciudad
-- [us-802-catalogo-estatico.md](features/sprint8/us-802-catalogo-estatico.md) — **P1** US-802: Catálogo estático de condiciones
-- [us-806-ttl-automatico.md](features/sprint8/us-806-ttl-automatico.md) — **P2** US-806: TTL automático 7 días
-- [us-803-dashboard-firestore.md](features/sprint8/us-803-dashboard-firestore.md) — **P2** US-803: Dashboard lee desde Firestore
-- [us-805-reporte-clasificacion.md](features/sprint8/us-805-reporte-clasificacion.md) — **P3** US-805: Reporte de clasificación incorrecta
+**Sprint 8** (✅ COMPLETADO):
+- 7 US completadas (US-706 a US-806)
+- Ver: [sprints/sprint-8/README.md](sprints/sprint-8/README.md) para resumen
+- Detalles: [sprints/sprint-8/us/](sprints/sprint-8/us/) para documentación individual
 
 ---
 
@@ -73,6 +62,7 @@ Guía de navegación por categoría.
 - [05-testing-tools-excel-export.md](technical/05-testing-tools-excel-export.md) — Herramientas testing + export
 - [06-next-session-weather-precision.md](technical/06-next-session-weather-precision.md) — Notas precisión climática
 - [07-sonar.md](technical/07-sonar.md) — Análisis SonarQube
+- [08-firebase-setup.md](technical/08-firebase-setup.md) — **NUEVO** Setup credenciales Firebase (Sprint 8)
 
 ---
 
@@ -98,11 +88,13 @@ Guía de navegación por categoría.
 
 | Necesidad | Documento |
 |-----------|-----------|
+| **📖 Visión del proyecto** | [📈 ROADMAP.md](ROADMAP.md) — Sprints 8-12 |
 | Iniciar en el proyecto | [overview/01-project.md](overview/01-project.md) |
-| Entender la clasificación clima → Pokémon | [architecture/03-weather-classification-algorithm.md](architecture/03-weather-classification-algorithm.md) |
+| Entender clasificación clima → Pokémon | [architecture/03-weather-classification-algorithm.md](architecture/03-weather-classification-algorithm.md) |
 | Setup AccuWeather API | [technical/03-setup-accuweather.md](technical/03-setup-accuweather.md) |
-| Setup Firebase (Sprint 8) | [features/sprint8/us-804-firebase-setup.md](features/sprint8/us-804-firebase-setup.md) |
+| Setup Firebase (Sprint 8) | [technical/08-firebase-setup.md](technical/08-firebase-setup.md) |
 | Debuggear caché | [technical/02-debugging-cache.md](technical/02-debugging-cache.md) |
-| Estado del sprint actual | [sprints/05-sprint8.md](sprints/05-sprint8.md) |
-| Arquitectura backend | [architecture/09-weather-persistence-backend.md](architecture/09-weather-persistence-backend.md) |
-| US disponibles Sprint 8 | [features/sprint8/](features/sprint8/) |
+| Sprint 9 (próximo) | [sprints/sprint-9/](sprints/sprint-9/) — Bundle Optimization |
+| Arquitectura Firestore | [architecture/09-weather-persistence-backend.md](architecture/09-weather-persistence-backend.md) |
+| Data schema Firestore | [architecture/10-firestore-data-schema.md](architecture/10-firestore-data-schema.md) |
+| Firebase credentials setup | [technical/08-firebase-setup.md](technical/08-firebase-setup.md) |

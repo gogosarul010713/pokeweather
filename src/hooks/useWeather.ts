@@ -1,14 +1,14 @@
 // useWeather.ts
-// Hook principal de carga de datos climáticos desde AccuWeather API.
-// ⚠️ REQUIERE VITE_ACCUWEATHER_KEY configurada en .env.local
+// Hook principal de carga de datos climaticos. Fuente de verdad: Firestore (D-043).
+// AccuWeather solo en dev con VITE_ACCUWEATHER_KEY — fallback de emergencia en prod.
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { loadCitiesInBatch } from '../services/weather/batchWeatherService'
 import { getS2Key } from '../services/geo/s2Service'
-import { shouldRefreshCities, setLastUpdateHour, getCachedWeather } from '../services/cache/cacheService'
+import { shouldRefreshCities, setLastUpdateHour, getCachedWeather, setCachedWeather } from '../services/cache/cacheService'
 import { msUntilNextHour } from '../utils/timeUtils'
-import { saveSnapshots, clearOldSnapshots } from '../services/history/weatherHistoryService'
+import { getWeatherFromFirestore } from '../services/firebase/firebaseWeatherService'
 import type { City } from '../store/useStore'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -22,15 +22,59 @@ const calculateLocalTime = (timezone: number): string => {
   return `${hours}:${minutes}`
 }
 
+/**
+ * US-1104: Lectura optimizada de climas con fallback Firestore
+ * Flujo: IndexedDB (caché local, <60 min) → Firestore (source of truth) → city vacío
+ * CAPA 1: IndexedDB by accuLocationKey (rápido, 40ms)
+ * CAPA 2: Firestore by city.id (fallback, 300-500ms)
+ */
 const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
   const result: City[] = []
 
   for (const city of cities) {
-    // ✅ FIX #2: Buscar caché por locationKey (sincronizado con batchWeatherService)
-    // Nota: US-605 guarda datos por locationKey, no por city.id
-    const cached = await getCachedWeather(city.s2Key)  // Usar s2Key como proxy de locationKey
+    // FIX: usar city.id como cache key cuando accuLocationKey esta vacio.
+    // En modo prod (sin VITE_ACCUWEATHER_KEY), city.accuLocationKey viene '' del JSON,
+    // lo que causaba que TODAS las ciudades compartieran la misma entrada en IndexedDB.
+    const locationKey = city.accuLocationKey || `cityid-${city.id}`
+    const cached = await getCachedWeather(locationKey)
+
+    // CAPA 1: Firestore (source of truth — Cloud Function escribe cada hora)
+    // Comparar timestamp: usar Firestore si es más reciente que IndexedDB
+    const firestoreWeather = await getWeatherFromFirestore(city.id)
+
+    if (firestoreWeather) {
+      const firestoreTime = firestoreWeather.updatedAt ?? 0
+      const cachedTime = cached?.updatedAt ?? 0
+
+      // Firestore gana si: no hay cache O Firestore es más reciente o igual
+      if (!cached || firestoreTime >= cachedTime) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { weatherImage, ...cacheableData } = firestoreWeather
+        await setCachedWeather(locationKey, { ...cacheableData, weatherImage: '' })
+
+        const merged = {
+          ...city,
+          condition: firestoreWeather.condition as City['condition'],
+          boostedTypes: firestoreWeather.boostedTypes,
+          tempC: firestoreWeather.tempC,
+          feelsLike: firestoreWeather.feelsLike,
+          humidity: firestoreWeather.humidity,
+          windKmh: firestoreWeather.windKmh,
+          gustKmh: firestoreWeather.gustKmh,
+          weatherIcon: firestoreWeather.weatherIcon,
+          isExtreme: firestoreWeather.isExtreme,
+          timezone: firestoreWeather.timezone,
+          updatedAt: firestoreWeather.updatedAt,
+          localTime: calculateLocalTime(firestoreWeather.timezone),
+          weatherImage: firestoreWeather.weatherImage,
+        } as City
+        result.push(merged)
+        continue
+      }
+    }
+
+    // CAPA 2: IndexedDB (si Firestore vacío o cache es más reciente)
     if (cached) {
-      // Preservar id/name/lat/lon del city original — nunca del caché
       const merged = {
         ...(cached as Partial<City>),
         id: city.id,
@@ -38,30 +82,28 @@ const loadCitiesFromCache = async (cities: City[]): Promise<City[]> => {
         lat: city.lat,
         lon: city.lon,
         s2Key: city.s2Key,
-        localTime: calculateLocalTime((cached as any).timezone ?? 0),
+        localTime: calculateLocalTime(cached?.timezone ?? 0),
       } as City
       result.push(merged)
-    } else {
-      const withTime = { ...city, localTime: calculateLocalTime(city.timezone) }
-      result.push(withTime)
+      continue
     }
+
+    // FALLBACK: Sin datos
+    const withTime = { ...city, localTime: calculateLocalTime(city.timezone) }
+    result.push(withTime)
   }
 
   return result
 }
 
-const getApiKey = (): string => {
-  const key = import.meta.env.VITE_ACCUWEATHER_KEY
-  if (!key) {
-    console.error('❌ VITE_ACCUWEATHER_KEY not configured in .env.local')
-    console.error('   Create .env.local with: VITE_ACCUWEATHER_KEY=your_api_key')
-    throw new Error('AccuWeather API key is required')
-  }
-  return key
+type RawCityJson = {
+  name: string; country: string; flag: string; region: string
+  lat: number; lng: number; density: number; stops: number; gyms: number; rating: number
+  tags?: string[]; tips?: string; best?: string; evento?: string; transporte?: string
 }
 
 // Transformar datos del JSON a formato City
-function transformCitiesToCityFormat(jsonCities: any[]): City[] {
+function transformCitiesToCityFormat(jsonCities: RawCityJson[]): City[] {
   return jsonCities.map((c) => ({
     id: c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     name: c.name,
@@ -96,7 +138,7 @@ function transformCitiesToCityFormat(jsonCities: any[]): City[] {
     timezone: 0,
     updatedAt: Date.now(),
     weatherImage: '',
-  }))
+  })) as City[]
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -114,7 +156,7 @@ export function useWeather() {
 
   const loadCities = useCallback(async (forceRefresh: boolean = false): Promise<City[]> => {
     // Cargar ciudades del JSON (siempre)
-    const rawCities: any[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+    const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
     const cities = transformCitiesToCityFormat(rawCities)
     const total = cities.length
 
@@ -144,8 +186,31 @@ export function useWeather() {
       }
     }
 
-    // ─ Refrescar desde API ─
-    const apiKey = getApiKey() // ⚠️ Throws si no está configurada
+    // ─ D-043: Firestore es siempre la fuente de verdad primaria ─
+    // AccuWeather solo como fallback si Firestore devuelve datos vacios
+    console.log('ℹ️ D-043: leyendo desde Firestore (fuente de verdad)...')
+    setLoadingStatus('loading')
+    const firestoreCities = await loadCitiesFromCache(cities)
+    const hasRealData = firestoreCities.some(c => c.tempC > 0)
+    if (hasRealData) {
+      const percent = Math.round((firestoreCities.length / total) * 100)
+      setLoadingProgress({
+        cityName: `Cargadas ${firestoreCities.length} de ${total} (Firestore)`,
+        current: firestoreCities.length,
+        total,
+        percent,
+      })
+      setLastUpdateHour()
+      return firestoreCities
+    }
+
+    // Fallback AccuWeather: solo si Firestore esta vacio Y hay API key
+    const apiKey = import.meta.env.VITE_ACCUWEATHER_KEY
+    if (!apiKey) {
+      console.warn('⚠️ Firestore vacio y sin VITE_ACCUWEATHER_KEY — sin datos')
+      return firestoreCities
+    }
+    console.log('ℹ️ Firestore vacio — fallback AccuWeather...')
     const isAutoRefresh = forceRefresh && !shouldRefreshCities()
     console.log(`🌍 Loading ${total} cities from AccuWeather API${isAutoRefresh ? ' (auto-refresh)' : ''}...`)
     setLoadingStatus('loading')
@@ -195,8 +260,8 @@ export function useWeather() {
       // Guardar timestamp de actualización (Lazy Load)
       setLastUpdateHour()
 
-      // US-607: Guardar snapshots históricos para análisis de precisión
-      await saveSnapshots(resultWithTime)
+      // US-801: Firebase persistence ya se ejecuta en loadCitiesInBatch
+      // (no duplicar aquí — evita writes duplicados a Firestore)
 
       return resultWithTime
     } catch (error) {
@@ -208,46 +273,54 @@ export function useWeather() {
   // Ref para quebrar la circular dependency entre doRefresh y scheduleNextRefresh
   const scheduleNextRefreshRef = useRef<() => void>(() => {})
 
-  // ✅ FIX: Helper para ejecutar refresh y reprogramar siguiente
+  // D-043 (2026-06-12): doRefresh ya no llama AccuWeather directamente.
+  // El refresh horario real viene de useFirestoreSync (onSnapshot) — cuando la CF escribe,
+  // Firestore notifica al frontend sin race condition ni timer duplicado.
+  // Este doRefresh se mantiene solo como fallback de emergencia (visibilitychange con cache expirado).
   const doRefresh = useCallback(async () => {
-    // Mostrar LoadingScreen durante auto-refresh (en lugar de Toast sutil)
     setLoadingStatus('loading')
 
     try {
-      const refreshed = await loadCities(true)
+      // D-043: leer desde Firestore (via loadCitiesFromCache) en lugar de AccuWeather.
+      // loadCities(true) con apiKey ausente ya toma el path Firestore — pero si la key
+      // existe en .env.local (dev), tambien tomaria el path AccuWeather. Forzamos Firestore
+      // cargando directamente desde cache/Firestore sin pasar por AccuWeather.
+      const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+      const cities = transformCitiesToCityFormat(rawCities)
+      const refreshed = await loadCitiesFromCache(cities)
       setLoadingStatus('ready')
       setLastUpdated(Date.now())
       onReadyRef.current(refreshed)
-
-      // Después del fade-out del LoadingScreen (400ms), programar siguiente
       setTimeout(() => scheduleNextRefreshRef.current(), 400)
     } catch (error) {
-      console.error('❌ Auto-refresh error:', error)
+      console.error('❌ Auto-refresh Firestore error:', error)
       setLoadingStatus('error')
-      // Reintentar en 1 minuto
-      refreshRef.current = setTimeout(() => scheduleNextRefreshRef.current(), 60 * 1000)
+      refreshRef.current = setTimeout(() => scheduleNextRefreshRef.current(), 5 * 60 * 1000)
     }
-  }, [loadCities, setLoadingStatus, setLastUpdated])
+  }, [setLoadingStatus, setLastUpdated])
 
-  // Reprogramar siguiente refresh a HH:00
+  // D-043: scheduleNextRefresh ya no programa un refresh AccuWeather a HH:00.
+  // El timer se mantiene como heartbeat de visibilidad (Visibility API) pero el
+  // update real del clima viene de useFirestoreSync. Ver useFirestoreSync.ts.
   const scheduleNextRefresh = useCallback(() => {
-    // Limpiar timer anterior si existe
     if (refreshRef.current) {
       clearTimeout(refreshRef.current)
       refreshRef.current = null
     }
 
-    // No programar si app está oculta
     if (document.hidden) {
       console.log('⏸️ No se programa refresh (app oculta)')
       return
     }
 
     const msUntilNext = msUntilNextHour()
-    console.log(`⏰ Próximo auto-refresh en ${Math.round(msUntilNext / 1000)}s (${new Date(Date.now() + msUntilNext).toLocaleTimeString()})`)
+    console.log(`⏰ Heartbeat Firestore programado en ${Math.round(msUntilNext / 1000)}s (${new Date(Date.now() + msUntilNext).toLocaleTimeString()})`)
 
+    // D-043: el timeout es solo un heartbeat de seguridad. El update real ya ocurrio
+    // via useFirestoreSync cuando la CF escribio. Este timer cubre el caso edge donde
+    // el onSnapshot fallo o la app estaba en background durante el write de la CF.
     refreshRef.current = setTimeout(() => {
-      console.log('🔄 Trigger auto-refresh HH:00')
+      console.log('🔄 Heartbeat Firestore HH:00 (D-043)')
       doRefresh()
     }, msUntilNext)
   }, [doRefresh])
@@ -257,24 +330,23 @@ export function useWeather() {
     scheduleNextRefreshRef.current = scheduleNextRefresh
   }, [scheduleNextRefresh])
 
-  // Visibility API: pausa/reschedule refresh según visibilidad
+  // Visibility API: pausa/reschedule heartbeat segun visibilidad.
+  // D-043: ya no dispara AccuWeather — si el cache expiro, lee Firestore via doRefresh.
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
-      // App en background: pausar auto-refresh
       if (refreshRef.current) {
         clearTimeout(refreshRef.current)
         refreshRef.current = null
-        console.log('⏸️ Auto-refresh pausado (app en background)')
+        console.log('⏸️ Heartbeat pausado (app en background)')
       }
     } else {
-      // App visible nuevamente: reschedule y ejecutar si está expirada
-      console.log('▶️ App visible — rescheduleando timer...')
+      console.log('▶️ App visible — rescheduleando heartbeat Firestore...')
       if (shouldRefreshCities()) {
-        console.log('⚡ Caché expirado, refrescando inmediatamente...')
+        // D-043: cache expirado = leer Firestore (no AccuWeather)
+        console.log('⚡ Cache expirado, leyendo Firestore...')
         doRefresh()
       } else {
-        // Timer no expiró: simplemente reprogramar
-        console.log('✓ Caché vigente, reprogramando timer')
+        console.log('✓ Cache vigente, reprogramando heartbeat')
         scheduleNextRefresh()
       }
     }
@@ -293,17 +365,37 @@ export function useWeather() {
       onReadyRef.current = onReady
 
       try {
-        // US-607: Limpiar snapshots antiguos (> N días)
-        await clearOldSnapshots()
-
         let cities = await loadCities()
+
+        // Detectar ciudades sin datos reales y forzar refresh API
+        const noRealData = cities.length > 0 && cities.every(
+          c => c.tempC === 0 && c.boostedTypes.length === 0
+        )
+        if (noRealData) {
+          console.warn('⚠️ Ciudades sin datos reales, forzando refresh API + limpiando localStorage stale...')
+          // Limpiar el flag de localStorage que estaba bloqueando el refresh
+          localStorage.removeItem('pwe-lastUpdateHour')
+          try {
+            cities = await loadCities(true)
+            console.log('✅ Refresh API completado:', cities.length, 'ciudades')
+          } catch (forceErr) {
+            console.error('❌ Force refresh API falló:', forceErr)
+            // Último intento: Firestore directo
+            const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+            const baseCities = transformCitiesToCityFormat(rawCities)
+            const firestoreCities = await loadCitiesFromCache(baseCities)
+            if (firestoreCities.some(c => c.tempC > 0 || c.boostedTypes.length > 0)) {
+              cities = firestoreCities
+              console.log('✅ Datos recuperados desde Firestore:', cities.length)
+            }
+          }
+        }
 
         // ✅ FIX #3: Deduplicación defensiva
         const ids = cities.map(c => c.id)
         const uniqueIds = new Set(ids)
         if (ids.length !== uniqueIds.size) {
           console.warn('⚠️ Duplicados detectados, deduplicando...')
-          // Mantener primer elemento de cada id único
           const seen = new Set<string>()
           cities = cities.filter(city => {
             if (seen.has(city.id)) return false
@@ -319,11 +411,30 @@ export function useWeather() {
         setLastUpdated(Date.now())
         onReady(cities)
 
-        // Programar auto-refresh + Visibility listener
+        // D-043: programar heartbeat Firestore + Visibility listener.
+        // El update real del clima viene de useFirestoreSync (onSnapshot).
         scheduleNextRefresh()
         document.addEventListener('visibilitychange', handleVisibilityChange)
-      } catch {
-        setLoadingStatus('error')
+      } catch (err) {
+        console.error('❌ run() falló, intentando Firestore como último fallback:', err)
+        // Último recurso: cargar desde Firestore para no dejar sidebar vacío
+        try {
+          const rawCities: RawCityJson[] = await import('../data/pokedensity-cities.json').then((m) => m.default || m)
+          const baseCities = transformCitiesToCityFormat(rawCities)
+          const fallback = await loadCitiesFromCache(baseCities)
+          if (fallback.length > 0) {
+            setLoadingStatus('ready')
+            setLastUpdated(Date.now())
+            onReady(fallback)
+            scheduleNextRefresh()
+            document.addEventListener('visibilitychange', handleVisibilityChange)
+            console.log(`✅ run() fallback Firestore: ${fallback.length} ciudades`)
+          } else {
+            setLoadingStatus('error')
+          }
+        } catch {
+          setLoadingStatus('error')
+        }
       } finally {
         loadingCitiesRef.current = false  // Permitir siguiente carga
       }

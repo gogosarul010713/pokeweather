@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useStore } from '../../store/useStore'
+import { useStore, type SortMode, type Region } from '../../store/useStore'
 
 const CLIMATE_OPTIONS = [
   { label: 'Todos', value: 'todos', icon: '/weather/all.png' },
   { label: 'Soleado', value: 'sunny', icon: '/weather/sunny.png' },
+  { label: 'Despejado', value: 'clear', icon: '/weather/clear.png' },
   { label: 'Parcial', value: 'partly', icon: '/weather/partly.png' },
   { label: 'Nublado', value: 'cloudy', icon: '/weather/cloudy.png' },
   { label: 'Niebla', value: 'fog', icon: '/weather/fog.png' },
@@ -94,7 +95,7 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
     setRegionFilter('todas')
     setConditionFilter([])
     setTypeFilter([])
-    setSortMode('' as any)
+    setSortMode('')
     setSortDirection('asc')
     setExpandedSections({ regions: false, climate: false, types: false, sort: false })
     setShowAllTypes(false)
@@ -557,7 +558,7 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
                     <button
                       key={region.value}
                       className={`fpm-pill ${regionFilter === region.value ? 'active' : ''}`}
-                      onClick={() => setRegionFilter(region.value as any)}
+                      onClick={() => setRegionFilter(region.value as Region)}
                     >
                       {region.label}
                     </button>
@@ -718,7 +719,7 @@ export default function FilterPanelModal({ isOpen, onClose }: FilterPanelModalPr
                           setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
                         } else {
                           // Different sort: set to new sort + reset direction to asc
-                          setSortMode(option.value as any)
+                          setSortMode(option.value as SortMode)
                           setSortDirection('asc')
                         }
                       }}

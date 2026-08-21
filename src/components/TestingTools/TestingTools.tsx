@@ -1,32 +1,137 @@
 import { useState } from 'react'
-import { getRetentionDays, setRetentionDays } from '../../services/history/weatherHistoryService'
-import HistoryGrid from './HistoryGrid'
-import CachePanel from './CachePanel'
-import PrecisionMetrics from './PrecisionMetrics'
-import type { City } from '../../store/useStore'
+import { useStore } from '../../store/useStore'
+import { CleanupPanel } from './CleanupPanel'
+import { PredictionAnalysisDemo } from '../Analytics/PredictionAnalysisDemo'
+import { updateAutoSyncSetting } from '../../services/firebase/settingsService'
+
+const AUTOSYNC_MSG_KEY = 'pwe-autosync-msg'
 
 interface TestingToolsProps {
-  cities: City[]
   isOpen: boolean
   onClose: () => void
 }
 
-type TabType = 'historial' | 'cache' | 'metricas'
+type TabType = 'limpiar' | 'predicciones' | 'sincronizacion'
 
-export default function TestingTools({ cities, isOpen, onClose }: TestingToolsProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('historial')
-  const [retentionDays, setRetentionDaysLocal] = useState<7 | 14 | 30>(
-    (getRetentionDays() as 7 | 14 | 30) || 7
-  )
-  const [isMaximized, setIsMaximized] = useState(false)
+export default function TestingTools({ isOpen, onClose }: TestingToolsProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('predicciones')
+  const [isMaximized, setIsMaximized] = useState(true)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [predictionRefreshKey, setPredictionRefreshKey] = useState(0)
+  const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [isSyncSaving, setIsSyncSaving] = useState(false)
+  const [toggleMessage, setToggleMessage] = useState<{ type: 'success' | 'info'; text: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem(AUTOSYNC_MSG_KEY)
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
 
-  const handleRetentionChange = (days: 7 | 14 | 30) => {
-    setRetentionDaysLocal(days)
-    setRetentionDays(days)
-  }
+  const autoSyncEnabled = useStore((s) => s.autoSyncEnabled)
+  const setAutoSyncEnabled = useStore((s) => s.setAutoSyncEnabled)
 
   const handleToggleMaximize = () => {
     setIsMaximized(!isMaximized)
+  }
+
+  // US-1101: Disparar sincronización manual de climas
+  const handleManualSync = async () => {
+    setIsSyncing(true)
+    setSyncMessage(null)
+
+    try {
+      // Obtener la URL de la Cloud Function
+      const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID
+      const cronSecret = import.meta.env.VITE_CRON_SECRET || ''
+
+      console.log('[TestingTools][DIAG] Manual sync iniciado')
+
+      if (!cronSecret) {
+        setSyncMessage({
+          type: 'error',
+          text: 'VITE_CRON_SECRET no configurado. Revisa .env.local',
+        })
+        setIsSyncing(false)
+        return
+      }
+
+      const url = `https://us-central1-${projectId}.cloudfunctions.net/syncWeatherManual`
+
+      console.log('[TestingTools][DIAG] Llamando CF en:', url)
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'x-cron-secret': cronSecret,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('[TestingTools][DIAG] CF respondió con status:', response.status)
+
+      const data = await response.json()
+
+      console.log('[TestingTools][DIAG] CF response data:', data)
+
+      if (response.ok && data.success) {
+        setSyncMessage({
+          type: 'success',
+          text: `✅ Sincronización completada: ${data.citiesUpdated} ciudades actualizadas`,
+        })
+        setPredictionRefreshKey(k => k + 1)
+      } else {
+        setSyncMessage({
+          type: 'error',
+          text: `❌ Error: ${data.error || 'Fallo desconocido'}`,
+        })
+      }
+    } catch (error) {
+      setSyncMessage({
+        type: 'error',
+        text: `❌ Error de conexión: ${error instanceof Error ? error.message : 'Fallo desconocido'}`,
+      })
+      console.error('[TestingTools][DIAG] Manual sync error:', error)
+    } finally {
+      setIsSyncing(false)
+      console.log('[TestingTools][DIAG] Manual sync finalizado')
+      // Limpiar mensaje después de 4 segundos
+      setTimeout(() => setSyncMessage(null), 4000)
+    }
+  }
+
+  // US-1106b: Toggle auto-sync con feedback visual persistente en localStorage
+  const handleToggleAutoSync = async () => {
+    setIsSyncSaving(true)
+    try {
+      const newState = !autoSyncEnabled
+      await updateAutoSyncSetting(newState)
+      setAutoSyncEnabled(newState)
+
+      const now = new Date()
+      let msg: { type: 'success' | 'info'; text: string }
+
+      if (newState) {
+        const next = new Date(now)
+        next.setMinutes(0, 0, 0)
+        next.setHours(next.getHours() + 1)
+        const nextStr = next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        msg = { type: 'success', text: `Auto-sync activado. Proxima ejecucion: ${nextStr}.` }
+      } else {
+        const lastRun = new Date(now)
+        lastRun.setMinutes(0, 0, 0)
+        const lastStr = lastRun.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        msg = { type: 'info', text: `Auto-sync desactivado. Ultima ejecucion: ${lastStr}. La CF no correra hasta que lo reactives.` }
+      }
+
+      localStorage.setItem(AUTOSYNC_MSG_KEY, JSON.stringify(msg))
+      setToggleMessage(msg)
+    } catch (error) {
+      console.error('[TestingTools] Error toggling auto-sync:', error)
+    } finally {
+      setIsSyncSaving(false)
+    }
   }
 
   return (
@@ -297,41 +402,108 @@ export default function TestingTools({ cities, isOpen, onClose }: TestingToolsPr
           {/* Tab Navigation */}
           <div className="tt-tabs">
             <button
-              className={`tt-tab ${activeTab === 'historial' ? 'active' : ''}`}
-              onClick={() => setActiveTab('historial')}
+              className={`tt-tab ${activeTab === 'limpiar' ? 'active' : ''}`}
+              onClick={() => setActiveTab('limpiar')}
             >
-              📊 Historial
+              🗑️ Limpiar
             </button>
             <button
-              className={`tt-tab ${activeTab === 'cache' ? 'active' : ''}`}
-              onClick={() => setActiveTab('cache')}
+              className={`tt-tab ${activeTab === 'predicciones' ? 'active' : ''}`}
+              onClick={() => setActiveTab('predicciones')}
             >
-              🔧 Caché
+              📊 Predicciones
             </button>
             <button
-              className={`tt-tab ${activeTab === 'metricas' ? 'active' : ''}`}
-              onClick={() => setActiveTab('metricas')}
+              className={`tt-tab ${activeTab === 'sincronizacion' ? 'active' : ''}`}
+              onClick={() => setActiveTab('sincronizacion')}
             >
-              📈 Métricas
+              ⚙️ Sincronización
             </button>
           </div>
 
           {/* Content */}
           <div className="tt-content">
-            {/* Tab: Historial */}
-            {activeTab === 'historial' && (
-              <HistoryGrid
-                cities={cities}
-                retentionDays={retentionDays}
-                onRetentionChange={handleRetentionChange}
-              />
+            {/* Tab: Limpiar */}
+            {activeTab === 'limpiar' && <CleanupPanel onCleanupComplete={() => setPredictionRefreshKey(k => k + 1)} />}
+            {/* Tab: Predicciones */}
+            {activeTab === 'predicciones' && <PredictionAnalysisDemo refreshKey={predictionRefreshKey} />}
+            {/* Tab: Sincronización */}
+            {activeTab === 'sincronizacion' && (
+              <>
+                {/* Auto-sync Toggle */}
+                <div className="tt-section">
+                  <h3 className="tt-section-title">⏰ Auto-sync</h3>
+                  <p className="tt-section-desc">
+                    Controlar si la sincronización ocurre automáticamente cada hora
+                  </p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px',
+                      background: 'var(--bg-tertiary)',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={autoSyncEnabled}
+                      onChange={handleToggleAutoSync}
+                      disabled={isSyncSaving}
+                      style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {autoSyncEnabled ? '🟢 Auto-sync ACTIVADO' : '🔴 Auto-sync DESACTIVADO'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                        {autoSyncEnabled
+                          ? 'Se sincroniza automáticamente cada HH:00 UTC'
+                          : 'Solo sincroniza cuando presionas el botón'}
+                      </div>
+                    </div>
+                  </div>
+                  {toggleMessage && (
+                    <div
+                      className="tt-info"
+                      style={{
+                        backgroundColor: toggleMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(99, 179, 237, 0.1)',
+                        borderColor: toggleMessage.type === 'success' ? '#22c55e' : '#63b3ed',
+                        color: toggleMessage.type === 'success' ? '#22c55e' : '#63b3ed',
+                      }}
+                    >
+                      {toggleMessage.text}
+                    </div>
+                  )}
+                </div>
+
+                <hr style={{ margin: '16px 0', borderColor: 'var(--border-default)' }} />
+
+                {/* Manual Sync */}
+                <div className="tt-section">
+                  <h3 className="tt-section-title">⚡ Sincronización Manual</h3>
+                  <p className="tt-section-desc">
+                    Disparar sincronización de climas manualmente (sin esperar HH:00)
+                  </p>
+                  <button className="tt-button tt-button-primary" onClick={handleManualSync} disabled={isSyncing}>
+                    {isSyncing ? '🔄 Sincronizando...' : '🔄 Sincronizar ahora'}
+                  </button>
+                  {syncMessage && (
+                    <div
+                      className="tt-info"
+                      style={{
+                        backgroundColor: syncMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        borderColor: syncMessage.type === 'success' ? '#22c55e' : '#ef4444',
+                        color: syncMessage.type === 'success' ? '#22c55e' : '#ef4444',
+                      }}
+                    >
+                      {syncMessage.text}
+                    </div>
+                  )}
+                </div>
+              </>
             )}
-
-            {/* Tab: Caché */}
-            {activeTab === 'cache' && <CachePanel />}
-
-            {/* Tab: Métricas */}
-            {activeTab === 'metricas' && <PrecisionMetrics retentionDays={retentionDays} />}
           </div>
         </div>
       )}

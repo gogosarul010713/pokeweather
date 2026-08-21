@@ -10,9 +10,10 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/).
 
 ### 🎉 Release Stable Inicial
 
-**Status:** Production-ready  
+**Status:** Production-ready (Sprint 1-7 completado)  
 **Build:** ✅ PASSED  
-**Tests:** ✅ PASSED (95+ tests)
+**Tests:** ✅ PASSED (95+ tests)  
+**Última actualización:** 2026-04-12 (docs cleanup)
 
 #### ✨ Features Completas (Sprint 1-7)
 - **Sprint 1-3:** Core climate data, Pokémon type mapping, AccuWeather integration
@@ -68,18 +69,22 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
-## [2.0.0-beta] — TBD (IN DEVELOPMENT)
+## [2.0.0-alpha] — 2026-04-08→2026-04-12 (IN DEVELOPMENT)
 
-### 🔄 Major Refactoring
+### 🔄 Major Refactoring — Sprint 8 ✅ COMPLETADO
 
-**Status:** In progress (refactor/firebase-v2 branch)  
-**Estimated:** Sprint 8-13 (6 sprints)
+**Status:** Sprint 8 done, merged to develop  
+**Branch:** develop (v2.0.0-alpha)  
+**Commits:** 3 commits (reorganización docs + cleanup)
 
-#### 🚀 Planned Features
-- **US-801:** Persistir pronóstico en Firestore (async/background)
-- **US-802:** Catálogo estático (weather_catalog collection)
-- **US-803:** Dashboard Firestore (analytics + queries)
-- **US-805:** Reportes de clasificación clima
+#### ✅ Completado Sprint 8
+- **US-706:** Bottom Sheet Mobile (z-index 1001 fix)
+- **US-801:** ✅ Persistir pronóstico en Firestore (async/background)
+- **US-802:** ✅ Catálogo estático (weather_catalog collection)
+- **US-803:** ✅ Dashboard Firestore (analytics + queries)
+- **US-804:** ✅ Firebase setup
+- **US-805:** ✅ Reportes de clasificación clima
+- **US-806:** ✅ TTL automático 7 días
 
 #### 📦 Major Changes
 - ♻️ Cache migration: IndexedDB → Firestore (gradual)
@@ -101,23 +106,21 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
-## [Unreleased]
+## [2.0.0-alpha] — Sprint 9+ (Upcoming)
 
 ### Upcoming Sprints
-- Sprint 8 (current): Firebase weather persistence
-- Sprint 9-10: Nidos system
-- Sprint 11: PVP system
-- Sprint 12: Testing + validation
-- Sprint 13: Release v2.0.0
+- **Sprint 9:** Bundle Optimization (Code-splitting, lazy load)
+- **Sprint 10-12:** Nests feature system (paralelo)
+- **Sprint 13+:** PVP system, release testing
 
 ---
 
 ## Git References
 
-- **v1.0.0-stable** — Current production release
-- **sprint-8** — Active development branch
-- **main** — Stable releases (currently v1.0.0)
-- **develop** — Staging area
+- **v1.0.0-stable** — Current production release (main branch, locked)
+- **develop** — Sprint 8 merged, v2.0.0-alpha active
+- **feature/nests** — Nests feature (worktree, paralelo)
+- **main** — Stable releases only (v1.0.0, locked)
 
 ## How to Compare Versions
 

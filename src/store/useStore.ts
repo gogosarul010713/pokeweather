@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { WeatherCondition } from '../services/weather/weatherClassify'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ export interface City {
   transporte: string
 
   // Runtime (AccuWeather + S2)
-  condition: 'sunny' | 'partly' | 'cloudy' | 'fog' | 'rain' | 'snow' | 'windy'
+  condition: WeatherCondition
   isExtreme: boolean
   boostedTypes: string[]
   tempC: number
@@ -40,9 +41,9 @@ export interface City {
   weatherImage: string
 }
 
-type Region = 'todas' | 'asia' | 'europa' | 'america' | 'oceania' | 'africa'
-type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin ordenar
-type SortDirection = 'asc' | 'desc'
+export type Region = 'todas' | 'asia' | 'europa' | 'america' | 'oceania' | 'africa'
+export type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin ordenar
+export type SortDirection = 'asc' | 'desc'
 type LoadingStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 interface LoadingProgress {
@@ -73,6 +74,7 @@ interface AppStore {
   lastUpdated: number | null
   isFilterPanelOpen: boolean
   typeFilter: string[]
+  autoSyncEnabled: boolean
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -96,6 +98,7 @@ interface AppStore {
   setIsFilterPanelOpen: (open: boolean) => void
   setTypeFilter: (types: string[]) => void
   toggleType: (type: string) => void
+  setAutoSyncEnabled: (enabled: boolean) => void
   resetToHome: () => void
 
   // Derived
@@ -144,6 +147,7 @@ export const useStore = create<AppStore>((set, get) => ({
   lastUpdated: null,
   isFilterPanelOpen: false,
   typeFilter: [],
+  autoSyncEnabled: true, // Default: auto-sync enabled (US-1106)
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -234,6 +238,8 @@ export const useStore = create<AppStore>((set, get) => ({
         ? state.typeFilter.filter((t) => t !== type)
         : [...state.typeFilter, type],
     })),
+
+  setAutoSyncEnabled: (enabled) => set({ autoSyncEnabled: enabled }),
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {

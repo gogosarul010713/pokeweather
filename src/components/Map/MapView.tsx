@@ -74,7 +74,7 @@ export default function MapView({ cities }: MapViewProps) {
   const badgesByCity = useMemo(() => {
     if (cities.length === 0) return new Map()
     const badgeCalculator = calculateBadges(cities)
-    const badges = new Map<string, any[]>()
+    const badges = new Map<string, unknown[]>()
     cities.forEach(city => {
       badges.set(city.id, badgeCalculator(city))
     })

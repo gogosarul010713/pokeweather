@@ -4,72 +4,17 @@
 // Sprint 7: Mejorar precision (target 95%+ vs PGO oficial)
 // Sprint 7 - US-605: Caché geoespacial optimizado (por locationKey)
 
-import type { WeatherCondition } from '../../config/weatherImages'
+// Algoritmo puro de clasificacion clima → PGO. Fuente de verdad: weatherClassify.ts (D-042)
+export * from './weatherClassify'
 
-// ─── Traducción AccuWeather WeatherIcon → Clima Pokémon GO ──────────────────
-// Referencia: Doc 20 (20-weather-classification-algorithm.md)
-// Cada icono AccuWeather (1-44) tiene un clima PGO asignado + flag canWindy.
-// canWindy=true: climas "secos" que pueden convertirse en Windy por viento fuerte.
-// canWindy=false: precipitación activa (lluvia, nieve, tormentas, niebla).
-
-export interface WeatherTranslation {
-  id: number
-  iconText: string
-  canWindy: boolean
-  pgoCondition: WeatherCondition
-}
-
-export const WEATHER_TRANSLATIONS: Record<number, WeatherTranslation> = {
-  // ── Día (1-32) ──
-  1:  { id: 1,  iconText: 'Sunny',                     canWindy: true,  pgoCondition: 'sunny' },
-  2:  { id: 2,  iconText: 'Mostly Sunny',              canWindy: true,  pgoCondition: 'sunny' },
-  3:  { id: 3,  iconText: 'Partly Sunny',              canWindy: true,  pgoCondition: 'partly' },
-  4:  { id: 4,  iconText: 'Intermittent Clouds',       canWindy: true,  pgoCondition: 'partly' },
-  5:  { id: 5,  iconText: 'Hazy Sunshine',             canWindy: true,  pgoCondition: 'cloudy' },
-  6:  { id: 6,  iconText: 'Mostly Cloudy',             canWindy: true,  pgoCondition: 'cloudy' },
-  7:  { id: 7,  iconText: 'Cloudy',                    canWindy: true,  pgoCondition: 'cloudy' },
-  8:  { id: 8,  iconText: 'Dreary (Overcast)',         canWindy: true,  pgoCondition: 'cloudy' },
-  // 9, 10: No existen en AccuWeather
-  11: { id: 11, iconText: 'Fog',                       canWindy: false, pgoCondition: 'fog' },
-  12: { id: 12, iconText: 'Showers',                   canWindy: false, pgoCondition: 'rain' },
-  13: { id: 13, iconText: 'Mostly Cloudy w/ Showers',  canWindy: false, pgoCondition: 'cloudy' },
-  14: { id: 14, iconText: 'Partly Sunny w/ Showers',   canWindy: false, pgoCondition: 'partly' },
-  15: { id: 15, iconText: 'T-Storms',                  canWindy: false, pgoCondition: 'rain' },
-  16: { id: 16, iconText: 'Mostly Cloudy w/ T-Storms', canWindy: false, pgoCondition: 'cloudy' },
-  17: { id: 17, iconText: 'Partly Sunny w/ T-Storms',  canWindy: false, pgoCondition: 'partly' },
-  18: { id: 18, iconText: 'Rain',                      canWindy: false, pgoCondition: 'rain' },
-  19: { id: 19, iconText: 'Flurries',                  canWindy: false, pgoCondition: 'snow' },
-  20: { id: 20, iconText: 'Mostly Cloudy w/ Flurries', canWindy: false, pgoCondition: 'cloudy' },
-  21: { id: 21, iconText: 'Partly Sunny w/ Flurries',  canWindy: false, pgoCondition: 'partly' },
-  22: { id: 22, iconText: 'Snow',                      canWindy: false, pgoCondition: 'snow' },
-  23: { id: 23, iconText: 'Mostly Cloudy w/ Snow',     canWindy: false, pgoCondition: 'cloudy' },
-  24: { id: 24, iconText: 'Ice',                       canWindy: false, pgoCondition: 'snow' },
-  25: { id: 25, iconText: 'Sleet',                     canWindy: false, pgoCondition: 'snow' },
-  26: { id: 26, iconText: 'Freezing Rain',             canWindy: false, pgoCondition: 'rain' },
-  // 27, 28: No existen en AccuWeather
-  29: { id: 29, iconText: 'Rain and Snow',             canWindy: false, pgoCondition: 'rain' },
-  30: { id: 30, iconText: 'Hot',                       canWindy: true,  pgoCondition: 'sunny' },
-  31: { id: 31, iconText: 'Cold',                      canWindy: true,  pgoCondition: 'snow' },
-  32: { id: 32, iconText: 'Windy',                     canWindy: true,  pgoCondition: 'windy' },
-  // ── Noche (33-44) ──
-  33: { id: 33, iconText: 'Clear',                     canWindy: true,  pgoCondition: 'sunny' },
-  34: { id: 34, iconText: 'Mostly Clear',              canWindy: true,  pgoCondition: 'sunny' },
-  35: { id: 35, iconText: 'Partly Cloudy',             canWindy: true,  pgoCondition: 'partly' },
-  36: { id: 36, iconText: 'Intermittent Clouds',       canWindy: true,  pgoCondition: 'partly' },
-  37: { id: 37, iconText: 'Hazy Moonlight',            canWindy: true,  pgoCondition: 'cloudy' },
-  38: { id: 38, iconText: 'Mostly Cloudy',             canWindy: true,  pgoCondition: 'cloudy' },
-  39: { id: 39, iconText: 'Partly Cloudy w/ Showers',  canWindy: false, pgoCondition: 'partly' },
-  40: { id: 40, iconText: 'Mostly Cloudy w/ Showers',  canWindy: false, pgoCondition: 'cloudy' },
-  41: { id: 41, iconText: 'Partly Cloudy w/ T-Storms', canWindy: false, pgoCondition: 'partly' },
-  42: { id: 42, iconText: 'Mostly Cloudy w/ T-Storms', canWindy: false, pgoCondition: 'cloudy' },
-  43: { id: 43, iconText: 'Mostly Cloudy w/ Flurries', canWindy: false, pgoCondition: 'snow' },
-  44: { id: 44, iconText: 'Mostly Cloudy w/ Snow',     canWindy: false, pgoCondition: 'snow' },
-}
+import { resolveCondition } from './weatherClassify'
+import type { WeatherCondition } from './weatherClassify'
 
 // ─── Mapeo condición → tipos Pokémon potenciados ──────────────────────────────
 
 export const CONDITION_TO_TYPES: Record<WeatherCondition, string[]> = {
   sunny:  ['fire',     'ground',   'grass'],
+  clear:  ['fire',     'ground',   'grass'],
   partly: ['normal',   'rock'],
   cloudy: ['fairy',    'fighting', 'poison'],
   fog:    ['ghost',    'dark'],
@@ -83,6 +28,7 @@ export const CONDITION_TO_TYPES: Record<WeatherCondition, string[]> = {
 
 export const CONDITION_COLORS: Record<WeatherCondition, string> = {
   sunny:  '#FFB347',
+  clear:  '#4A5568',
   partly: '#87CEEB',
   cloudy: '#9E9E9E',
   fog:    '#C8C8C8',
@@ -93,6 +39,7 @@ export const CONDITION_COLORS: Record<WeatherCondition, string> = {
 
 export const CONDITION_LABEL: Record<WeatherCondition, string> = {
   sunny:  'Soleado',
+  clear:  'Despejado',
   partly: 'Parcial',
   cloudy: 'Nublado',
   fog:    'Niebla',
@@ -140,45 +87,12 @@ export const BADGE_ICONS: Record<BadgeType, string> = {
   best: '✨',
 }
 
-// ─── Funciones de cálculo ─────────────────────────────────────────────────────
-
-// Umbrales de viento para override a Windy (Doc 20)
-const WINDY_WIND_KMH = 29    // km/h - viento sostenido
-const WINDY_GUST_KMH = 31    // km/h - ráfagas
-
-export const getBaseCondition = (iconId: number): WeatherCondition => {
-  const translation = WEATHER_TRANSLATIONS[iconId]
-  if (!translation) {
-    console.warn(`⚠️ WeatherIcon ${iconId} no reconocido, fallback a cloudy`)
-    return 'cloudy'
-  }
-  return translation.pgoCondition
-}
-
-export const resolveCondition = (
-  iconId: number,
-  windKmh: number,
-  gustKmh: number
-): WeatherCondition => {
-  const base = getBaseCondition(iconId)
-  const translation = WEATHER_TRANSLATIONS[iconId]
-
-  // WINDY reemplaza cualquier clima si:
-  // 1. El icono AccuWeather permite override por viento (translation.canWindy = true)
-  // 2. El viento supera los umbrales (Doc 20: > 29 km/h o > 31 km/h ráfagas)
-  //
-  // Iconos con canWindy=false (precipitación activa, FOG): nunca se convierten en WINDY
-  // Iconos con canWindy=true (climas secos): pueden convertirse en WINDY si hay viento fuerte
-  if (translation && translation.canWindy) {
-    const isWindy = windKmh > WINDY_WIND_KMH || gustKmh > WINDY_GUST_KMH
-    if (isWindy) return 'windy'
-  }
-
-  return base
-}
-
 export const isExtremeWeather = (alerts: unknown[]): boolean =>
   Array.isArray(alerts) && alerts.length > 0
+
+// REF-001 (sprint-11): ForecastSnapshot y createForecastSnapshots eliminados.
+// La CF es la unica fuente de escritura en Firestore — genera sus propios snapshots
+// con pgo_condition incluido. El frontend ya no clasifica ni persiste snapshots.
 
 // ─── AccuWeather API Functions (Sprint 6) ─────────────────────────────────────
 
@@ -187,13 +101,12 @@ import type { WeatherData } from '../cache/cacheService'
 import { getS2Key } from '../geo/s2Service'
 import type { City } from '../../store/useStore'
 
-// En dev: llamada directa (localhost no tiene CORS)
+// En dev: proxy via Vite a backend Nest (5174) para evitar CORS
 // En prod: proxy via Vercel (evita CORS desde dominio de producción)
-const ACCUWEATHER_BASE = import.meta.env.DEV
-  ? 'https://dataservice.accuweather.com'
-  : '/api/accuweather'
+const ACCUWEATHER_BASE = '/api/accuweather'
 
 interface HourlyForecastData {
+  EpochDateTime: number
   WeatherIcon: number
   Temperature: { Value: number }
   RealFeelTemperature: { Value: number }
@@ -207,6 +120,29 @@ interface HourlyForecastData {
 export interface LocationData {
   locationKey: string
   timezone: number  // offset en segundos desde UTC
+}
+
+/**
+ * Selecciona el slot horario activo de AccuWeather.
+ * AccuWeather actualiza cada 30min — data[0] NO siempre es la hora actual.
+ * Busca el slot con EpochDateTime mas reciente que sea <= ahora.
+ * Fallback a slots[0] si todos son futuros (rotacion anticipada de AccuWeather).
+ */
+export function findCurrentSlot<T extends { EpochDateTime: number }>(
+  slots: T[],
+  nowMs: number = Date.now()
+): T {
+  if (slots.length === 0) throw new Error('No slots available')
+
+  const nowSec = Math.floor(nowMs / 1000)
+  let best = slots[0]
+  for (const slot of slots) {
+    if (slot.EpochDateTime <= nowSec && slot.EpochDateTime > best.EpochDateTime) {
+      best = slot
+    }
+  }
+  const anyPast = slots.some(s => s.EpochDateTime <= nowSec)
+  return anyPast ? best : slots[0]
 }
 
 export const getAccuWeatherLocationKey = async (
@@ -266,7 +202,31 @@ export const getHourlyForecast = async (
   }
 
   const data = await response.json()
-  return data[0] // primer slot = hora actual
+  return findCurrentSlot(data)
+}
+
+/**
+ * Obtener pronóstico completo de 12 horas desde AccuWeather
+ * US-801: Para persistencia en Firestore
+ *
+ * @param locationKey AccuWeather location identifier
+ * @param apiKey AccuWeather API key
+ * @returns Array de 12 HourlyForecastData (típicamente)
+ */
+export const getHourlyForecasts = async (
+  locationKey: string,
+  apiKey: string
+): Promise<HourlyForecastData[]> => {
+  const url = `${ACCUWEATHER_BASE}/forecasts/v1/hourly/12hour/${locationKey}` +
+    `?apikey=${apiKey}&details=true&metric=true`
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
+  if (!response.ok) {
+    throw new Error(`AccuWeather forecast error: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return Array.isArray(data) ? data : [] // retorna array vacío si no es array
 }
 
 export const getAlerts = async (
@@ -286,25 +246,30 @@ export const getAlerts = async (
   }
 }
 
+// REF-001 (sprint-11): retorna solo City — snapshots eliminados (la CF los genera).
 export const fetchCityWeather = async (
   city: City,
   apiKey: string,
   enableAlerts: boolean = false
-): Promise<City> => {
+): Promise<{ city: City }> => {
   try {
     // 1. Obtener location key y timezone
     const { locationKey, timezone } = await getAccuWeatherLocationKey(city.lat, city.lon, apiKey)
 
-    // 2. Fetch forecast + alerts (opcional, si plan lo soporta)
-    const forecastPromise = getHourlyForecast(locationKey, apiKey)
+    // 2. Fetch primer slot del forecast + alerts (opcional)
+    const hourlyForecastsPromise = getHourlyForecasts(locationKey, apiKey)
     const alertsPromise = enableAlerts ? getAlerts(locationKey, apiKey) : Promise.resolve([])
 
-    const [forecast, alerts] = await Promise.all([
-      forecastPromise,
+    const [hourlyForecasts, alerts] = await Promise.all([
+      hourlyForecastsPromise,
       alertsPromise,
     ])
 
-    // 3. Calcular condición y tipos
+    const forecast = findCurrentSlot(hourlyForecasts)
+    if (!forecast) {
+      throw new Error('No hourly forecast data returned')
+    }
+    // 3. Clasificar condicion para la UI (sidebar, mapa)
     const condition = resolveCondition(
       forecast.WeatherIcon,
       forecast.Wind.Speed.Value,
@@ -313,7 +278,7 @@ export const fetchCityWeather = async (
     const boostedTypes = CONDITION_TO_TYPES[condition]
     const isExtreme = isExtremeWeather(alerts)
 
-    // 4. Construir objeto City actualizado
+    // 4. Construir City enriquecida para la UI
     const weatherData: City = {
       ...city,
       condition,
@@ -324,18 +289,16 @@ export const fetchCityWeather = async (
       humidity: forecast.RelativeHumidity,
       windKmh: forecast.Wind.Speed.Value,
       gustKmh: forecast.WindGust.Speed.Value,
-      visibilityKm: forecast.Visibility?.Value ?? 10,  // ← Default 10km si no viene
+      visibilityKm: forecast.Visibility?.Value ?? 10,
       weatherIcon: forecast.WeatherIcon,
       accuLocationKey: locationKey,
-      timezone,  // ← Ahora se asigna correctamente
+      timezone,
       updatedAt: Date.now(),
       weatherImage: `/weather/${condition}.png`,
-      // localTime será calculado en useWeather con timezone
     }
 
-    return weatherData
+    return { city: weatherData }
   } catch (error) {
-    // Lanzar error para que useWeather lo maneje y muestre estado informativo
     throw new Error(`Failed to fetch weather for ${city.name}: ${error instanceof Error ? error.message : String(error)}`)
   }
 }

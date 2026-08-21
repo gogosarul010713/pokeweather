@@ -3,7 +3,7 @@
 // Usado en Sprint 6 (AccuWeather) para cachear datos por celda S2.
 // Nivel 10 es el especificado por Pokémon GO (200 km² por celda).
 
-// @ts-ignore — s2-geometry no tiene tipos TS
+// @ts-expect-error — s2-geometry no tiene tipos TS
 import S2lib from 's2-geometry'
 
 const S2 = S2lib?.S2 ?? S2lib

@@ -4,6 +4,8 @@
 // Sprint 7 - US-605: Caché geoespacial optimizado (por locationKey)
 
 import type { City } from '../../store/useStore'
+// Sprint-11: saveCityForecast eliminado — la CF es la unica fuente de escritura en Firestore.
+// El frontend solo llama AccuWeather para poblar la UI y el cache local (IndexedDB).
 import { fetchCityWeather, enrichCityWithWeatherData, getAccuWeatherLocationKey } from './weatherService'
 import { getCachedWeather, setCachedWeather } from '../cache/cacheService'
 
@@ -88,14 +90,15 @@ export async function loadCitiesInBatch(
             { ...city, accuLocationKey: locationKey },
             cached
           )
+
           return {
             success: true as const,
             data: enrichedCity,
           }
         }
 
-        // 3. Si no está en caché, fetchar de API
-        const weatherData = await fetchCityWeatherWithRetry(
+        // 3. Si no esta en cache, fetchar de API
+        const enrichedCity = await fetchCityWeatherWithRetry(
           city,
           apiKey,
           finalConfig.maxRetries,
@@ -104,13 +107,13 @@ export async function loadCitiesInBatch(
 
         // 4. Cachear resultado por locationKey (NO por city.id)
         // Beneficio US-605: Dos ciudades con mismo locationKey reutilizan caché
-        const { accuLocationKey, ...cacheableData } = weatherData
+        const { accuLocationKey, ...cacheableData } = enrichedCity
         await setCachedWeather(accuLocationKey, cacheableData)
 
         // Contar endpoints: location + forecast + (alerts si está habilitado)
         totalCalls += finalConfig.enableAlerts ? 3 : 2
 
-        return { success: true as const, data: weatherData }
+        return { success: true as const, data: enrichedCity }
       } catch (error) {
         return {
           success: false as const,
@@ -156,7 +159,9 @@ export async function loadCitiesInBatch(
 /**
  * Fetch con reintentos automáticos.
  * Si falla, reintenta hasta maxRetries veces.
+ * Retorna: {city, snapshots} para persistencia en Firestore (US-801)
  */
+// Sprint-11: retorna solo City — snapshots ya no se pasan a Firestore desde el frontend.
 async function fetchCityWeatherWithRetry(
   city: City,
   apiKey: string,
@@ -165,10 +170,10 @@ async function fetchCityWeatherWithRetry(
   attempt: number = 0
 ): Promise<City> {
   try {
-    return await fetchCityWeather(city, apiKey, enableAlerts)
+    const { city: enriched } = await fetchCityWeather(city, apiKey, enableAlerts)
+    return enriched
   } catch (error) {
     if (attempt < maxRetries) {
-      // Esperar un poco antes de reintentar (backoff exponencial)
       await sleep(Math.pow(2, attempt) * 100)
       return fetchCityWeatherWithRetry(city, apiKey, maxRetries, enableAlerts, attempt + 1)
     }

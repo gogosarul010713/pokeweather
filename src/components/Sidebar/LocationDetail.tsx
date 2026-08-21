@@ -208,6 +208,36 @@ export default function LocationDetail({ city }: LocationDetailProps) {
 
         .ld-btn:hover { color: var(--text-primary); }
         .ld-btn.active { color: #ff4757; }
+        .ld-btn.report { color: var(--text-secondary); }
+
+        /* Toast */
+        .ld-toast {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: var(--ui-accent, #58a6ff);
+          color: white;
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-family: 'Exo 2', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          z-index: 2000;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          animation: slideInUp 300ms ease;
+        }
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
 
         /* ── Content ── */
         .ld-content {
@@ -380,6 +410,9 @@ export default function LocationDetail({ city }: LocationDetailProps) {
             className="ld-weather-icon"
             src={`/weather/${city.condition}.png`}
             alt={city.condition}
+            loading="lazy"
+            width={48}
+            height={48}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
 
@@ -430,6 +463,9 @@ export default function LocationDetail({ city }: LocationDetailProps) {
                 className="ld-climate-img"
                 src={`/weather/${city.condition}.png`}
                 alt={city.condition}
+                loading="lazy"
+                width={32}
+                height={32}
                 onError={(e) => { e.currentTarget.style.display = 'none' }}
               />
               <div>
@@ -454,6 +490,9 @@ export default function LocationDetail({ city }: LocationDetailProps) {
                       src={src}
                       alt={type}
                       title={type}
+                      loading="lazy"
+                      width={36}
+                      height={36}
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
                   )
@@ -516,6 +555,7 @@ export default function LocationDetail({ city }: LocationDetailProps) {
           </button>
         </div>
       </div>
+
     </>
   )
 }

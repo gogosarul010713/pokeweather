@@ -44,11 +44,6 @@ const INITIAL_STATE: CachePanelState = {
 export default function CachePanel() {
   const [state, setState] = useState<CachePanelState>(INITIAL_STATE)
 
-  // Cargar datos al montar
-  useEffect(() => {
-    loadData()
-  }, [])
-
   const loadData = useCallback(async () => {
     try {
       setState(s => ({ ...s, isLoading: true, error: null }))
@@ -72,6 +67,11 @@ export default function CachePanel() {
     }
   }, [])
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadData()
+  }, [loadData])
+
   const handleSelectEntry = useCallback((id: string, checked: boolean) => {
     setState(s => {
       const newSelected = new Set(s.selectedIds)
@@ -84,6 +84,7 @@ export default function CachePanel() {
     })
   }, [])
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleSelectAll = useCallback((checked: boolean) => {
     setState(s => {
       const filtered = getFilteredEntries(s.entries, s.filter, s.searchQuery)

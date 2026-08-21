@@ -18,11 +18,7 @@ export default function LoadingScreen({ mode = 'initial' }: LoadingScreenProps) 
 
   // Cuando loadingStatus cambia: mostrar si está 'loading', ocultar si está 'ready'
   useEffect(() => {
-    if (loadingStatus === 'loading') {
-      // Mostrar LoadingScreen
-      setVisible(true)
-    } else if (loadingStatus === 'ready') {
-      // Fade-out 400ms antes de ocultar
+    if (loadingStatus === 'ready') {
       const t = setTimeout(() => setVisible(false), 400)
       return () => clearTimeout(t)
     }

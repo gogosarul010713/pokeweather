@@ -1,0 +1,229 @@
+// firebaseWeatherService.ts
+// Persistencia de pronósticos climáticos en Firestore
+// US-801: Guardar 12 horas de pronóstico clasificado a Pokémon GO
+// US-901: Dynamic imports (lazy Firestore SDK)
+
+import { getDb } from './firebaseConfig'
+import type { Timestamp } from 'firebase/firestore'
+import type { WeatherCondition } from '../../config/weatherImages'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+// Schema CF (post BL-012): la Cloud Function es la unica fuente de escritura en Firestore.
+// El frontend solo lee — saveCityForecast fue eliminado en sprint-11 (limpieza legacy).
+
+export interface ForecastSnapshot {
+  hour: number
+  epoch_dt: number
+  icon_code: number
+  icon_phrase: string
+  temp_c: number
+  wind_kmh: number
+  gust_kmh: number
+  humidity: number
+  has_precipitation: boolean
+  pgo_condition: string
+}
+
+export interface ForecastDoc {
+  city_id: string
+  city_name: string
+  country: string
+  region: string
+  lat: number
+  lon: number
+  date_hour: string
+  snapshots: ForecastSnapshot[]
+  timezone: number
+  target_hour: number
+  local_time_user: string
+  ttl: Timestamp
+  created_at: Timestamp
+  last_written_at?: Timestamp
+}
+
+export interface WeatherData {
+  condition: WeatherCondition
+  boostedTypes: string[]
+  isExtreme: boolean
+  tempC: number
+  feelsLike: number
+  humidity: number
+  windKmh: number
+  gustKmh: number
+  weatherIcon: number
+  timezone: number
+  updatedAt: number
+  weatherImage: string
+}
+
+// ─── Functions ────────────────────────────────────────────────────────────────
+
+/**
+ * Obtener pronósticos recientes desde Firestore (últimas N horas)
+ * STRATEGY: Procesar sin índice Firestore
+ * - Obtiene todos los forecasts (sin where/orderBy)
+ * - Filtra + ordena en memoria (JavaScript)
+ * - Razón: Firestore requiere índice para collectionGroup().where().orderBy()
+ *
+ * @param timeRange - '1h' | '6h' | '24h' | '7d'
+ * @returns Promise<ForecastDoc[]> — array de documentos (vacío si offline o error)
+ */
+export async function getRecentForecasts(
+  timeRange: '1h' | '6h' | '24h' | '7d' = '24h',
+  since?: number
+): Promise<ForecastDoc[]> {
+  // Dynamic import Firestore functions (lazy)
+  const { collectionGroup, getDocs, Timestamp } = await import('firebase/firestore')
+
+  // Lazy initialize Firebase if needed
+  const db = await getDb()
+
+  if (!db) {
+    console.warn('[Firebase] Firestore not initialized, returning empty forecasts')
+    return []
+  }
+
+  try {
+    // Determinar minDate: `since` tiene precedencia, sino usar timeRange
+    let minDate: Timestamp
+    if (since !== undefined && since > 0) {
+      minDate = Timestamp.fromMillis(since)
+    } else {
+      let hoursBack: number
+
+      switch (timeRange) {
+        case '1h':
+          hoursBack = 1
+          break
+        case '6h':
+          hoursBack = 6
+          break
+        case '24h':
+          hoursBack = 24
+          break
+        case '7d':
+          hoursBack = 7 * 24
+          break
+        default:
+          hoursBack = 24
+      }
+
+      minDate = Timestamp.fromDate(new Date(Date.now() - hoursBack * 60 * 60 * 1000))
+    }
+
+    // ⚠️ NOTA: Firestore requiere índices COLLECTION_GROUP para where() en collectionGroup
+    // Estrategia: obtener todos los docs y filtrar en memoria (compatible con current volume ~45 docs)
+    // Futuro: cuando volumen crezca, crear índices COLLECTION_GROUP o usar batch queries
+    const allSnapshot = await getDocs(collectionGroup(db, 'forecasts'))
+
+    // Mapear + filtrar + ordenar en memoria
+    const documents: ForecastDoc[] = allSnapshot.docs
+      .map(doc => {
+        const data = doc.data()
+        return {
+          city_id: data.city_id,
+          city_name: data.city_name,
+          country: data.country,
+          region: data.region,
+          lat: data.lat,
+          lon: data.lon,
+          date_hour: data.date_hour,
+          snapshots: data.snapshots || [],
+          calculated_condition: data.calculated_condition || 'Unknown',
+          timezone: data.timezone ?? 0,
+          target_hour: data.target_hour,
+          local_time_user: data.local_time_user || '',
+          ttl: data.ttl,
+          created_at: data.created_at,
+        }
+      })
+      .filter(doc => {
+        // Descartar docs sin target_hour — son obsoletos (pre-CF actualizada)
+        if (doc.target_hour === undefined || doc.target_hour === null) return false
+        // Filtrar por minDate o since
+        const docTime = doc.created_at?.toMillis?.() ?? 0
+        const minTime = minDate.toMillis?.() ?? 0
+        return docTime >= minTime
+      })
+      .sort((a, b) => {
+        const timeA = a.created_at?.toMillis?.() ?? 0
+        const timeB = b.created_at?.toMillis?.() ?? 0
+        return timeB - timeA // DESC order
+      })
+      .slice(0, 500) // limit
+
+    const sinceLabel = since ? new Date(since).toLocaleString() : timeRange
+    console.log(`[Firebase] ✅ Query delta (since=${sinceLabel}) → ${documents.length} docs`)
+    return documents
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.warn(`[Firebase] ⚠️ Error loading forecasts:`, errorMessage)
+    return []
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Obtener datos climáticos de Firestore para una ciudad
+ * Usado por lectura optimizada en UI (fallback si caché expirado)
+ * Retorna en formato WeatherData compatible con cacheService
+ * @param cityId ID de ciudad (ej: "tokyo")
+ * @returns WeatherData enriquecido o null
+ */
+export async function getWeatherFromFirestore(cityId: string): Promise<WeatherData | null> {
+  const { collection, getDocs, query, orderBy, limit } = await import('firebase/firestore')
+  const db = await getDb()
+
+  if (!db) {
+    console.warn('[Firebase] Firestore not initialized, skipping getWeatherFromFirestore')
+    return null
+  }
+
+  try {
+    // Leer directamente de /city_weather/{cityId}/forecasts ordenado por created_at DESC
+    // Mas rapido y confiable que collectionGroup full-scan (no requiere indice global)
+    const forecastsRef = collection(db, 'city_weather', cityId, 'forecasts')
+    const q = query(forecastsRef, orderBy('created_at', 'desc'), limit(1))
+    const snapshot = await getDocs(q)
+
+    if (snapshot.empty) {
+      console.log(`[Firebase] ℹ️ ${cityId}: No forecast documents found`)
+      return null
+    }
+
+    const docData = snapshot.docs[0].data() as ForecastDoc
+
+    if (!docData.snapshots || docData.snapshots.length === 0) {
+      console.log(`[Firebase] ℹ️ ${cityId}: Document has no snapshots`)
+      return null
+    }
+
+    const forecastSnapshot = docData.snapshots[0]
+
+    const { CONDITION_TO_TYPES } = await import('../weather/weatherService')
+
+    const condition = forecastSnapshot.pgo_condition as WeatherCondition
+    const boostedTypes = CONDITION_TO_TYPES[condition] || []
+
+    return {
+      condition,
+      boostedTypes,
+      isExtreme: false,
+      tempC: forecastSnapshot.temp_c,
+      feelsLike: forecastSnapshot.temp_c,
+      humidity: forecastSnapshot.humidity,
+      windKmh: forecastSnapshot.wind_kmh,
+      gustKmh: forecastSnapshot.gust_kmh,
+      weatherIcon: forecastSnapshot.icon_code,
+      timezone: docData.timezone,
+      updatedAt: docData.created_at?.toMillis?.() ?? Date.now(),
+      weatherImage: '',
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.warn(`[Firebase] ⚠️ Error loading weather from Firestore for ${cityId}:`, errorMessage)
+    return null
+  }
+}
+

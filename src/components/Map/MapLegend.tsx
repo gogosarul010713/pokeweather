@@ -9,7 +9,7 @@ import type { WeatherCondition } from '../../config/weatherImages'
 import type { BadgeType } from '../../services/weather/weatherService'
 
 const CONDITIONS: WeatherCondition[] = [
-  'sunny', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy',
+  'sunny', 'clear', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy',
 ]
 
 const BADGE_LABELS: Record<BadgeType, string> = {
