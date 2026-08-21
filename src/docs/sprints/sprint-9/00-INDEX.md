@@ -260,3 +260,14 @@ Usar estos valores consistentemente en toda la app (toggles, filtros, pins, tags
 | PokéParadas | Violeta | `#a78bfa` |
 | Rutas | Ámbar | `#f59e0b` |
 | Multi-capa | Azul índigo | `#4f7cff` |
+
+---
+
+## Sesion 40 -- Mejoras funcionales nidos (2026-08-20)
+
+**Foco:** Migracion ciclica automatica + quitar estilo disabled en nidos no verificados.
+
+| US | Titulo | SP | Status |
+|---|---|---|---|
+| US-911 | Migracion ciclica automatica de nidos | 2 | ⏳ Pendiente |
+| US-912 | Quitar estilo disabled en nidos no verificados | 1 | ⏳ Pendiente |
