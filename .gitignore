@@ -53,3 +53,11 @@ functions/lib/
 .claude/settings.local.json
 .claude/archive/
 .claude/worktrees/
+
+# context-snapshot (local, no versionar)
+.context/
+.codebase-memory/
+.superpowers/
+.claude/session-state.md
+.claude/snapshot.md
+verify-cleanup.js

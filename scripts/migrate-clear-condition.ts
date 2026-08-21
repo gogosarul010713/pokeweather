@@ -70,9 +70,11 @@ async function migrateClearCondition(
 
   for (const doc of forecastsSnap.docs) {
     const data = doc.data()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const snapshots: any[] = data.snapshots ?? []
 
     let changed = false
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatedSnapshots = snapshots.map((s: any) => {
       if (ICONS_TO_MIGRATE.includes(s.icon_code) && s.pgo_condition === 'sunny') {
         changed = true
@@ -88,6 +90,7 @@ async function migrateClearCondition(
 
     if (dryRun) {
       const fixedCount = snapshots.filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (s: any) => ICONS_TO_MIGRATE.includes(s.icon_code) && s.pgo_condition === 'sunny'
       ).length
       console.log(`   [DRY-RUN] ${doc.ref.path} — ${fixedCount} snapshots a corregir`)
