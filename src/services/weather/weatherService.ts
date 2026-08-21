@@ -201,7 +201,7 @@ export const getHourlyForecast = async (
     throw new Error(`AccuWeather forecast error: ${response.status}`)
   }
 
-  const data = await response.json()
+  const data: HourlyForecastData[] = await response.json()
   return findCurrentSlot(data)
 }
 
@@ -225,8 +225,8 @@ export const getHourlyForecasts = async (
     throw new Error(`AccuWeather forecast error: ${response.status}`)
   }
 
-  const data = await response.json()
-  return Array.isArray(data) ? data : [] // retorna array vacío si no es array
+  const data: unknown = await response.json()
+  return Array.isArray(data) ? (data as HourlyForecastData[]) : []
 }
 
 export const getAlerts = async (

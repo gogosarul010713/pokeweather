@@ -310,7 +310,7 @@ export async function showForecastCache(): Promise<void> {
       console.log(`    date_hour: ${doc.date_hour}`)
       console.log(`    created_at: ${dateStr}`)
       console.log(`    snapshots: ${doc.snapshots?.length || 0} horas`)
-      console.log(`    calculated_condition: ${doc.calculated_condition || 'N/A'}`)
+      console.log(`    calculated_condition: ${(doc as unknown as Record<string, unknown>)['calculated_condition'] || 'N/A'}`)
       console.log(`    timezone: ${doc.timezone}`)
       console.log(`    local_time_user: ${doc.local_time_user || 'N/A'}`)
       console.log('')
@@ -328,7 +328,7 @@ export async function showForecastCache(): Promise<void> {
     console.log(`\n📈 Estadísticas:`)
     const conditionCounts = new Map<string, number>()
     forecastDocs.forEach((doc) => {
-      const cond = doc.calculated_condition || 'unknown'
+      const cond = ((doc as unknown as Record<string, unknown>)['calculated_condition'] as string) || 'unknown'
       conditionCounts.set(cond, (conditionCounts.get(cond) || 0) + 1)
     })
     Array.from(conditionCounts.entries()).forEach(([cond, count]) => {
