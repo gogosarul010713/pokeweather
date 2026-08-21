@@ -1,45 +1,55 @@
-# US-914 -- Merge rama nests a main
+# US-914 -- Merge triple: sprint-12 + sprint-9-nests -> main
 
 **Sprint:** 9
-**Story Points:** 2
+**Story Points:** 5
 **Priority:** High
-**Status:** Pending
-**Dependencies:** US-901 al US-913
+**Status:** In Progress
+**Dependencies:** US-901 al US-913, sprint-12 completo
+**Plan:** `docs/plans/PLAN-2026-08-20-merge-triple.md`
 
 ---
 
 ## User Story
 
-> As a developer, I want to merge the sprint-9-nests worktree branch into main, so that all nest features are available in the main codebase.
+> As a developer, I want to merge both active branches (sprint-12 and sprint-9-nests) into main via a sandbox branch, so that all features from both workstreams are unified in the main codebase.
 
 ---
 
 ## Problem
 
-La rama sprint-9-nests fue desarrollada en un worktree separado. Debe integrarse a main para unificar el codigo y habilitar el deploy.
+Dos ramas activas divergen de main en el mismo repo:
+- `sprint-12` (pokeweather): 193 commits, 276 archivos -- firebase, analytics, clasificador clear
+- `sprint-9-nests` (worktree): 152 commits, 336 archivos -- feature nidos completa
+
+25 archivos de codigo tienen overlap real (store, App, servicios firebase, mapa, sidebar). El merge debe ser gradual y validado fase a fase para detectar regresiones con precision.
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Rama intermedia `merge/nests-to-main` creada desde main
-- [ ] Merge gradual: cada feature branch/commit mergeado y probado individualmente
-- [ ] Se documenta el punto exacto donde se pierde funcionalidad o hay regresion
-- [ ] Tests pasan en la rama intermedia antes de tocar main
-- [ ] Branch sprint-9-nests mergeado a main sin conflictos (solo tras validacion)
-- [ ] Worktree eliminado tras merge exitoso
+- [ ] Rama sandbox `merge/nests-to-main` creada desde main
+- [ ] Fase A (sprint-12): 10 fases mergeadas y validadas
+- [ ] Fase B (sprint-9-nests): 13 fases mergeadas y validadas
+- [ ] Conflictos en store, App.tsx, useWeather, servicios firebase y mapa resueltos manualmente
+- [ ] `npm run build` pasa en sandbox
+- [ ] `npm run test` pasa en sandbox
+- [ ] Golden path validado: ciudad -> clima -> mapa -> nidos -> fijar zona
+- [ ] Merge final `merge/nests-to-main` -> main sin conflictos
+- [ ] Worktree `pokeweather-nests` eliminado tras merge exitoso
 
 ---
 
 ## Approach
 
-**Rama intermedia:** `merge/nests-to-main`
-- Se crea desde main para no afectar ni sprint-9-nests ni main durante la validacion
-- Se van incorporando los cambios gradualmente (feature por feature o commit por commit)
-- En cada paso se prueba la app y se anota si algo deja de funcionar
-- Solo cuando todo este validado se hace el merge final a main
+**Rama sandbox:** `merge/nests-to-main` creada desde main.
 
-Esto permite identificar con precision que cambio rompe algo, sin ensuciar las ramas de trabajo.
+Orden de merge:
+1. `sprint-12` primero -- tiene la infraestructura firebase/analytics que nests extiende
+2. `sprint-9-nests` encima -- agrega feature nidos sobre la base unificada
+
+Cada fase: merge del grupo de archivos -> probar app -> documentar conflictos en el plan.
+
+Ver plan completo: `docs/plans/PLAN-2026-08-20-merge-triple.md`
 
 ---
 
@@ -47,11 +57,13 @@ Esto permite identificar con precision que cambio rompe algo, sin ensuciar las r
 
 | File | Action |
 |------|--------|
-| -- | Operacion git, no archivos especificos |
+| -- | Operacion git -- ver plan para lista de archivos por fase |
 
 ---
 
 ## Notes
 
-Verificar conflictos en archivos compartidos como store, components de mapa, y configuracion Vite antes del merge.
-La rama intermedia actua como "sandbox de integracion" -- se descarta o se promociona a main segun resultado.
+Archivos con conflicto esperado (ambas ramas los modificaron):
+`useStore.ts`, `App.tsx`, `useWeather.ts`, `MapView.tsx`, `MapLegend.tsx`,
+`LocationCard.tsx`, `LocationDetail.tsx`, `LocationFeed.tsx`, `Header.tsx`,
+`FilterPanelModal.tsx`, `TestingTools.tsx`, servicios firebase (4), `vite.config.ts`, `package.json`
