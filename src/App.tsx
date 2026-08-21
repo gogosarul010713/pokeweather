@@ -28,6 +28,8 @@ export default function App() {
   const searchQuery = useStore((s) => s.searchQuery)
   const sortMode = useStore((s) => s.sortMode)
   const sortDirection = useStore((s) => s.sortDirection)
+  const homeLocation = useStore((s) => s.homeLocation)
+  const tickNow = useStore((s) => s.tickNow)
   const { run, toastMessage } = useWeather()
 
   // Ref para saber si es el primer load (initial) o auto-refresh posterior
@@ -48,7 +50,7 @@ export default function App() {
   // Aplicar filtros a las ciudades cargadas — se recalcula cuando cambian filtros
   const filteredCities = useMemo(() => {
     return getFilteredCities(cities)
-  }, [cities, regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection])
+  }, [cities, regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection, homeLocation])
 
   // Ejecutar una sola vez al montar el componente
   useEffect(() => {
@@ -60,6 +62,12 @@ export default function App() {
   useEffect(() => {
     syncForecastsOnLoad()
   }, [])
+
+  // Intervalo global para countdown de nidos (DEC-907)
+  useEffect(() => {
+    const id = setInterval(tickNow, 60_000)
+    return () => clearInterval(id)
+  }, [tickNow])
 
   // US-1106: Cargar settings de auto-sync al iniciar la app
   useEffect(() => {
@@ -138,12 +146,12 @@ export default function App() {
           overflow: hidden;
         }
 
-        /* BODY = sidebar + map, debajo del header */
+        /* BODY = sidebar + map, debajo del header.
+           Header ocupa su espacio real en el flex flow (flex-shrink: 0 en .hd-root). */
         .app-body {
           display: flex;
           flex-direction: row;
-          margin-top: 80px;
-          height: calc(100vh - 80px);
+          flex: 1;
           overflow: hidden;
         }
 
@@ -163,8 +171,6 @@ export default function App() {
         @media (max-width: 767px) {
           .app-body {
             flex-direction: column;
-            margin-top: 96px;
-            height: calc(100vh - 96px);
             overflow: hidden;  /* BottomSheet is fixed, no body scroll */
             position: relative;  /* Positioning context for absolute children (Sidebar wrapper) */
           }
@@ -180,19 +186,15 @@ export default function App() {
           }
         }
 
-        /* TABLET (768px - 1023px): Sidebar colapsable, map expands */
+        /* TABLET (768px - 1023px) */
         @media (min-width: 768px) and (max-width: 1023px) {
           .app-body {
             flex-direction: row;
-            height: calc(100vh - 80px);
-            overflow: hidden;
-            transition: all 300ms ease;
           }
 
           .app-map-area {
             flex: 1;
             position: relative;
-            transition: flex 300ms ease;
           }
 
           .app-list-area {
