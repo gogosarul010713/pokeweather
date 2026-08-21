@@ -65,6 +65,11 @@ body {
   /* Tile filter: positron invertido → dark grisáceo CartoDB sin CORS */
   --tile-filter: invert(0.92) hue-rotate(210deg) brightness(0.85) saturate(0.75);
 
+  /* Mi Zona (home pin) */
+  --home:      #22D3EE;
+  --home-dim:  rgba(34, 211, 238, 0.14);
+  --home-glow: rgba(34, 211, 238, 0.32);
+
   /* Tipos Pokémon */
   --type-fire:     #FF6B35; --type-fire-rgb:     255, 107, 53;
   --type-ground:   #C2A062; --type-ground-rgb:   194, 160, 98;
@@ -114,6 +119,11 @@ html.light {
 
   /* Tile filter: voyager en light mode — sin filtro */
   --tile-filter: none;
+
+  /* Mi Zona (home pin) — light */
+  --home:      #0891B2;
+  --home-dim:  rgba(8, 145, 178, 0.12);
+  --home-glow: rgba(8, 145, 178, 0.28);
 
   /* Condiciones y tipos NO cambian entre temas */
 }
