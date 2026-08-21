@@ -4,31 +4,27 @@ import Brand from './Brand'
 import SearchInput from './SearchInput'
 import ThemeToggle from './ThemeToggle'
 import SyncBadge from '../UI/SyncBadge'
-import FilterPanel from './FilterPanel'
 import FilterPanelModal from '../UI/FilterPanelModal'
+import { LayerToggles } from './LayerToggles'
 import TestingButton from './TestingButton'
-// BUG-020 (C1): TestingTools solo en DEV
 import TestingTools from '../TestingTools/TestingTools'
+import { Z } from '../../config/zIndex'
 
 export default function Header() {
   const [isTestingOpen, setIsTestingOpen] = useState(false)
 
   const isFilterPanelOpen = useStore((s) => s.isFilterPanelOpen)
   const setIsFilterPanelOpen = useStore((s) => s.setIsFilterPanelOpen)
-  const sidebarOpen = useStore((s) => s.sidebarOpen)
-  const setSidebarOpen = useStore((s) => s.setSidebarOpen)
 
   return (
     <>
       <style>{`
-        /* Header: columna para poder apilar filas */
+        /* Header: columna para poder apilar filas. Ocupa su espacio real en el
+           flex flow de .app-root (flex-shrink: 0) — no usa position: fixed. */
         .hd-root {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
+          position: relative;
           height: 80px;
-          z-index: 1001;
+          z-index: ${Z.header};
           display: flex;
           flex-direction: column;
           background: var(--bg-secondary);
@@ -56,6 +52,7 @@ export default function Header() {
           align-items: center;
           gap: 8px;
           flex-shrink: 0;
+          margin-left: auto;
         }
 
         /* Filter Button (mobile only) */
@@ -94,34 +91,6 @@ export default function Header() {
           justify-content: center;
         }
 
-        /* Sidebar toggle button (tablet only) */
-        .hd-sidebar-toggle {
-          display: none;
-          width: 36px;
-          height: 36px;
-          background: transparent;
-          border: 1px solid var(--border-default);
-          border-radius: 6px;
-          color: var(--text-primary);
-          cursor: pointer;
-          font-size: 16px;
-          transition: all 150ms ease;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .hd-sidebar-toggle:hover {
-          background: var(--bg-tertiary);
-          border-color: var(--border-strong);
-        }
-
-        /* Tablet: show sidebar toggle */
-        @media (min-width: 768px) and (max-width: 1023px) {
-          .hd-sidebar-toggle {
-            display: flex;
-          }
-        }
-
         /* ── MOBILE (<768px): Header de 2 filas ── */
         @media (max-width: 767px) {
           .hd-root {
@@ -133,11 +102,6 @@ export default function Header() {
             flex: 0 0 52px;
             padding: 0 12px;
             gap: 8px;
-          }
-
-          /* Spacer entre Brand y hd-right */
-          .hd-filter-panel {
-            display: none;
           }
 
           .hd-right {
@@ -173,10 +137,6 @@ export default function Header() {
             display: flex;
             align-items: center;
             justify-content: center;
-          }
-
-          .hd-sidebar-toggle {
-            display: none;
           }
         }
 
@@ -232,26 +192,12 @@ export default function Header() {
         <div className="hd-row1">
           <Brand />
 
-          {/* Desktop/Tablet: filtros + búsqueda */}
-          <div className="hd-filter-panel">
-            <FilterPanel />
-          </div>
+          {/* Layer toggles — Clima, Nidos y capas futuras */}
+          <LayerToggles />
 
           {/* Iconos derecha */}
           <div className="hd-right">
-            <button
-              className="hd-sidebar-toggle"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              title={sidebarOpen ? 'Colapsar sidebar' : 'Expandir sidebar'}
-              type="button"
-            >
-              {sidebarOpen ? '☰' : '›'}
-            </button>
-
-            {/* US-1114: DEV local siempre; Vercel preview/prod via VITE_ENABLE_TESTING_TOOLS=true */}
-            {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TESTING_TOOLS === 'true') && (
-              <TestingButton onClick={() => setIsTestingOpen(true)} />
-            )}
+            <TestingButton onClick={() => setIsTestingOpen(true)} />
             <SyncBadge />
             <ThemeToggle />
           </div>
@@ -268,9 +214,7 @@ export default function Header() {
         onClose={() => setIsFilterPanelOpen(false)}
       />
 
-      {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TESTING_TOOLS === 'true') && (
-        <TestingTools isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
-      )}
+      <TestingTools isOpen={isTestingOpen} onClose={() => setIsTestingOpen(false)} />
     </>
   )
 }

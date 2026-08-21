@@ -64,6 +64,50 @@ const SORT_OPTIONS: SortOption[] = [
         : 'Tarde primero · Click para invertir (temprano primero)'
     },
   },
+  {
+    label: 'Distancia',
+    value: 'distance',
+    icon: '📍',
+    tooltip: (isActive, direction) => {
+      if (!isActive) return 'Click para ordenar por distancia (más cerca primero)'
+      return direction === 'asc'
+        ? 'Más cerca primero · Click para invertir'
+        : 'Más lejos primero · Click para invertir'
+    },
+  },
+  {
+    label: 'Cooldown',
+    value: 'cooldown',
+    icon: '⏳',
+    tooltip: (isActive, direction) => {
+      if (!isActive) return 'Click para ordenar por menor cooldown requerido'
+      return direction === 'asc'
+        ? 'Menor cooldown primero · Click para invertir'
+        : 'Mayor cooldown primero · Click para invertir'
+    },
+  },
+  {
+    label: 'Densidad',
+    value: 'spawnRate',
+    icon: '🌀',
+    tooltip: (isActive, direction) => {
+      if (!isActive) return 'Click para ordenar por mayor densidad de aparicion'
+      return direction === 'asc'
+        ? 'Menor densidad primero · Click para invertir'
+        : 'Mayor densidad primero · Click para invertir'
+    },
+  },
+  {
+    label: 'Tipo',
+    value: 'type',
+    icon: '🏷️',
+    tooltip: (isActive, direction) => {
+      if (!isActive) return 'Click para ordenar por tipo Pokémon'
+      return direction === 'asc'
+        ? 'Ascendente A-Z · Click para invertir'
+        : 'Descendente Z-A · Click para invertir'
+    },
+  },
 ]
 
 export default function SortDropdown({
