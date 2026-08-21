@@ -1,14 +1,23 @@
-import { useEffect, useMemo } from 'react'
-import { MapContainer, useMap, Popup } from 'react-leaflet'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { MapContainer, useMap, useMapEvents, ZoomControl } from 'react-leaflet'
 import L from 'leaflet'
+import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useStore } from '../../store/useStore'
 import { calculateBadges } from '../../services/weather/weatherService'
 import type { City } from '../../store/useStore'
+import type { Nest } from '../../types/nest'
+import nestsData from '../../data/nests.json'
 import MapPin from './MapPin'
-import CityTooltip from './CityTooltip'
+import NestPin from './NestPin'
 import FlyToCity from './FlyToCity'
-import MapLegend from './MapLegend'
+import FlyToNest from './FlyToNest'
+import MapSearch from './MapSearch'
+import MapZoomControls from './MapZoomControls'
+import NavPin from './NavPin'
+import HomePin from './HomePin'
+import MapContextMenu from './MapContextMenu'
+import { NEST_THRESHOLDS } from '../../config/nestThresholds'
 
 // ─── Tile URLs ────────────────────────────────────────────────────────────────
 // dark_matter bloqueado por ORB en Chromium → usamos positron + CSS invert para dark mode.
@@ -38,27 +47,29 @@ function TileSwitcher() {
   return null
 }
 
-// ─── SelectedPopup — popup sincronizado con selectedCity ──────────────────────
-// Se monta dentro de MapContainer para tener acceso al mapa.
+// ─── MapRefCapture — expone la instancia del mapa al componente padre ─────────
+function MapRefCapture({ mapRef }: { mapRef: { current: LeafletMap | null } }) {
+  const map = useMap()
+  useEffect(() => { mapRef.current = map }, [map, mapRef])
+  return null
+}
 
-function SelectedPopup({ cities }: { cities: City[] }) {
-  const selectedCity = useStore((s) => s.selectedCity)
-  const setSelectedCity = useStore((s) => s.setSelectedCity)
+// ─── ContextMenuCapture — captura contextmenu de Leaflet ─────────────────────
+interface ContextMenuState { x: number; y: number; lat: number; lon: number }
 
-  if (!selectedCity) return null
-
-  const city = cities.find((c) => c.id === selectedCity.id) ?? selectedCity
-
-  return (
-    <Popup
-      position={[city.lat, city.lon]}
-      eventHandlers={{ remove: () => setSelectedCity(null) }}
-      closeButton={true}
-      autoPan={false}
-    >
-      <CityTooltip city={city} />
-    </Popup>
-  )
+function ContextMenuCapture({ onOpen }: { onOpen: (s: ContextMenuState) => void }) {
+  useMapEvents({
+    contextmenu(e) {
+      e.originalEvent.preventDefault()
+      onOpen({
+        x: e.originalEvent.clientX,
+        y: e.originalEvent.clientY,
+        lat: e.latlng.lat,
+        lon: e.latlng.lng,
+      })
+    },
+  })
+  return null
 }
 
 // ─── MapView ──────────────────────────────────────────────────────────────────
@@ -68,27 +79,68 @@ interface MapViewProps {
 }
 
 export default function MapView({ cities }: MapViewProps) {
-  const badgeFilter = useStore((s) => s.badgeFilter)
+  const mapRef = useRef<LeafletMap | null>(null)
+  const [searchOpenTick, setSearchOpenTick] = useState(0)
+  const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null)
+  const activeLayers = useStore((s) => s.activeLayers)
+  const highlightCategories = useStore((s) => s.highlightCategories)
+  const categoryFilter = useStore((s) => s.categoryFilter)
+  const nests = useStore((s) => s.nests)
+  const setNests = useStore((s) => s.setNests)
+
+  // Load nests on mount
+  useEffect(() => {
+    if (nests.length === 0 && nestsData?.nests) {
+      setNests(nestsData.nests as Nest[])
+    }
+  }, [nests.length, setNests])
 
   // Calcular badges por ciudad
   const badgesByCity = useMemo(() => {
     if (cities.length === 0) return new Map()
     const badgeCalculator = calculateBadges(cities)
-    const badges = new Map<string, unknown[]>()
+    const badges = new Map<string, string[]>()
     cities.forEach(city => {
       badges.set(city.id, badgeCalculator(city))
     })
     return badges
   }, [cities])
 
-  // Filtrar ciudades por badges seleccionados (OR logic)
-  const filteredCities = useMemo(() => {
-    if (badgeFilter.length === 0) return cities
+  // US-828: filtrar ciudades por categoria desde FilterPanelClima
+  const filteredByCategory = useMemo(() => {
+    if (categoryFilter.length === 0) return cities
     return cities.filter(city => {
       const cityBadges = badgesByCity.get(city.id) || []
-      return cityBadges.some((badge: string) => badgeFilter.includes(badge))
+      return cityBadges.some((badge: string) => categoryFilter.includes(badge))
     })
-  }, [cities, badgeFilter, badgesByCity])
+  }, [cities, categoryFilter, badgesByCity])
+
+  const highlightNestRow = useStore((s) => s.highlightNestRow)
+
+  // US-827: set de ids resaltados (highlight, no filtro)
+  const highlightedCityIds = useMemo(() => {
+    if (highlightCategories.length === 0) return null
+    const ids = new Set<string>()
+    cities.forEach(city => {
+      const cityBadges = badgesByCity.get(city.id) || []
+      if (cityBadges.some((badge: string) => highlightCategories.includes(badge))) {
+        ids.add(city.id)
+      }
+    })
+    return ids
+  }, [cities, highlightCategories, badgesByCity])
+
+  // US-815: nidos que cumplen el umbral de la fila activa
+  const highlightedNestIds = useMemo(() => {
+    if (!highlightNestRow) return null
+    const ids = new Set<string>()
+    nests.forEach(n => {
+      if (highlightNestRow === 'spawn' && (n.spawnRate ?? 0) >= NEST_THRESHOLDS.spawnRate) ids.add(n.id)
+      if (highlightNestRow === 'stops' && (n.stops ?? 0) >= NEST_THRESHOLDS.stops) ids.add(n.id)
+      if (highlightNestRow === 'gyms'  && (n.gyms  ?? 0) >= NEST_THRESHOLDS.gyms)  ids.add(n.id)
+    })
+    return ids
+  }, [highlightNestRow, nests])
 
   return (
     <>
@@ -134,9 +186,40 @@ export default function MapView({ cities }: MapViewProps) {
           color: var(--text-primary) !important;
         }
 
+        /* Nest popup: anula wrapper de Leaflet — NestPopup tiene su propio estilo */
+        .mv-root .leaflet-popup-nest .leaflet-popup-content-wrapper {
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          box-shadow: none;
+          padding: 0;
+        }
+        .mv-root .leaflet-popup-nest .leaflet-popup-content {
+          margin: 0;
+        }
+
         /* Dark mode: invierte positron → dark grisáceo sin CORS issues */
         .mv-root .leaflet-tile-container {
           filter: var(--tile-filter, none);
+        }
+
+        /* Search overlay — centro superior */
+        .mv-search-wrapper {
+          position: absolute;
+          top: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          pointer-events: auto;
+        }
+
+        /* Zoom controls — alineados con los +/-, debajo */
+        .mv-zoom-wrapper {
+          position: absolute;
+          top: 76px;
+          right: 10px;
+          z-index: 1001;
+          pointer-events: auto;
         }
       `}</style>
 
@@ -146,24 +229,60 @@ export default function MapView({ cities }: MapViewProps) {
           zoom={2}
           minZoom={2}
           style={{ width: '100%', height: '100%' }}
-          zoomControl={true}
+          zoomControl={false}
           attributionControl={true}
           worldCopyJump={true}
         >
+          <MapRefCapture mapRef={mapRef} />
+          <ContextMenuCapture onOpen={setCtxMenu} />
+          <ZoomControl position="topright" />
           <TileSwitcher />
           <FlyToCity />
-          {filteredCities.map((city) => (
-            <MapPin
-              key={city.id}
-              city={city}
-              badges={badgesByCity.get(city.id)}
-            />
-          ))}
-          <SelectedPopup cities={cities} />
+          <FlyToNest />
+
+          {/* MapPin (Clima) */}
+          {activeLayers.clima &&
+            filteredByCategory.map((city) => (
+              <MapPin
+                key={city.id}
+                city={city}
+                badges={badgesByCity.get(city.id)}
+                dimmed={highlightedCityIds !== null && !highlightedCityIds.has(city.id)}
+              />
+            ))
+          }
+
+          {/* NestPin (Nidos) */}
+          {activeLayers.nidos &&
+            nests.map((nest) => (
+              <NestPin
+                key={nest.id}
+                nest={nest}
+                dimmed={highlightedNestIds !== null && !highlightedNestIds.has(nest.id)}
+              />
+            ))
+          }
+
         </MapContainer>
 
-        {/* Leyenda fuera del MapContainer para evitar z-index conflicts */}
-        <MapLegend />
+        {/* Overlays fuera del MapContainer para evitar z-index conflicts */}
+        <div className="mv-search-wrapper">
+          <MapSearch cities={cities} mapRef={mapRef} openTick={searchOpenTick} />
+        </div>
+        <div className="mv-zoom-wrapper">
+          <MapZoomControls mapRef={mapRef} cities={cities} onOpenSearch={() => setSearchOpenTick(t => t + 1)} />
+        </div>
+        <NavPin mapRef={mapRef} />
+        <HomePin mapRef={mapRef} />
+        {ctxMenu && (
+          <MapContextMenu
+            x={ctxMenu.x}
+            y={ctxMenu.y}
+            lat={ctxMenu.lat}
+            lon={ctxMenu.lon}
+            onClose={() => setCtxMenu(null)}
+          />
+        )}
       </div>
     </>
   )

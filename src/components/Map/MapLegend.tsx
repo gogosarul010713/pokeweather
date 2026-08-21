@@ -1,47 +1,66 @@
-// MapLegend.tsx — Leyenda con pestañas (Clima + Categorías)
-// Tab 1: Condiciones de clima
-// Tab 2: Filtros de categorías + Toggle de badges en pines
-
-import { useState } from 'react'
 import { useStore } from '../../store/useStore'
-import { CONDITION_COLORS, CONDITION_LABEL, BADGE_ICONS } from '../../services/weather/weatherService'
-import type { WeatherCondition } from '../../config/weatherImages'
+import type { City } from '../../store/useStore'
+import { calculateBadges } from '../../services/weather/weatherService'
 import type { BadgeType } from '../../services/weather/weatherService'
+import { useState, useMemo } from 'react'
 
-const CONDITIONS: WeatherCondition[] = [
-  'sunny', 'clear', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'windy',
-]
+type LegendRowKey = BadgeType | 'verified' | 'spawn'
 
-const BADGE_LABELS: Record<BadgeType, string> = {
-  stops: 'Pokestop Hub',
-  gyms: 'Gym Hub',
-  community: 'Comunidad Activa',
-  best: 'Mejores Lugares',
+interface LegendRow {
+  key: LegendRowKey
+  icon: string
+  label: string
+  color: string
+  kind: 'clima' | 'nido'
 }
 
-const BADGE_ORDER: BadgeType[] = ['stops', 'gyms', 'community', 'best']
+const ROWS: LegendRow[] = [
+  { key: 'stops',     icon: '🎯', label: 'Pokestop Hub',     color: '#58A6FF', kind: 'clima' },
+  { key: 'gyms',      icon: '💪', label: 'Gym Hub',          color: '#F85149', kind: 'clima' },
+  { key: 'community', icon: '👥', label: 'Comunidad Activa', color: '#3FB950', kind: 'clima' },
+  { key: 'best',      icon: '🏆', label: 'Mejor Lugar',      color: '#FFD700', kind: 'clima' },
+  { key: 'spawn',     icon: '🌿', label: 'Mayor Spawn',      color: '#FB923C', kind: 'clima' },
+]
 
-type TabType = 'clima' | 'categorias'
+export default function MapLegend({ cities = [] }: { cities?: City[] }) {
+  const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768)
 
-export default function MapLegend() {
-  // Mobile (<768px): collapsed by default for space savings
-  // Desktop/Tablet: expanded by default
-  const [collapsed, setCollapsed] = useState(() => {
-    return typeof window !== 'undefined' && window.innerWidth < 768
-  })
-  const [activeTab, setActiveTab] = useState<TabType>('clima')
-  const badgeFilter = useStore((s) => s.badgeFilter)
-  const setBadgeFilter = useStore((s) => s.setBadgeFilter)
-  const showBadgesOnPins = useStore((s) => s.showBadgesOnPins)
-  const setShowBadgesOnPins = useStore((s) => s.setShowBadgesOnPins)
+  const highlightCategories = useStore((s) => s.highlightCategories)
+  const setHighlightCategories = useStore((s) => s.setHighlightCategories)
+  const setHighlightNestRow = useStore((s) => s.setHighlightNestRow)
+  const nests = useStore((s) => s.nests)
 
-  const handleBadgeToggle = (badge: BadgeType) => {
-    const isChecked = badgeFilter.includes(badge)
-    if (isChecked) {
-      setBadgeFilter(badgeFilter.filter(b => b !== badge))
-    } else {
-      setBadgeFilter([...badgeFilter, badge])
+  const activeKeys = new Set(highlightCategories as LegendRowKey[])
+  const title = activeKeys.size > 0 ? 'Leyenda · Activo' : 'Leyenda'
+
+  // Badges por separado: ciudades entre ciudades, nidos entre nidos
+  const badgesById = useMemo(() => {
+    const map = new Map<string, string[]>()
+    if (cities.length > 0) {
+      const cityPool = cities.map((c) => ({ id: c.id, density: c.density ?? 0, gyms: c.gyms, rating: c.rating }))
+      const calcCity = calculateBadges(cityPool)
+      cityPool.forEach((p) => map.set(p.id, calcCity(p)))
     }
+    if (nests.length > 0) {
+      const nestPool = nests.map(n => ({ id: n.id, density: n.stops ?? 0, gyms: n.gyms ?? 0, rating: 0, spawnRate: n.spawnRate }))
+      const calcNest = calculateBadges(nestPool)
+      nestPool.forEach(p => map.set(p.id, calcNest(p)))
+    }
+    return map
+  }, [cities, nests])
+
+  function getCount(row: LegendRow): number {
+    let count = 0
+    badgesById.forEach(badges => { if (badges.includes(row.key)) count++ })
+    return count
+  }
+
+  function handleClick(row: LegendRow) {
+    const next = activeKeys.has(row.key)
+      ? highlightCategories.filter(k => k !== row.key)
+      : [...highlightCategories, row.key as string]
+    setHighlightCategories(next)
+    setHighlightNestRow(null)
   }
 
   return (
@@ -50,19 +69,18 @@ export default function MapLegend() {
         .ml-root {
           position: absolute;
           bottom: 28px;
-          right: 12px;
-          z-index: 450;
+          right: 50px;
+          z-index: 1000;
           background: var(--bg-secondary);
           border: 1px solid var(--border-default);
           border-radius: 8px;
           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
           overflow: hidden;
-          min-width: 150px;
+          width: 192px;
           max-height: 70vh;
           display: flex;
           flex-direction: column;
         }
-
         .ml-header {
           display: flex;
           align-items: center;
@@ -70,198 +88,80 @@ export default function MapLegend() {
           padding: 8px 10px;
           cursor: pointer;
           user-select: none;
-          gap: 8px;
-          flex-shrink: 0;
           border-bottom: 1px solid var(--border-default);
+          flex-shrink: 0;
         }
-
-        .ml-header:hover {
-          background: var(--bg-tertiary);
-        }
-
+        .ml-header:hover { background: var(--bg-tertiary); }
         .ml-title {
           font-family: 'Exo 2', sans-serif;
           font-size: 10px;
           font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.08em;
           color: var(--text-secondary);
+          transition: color 200ms ease;
         }
-
+        .ml-title.active { color: var(--ui-accent); }
         .ml-chevron {
-          font-size: 10px;
+          font-size: 9px;
           color: var(--text-secondary);
           transition: transform 200ms ease;
         }
-
-        .ml-chevron.open {
-          transform: rotate(180deg);
-        }
-
-        /* ── Pestañas ── */
-        .ml-tabs {
-          display: flex;
-          border-bottom: 1px solid var(--border-default);
-          flex-shrink: 0;
-          background: var(--bg-primary);
-        }
-
-        .ml-tab {
-          flex: 1;
-          padding: 8px 10px;
-          border: none;
-          background: transparent;
-          color: var(--text-secondary);
-          cursor: pointer;
-          font-size: 10px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.4px;
-          border-bottom: 2px solid transparent;
-          transition: all 150ms ease;
+        .ml-chevron.open { transform: rotate(180deg); }
+        .ml-reset-chip {
           font-family: 'Exo 2', sans-serif;
-        }
-
-        .ml-tab:hover {
-          color: var(--text-primary);
-          background: var(--bg-tertiary);
-        }
-
-        .ml-tab.active {
+          font-size: 9px;
+          font-weight: 700;
           color: var(--ui-accent);
-          border-bottom-color: var(--ui-accent);
+          background: rgba(var(--ui-accent-rgb), 0.12);
+          border: 1px solid rgba(var(--ui-accent-rgb), 0.3);
+          border-radius: 10px;
+          padding: 1px 6px;
+          cursor: pointer;
+          user-select: none;
+          transition: background 150ms ease;
+          white-space: nowrap;
         }
-
+        .ml-reset-chip:hover { background: rgba(var(--ui-accent-rgb), 0.22); }
         .ml-body {
-          padding: 8px 0;
           overflow-y: auto;
           flex: 1;
+          padding: 4px 0;
         }
-
         .ml-row {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 4px 10px;
+          padding: 6px 10px 6px 8px;
+          cursor: pointer;
+          border-left: 3px solid transparent;
+          transition: background 150ms ease, border-color 150ms ease;
         }
-
-        .ml-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
+        .ml-row:hover { background: rgba(var(--ui-accent-rgb), 0.08); }
+        .ml-row-active { background: rgba(var(--ui-accent-rgb), 0.06); }
+        .ml-row-icon {
+          font-size: 14px;
+          width: 20px;
+          text-align: center;
           flex-shrink: 0;
         }
-
         .ml-label {
           font-family: 'Exo 2', sans-serif;
           font-size: 12px;
           font-weight: 500;
           color: var(--text-primary);
+          flex: 1;
         }
-
-        .ml-checkbox-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          cursor: pointer;
-          user-select: none;
-          transition: background 150ms ease;
-        }
-
-        .ml-checkbox-row:hover {
-          background: var(--bg-tertiary);
-        }
-
-        .ml-checkbox {
-          width: 14px;
-          height: 14px;
-          border: 1.5px solid var(--border-default);
-          border-radius: 3px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          transition: all 150ms ease;
-        }
-
-        .ml-checkbox.checked {
-          background: var(--ui-accent);
-          border-color: var(--ui-accent);
-        }
-
-        .ml-checkbox.checked::after {
-          content: '✓';
-          color: white;
+        .ml-row-count {
+          font-family: 'Exo 2', sans-serif;
           font-size: 10px;
-          font-weight: bold;
-        }
-
-        .ml-checkbox-icon {
-          font-size: 14px;
+          font-weight: 700;
+          color: var(--text-tertiary);
+          margin-left: auto;
           flex-shrink: 0;
+          min-width: 18px;
+          text-align: right;
         }
-
-        .ml-checkbox-label {
-          font-family: 'Exo 2', sans-serif;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--text-primary);
-          flex: 1;
-        }
-
-        /* ── Toggle Switch ── */
-        .ml-toggle-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 10px;
-          border-top: 1px solid var(--border-subtle);
-          border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .ml-toggle-label {
-          font-family: 'Exo 2', sans-serif;
-          font-size: 11px;
-          font-weight: 600;
-          color: var(--text-secondary);
-          text-transform: uppercase;
-          letter-spacing: 0.3px;
-          flex: 1;
-        }
-
-        .ml-switch {
-          width: 32px;
-          height: 18px;
-          border-radius: 9px;
-          background: var(--border-default);
-          border: none;
-          cursor: pointer;
-          padding: 2px;
-          display: flex;
-          align-items: center;
-          transition: background 200ms ease;
-          position: relative;
-        }
-
-        .ml-switch.on {
-          background: var(--ui-accent);
-        }
-
-        .ml-switch-thumb {
-          width: 14px;
-          height: 14px;
-          border-radius: 50%;
-          background: white;
-          transition: transform 200ms ease;
-          flex-shrink: 0;
-        }
-
-        .ml-switch.on .ml-switch-thumb {
-          transform: translateX(14px);
-        }
-
-        /* ── RESPONSIVE ── */
         @media (max-width: 767px) {
           .ml-root {
             bottom: 75px;
@@ -273,77 +173,47 @@ export default function MapLegend() {
       `}</style>
 
       <div className="ml-root">
-        <div className="ml-header" onClick={() => setCollapsed((c) => !c)}>
-          <span className="ml-title">Leyenda</span>
-          <span className={`ml-chevron ${collapsed ? '' : 'open'}`}>▼</span>
+        <div className="ml-header" onClick={() => setCollapsed(c => !c)}>
+          <span className={`ml-title${activeKeys.size > 0 ? ' active' : ''}`}>{title}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {activeKeys.size > 0 && (
+              <span
+                className="ml-reset-chip"
+                onClick={e => { e.stopPropagation(); setHighlightCategories([]); setHighlightNestRow(null) }}
+              >
+                Top {activeKeys.size} ×
+              </span>
+            )}
+            <span className={`ml-chevron${collapsed ? '' : ' open'}`}>&#9660;</span>
+          </div>
         </div>
 
         {!collapsed && (
-          <>
-            {/* ── Pestañas ── */}
-            <div className="ml-tabs">
-              <button
-                className={`ml-tab ${activeTab === 'clima' ? 'active' : ''}`}
-                onClick={() => setActiveTab('clima')}
-                type="button"
-              >
-                Clima
-              </button>
-              <button
-                className={`ml-tab ${activeTab === 'categorias' ? 'active' : ''}`}
-                onClick={() => setActiveTab('categorias')}
-                type="button"
-              >
-                Categorías
-              </button>
-            </div>
-
-            {/* ── Body ── */}
-            <div className="ml-body">
-              {/* Tab: Clima */}
-              {activeTab === 'clima' && (
-                <>
-                  {CONDITIONS.map((cond) => (
-                    <div key={cond} className="ml-row">
-                      <div className="ml-dot" style={{ background: CONDITION_COLORS[cond] }} />
-                      <span className="ml-label">{CONDITION_LABEL[cond]}</span>
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* Tab: Categorías */}
-              {activeTab === 'categorias' && (
-                <>
-                  {/* ── Toggle Badges en Pines ── */}
-                  <div className="ml-toggle-row">
-                    <span className="ml-toggle-label">Iconos en pines</span>
-                    <button
-                      className={`ml-switch ${showBadgesOnPins ? 'on' : ''}`}
-                      onClick={() => setShowBadgesOnPins(!showBadgesOnPins)}
-                      type="button"
-                      title={showBadgesOnPins ? 'Desactivar iconos' : 'Activar iconos'}
-                    >
-                      <div className="ml-switch-thumb" />
-                    </button>
-                  </div>
-
-                  {/* ── Filtro de Categorías ── */}
-                  {BADGE_ORDER.map((badge) => (
-                    <div
-                      key={badge}
-                      className="ml-checkbox-row"
-                      onClick={() => handleBadgeToggle(badge)}
-                    >
-                      <div className={`ml-checkbox ${badgeFilter.includes(badge) ? 'checked' : ''}`} />
-                      <span className="ml-checkbox-icon">{BADGE_ICONS[badge]}</span>
-                      <span className="ml-checkbox-label">{BADGE_LABELS[badge]}</span>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </>
+          <div className="ml-body">
+            {ROWS.map(row => {
+              const active = activeKeys.has(row.key)
+              const count = getCount(row)
+              return (
+                <div
+                  key={row.key}
+                  className={`ml-row${active ? ' ml-row-active' : ''}`}
+                  onClick={() => handleClick(row)}
+                  style={{
+                    borderLeftColor: active ? row.color : 'transparent',
+                  }}
+                >
+                  <span className="ml-row-icon">{row.icon}</span>
+                  <span
+                    className="ml-label"
+                    style={active ? { color: row.color, fontWeight: 600 } : { color: 'var(--text-primary)' }}
+                  >
+                    {row.label}
+                  </span>
+                  <span className="ml-row-count" style={{ color: 'var(--text-primary)' }}>{count}</span>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </>

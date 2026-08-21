@@ -116,6 +116,8 @@ interface AppStore {
   favorites: string[]
   badgeFilter: string[] // DEPRECATED: uso en MapLegend eliminado en US-827. Solo FilterPanel lo usa para filtrar ciudades.
   highlightCategories: string[] // US-827/US-815: resaltar pines. Radio exclusivo global. Valores: 'stops'|'gyms'|'community'|'best'|'nest:verified'|'nest:spawn'|'nest:dust'|'nest:top'
+  highlightNestRow: string | null
+  setHighlightNestRow: (row: string | null) => void
   categoryFilter: string[] // US-828: filtrar ciudades por categoria (stops/gyms/community/best) desde FilterPanelClima
   showBadgesOnPins: boolean
   lastUpdated: number | null
@@ -234,6 +236,7 @@ export const useStore = create<AppStore>((set, get) => ({
   badgeFilter: ['stops', 'gyms', 'community', 'best'],
   categoryFilter: [],
   highlightCategories: [],
+  highlightNestRow: null,
   showBadgesOnPins: (() => {
     try {
       const saved = localStorage.getItem('pwe-showBadgesOnPins')
@@ -350,6 +353,7 @@ export const useStore = create<AppStore>((set, get) => ({
     })),
 
   setHighlightCategories: (cats) => set({ highlightCategories: cats }),
+  setHighlightNestRow: (row) => set({ highlightNestRow: row }),
 
   toggleHighlightCategory: (cat) =>
     set((s) => ({

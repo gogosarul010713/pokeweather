@@ -4,26 +4,63 @@
 
 import { useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
+import type { Map } from 'leaflet'
 import { useStore } from '../../store/useStore'
 
-const FLY_ZOOM     = 10
-const FLY_DURATION = 1.5   // segundos
+const FLY_ZOOM       = 13
+const FLY_DURATION   = 1.5
+// El popup sale ARRIBA del pin. Para que pin quede visible:
+// el pin debe estar en la mitad inferior -> sumar px al destino (bajar el pin en pantalla)
+// city: popup 153 + tip 20 = 173, pin a centro + 173/2 - margen
+const OFFSET_CITY_PX = 60   // subir el mapa para que popup no quede cortado arriba
+const OFFSET_NEST_PX = 60   // igual que ciudad — popup vive en el marker
+
+function flyWithOffset(map: Map, lat: number, lng: number, offsetPx: number, direction: 1 | -1 = 1) {
+  const pinPoint = map.project([lat, lng], FLY_ZOOM)
+  pinPoint.y += offsetPx * direction
+  map.flyTo(map.unproject(pinPoint, FLY_ZOOM), FLY_ZOOM, { duration: FLY_DURATION })
+}
 
 export default function FlyToCity() {
-  const selectedCity = useStore((s) => s.selectedCity)
-  const map          = useMap()
-  const prevIdRef    = useRef<string | null>(null)
+  const selectedCity       = useStore((s) => s.selectedCity)
+  const selectedNest       = useStore((s) => s.selectedNest)
+  const homeLocation       = useStore((s) => s.homeLocation)
+  const scrollToFeedTick   = useStore((s) => s.scrollToFeedTick)
+  const scrollToFeedTarget = useStore((s) => s.scrollToFeedTarget)
+  const map                = useMap()
+  const prevCityIdRef      = useRef<string | null>(null)
+  const prevNestIdRef      = useRef<string | null>(null)
+  const prevTickRef        = useRef<number>(0)
+  const prevHomeKeyRef     = useRef<string | null>(null)
 
+  // Volar a ciudad seleccionada
   useEffect(() => {
-    if (!selectedCity) return
-    // Solo vuela si es una ciudad distinta a la anterior
-    if (selectedCity.id === prevIdRef.current) return
+    if (!selectedCity) { prevCityIdRef.current = null; return }
+    const tickChanged = scrollToFeedTick !== prevTickRef.current && scrollToFeedTarget === 'city'
+    if (selectedCity.id === prevCityIdRef.current && !tickChanged) return
 
-    prevIdRef.current = selectedCity.id
-    map.flyTo([selectedCity.lat, selectedCity.lon], FLY_ZOOM, {
-      duration: FLY_DURATION,
-    })
-  }, [selectedCity, map])
+    prevCityIdRef.current = selectedCity.id
+    prevTickRef.current   = scrollToFeedTick
+    flyWithOffset(map, selectedCity.lat, selectedCity.lon, OFFSET_CITY_PX, -1)
+  }, [selectedCity, scrollToFeedTick, scrollToFeedTarget, map])
+
+  // Volar a home fijado
+  useEffect(() => {
+    if (!homeLocation) { prevHomeKeyRef.current = null; return }
+    const key = `${homeLocation.lat},${homeLocation.lon}`
+    if (key === prevHomeKeyRef.current) return
+    prevHomeKeyRef.current = key
+    flyWithOffset(map, homeLocation.lat, homeLocation.lon, OFFSET_CITY_PX, -1)
+  }, [homeLocation, map])
+
+  // Volar a nido seleccionado
+  useEffect(() => {
+    if (!selectedNest) { prevNestIdRef.current = null; return }
+    if (selectedNest.id === prevNestIdRef.current) return
+
+    prevNestIdRef.current = selectedNest.id
+    flyWithOffset(map, selectedNest.lat, selectedNest.lng, OFFSET_NEST_PX, -1)
+  }, [selectedNest, map])
 
   return null
 }
