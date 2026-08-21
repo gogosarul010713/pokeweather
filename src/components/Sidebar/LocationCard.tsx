@@ -1,5 +1,7 @@
 import { useStore, type City } from '../../store/useStore'
 import { TYPE_ICON } from '../../config/typeIcons'
+import { calculateDistance, formatDistance } from '../../utils/distance'
+import { getCooldown } from '../../utils/cooldown'
 
 interface LocationCardProps {
   city: City
@@ -25,14 +27,9 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
   const setSelectedCity = useStore((s) => s.setSelectedCity)
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const favorites = useStore((s) => s.favorites)
+  const homeLocation = useStore((s) => s.homeLocation)
 
   const isFavorite = favorites.includes(city.id)
-
-  // BUG-011: Detectar ciudad sin datos sincronizados (placeholder de transformCitiesToCityFormat)
-  // Tras cleanup, Firestore puede estar vacío y la ciudad llega solo con datos del JSON estático.
-  // Heurística: weatherIcon=0 + tempC=0 + sin tipos potenciados = placeholder, no datos reales.
-  const hasNoWeatherData =
-    city.tempC === 0 && city.boostedTypes.length === 0 && (city.weatherIcon === 0 || city.weatherIcon === undefined)
 
   const handleCardClick = () => {
     setSelectedCity(city)
@@ -46,21 +43,25 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
   const localDate = getLocalDate(city.timezone)
   const localTime = formatTime(city.localTime)
 
+  const distInfo = homeLocation
+    ? (() => {
+        const m = calculateDistance(homeLocation.lat, homeLocation.lon, city.lat, city.lon)
+        return { dist: formatDistance(m), cooldown: getCooldown(m) }
+      })()
+    : null
+
   return (
     <>
       <style>{`
         .lc-root {
           position: relative;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 12px;
           background: var(--bg-primary);
           border: 1px solid var(--border-default);
           border-radius: 8px;
           cursor: pointer;
           transition: all 200ms ease;
           user-select: none;
+          overflow: hidden;
         }
 
         .lc-root:hover {
@@ -72,7 +73,39 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           background: rgba(var(--ui-accent-rgb, 88, 166, 255), 0.08);
           border-color: var(--ui-accent);
           border-left: 3px solid var(--ui-accent);
-          padding-left: 10px;
+        }
+
+        .lc-main {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 12px;
+          position: relative;
+        }
+        .lc-root.active .lc-main { padding-left: 10px; }
+
+        /* Barra inferior */
+        .lc-bar {
+          display: flex;
+          align-items: center;
+          padding: 5px 12px 5px 54px;
+          border-top: 1px solid var(--border-subtle);
+          background: var(--bg-overlay);
+          gap: 10px;
+        }
+        .lc-root.active .lc-bar { padding-left: 52px; }
+        .lc-bar-item { display: flex; align-items: center; gap: 5px; }
+        .lc-bar-val {
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--home);
+          text-shadow: 0 0 6px var(--home-glow);
+          font-variant-numeric: tabular-nums;
+        }
+        .lc-bar-divider {
+          width: 1px;
+          height: 11px;
+          background: var(--border-default);
         }
 
         .lc-weather {
@@ -80,29 +113,6 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           height: 36px;
           flex-shrink: 0;
           object-fit: contain;
-        }
-
-        .lc-weather-empty {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          opacity: 0.5;
-          background: var(--bg-tertiary);
-          border-radius: 6px;
-        }
-
-        .lc-no-data {
-          font-family: 'Rajdhani', monospace;
-          font-size: 9px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          color: var(--text-secondary);
-          opacity: 0.6;
-          padding: 2px 6px;
-          border: 1px dashed var(--border-default);
-          border-radius: 3px;
         }
 
         .lc-body {
@@ -190,40 +200,24 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
           color: var(--text-secondary);
           white-space: nowrap;
         }
+
       `}</style>
 
       <div className={`lc-root ${isActive ? 'active' : ''}`} onClick={handleCardClick}>
 
-        {/* Weather icon — placeholder visible si no hay datos sincronizados */}
-        {hasNoWeatherData ? (
-          <div
-            className="lc-weather lc-weather-empty"
-            title="Sin datos sincronizados"
-            aria-label="Sin datos sincronizados"
-          >
-            ⏳
-          </div>
-        ) : (
+        <div className="lc-main">
           <img
             className="lc-weather"
             src={`/weather/${city.condition}.png`}
             alt={city.condition}
-            loading="lazy"
-            width={36}
-            height={36}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
-        )}
 
-        <div className="lc-body">
-          {/* Row 1: nombre | tipos | ❤️ */}
-          <div className="lc-row1">
-            <span className="lc-name" title={city.name}>{city.name}</span>
-            <div className="lc-types-row">
-              {hasNoWeatherData ? (
-                <span className="lc-no-data" title="Sin datos sincronizados">sin datos</span>
-              ) : (
-                city.boostedTypes.slice(0, 4).map((type) => {
+          <div className="lc-body">
+            <div className="lc-row1">
+              <span className="lc-name" title={city.name}>{city.name}</span>
+              <div className="lc-types-row">
+                {city.boostedTypes.slice(0, 4).map((type) => {
                   const src = TYPE_ICON[type.toLowerCase()]
                   if (!src) return null
                   return (
@@ -233,31 +227,45 @@ export default function LocationCard({ city, isActive }: LocationCardProps) {
                       src={src}
                       alt={type}
                       title={type}
-                      loading="lazy"
-                      width={22}
-                      height={22}
                       onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
                   )
-                })
-              )}
+                })}
+              </div>
+              <button
+                className={`lc-favorite ${isFavorite ? 'active' : ''}`}
+                onClick={handleFavoriteClick}
+                type="button"
+                title={isFavorite ? 'Quitar favorito' : 'Agregar favorito'}
+              >
+                {isFavorite ? '❤️' : '🤍'}
+              </button>
             </div>
-            <button
-              className={`lc-favorite ${isFavorite ? 'active' : ''}`}
-              onClick={handleFavoriteClick}
-              type="button"
-              title={isFavorite ? 'Quitar favorito' : 'Agregar favorito'}
-            >
-              {isFavorite ? '❤️' : '🤍'}
-            </button>
-          </div>
 
-          {/* Row 2: país | fecha·hora */}
-          <div className="lc-row2">
-            <span className="lc-country">{city.country}</span>
-            <span className="lc-datetime">{localDate} · {localTime}</span>
+            <div className="lc-row2">
+              <span className="lc-country">{city.country}</span>
+              <span className="lc-datetime">{localDate} · {localTime}</span>
+            </div>
           </div>
         </div>
+
+        {distInfo && (
+          <div className="lc-bar">
+            <div className="lc-bar-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              </svg>
+              <span className="lc-bar-val">{distInfo.dist}</span>
+            </div>
+            <div className="lc-bar-divider"/>
+            <div className="lc-bar-item">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--home)" strokeWidth="2.5" style={{opacity:.8}}>
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+              </svg>
+              <span className="lc-bar-val">{distInfo.cooldown}</span>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )
