@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "weather-app-prod-ef50d",
+    "prod": "weather-app-prod-ef50d",
+    "dev": "weather-app-dev-f28ce"
+  }
+}
