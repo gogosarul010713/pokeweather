@@ -1,5 +1,29 @@
 import { create } from 'zustand'
 import type { WeatherCondition } from '../services/weather/weatherClassify'
+import type { Nest } from '../types/nest'
+import type { NavPinState } from '../types/navPin'
+import type { HomeLocation } from '../types/homeLocation'
+import { calculateDistance } from '../utils/distance'
+
+// ─── Layer Types ──────────────────────────────────────────────────────────────
+
+export type LayerKey = 'clima' | 'nidos' | 'gyms' | 'stops' | 'rutas'
+
+export interface ActiveLayers {
+  clima: boolean
+  nidos: boolean
+  gyms: boolean
+  stops: boolean
+  rutas: boolean
+}
+
+const DEFAULT_LAYERS: ActiveLayers = {
+  clima: true,
+  nidos: false,
+  gyms: false,
+  stops: false,
+  rutas: false,
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +70,26 @@ export type SortMode = '' | 'name' | 'density' | 'rating' | 'time'  // '' = sin 
 export type SortDirection = 'asc' | 'desc'
 type LoadingStatus = 'idle' | 'loading' | 'ready' | 'error'
 
+export type AccordionKey = 'condicion' | 'region' | 'tipoClima' | 'orden' | 'tipoPoke' | 'ordenNidos' | 'categoria'
+
+export interface DraftFilters {
+  region: Region
+  condition: string[]
+  type: string[]
+  sortMode: SortMode
+  nestType: string[]
+  nestSortBy: 'name' | 'type' | 'spawnRate' | 'distance' | 'cooldown'
+}
+
+const DEFAULT_DRAFT: DraftFilters = {
+  region: 'todas',
+  condition: [],
+  type: [],
+  sortMode: '',
+  nestType: [],
+  nestSortBy: 'name',
+}
+
 interface LoadingProgress {
   cityName: string
   current: number
@@ -64,17 +108,44 @@ interface AppStore {
   sortDirection: SortDirection
   selectedCity: City | null
   theme: 'dark' | 'light'
-  sidebarOpen: boolean
   loadingStatus: LoadingStatus
   loadingProgress: LoadingProgress
   sidebarMode: 'list' | 'detail' | 'favorites'
+  scrollToFeedTick: number
+  scrollToFeedTarget: 'city' | 'nest' | null
   favorites: string[]
-  badgeFilter: string[]
+  badgeFilter: string[] // DEPRECATED: uso en MapLegend eliminado en US-827. Solo FilterPanel lo usa para filtrar ciudades.
+  highlightCategories: string[] // US-827/US-815: resaltar pines. Radio exclusivo global. Valores: 'stops'|'gyms'|'community'|'best'|'nest:verified'|'nest:spawn'|'nest:dust'|'nest:top'
+  categoryFilter: string[] // US-828: filtrar ciudades por categoria (stops/gyms/community/best) desde FilterPanelClima
   showBadgesOnPins: boolean
   lastUpdated: number | null
   isFilterPanelOpen: boolean
   typeFilter: string[]
+  activeLayers: ActiveLayers
+  nests: Nest[]
+  selectedNest: Nest | null
+  nestPopupOpen: boolean
+  nestTypeFilter: string[]
+  nestSortBy: 'name' | 'type' | 'spawnRate' | 'distance' | 'cooldown'
+  nestSortDirection: 'asc' | 'desc'
+  navPin: NavPinState | null
+  homeLocation: HomeLocation | null
+  homeModalOpen: boolean
+
+  // Migration countdown
+  now: number
+  tickNow: () => void
+
+  // sprint-12 compat
   autoSyncEnabled: boolean
+  setAutoSyncEnabled: (enabled: boolean) => void
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
+
+  // Filter panel
+  filterPanelOpen: boolean
+  accordionState: Record<AccordionKey, boolean>
+  draftFilters: DraftFilters
 
   // Actions
   setRegionFilter: (region: Region) => void
@@ -86,20 +157,51 @@ interface AppStore {
   setSortDirection: (direction: SortDirection) => void
   setSelectedCity: (city: City | null) => void
   toggleTheme: () => void
-  setSidebarOpen: (open: boolean) => void
   setLoadingStatus: (status: LoadingStatus) => void
   setLoadingProgress: (progress: LoadingProgress) => void
   setSidebarMode: (mode: 'list' | 'detail' | 'favorites') => void
+  scrollToFeed: (target: 'city' | 'nest') => void
   toggleFavorite: (cityId: string) => void
   clearFavorites: () => void
   setBadgeFilter: (badges: string[]) => void
+  setHighlightCategories: (cats: string[]) => void
+  setCategoryFilter: (cats: string[]) => void
+  toggleCategory: (cat: string) => void
+  toggleHighlightCategory: (cat: string) => void
   setShowBadgesOnPins: (show: boolean) => void
   setLastUpdated: (timestamp: number) => void
   setIsFilterPanelOpen: (open: boolean) => void
   setTypeFilter: (types: string[]) => void
   toggleType: (type: string) => void
-  setAutoSyncEnabled: (enabled: boolean) => void
   resetToHome: () => void
+  toggleLayer: (layer: LayerKey) => void
+  setLayer: (layer: LayerKey, value: boolean) => void
+  setNests: (nests: Nest[]) => void
+  setSelectedNest: (nest: Nest | null) => void
+  setNestPopupOpen: (open: boolean) => void
+  setNestTypeFilter: (types: string[]) => void
+  toggleNestType: (type: string) => void
+  setNestSortBy: (mode: 'name' | 'type' | 'spawnRate' | 'distance' | 'cooldown') => void
+  setNestSortDirection: (direction: 'asc' | 'desc') => void
+  setNavPin: (pin: NavPinState | null) => void
+  clearNavPin: () => void
+  setHomeLocation: (loc: HomeLocation) => void
+  clearHomeLocation: () => void
+  setHomeModalOpen: (open: boolean) => void
+
+  // Filter panel actions
+  openFilterPanel: () => void
+  applyFilterPanel: () => void
+  cancelFilterPanel: () => void
+  clearDraftFilters: () => void
+  clearAppliedFilters: () => void
+  setDraftRegion: (region: Region) => void
+  setDraftCondition: (conditions: string[]) => void
+  setDraftType: (types: string[]) => void
+  setDraftSortMode: (mode: SortMode) => void
+  setDraftNestType: (types: string[]) => void
+  setDraftNestSortBy: (mode: 'name' | 'type' | 'spawnRate' | 'distance' | 'cooldown') => void
+  toggleAccordion: (section: AccordionKey) => void
 
   // Derived
   getFilteredCities: (cities: City[]) => City[]
@@ -116,17 +218,11 @@ export const useStore = create<AppStore>((set, get) => ({
   sortDirection: 'asc',  // Default: ascendente (como solicitó el usuario)
   selectedCity: null,
   theme: (localStorage.getItem('pwe-theme') as 'dark' | 'light') || 'dark',
-  sidebarOpen: (() => {
-    try {
-      const saved = localStorage.getItem('pwe-sidebar-open')
-      return saved ? JSON.parse(saved) : true
-    } catch {
-      return true
-    }
-  })(),
   loadingStatus: 'idle',
   loadingProgress: { cityName: '', current: 0, total: 0, percent: 0 },
   sidebarMode: 'list',
+  scrollToFeedTick: 0,
+  scrollToFeedTarget: null,
   favorites: (() => {
     try {
       const saved = localStorage.getItem('pwe-favorites')
@@ -136,6 +232,8 @@ export const useStore = create<AppStore>((set, get) => ({
     }
   })(),
   badgeFilter: ['stops', 'gyms', 'community', 'best'],
+  categoryFilter: [],
+  highlightCategories: [],
   showBadgesOnPins: (() => {
     try {
       const saved = localStorage.getItem('pwe-showBadgesOnPins')
@@ -147,7 +245,45 @@ export const useStore = create<AppStore>((set, get) => ({
   lastUpdated: null,
   isFilterPanelOpen: false,
   typeFilter: [],
-  autoSyncEnabled: true, // Default: auto-sync enabled (US-1106)
+  activeLayers: (() => {
+    try {
+      const stored = localStorage.getItem('pwe-activeLayers')
+      if (!stored) return DEFAULT_LAYERS
+      return { ...DEFAULT_LAYERS, ...JSON.parse(stored) }
+    } catch {
+      return DEFAULT_LAYERS
+    }
+  })(),
+  nests: [],
+  selectedNest: null,
+  nestPopupOpen: false,
+  nestTypeFilter: [],
+  nestSortBy: 'name',
+  nestSortDirection: 'asc',
+  navPin: null,
+  homeLocation: (() => {
+    try {
+      const saved = localStorage.getItem('pwe-home-location')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })(),
+  homeModalOpen: false,
+  now: Date.now(),
+  autoSyncEnabled: true,
+  sidebarOpen: true,
+  filterPanelOpen: false,
+  accordionState: {
+    condicion: true,
+    region: false,
+    tipoClima: false,
+    orden: false,
+    tipoPoke: true,
+    ordenNidos: false,
+    categoria: false,
+  },
+  draftFilters: DEFAULT_DRAFT,
 
   // ── Actions ────────────────────────────────────────────────────────────────
   setRegionFilter: (region) => set({ regionFilter: region }),
@@ -172,7 +308,7 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ sortDirection: direction })
   },
 
-  setSelectedCity: (city) => set({ selectedCity: city }),
+  setSelectedCity: (city) => set({ selectedCity: city, selectedNest: null, nestPopupOpen: false, navPin: null }),
 
   toggleTheme: () => {
     const next = get().theme === 'dark' ? 'light' : 'dark'
@@ -181,12 +317,8 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ theme: next })
   },
 
-  setSidebarOpen: (open) => {
-    localStorage.setItem('pwe-sidebar-open', JSON.stringify(open))
-    set({ sidebarOpen: open })
-  },
-
   setSidebarMode: (mode) => set({ sidebarMode: mode }),
+  scrollToFeed: (target) => set((s) => ({ sidebarMode: 'list', scrollToFeedTick: s.scrollToFeedTick + 1, scrollToFeedTarget: target, nestPopupOpen: false })),
 
   toggleFavorite: (cityId) =>
     set((state) => {
@@ -207,6 +339,23 @@ export const useStore = create<AppStore>((set, get) => ({
   setLoadingProgress: (progress) => set({ loadingProgress: progress }),
 
   setBadgeFilter: (badges) => set({ badgeFilter: badges }),
+
+  setCategoryFilter: (cats) => set({ categoryFilter: cats }),
+
+  toggleCategory: (cat) =>
+    set((s) => ({
+      categoryFilter: s.categoryFilter.includes(cat)
+        ? s.categoryFilter.filter((c) => c !== cat)
+        : [...s.categoryFilter, cat],
+    })),
+
+  setHighlightCategories: (cats) => set({ highlightCategories: cats }),
+
+  toggleHighlightCategory: (cat) =>
+    set((s) => ({
+      // US-815: radio exclusivo global — una sola fila activa en toda la leyenda
+      highlightCategories: s.highlightCategories.includes(cat) ? [] : [cat],
+    })),
 
   setShowBadgesOnPins: (show) => {
     localStorage.setItem('pwe-showBadgesOnPins', JSON.stringify(show))
@@ -239,11 +388,114 @@ export const useStore = create<AppStore>((set, get) => ({
         : [...state.typeFilter, type],
     })),
 
+  toggleLayer: (layer) =>
+    set((state) => {
+      const next = { ...state.activeLayers, [layer]: !state.activeLayers[layer] }
+      localStorage.setItem('pwe-activeLayers', JSON.stringify(next))
+      return { activeLayers: next }
+    }),
+
+  setLayer: (layer, value) =>
+    set((state) => {
+      const next = { ...state.activeLayers, [layer]: value }
+      localStorage.setItem('pwe-activeLayers', JSON.stringify(next))
+      return { activeLayers: next }
+    }),
+
+  setNests: (nests) => set({ nests }),
+
+  setSelectedNest: (nest) => set({ selectedNest: nest, nestPopupOpen: nest !== null, selectedCity: null }),
+  setNestPopupOpen: (open) => set({ nestPopupOpen: open }),
+
+  setNestTypeFilter: (types) => set({ nestTypeFilter: types }),
+
+  toggleNestType: (type) =>
+    set((state) => ({
+      nestTypeFilter: state.nestTypeFilter.includes(type)
+        ? state.nestTypeFilter.filter((t) => t !== type)
+        : [...state.nestTypeFilter, type],
+    })),
+
+  setNestSortBy: (mode) => set({ nestSortBy: mode }),
+
+  setNestSortDirection: (direction) => set({ nestSortDirection: direction }),
+
+  setNavPin: (pin) => set({ navPin: pin }),
+  clearNavPin: () => set({ navPin: null }),
+
+  setHomeLocation: (loc) => {
+    localStorage.setItem('pwe-home-location', JSON.stringify(loc))
+    set({ homeLocation: loc })
+  },
+  clearHomeLocation: () => {
+    localStorage.removeItem('pwe-home-location')
+    set({ homeLocation: null })
+  },
+  setHomeModalOpen: (open: boolean) => set({ homeModalOpen: open }),
+
+  tickNow: () => set({ now: Date.now() }),
+
+  openFilterPanel: () => {
+    const { regionFilter, conditionFilter, typeFilter, sortMode, nestTypeFilter, nestSortBy } = get()
+    set({
+      filterPanelOpen: true,
+      draftFilters: {
+        region: regionFilter,
+        condition: [...conditionFilter],
+        type: [...typeFilter],
+        sortMode,
+        nestType: [...nestTypeFilter],
+        nestSortBy,
+      },
+    })
+  },
+
+  applyFilterPanel: () => {
+    const { draftFilters } = get()
+    set({
+      filterPanelOpen: false,
+      regionFilter: draftFilters.region,
+      conditionFilter: draftFilters.condition,
+      typeFilter: draftFilters.type,
+      sortMode: draftFilters.sortMode,
+      nestTypeFilter: draftFilters.nestType,
+      nestSortBy: draftFilters.nestSortBy,
+    })
+  },
+
+  cancelFilterPanel: () => set({ filterPanelOpen: false, draftFilters: DEFAULT_DRAFT }),
+
   setAutoSyncEnabled: (enabled) => set({ autoSyncEnabled: enabled }),
+  setSidebarOpen: (open) => {
+    localStorage.setItem('pwe-sidebar-open', JSON.stringify(open))
+    set({ sidebarOpen: open })
+  },
+
+  clearDraftFilters: () => set({ draftFilters: DEFAULT_DRAFT }),
+
+  clearAppliedFilters: () => set({
+    regionFilter: 'todas',
+    conditionFilter: [],
+    typeFilter: [],
+    sortMode: '',
+    nestTypeFilter: [],
+    nestSortBy: 'name',
+    categoryFilter: [],
+  }),
+
+  setDraftRegion: (region) => set((s) => ({ draftFilters: { ...s.draftFilters, region } })),
+  setDraftCondition: (condition) => set((s) => ({ draftFilters: { ...s.draftFilters, condition } })),
+  setDraftType: (type) => set((s) => ({ draftFilters: { ...s.draftFilters, type } })),
+  setDraftSortMode: (sortMode) => set((s) => ({ draftFilters: { ...s.draftFilters, sortMode } })),
+  setDraftNestType: (nestType) => set((s) => ({ draftFilters: { ...s.draftFilters, nestType } })),
+  setDraftNestSortBy: (nestSortBy) => set((s) => ({ draftFilters: { ...s.draftFilters, nestSortBy } })),
+
+  toggleAccordion: (section) =>
+    set((s) => ({ accordionState: { ...s.accordionState, [section]: !s.accordionState[section] } })),
 
   // ── Derived ────────────────────────────────────────────────────────────────
   getFilteredCities: (cities) => {
-    const { regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection } = get()
+    const { regionFilter, conditionFilter, typeFilter, searchQuery, sortMode, sortDirection, homeLocation } = get()
     let result = [...cities]
 
     if (regionFilter !== 'todas') {
@@ -272,11 +524,9 @@ export const useStore = create<AppStore>((set, get) => ({
       )
     }
 
-    // Aplicar ordenamiento solo si sortMode !== ''
     if (sortMode !== '') {
       result.sort((a, b) => {
         let comparison = 0
-
         if (sortMode === 'name') {
           comparison = a.name.localeCompare(b.name)
         } else if (sortMode === 'density') {
@@ -286,10 +536,13 @@ export const useStore = create<AppStore>((set, get) => ({
         } else if (sortMode === 'time') {
           comparison = a.localTime.localeCompare(b.localTime)
         }
-
-        // Invertir si es descendente
         return sortDirection === 'desc' ? -comparison : comparison
       })
+    } else if (homeLocation) {
+      result.sort((a, b) =>
+        calculateDistance(homeLocation.lat, homeLocation.lon, a.lat, a.lon) -
+        calculateDistance(homeLocation.lat, homeLocation.lon, b.lat, b.lon)
+      )
     }
 
     return result
