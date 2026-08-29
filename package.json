@@ -21,6 +21,7 @@
     "deploy:functions": "cd functions && npm run build && cd .. && firebase deploy --only functions"
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.46.0",
     "@tanstack/react-table": "^8.21.3",
     "exceljs": "^4.4.0",
     "firebase": "^12.11.0",
@@ -35,7 +36,6 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.59.1",
-    "firebase-admin": "^13.7.0",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
@@ -47,6 +47,7 @@
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "firebase-admin": "^13.7.0",
     "globals": "^17.4.0",
     "happy-dom": "^20.8.7",
     "tsx": "^4.11.2",
