@@ -22,9 +22,10 @@ import { NEST_THRESHOLDS } from '../../config/nestThresholds'
 // ─── Tile URLs ────────────────────────────────────────────────────────────────
 // dark_matter bloqueado por ORB en Chromium → usamos positron + CSS invert para dark mode.
 // positron (light_all) no tiene CORS issues y con invert/hue-rotate queda dark grisáceo.
+const CARTO_KEY = import.meta.env.VITE_CARTO_KEY ? `?key=${import.meta.env.VITE_CARTO_KEY}` : ''
 const TILES = {
-  dark:  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  dark:  `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png${CARTO_KEY}`,
+  light: `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png${CARTO_KEY}`,
 }
 
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
