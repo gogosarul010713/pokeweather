@@ -15,6 +15,7 @@ import type { WeatherCondition } from '../../config/weatherImages';
 import { CONDITION_TO_TYPES } from '../../services/weather/weatherService';
 import { TYPE_ICON } from '../../config/typeIcons';
 import WeatherReportModal from './WeatherReportModal';
+import { FF_WEATHER_REPORT } from '../../config/featureFlags';
 import { LookbackPanel } from './LookbackPanel';
 import { fetchLookback, type LookbackEntry } from '../../services/lookback/lookbackService';
 import { PrecisionPanel } from './PrecisionPanel';
@@ -349,7 +350,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       enableSorting: false,
       enableColumnFilter: false,
     }),
-    columnHelper.display({
+    ...(FF_WEATHER_REPORT ? [columnHelper.display({
       id: 'reportar',
       header: '⚠️',
       cell: info => (
@@ -364,7 +365,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       ),
       enableSorting: false,
       enableColumnFilter: false,
-    }),
+    })] : []),
     columnHelper.display({
       id: 'copiarCoords',
       header: '📋',
@@ -1245,7 +1246,7 @@ export function PredictionAnalysisTable({ rows, title = 'Predicciones Detalladas
       <div id="prediction-toast" className="pat-toast" />
 
       {/* Weather Report Modal */}
-      {reportingRow && (
+      {FF_WEATHER_REPORT && reportingRow && (
         <WeatherReportModal
           cityId={reportingRow.cityId}
           cityName={reportingRow.cityName}
