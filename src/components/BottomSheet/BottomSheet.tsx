@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 
 interface BottomSheetProps {
   children: React.ReactNode
+  cityCount?: number
 }
 
 const SNAP_POSITIONS = {
@@ -17,7 +18,7 @@ function findClosestSnap(currentPercent: number): number {
   )
 }
 
-export default function BottomSheet({ children }: BottomSheetProps) {
+export default function BottomSheet({ children, cityCount }: BottomSheetProps) {
   const [sheetHeightPercent, setSheetHeightPercent] = useState(SNAP_POSITIONS.middle)
   const [isDragging, setIsDragging] = useState(false)
   const dragStartRef = useRef({ y: 0, heightPercent: 0 })
@@ -123,6 +124,13 @@ export default function BottomSheet({ children }: BottomSheetProps) {
         .bs-content::-webkit-scrollbar-track { background: transparent; }
         .bs-content::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
         .bs-content::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+        .bs-collapsed-badge {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-secondary);
+          letter-spacing: 0.02em;
+        }
       `}</style>
 
       <div
@@ -134,6 +142,9 @@ export default function BottomSheet({ children }: BottomSheetProps) {
       >
         <div className="bs-handle-area" onMouseDown={handleDragStart} onTouchStart={handleDragStart}>
           <div className="bs-handle" />
+          {sheetHeightPercent === SNAP_POSITIONS.collapsed && cityCount !== undefined && cityCount > 0 && (
+            <span className="bs-collapsed-badge">{cityCount} ciudad{cityCount !== 1 ? 'es' : ''}</span>
+          )}
         </div>
         <div className="bs-content">
           {children}
