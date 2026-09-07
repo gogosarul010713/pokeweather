@@ -16,7 +16,7 @@ interface MapPinProps {
   dimmed?: boolean
 }
 
-function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], showBadges: boolean = true, dimmed = false, weatherImg?: string): L.DivIcon {
+function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], showBadges: boolean = true, dimmed = false, weatherImg?: string, tempC?: number): L.DivIcon {
   const size = selected ? 36 : 28
   const half = size / 2
   const cx = half
@@ -52,13 +52,18 @@ function buildIcon(color: string, selected: boolean, badges: BadgeType[] = [], s
     : `<path d="${path}" fill="${color}"/>
        <circle cx="${cx}" cy="${cy}" r="${Math.round(r * 0.42)}" fill="rgba(255,255,255,0.9)"/>`
 
+  const tempLabel = tempC !== undefined
+    ? `<div style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.9);pointer-events:none;">${Math.round(tempC)}°</div>`
+    : ''
+
   const html = `
-    <div style="position:relative;width:${size}px;height:${size}px;filter:${filter};${opacity}transition:opacity 200ms ease;">
+    <div style="position:relative;width:${size}px;height:${size + (tempC !== undefined ? 14 : 0)}px;filter:${filter};${opacity}transition:opacity 200ms ease;">
       <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
         ${svgInner}
       </svg>
       ${weatherImg ? spriteHtml : ''}
       ${badgesHtml}
+      ${tempLabel}
     </div>`
 
   return L.divIcon({
@@ -85,7 +90,8 @@ export default function MapPin({ city, badges = [], dimmed = false }: MapPinProp
   const markerRef = useRef<L.Marker>(null)
 
   const weatherImg = WEATHER_IMAGES[city.condition as keyof typeof WEATHER_IMAGES]
-  const icon = useMemo(() => buildIcon(color, isSelected, activeBadges, true, dimmed, weatherImg), [color, isSelected, activeBadges, dimmed, weatherImg])
+  const isMobile = window.innerWidth < 768
+  const icon = useMemo(() => buildIcon(color, isSelected, activeBadges, true, dimmed, weatherImg, isMobile ? city.tempC : undefined), [color, isSelected, activeBadges, dimmed, weatherImg, isMobile, city.tempC])
 
   useEffect(() => {
     if (isSelected) markerRef.current?.openPopup()
