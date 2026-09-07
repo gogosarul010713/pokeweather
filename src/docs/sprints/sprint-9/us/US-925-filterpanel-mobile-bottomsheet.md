@@ -3,7 +3,7 @@
 **Sprint:** 9
 **Story Points:** 1
 **Priority:** Medium
-**Status:** Pending
+**Status:** Done
 **Dependencies:** --
 
 ---
