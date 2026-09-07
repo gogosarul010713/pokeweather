@@ -22,11 +22,11 @@ El FilterPanel en desktop se abre como modal o panel lateral. En mobile debe abr
 
 ## Acceptance Criteria
 
-- [ ] En mobile (< 768px), al tocar el boton de filtros, el FilterPanel aparece anclado al borde inferior de la pantalla
-- [ ] El panel tiene handle de arrastre para cerrarlo
-- [ ] Los filtros internos (capas, condicion, tipo, region, ordenar) son accesibles con scroll vertical
-- [ ] El boton "Aplicar" permanece visible sin hacer scroll
-- [ ] En desktop el comportamiento no cambia
+- [x] En mobile (< 768px), al tocar el boton de filtros, el FilterPanel aparece anclado al borde inferior de la pantalla
+- [x] El panel tiene handle de arrastre para cerrarlo
+- [x] Los filtros internos (capas, condicion, tipo, region, ordenar) son accesibles con scroll vertical
+- [x] El boton "Aplicar" permanece visible sin hacer scroll
+- [x] En desktop el comportamiento no cambia
 
 ---
 
