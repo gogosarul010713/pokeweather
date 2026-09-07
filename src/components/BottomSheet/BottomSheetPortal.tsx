@@ -4,6 +4,7 @@ import BottomSheet from './BottomSheet'
 interface BottomSheetPortalProps {
   children: React.ReactNode
   cityCount?: number
+  miZonaActive?: boolean
 }
 
 /**
@@ -11,7 +12,7 @@ interface BottomSheetPortalProps {
  * This escapes the overflow: hidden stacking context and ensures
  * the sheet is always visible in the viewport on mobile.
  */
-export function BottomSheetPortal({ children, cityCount }: BottomSheetPortalProps) {
+export function BottomSheetPortal({ children, cityCount, miZonaActive }: BottomSheetPortalProps) {
   const portalElement = document.getElementById('bottom-sheet-root')
 
   if (!portalElement) {
@@ -20,7 +21,7 @@ export function BottomSheetPortal({ children, cityCount }: BottomSheetPortalProp
   }
 
   return createPortal(
-    <BottomSheet cityCount={cityCount}>{children}</BottomSheet>,
+    <BottomSheet cityCount={cityCount} miZonaActive={miZonaActive}>{children}</BottomSheet>,
     portalElement
   )
 }

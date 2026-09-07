@@ -236,7 +236,7 @@ export default function App() {
 
         {/* BOTTOM SHEET — Mobile only, rendered via portal outside #root */}
         {isMobile && (
-          <BottomSheetPortal cityCount={filteredCities.length}>
+          <BottomSheetPortal cityCount={filteredCities.length} miZonaActive={!!homeLocation}>
             <LocationFeed cities={filteredCities} />
           </BottomSheetPortal>
         )}
