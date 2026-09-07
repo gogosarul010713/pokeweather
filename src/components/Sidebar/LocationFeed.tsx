@@ -23,6 +23,10 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
   const regionFilter = useStore((s) => s.regionFilter)
+  const setRegionFilter = useStore((s) => s.setRegionFilter)
+  const setConditionFilter = useStore((s) => s.setConditionFilter)
+  const setTypeFilter = useStore((s) => s.setTypeFilter)
+  const setCategoryFilter = useStore((s) => s.setCategoryFilter)
   const activeLayers = useStore((s) => s.activeLayers)
   const nests = useStore((s) => s.nests)
   const selectedNest = useStore((s) => s.selectedNest)
@@ -241,6 +245,55 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
           pointer-events: none;
         }
 
+        /* Filter chips strip -- mobile only */
+        .lf-filter-strip {
+          display: none;
+        }
+
+        @media (max-width: 767px) {
+          .lf-filter-strip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            overflow-x: auto;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-default);
+            scrollbar-width: none;
+          }
+
+          .lf-filter-strip::-webkit-scrollbar { display: none; }
+
+          .lf-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px 2px 8px;
+            background: rgba(88, 166, 255, 0.12);
+            border: 1px solid var(--ui-accent);
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--ui-accent);
+            white-space: nowrap;
+            flex-shrink: 0;
+            cursor: pointer;
+          }
+
+          .lf-chip-x {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 12px;
+            height: 12px;
+            font-size: 10px;
+            line-height: 1;
+            opacity: 0.7;
+          }
+
+          .lf-chip:hover .lf-chip-x { opacity: 1; }
+        }
+
         /* Sort mini-dropdown */
         .lf-sort-popup {
           position: absolute;
@@ -387,6 +440,30 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
                     </button>
                   </div>
                 </div>
+                {activeFilterCount > 0 && (
+                  <div className="lf-filter-strip">
+                    {regionFilter !== 'todas' && (
+                      <button className="lf-chip" onClick={() => setRegionFilter('todas')} type="button">
+                        {regionFilter} <span className="lf-chip-x">x</span>
+                      </button>
+                    )}
+                    {conditionFilter.map(c => (
+                      <button key={c} className="lf-chip" onClick={() => setConditionFilter(conditionFilter.filter(x => x !== c))} type="button">
+                        {c} <span className="lf-chip-x">x</span>
+                      </button>
+                    ))}
+                    {typeFilter.map(t => (
+                      <button key={t} className="lf-chip" onClick={() => setTypeFilter(typeFilter.filter(x => x !== t))} type="button">
+                        {t} <span className="lf-chip-x">x</span>
+                      </button>
+                    ))}
+                    {categoryFilter.map(cat => (
+                      <button key={cat} className="lf-chip" onClick={() => setCategoryFilter(categoryFilter.filter(x => x !== cat))} type="button">
+                        {cat} <span className="lf-chip-x">x</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="lf-group-content">
                   {displayedCities.map((city) => (
                     <div
