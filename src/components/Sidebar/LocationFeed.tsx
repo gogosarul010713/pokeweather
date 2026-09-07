@@ -28,6 +28,7 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
   const setTypeFilter = useStore((s) => s.setTypeFilter)
   const setCategoryFilter = useStore((s) => s.setCategoryFilter)
   const activeLayers = useStore((s) => s.activeLayers)
+  const toggleLayer  = useStore((s) => s.toggleLayer)
   const nests = useStore((s) => s.nests)
   const selectedNest = useStore((s) => s.selectedNest)
   const scrollToFeedTick   = useStore((s) => s.scrollToFeedTick)
@@ -245,6 +246,63 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
           pointer-events: none;
         }
 
+        /* Layer toggle strip -- mobile only */
+        .lf-layer-strip {
+          display: none;
+        }
+
+        @media (max-width: 767px) {
+          .lf-layer-strip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 8px;
+            overflow-x: auto;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-default);
+            scrollbar-width: none;
+          }
+
+          .lf-layer-strip::-webkit-scrollbar { display: none; }
+
+          .lf-layer-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 8px;
+            border: 1px solid var(--border-default);
+            background: var(--bg-tertiary);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: background 120ms, border-color 120ms, color 120ms;
+          }
+
+          .lf-layer-chip.clima-on {
+            border-color: rgba(88,166,255,0.4);
+            color: #58A6FF;
+            background: rgba(88,166,255,0.08);
+          }
+
+          .lf-layer-chip.nidos-on {
+            border-color: rgba(63,185,80,0.4);
+            color: #3FB950;
+            background: rgba(63,185,80,0.08);
+          }
+
+          .lf-layer-chip.soon {
+            opacity: 0.38;
+            cursor: default;
+            pointer-events: none;
+          }
+        }
+
         /* Filter chips strip -- mobile only */
         .lf-filter-strip {
           display: none;
@@ -406,6 +464,27 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
       `}</style>
 
       <div className="lf-root">
+        {/* Layer toggle strip — mobile only */}
+        <div className="lf-layer-strip">
+          <button
+            className={`lf-layer-chip${activeLayers.clima ? ' clima-on' : ''}`}
+            onClick={() => toggleLayer('clima')}
+            type="button"
+          >
+            ☁️ Clima
+          </button>
+          <button
+            className={`lf-layer-chip${activeLayers.nidos ? ' nidos-on' : ''}`}
+            onClick={() => toggleLayer('nidos')}
+            type="button"
+          >
+            🌿 Nidos
+          </button>
+          <span className="lf-layer-chip soon">🏟 Gyms</span>
+          <span className="lf-layer-chip soon">🔵 Stops</span>
+          <span className="lf-layer-chip soon">🗺 Rutas</span>
+        </div>
+
         {/* Lista o mensaje vacío */}
         {totalCount > 0 ? (
           <div className={`lf-scroll ${loadingStatus === 'loading' ? 'fade-refresh' : ''}`} ref={scrollContainerRef}>
