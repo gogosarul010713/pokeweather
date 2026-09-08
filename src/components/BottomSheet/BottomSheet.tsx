@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 
 interface BottomSheetProps {
   children: React.ReactNode
+  cityCount?: number
+  miZonaActive?: boolean
 }
 
 const SNAP_POSITIONS = {
@@ -17,7 +19,7 @@ function findClosestSnap(currentPercent: number): number {
   )
 }
 
-export default function BottomSheet({ children }: BottomSheetProps) {
+export default function BottomSheet({ children, cityCount, miZonaActive }: BottomSheetProps) {
   const [sheetHeightPercent, setSheetHeightPercent] = useState(SNAP_POSITIONS.middle)
   const [isDragging, setIsDragging] = useState(false)
   const dragStartRef = useRef({ y: 0, heightPercent: 0 })
@@ -123,6 +125,27 @@ export default function BottomSheet({ children }: BottomSheetProps) {
         .bs-content::-webkit-scrollbar-track { background: transparent; }
         .bs-content::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
         .bs-content::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+        .bs-collapsed-badge {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-secondary);
+          letter-spacing: 0.02em;
+        }
+
+        .bs-mizona-badge {
+          font-size: 11px;
+          font-weight: 700;
+          color: #00e5ff;
+          letter-spacing: 0.04em;
+          text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+          animation: bs-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes bs-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
       `}</style>
 
       <div
@@ -134,6 +157,13 @@ export default function BottomSheet({ children }: BottomSheetProps) {
       >
         <div className="bs-handle-area" onMouseDown={handleDragStart} onTouchStart={handleDragStart}>
           <div className="bs-handle" />
+          {sheetHeightPercent === SNAP_POSITIONS.collapsed && (
+            miZonaActive
+              ? <span className="bs-mizona-badge">⊙ Mi Zona activa</span>
+              : cityCount !== undefined && cityCount > 0
+                ? <span className="bs-collapsed-badge">{cityCount} ciudad{cityCount !== 1 ? 'es' : ''}</span>
+                : null
+          )}
         </div>
         <div className="bs-content">
           {children}

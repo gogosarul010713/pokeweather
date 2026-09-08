@@ -1,0 +1,42 @@
+{
+  "date": "2026-08-23",
+  "summary": {
+    "passed": 1,
+    "failed": 4,
+    "warned": 0
+  },
+  "results": [
+    {
+      "section": "US-801",
+      "status": "PASS",
+      "message": "Found 4025 forecast documents across 5 cities (fallback query)",
+      "details": {
+        "cities": 5,
+        "total_forecast_documents": 4025,
+        "total_snapshots": 48300,
+        "note": "Query executed without orderBy due to missing index"
+      }
+    },
+    {
+      "section": "US-802-conditions",
+      "status": "FAIL",
+      "message": "Document weather_catalog/conditions not found"
+    },
+    {
+      "section": "US-802-types",
+      "status": "FAIL",
+      "message": "Document weather_catalog/type_mapping not found"
+    },
+    {
+      "section": "US-802-rules",
+      "status": "FAIL",
+      "message": "Document weather_catalog/rules not found"
+    },
+    {
+      "section": "US-802",
+      "status": "FAIL",
+      "message": "Catálogo estático validado",
+      "details": {}
+    }
+  ]
+}

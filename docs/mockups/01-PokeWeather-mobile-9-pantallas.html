@@ -1,0 +1,542 @@
+<title>PokeWeather Mobile — 10 Pantallas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg-primary:#0D1117; --bg-secondary:#161B22; --bg-tertiary:#1C2333; --bg-overlay:#252D3D;
+  --text-primary:#E6EDF3; --text-secondary:#7D8590; --text-accent:#FFD700;
+  --border-subtle:rgba(255,255,255,0.06); --border-default:rgba(255,255,255,0.12); --border-strong:rgba(255,255,255,0.24);
+  --ui-accent:#58A6FF; --ui-success:#3FB950; --ui-warning:#D29922; --ui-error:#F85149;
+  --home:#22D3EE; --canvas:#13181F;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg-primary:#F0F4F8;--bg-secondary:#E2E8EF;--bg-tertiary:#D0D9E4;
+  --text-primary:#0D1117;--text-secondary:#4A5568;
+  --border-subtle:rgba(0,0,0,0.06);--border-default:rgba(0,0,0,0.12);--border-strong:rgba(0,0,0,0.24);
+  --canvas:#DDE4EE;
+}}
+:root[data-theme="dark"]{--bg-primary:#0D1117;--bg-secondary:#161B22;--bg-tertiary:#1C2333;--text-primary:#E6EDF3;--text-secondary:#7D8590;--canvas:#13181F;--border-subtle:rgba(255,255,255,0.06);--border-default:rgba(255,255,255,0.12);--border-strong:rgba(255,255,255,0.24);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Exo 2',sans-serif;background:var(--canvas);color:var(--text-primary);padding:40px 16px 80px;}
+
+.pg-header{text-align:center;margin-bottom:48px;}
+.pg-eyebrow{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ui-accent);margin-bottom:8px;}
+.pg-title{font-family:'Rajdhani',sans-serif;font-size:clamp(24px,5vw,38px);font-weight:700;line-height:1.1;}
+.pg-title span{color:var(--text-accent);}
+.pg-sub{margin-top:8px;font-size:13px;color:var(--text-secondary);}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:40px;max-width:1200px;margin:0 auto;}
+.cell{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.cell-num{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ui-accent);text-transform:uppercase;}
+.cell-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-align:center;}
+.ann{font-size:10px;color:var(--text-secondary);line-height:1.5;max-width:260px;text-align:center;}
+.ann strong{color:var(--text-primary);}
+
+/* PHONE */
+.ph{width:280px;height:560px;background:var(--bg-primary);border-radius:32px;border:2px solid var(--border-strong);overflow:hidden;position:relative;box-shadow:0 16px 48px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.04) inset;flex-shrink:0;}
+.ph::before{content:'';position:absolute;top:9px;left:50%;transform:translateX(-50%);width:72px;height:16px;background:#000;border-radius:8px;z-index:100;}
+
+/* MAP */
+.map{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(88,166,255,0.04) 0,rgba(88,166,255,0.04) 1px,transparent 1px,transparent 56px),repeating-linear-gradient(90deg,rgba(88,166,255,0.04) 0,rgba(88,166,255,0.04) 1px,transparent 1px,transparent 56px),linear-gradient(155deg,#1a2535 0%,#141c28 55%,#0f1720 100%);}
+
+/* HEADER 2-fila */
+.hdr{position:absolute;top:0;left:0;right:0;z-index:20;background:var(--bg-secondary);border-bottom:1px solid var(--border-default);}
+.hdr-r1{display:flex;align-items:center;gap:6px;padding:30px 10px 0;height:50px;}
+.hdr-r2{display:flex;align-items:center;padding:5px 10px 7px;gap:6px;}
+.brand{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--text-accent);letter-spacing:.04em;flex:1;}
+.ibt{width:28px;height:28px;border-radius:7px;background:var(--bg-tertiary);border:1px solid var(--border-default);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.ibt.on{background:rgba(88,166,255,0.12);border-color:rgba(88,166,255,0.35);color:var(--ui-accent);}
+.ibt.badge{position:relative;}
+.badge-dot{position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:50%;background:var(--ui-error);color:#fff;font-size:7px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.sync{width:6px;height:6px;border-radius:50%;background:var(--ui-success);box-shadow:0 0 5px var(--ui-success);}
+.srch{flex:1;height:26px;background:var(--bg-tertiary);border:1px solid var(--border-default);border-radius:6px;display:flex;align-items:center;gap:5px;padding:0 7px;}
+.srch-ph{font-size:10px;color:var(--text-secondary);}
+
+/* MAP CONTROLS sidebar */
+.mc{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;z-index:15;}
+.mb{width:28px;height:28px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border-default);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-secondary);}
+.mb.active{color:var(--home);border-color:rgba(34,211,238,0.35);}
+.mb-sep{height:1px;background:var(--border-default);margin:2px 0;}
+
+/* BOTTOM SHEET */
+.bs{position:absolute;left:0;right:0;bottom:0;background:var(--bg-primary);border-top:1px solid var(--border-default);border-radius:16px 16px 0 0;display:flex;flex-direction:column;z-index:30;}
+.bs-handle-area{padding:8px 0 4px;display:flex;justify-content:center;flex-shrink:0;}
+.bs-handle{width:32px;height:4px;background:var(--border-strong);border-radius:2px;}
+
+/* CARDS */
+.loc-card{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;}
+.loc-card.sel{border-color:rgba(88,166,255,0.35);background:rgba(88,166,255,0.05);}
+.loc-top{display:flex;align-items:center;gap:8px;}
+.loc-icon{width:32px;height:32px;border-radius:7px;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.loc-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:var(--text-primary);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.loc-meta{font-size:9px;color:var(--text-secondary);}
+.loc-temp{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;margin-left:auto;flex-shrink:0;}
+.loc-bottom{display:flex;align-items:center;gap:8px;padding-top:3px;border-top:1px solid var(--border-subtle);}
+.loc-km{font-size:9px;font-weight:600;color:var(--home);}
+.loc-cd{font-size:9px;color:var(--ui-warning);}
+.tbadge{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:2px 6px;border-radius:6px;}
+.t-fire{background:rgba(255,107,53,0.18);color:#FF6B35;}
+.t-water{background:rgba(104,144,240,0.18);color:#6890F0;}
+.t-grass{background:rgba(120,200,80,0.18);color:#78C850;}
+.t-psychic{background:rgba(167,139,250,0.18);color:#A78BFA;}
+
+/* MARKER */
+.mkr{position:absolute;display:flex;flex-direction:column;align-items:center;gap:1px;z-index:5;}
+.mkr-dot{width:8px;height:8px;border-radius:50%;border:2px solid rgba(0,0,0,0.3);}
+.mkr-lbl{font-size:7px;font-weight:600;color:var(--text-primary);background:rgba(13,17,23,0.78);padding:1px 4px;border-radius:3px;white-space:nowrap;}
+
+/* FEED HEADER */
+.feed-hdr{padding:6px 10px 0;border-bottom:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.feed-hdr-r1{display:flex;align-items:center;gap:6px;}
+.feed-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:var(--text-primary);letter-spacing:.02em;flex:1;}
+.feed-chips-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;}
+.feed-chips-scroll::-webkit-scrollbar{display:none;}
+.feed-chip{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:3px 7px;border-radius:8px;border:1px solid var(--border-default);color:var(--text-secondary);background:var(--bg-tertiary);white-space:nowrap;flex-shrink:0;}
+.feed-chip.on{border-color:rgba(88,166,255,0.4);color:var(--ui-accent);background:rgba(88,166,255,0.08);}
+.feed-chip.on-green{border-color:rgba(63,185,80,0.4);color:var(--ui-success);background:rgba(63,185,80,0.08);}
+.feed-chip.soon{opacity:.38;cursor:default;}
+
+/* DETAIL */
+.dt-hero{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border-subtle);flex-shrink:0;}
+.dt-temp{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;margin-left:auto;}
+.dt-tiles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:8px 10px;flex-shrink:0;}
+.dt-tile{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:7px;padding:6px 8px;text-align:center;}
+.dt-tile-label{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:4px;}
+.dt-tile-val{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;color:var(--text-primary);}
+.nest-row{display:flex;align-items:center;gap:8px;background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:7px;padding:7px 9px;}
+.nest-name{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;color:var(--text-primary);flex:1;}
+.nest-sub{font-size:8px;color:var(--text-secondary);}
+
+/* FILTER MODAL */
+.flt{position:absolute;left:0;right:0;bottom:0;background:var(--bg-secondary);border-top:1px solid var(--border-default);border-radius:14px 14px 0 0;z-index:40;display:flex;flex-direction:column;overflow:hidden;}
+.flt-hdr{display:flex;align-items:center;padding:4px 12px 8px;border-bottom:1px solid var(--border-subtle);flex-shrink:0;}
+.flt-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--text-primary);flex:1;}
+.flt-clear{font-size:10px;color:var(--ui-accent);}
+.section-lbl{font-size:8px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:5px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:4px;}
+.chip{font-size:9px;padding:3px 8px;border-radius:12px;background:var(--bg-tertiary);border:1px solid var(--border-default);color:var(--text-secondary);}
+.chip.on{border-color:rgba(255,179,71,0.45);background:rgba(255,179,71,0.12);color:#FFB347;}
+.chip.on-blue{border-color:rgba(88,166,255,0.45);background:rgba(88,166,255,0.1);color:var(--ui-accent);}
+.chip.on-fire{border-color:rgba(255,107,53,0.45);background:rgba(255,107,53,0.12);color:#FF6B35;}
+.chip.on-water{border-color:rgba(104,144,240,0.45);background:rgba(104,144,240,0.12);color:#6890F0;}
+.layer-row{display:flex;gap:5px;}
+.layer-pill{display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:7px;font-size:9px;font-weight:600;}
+.lp-clima{background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);color:var(--ui-accent);}
+.lp-nidos{background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);color:var(--ui-success);}
+.lp-off{background:var(--bg-tertiary);border:1px solid var(--border-subtle);color:var(--text-secondary);opacity:.45;}
+.btn-apply{background:var(--ui-accent);color:#fff;border-radius:7px;padding:8px 14px;text-align:center;font-size:11px;font-weight:600;letter-spacing:.04em;flex-shrink:0;}
+
+/* HOME SHEET */
+.home-sh{position:absolute;left:0;right:0;bottom:0;background:var(--bg-primary);border-top:1px solid var(--border-default);border-radius:16px 16px 0 0;z-index:30;display:flex;flex-direction:column;}
+.gps-block{display:flex;align-items:center;gap:8px;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);border-radius:8px;padding:9px 11px;}
+.gps-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;color:var(--home);}
+.field-lbl{font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:3px;}
+.field-box{background:var(--bg-tertiary);border:1px solid var(--border-default);border-radius:7px;padding:7px 9px;font-size:11px;color:var(--text-primary);display:flex;align-items:center;gap:5px;}
+.field-box.focus{border-color:rgba(88,166,255,.5);}
+.field-ph{color:var(--text-secondary);}
+.btn-row-2{display:flex;gap:6px;}
+.btn-row-2>*{flex:1;}
+.btn-pri{background:var(--ui-accent);color:#fff;border-radius:7px;padding:8px;text-align:center;font-size:11px;font-weight:600;}
+.btn-sec{background:transparent;color:var(--text-secondary);border:1px solid var(--border-default);border-radius:7px;padding:8px;text-align:center;font-size:11px;}
+.btn-del{background:rgba(248,81,73,0.1);color:var(--ui-error);border:1px solid rgba(248,81,73,0.25);border-radius:7px;padding:7px;text-align:center;font-size:10px;font-weight:600;}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="pg-header">
+  <div class="pg-eyebrow">ENH-009 — Mobile Responsive Layout</div>
+  <h1 class="pg-title">10 Pantallas <span>Mobile</span></h1>
+  <p class="pg-sub">Todas las vistas de la app adaptadas a &lt;768px &mdash; BottomSheet + Header 2 filas</p>
+</div>
+
+<div class="grid">
+
+<!-- ===== 1. INICIO — SHEET COLAPSADO ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 1</div>
+  <div class="cell-label">Inicio &mdash; sidebar oculto</div>
+  <div class="ph">
+    <div class="map"></div>
+    <div class="mkr" style="left:65px;top:220px"><div class="mkr-dot" style="background:#FF6B35;box-shadow:0 0 5px #FF6B35"></div><div class="mkr-lbl">Tokyo</div></div>
+    <div class="mkr" style="left:175px;top:195px"><div class="mkr-dot" style="background:#6890F0;box-shadow:0 0 5px #6890F0"></div><div class="mkr-lbl">Seoul</div></div>
+    <div class="mkr" style="left:110px;top:290px"><div class="mkr-dot" style="background:#78C850;box-shadow:0 0 5px #78C850"></div><div class="mkr-lbl">Shanghai</div></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on badge">⚙️<div class="badge-dot">3</div></div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <!-- map controls -->
+    <div class="mc" style="top:55%;"><div class="mb">+</div><div class="mb">−</div><div class="mb-sep"></div><div class="mb">🌐</div><div class="mb active">🏠</div><div class="mb">☆</div><div class="mb">♡</div><div class="mb">🔍</div><div class="mb">⊙</div></div>
+    <!-- collapsed sheet -->
+    <div class="bs" style="height:54px">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div style="padding:1px 12px 0;display:flex;align-items:center;gap:7px">
+        <div style="font-size:9px;font-weight:600;color:var(--text-accent);background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.2);padding:2px 7px;border-radius:9px">4 ciudades</div>
+        <div style="font-size:9px;color:var(--text-secondary)">Desliza para ver lista</div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">Mapa ocupa toda la pantalla. Sheet solo muestra el handle + resumen. <strong>MapZoomControls</strong> visibles a la derecha.</div>
+</div>
+
+<!-- ===== 2. SIDEBAR — CLIMAS Y NIDOS ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 2</div>
+  <div class="cell-label">Sidebar &mdash; climas y nidos</div>
+  <div class="ph">
+    <div class="map"></div>
+    <div class="mkr" style="left:65px;top:130px"><div class="mkr-dot" style="background:#FF6B35;box-shadow:0 0 5px #FF6B35"></div><div class="mkr-lbl">Tokyo</div></div>
+    <div class="mkr" style="left:185px;top:110px"><div class="mkr-dot" style="background:#6890F0;box-shadow:0 0 5px #6890F0"></div><div class="mkr-lbl">Seoul</div></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on badge">⚙️<div class="badge-dot">3</div></div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <div class="bs" style="height:55%">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div class="feed-hdr">
+        <div class="feed-hdr-r1"><div class="feed-title">Climas · 5 &amp; Nidos · 3</div></div>
+        <div class="feed-chips-scroll">
+          <div class="feed-chip on">☁️ Clima</div>
+          <div class="feed-chip on-green">🌿 Nidos</div>
+          <div class="feed-chip soon">🏟 Gyms</div>
+          <div class="feed-chip soon">🔵 Stops</div>
+          <div class="feed-chip soon">🗺 Rutas</div>
+        </div>
+      </div>
+      <div style="overflow-y:auto;flex:1;padding:6px 8px;display:flex;flex-direction:column;gap:5px">
+        <div style="font-size:8px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-accent);padding:2px 0 1px">Climas</div>
+        <div class="loc-card">
+          <div class="loc-top"><div class="loc-icon">🗼</div><div style="flex:1;min-width:0"><div class="loc-name">Tokyo</div><div class="loc-meta">Asia · 05/09 · 12:09 AM</div></div><div class="loc-temp">28°</div></div>
+          <div style="display:flex;gap:4px;padding-top:3px"><div class="tbadge t-fire">Fire</div><div class="tbadge t-psychic">Psychic</div></div>
+        </div>
+        <div class="loc-card">
+          <div class="loc-top"><div class="loc-icon">🗽</div><div style="flex:1;min-width:0"><div class="loc-name">Times Square</div><div class="loc-meta">EE.UU. · 05/09 · 03:09 AM</div></div><div class="loc-temp">21°</div></div>
+          <div style="display:flex;gap:4px;padding-top:3px"><div class="tbadge t-fire">Fire</div><div class="tbadge t-grass">Grass</div></div>
+        </div>
+        <div style="font-size:8px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-success);padding:4px 0 1px">Nidos</div>
+        <div class="nest-row"><div style="font-size:14px">🦊</div><div style="flex:1"><div class="nest-name">Vulpix Nido</div><div class="nest-sub">Shibuya · 35.6598, 139.7024</div></div><div class="tbadge t-fire">Fire</div></div>
+        <div class="nest-row"><div style="font-size:14px">🐎</div><div style="flex:1"><div class="nest-name">Ponyta Nido</div><div class="nest-sub">Yoyogi · 35.6718, 139.6944</div></div><div class="tbadge t-fire">Fire</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">Ambos toggles <strong>ON</strong> (estado por defecto). Fila de chips con <strong>scroll horizontal</strong> — escala a mas capas sin romper layout. Gyms / Stops / Rutas en estado <strong>pronto</strong> (opacidad 38%). Ver pantalla 10 para estado solo-Nidos.</div>
+</div>
+
+<!-- ===== 10. SIDEBAR — TAB NIDOS ACTIVO ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 10</div>
+  <div class="cell-label">Sidebar &mdash; tab Nidos activo</div>
+  <div class="ph">
+    <div class="map"></div>
+    <div class="mkr" style="left:70px;top:130px"><div class="mkr-dot" style="background:#3FB950;box-shadow:0 0 5px #3FB950"></div><div class="mkr-lbl">Nido Vulpix</div></div>
+    <div class="mkr" style="left:175px;top:160px"><div class="mkr-dot" style="background:#3FB950;box-shadow:0 0 5px #3FB950"></div><div class="mkr-lbl">Nido Ponyta</div></div>
+    <div class="mkr" style="left:120px;top:105px"><div class="mkr-dot" style="background:#3FB950;box-shadow:0 0 5px #3FB950"></div><div class="mkr-lbl">Nido Eevee</div></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on">⚙️</div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <div class="bs" style="height:55%">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div class="feed-hdr">
+        <div class="feed-hdr-r1"><div class="feed-title">Nidos · 3</div></div>
+        <div class="feed-chips-scroll">
+          <div class="feed-chip">☁️ Clima</div>
+          <div class="feed-chip on-green">🌿 Nidos</div>
+          <div class="feed-chip soon">🏟 Gyms</div>
+          <div class="feed-chip soon">🔵 Stops</div>
+          <div class="feed-chip soon">🗺 Rutas</div>
+        </div>
+      </div>
+      <div style="overflow-y:auto;flex:1;padding:6px 8px;display:flex;flex-direction:column;gap:5px">
+        <div class="nest-row">
+          <div style="font-size:14px">🦊</div>
+          <div style="flex:1">
+            <div class="nest-name">Vulpix Nido</div>
+            <div class="nest-sub">Shibuya · 35.6598, 139.7024</div>
+          </div>
+          <div class="tbadge t-fire">Fire</div>
+        </div>
+        <div class="nest-row">
+          <div style="font-size:14px">🐎</div>
+          <div style="flex:1">
+            <div class="nest-name">Ponyta Nido</div>
+            <div class="nest-sub">Yoyogi · 35.6718, 139.6944</div>
+          </div>
+          <div class="tbadge t-fire">Fire</div>
+        </div>
+        <div class="nest-row">
+          <div style="font-size:14px">🦁</div>
+          <div style="flex:1">
+            <div class="nest-name">Eevee Nido</div>
+            <div class="nest-sub">Harajuku · 35.6702, 139.7026</div>
+          </div>
+          <div class="tbadge" style="background:rgba(167,139,250,0.18);color:#A78BFA">Psychic</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">Toggle <strong>Nidos ON</strong> (verde), Clima OFF (gris). Solo lista de nidos visible. Toggle independiente — misma logica que desktop. El usuario puede tener cualquier combinacion: ambos, uno, o ninguno.</div>
+</div>
+
+<!-- ===== 3. DETALLE ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 3</div>
+  <div class="cell-label">Detalle ciudad / nido</div>
+  <div class="ph">
+    <div class="map" style="filter:brightness(.5)"></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on">⚙️</div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <div class="bs" style="height:84%">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div style="overflow-y:auto;flex:1;display:flex;flex-direction:column;">
+        <div class="dt-hero">
+          <div style="font-size:24px">🗼</div>
+          <div style="flex:1"><div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--text-primary)">Tokyo</div><div style="font-size:9px;color:var(--text-secondary)">Kanto · JP</div></div>
+          <div class="dt-temp">28°</div>
+        </div>
+        <div class="dt-tiles">
+          <div class="dt-tile"><div class="dt-tile-label">Condicion</div><div style="font-size:14px">☀️</div><div class="dt-tile-val" style="font-size:10px">Soleado</div></div>
+          <div class="dt-tile"><div class="dt-tile-label">Humedad</div><div style="font-size:14px">💧</div><div class="dt-tile-val">62%</div></div>
+          <div class="dt-tile" style="border-color:rgba(255,107,53,0.2);background:rgba(255,107,53,0.07)"><div class="dt-tile-label">Tipo activo</div><div style="font-size:14px">🔥</div><div class="dt-tile-val" style="color:#FF6B35">Fire</div></div>
+        </div>
+        <div style="padding:0 10px 8px;display:flex;flex-direction:column;gap:5px">
+          <div style="font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:2px">Nidos activos · 2</div>
+          <div class="nest-row"><div style="font-size:14px">🦊</div><div style="flex:1"><div class="nest-name">Vulpix Nido</div><div class="nest-sub">Shibuya · 35.6598, 139.7024</div></div><div class="tbadge t-fire">Fire</div></div>
+          <div class="nest-row"><div style="font-size:14px">🐎</div><div style="flex:1"><div class="nest-name">Ponyta Nido</div><div class="nest-sub">Yoyogi · 35.6718, 139.6944</div></div><div class="tbadge t-fire">Fire</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">Sheet al <strong>84%</strong>. Tiles de clima + lista de nidos con coordenadas reales. Mapa apenas visible al fondo.</div>
+</div>
+
+<!-- ===== 4. MAPA NAVEGANDO ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 4</div>
+  <div class="cell-label">Mapa — navegando</div>
+  <div class="ph">
+    <div class="map"></div>
+    <!-- roads pseudo -->
+    <div style="position:absolute;inset:0;background:linear-gradient(73deg,transparent 30%,rgba(30,40,58,0.85) 30%,rgba(30,40,58,0.85) 32%,transparent 32%),linear-gradient(160deg,transparent 20%,rgba(30,40,58,0.8) 20%,rgba(30,40,58,0.8) 22%,transparent 22%);z-index:1"></div>
+    <div class="mkr" style="left:55px;top:170px;z-index:6"><div class="mkr-dot" style="background:#FF6B35;box-shadow:0 0 5px #FF6B35;width:10px;height:10px"></div><div class="mkr-lbl">Tokyo ☀️ 28°</div></div>
+    <div class="mkr" style="left:185px;top:200px;z-index:6"><div class="mkr-dot" style="background:#6890F0;box-shadow:0 0 5px #6890F0;width:10px;height:10px"></div><div class="mkr-lbl">Seoul 🌧 21°</div></div>
+    <div class="mkr" style="left:115px;top:280px;z-index:6"><div class="mkr-dot" style="background:#78C850;box-shadow:0 0 5px #78C850;width:10px;height:10px"></div><div class="mkr-lbl">Shanghai ⛅ 25°</div></div>
+    <!-- home pin -->
+    <div style="position:absolute;left:140px;top:230px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:1px"><div style="font-size:16px;filter:drop-shadow(0 0 6px rgba(34,211,238,.7))">📍</div><div style="font-size:7px;color:var(--home);background:rgba(13,17,23,.8);padding:1px 4px;border-radius:3px">Mi Zona</div></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on">⚙️</div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <div class="mc" style="top:52%"><div class="mb">+</div><div class="mb">−</div><div class="mb-sep"></div><div class="mb">🌐</div><div class="mb active">🏠</div><div class="mb">☆</div><div class="mb">♡</div><div class="mb">🔍</div><div class="mb">⊙</div></div>
+    <div class="bs" style="height:54px">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div style="padding:1px 12px 0;display:flex;align-items:center;gap:7px">
+        <div style="font-size:9px;font-weight:600;color:var(--text-accent);background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.2);padding:2px 7px;border-radius:9px">4 ciudades</div>
+        <div style="font-size:9px;color:var(--text-secondary)">Desliza para ver</div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">Mapa full con pins de ciudad (clima + temp). Pin cyan = Mi Zona activa. <strong>MapZoomControls</strong> a la derecha.</div>
+</div>
+
+<!-- ===== 5. BOTONES MAPA DETALLE ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 5</div>
+  <div class="cell-label">Botones del mapa</div>
+  <div class="ph">
+    <div class="map"></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on">⚙️</div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <!-- botones con labels -->
+    <div style="position:absolute;right:8px;top:120px;display:flex;flex-direction:column;gap:4px;z-index:15">
+      <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="font-size:8px;color:var(--text-secondary);background:rgba(13,17,23,.8);padding:2px 5px;border-radius:3px">Zoom +</div>
+        <div class="mb">+</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="font-size:8px;color:var(--text-secondary);background:rgba(13,17,23,.8);padding:2px 5px;border-radius:3px">Zoom −</div>
+        <div class="mb">−</div>
+      </div>
+      <div class="mb-sep" style="height:1px;background:var(--border-default);margin:1px 0"></div>
+      <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="font-size:8px;color:var(--text-secondary);background:rgba(13,17,23,.8);padding:2px 5px;border-radius:3px">Modo mundial</div>
+        <div class="mb">🌐</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="font-size:8px;color:var(--home);background:rgba(13,17,23,.8);padding:2px 5px;border-radius:3px">Mi Zona</div>
+        <div class="mb active">🏠</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="font-size:8px;color:var(--text-secondary);background:rgba(13,17,23,.8);padding:2px 5px;border-radius:3px">Favoritos</div>
+        <div class="mb">☆</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="font-size:8px;color:var(--text-secondary);background:rgba(13,17,23,.8);padding:2px 5px;border-radius:3px">Resaltar</div>
+        <div class="mb">♡</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="font-size:8px;color:var(--text-secondary);background:rgba(13,17,23,.8);padding:2px 5px;border-radius:3px">Buscar lugar</div>
+        <div class="mb">🔍</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="font-size:8px;color:var(--text-secondary);background:rgba(13,17,23,.8);padding:2px 5px;border-radius:3px">GPS actual</div>
+        <div class="mb">⊙</div>
+      </div>
+    </div>
+    <div class="bs" style="height:54px">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div style="padding:1px 12px 0;font-size:9px;color:var(--text-secondary)">MapZoomControls — ya existen, sin cambios</div>
+    </div>
+  </div>
+  <div class="ann"><strong>MapZoomControls</strong> existente: + − / 🌐 Modo mundial / 🏠 Mi Zona / ☆ Favoritos / ♡ Resaltar / 🔍 Buscar / ⊙ GPS. Sin cambios en mobile.</div>
+</div>
+
+<!-- ===== 6. PANEL FILTROS ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 6</div>
+  <div class="cell-label">Panel filtros</div>
+  <div class="ph">
+    <div class="map" style="filter:brightness(.35)"></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on badge">⚙️<div class="badge-dot">3</div></div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <div class="flt" style="height:87%">
+      <div style="width:32px;height:4px;background:var(--border-default);border-radius:2px;margin:10px auto 6px"></div>
+      <div class="flt-hdr"><div class="flt-title">Filtros</div><div class="flt-clear">Limpiar todo</div></div>
+      <div style="overflow-y:auto;flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div class="section-lbl">Capas del mapa</div>
+          <div class="layer-row"><div class="layer-pill lp-clima">☁️ Clima</div><div class="layer-pill lp-nidos">🌿 Nidos</div><div class="layer-pill lp-off">💪 Gyms <span style="font-size:7px">pronto</span></div></div>
+        </div>
+        <div>
+          <div class="section-lbl">Condicion climatica</div>
+          <div class="chip-row"><div class="chip on">☀️ Soleado</div><div class="chip on">⛅ Parcial</div><div class="chip">☁️ Nublado</div><div class="chip">🌧 Lluvia</div><div class="chip">❄️ Nieve</div><div class="chip">💨 Ventoso</div></div>
+        </div>
+        <div>
+          <div class="section-lbl">Tipo Pokemon</div>
+          <div class="chip-row"><div class="chip on-fire">🔥 Fire</div><div class="chip on-water">💧 Water</div><div class="chip">🌿 Grass</div><div class="chip">⚡ Electric</div><div class="chip">🧊 Ice</div><div class="chip">🪨 Rock</div></div>
+        </div>
+        <div>
+          <div class="section-lbl">Region</div>
+          <div class="chip-row"><div class="chip on-blue">Todas</div><div class="chip">Asia</div><div class="chip">Europa</div><div class="chip">America</div><div class="chip">Oceania</div></div>
+        </div>
+        <div>
+          <div class="section-lbl">Ordenar por</div>
+          <div class="chip-row"><div class="chip">Sin orden</div><div class="chip on-blue">Densidad ↓</div><div class="chip">Nombre</div><div class="chip">Rating</div></div>
+        </div>
+        <div class="btn-apply">Aplicar filtros (3 activos)</div>
+      </div>
+    </div>
+  </div>
+  <div class="ann"><strong>FilterPanelModal</strong> ya es BottomSheet en el codigo. Boton ⚙️ con badge rojo lo abre. Capas, condicion, tipos, region y ordenar.</div>
+</div>
+
+<!-- ===== 7. FILTROS ACTIVOS ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 7</div>
+  <div class="cell-label">Filtros activos visibles</div>
+  <div class="ph">
+    <div class="map"></div>
+    <div class="mkr" style="left:65px;top:210px"><div class="mkr-dot" style="background:#FF6B35;box-shadow:0 0 5px #FF6B35"></div><div class="mkr-lbl">Tokyo ☀️</div></div>
+    <div class="mkr" style="left:175px;top:250px"><div class="mkr-dot" style="background:#FF6B35;box-shadow:0 0 5px #FF6B35"></div><div class="mkr-lbl">Times Sq ☀️</div></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on badge">⚙️<div class="badge-dot">3</div></div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <div class="bs" style="height:55%">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div class="feed-hdr">
+        <div class="feed-title">Climas · 2</div>
+        <div style="font-size:8px;color:var(--ui-accent);font-weight:600;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.25);padding:3px 7px;border-radius:8px">3 filtros activos</div>
+      </div>
+      <!-- active filter chips strip -->
+      <div style="display:flex;gap:4px;padding:5px 10px;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap;flex-shrink:0">
+        <div style="font-size:8px;padding:2px 7px;border-radius:10px;background:rgba(255,179,71,0.15);border:1px solid rgba(255,179,71,0.4);color:#FFB347;display:flex;align-items:center;gap:3px">☀️ Soleado <span style="opacity:.7">✕</span></div>
+        <div style="font-size:8px;padding:2px 7px;border-radius:10px;background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.4);color:#FF6B35;display:flex;align-items:center;gap:3px">🔥 Fire <span style="opacity:.7">✕</span></div>
+        <div style="font-size:8px;padding:2px 7px;border-radius:10px;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);color:var(--ui-accent);display:flex;align-items:center;gap:3px">Asia <span style="opacity:.7">✕</span></div>
+      </div>
+      <div style="overflow-y:auto;flex:1;padding:6px 8px;display:flex;flex-direction:column;gap:5px">
+        <div class="loc-card"><div class="loc-top"><div class="loc-icon">🗼</div><div style="flex:1;min-width:0"><div class="loc-name">Tokyo</div><div class="loc-meta">Asia · 05/09 · 12:09 AM</div></div><div class="loc-temp">28°</div></div><div style="display:flex;gap:4px;padding-top:3px"><div class="tbadge t-fire">Fire</div></div></div>
+        <div class="loc-card"><div class="loc-top"><div class="loc-icon">🏙️</div><div style="flex:1;min-width:0"><div class="loc-name">Seoul</div><div class="loc-meta">Asia · 05/09 · 01:09 AM</div></div><div class="loc-temp">24°</div></div><div style="display:flex;gap:4px;padding-top:3px"><div class="tbadge t-fire">Fire</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">Badge rojo en ⚙️ indica filtros activos. Strip de chips debajo del feed header muestra <strong>filtros activos con X</strong> para quitar individualmente. Lista reducida.</div>
+</div>
+
+<!-- ===== 8. MAPA MI ZONA ACTIVA ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 8</div>
+  <div class="cell-label">Mapa con Mi Zona activa</div>
+  <div class="ph">
+    <div class="map"></div>
+    <!-- home radius circle (pseudo) -->
+    <div style="position:absolute;left:95px;top:175px;width:100px;height:100px;border-radius:50%;border:2px solid rgba(34,211,238,0.3);background:rgba(34,211,238,0.06);z-index:4"></div>
+    <!-- home pin -->
+    <div style="position:absolute;left:138px;top:215px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:1px">
+      <div style="font-size:18px;filter:drop-shadow(0 0 7px rgba(34,211,238,.8))">📍</div>
+      <div style="font-size:7px;color:var(--home);background:rgba(13,17,23,.85);padding:1px 4px;border-radius:3px">Mi Zona</div>
+    </div>
+    <div class="mkr" style="left:55px;top:185px;z-index:6"><div class="mkr-dot" style="background:#FF6B35;box-shadow:0 0 5px #FF6B35"></div><div class="mkr-lbl">Tokyo</div></div>
+    <div class="mkr" style="left:185px;top:155px;z-index:6"><div class="mkr-dot" style="background:#6890F0;box-shadow:0 0 5px #6890F0"></div><div class="mkr-lbl">Seoul</div></div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on">⚙️</div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <div class="mc" style="top:52%"><div class="mb">+</div><div class="mb">−</div><div class="mb-sep"></div><div class="mb">🌐</div><div class="mb active" style="box-shadow:0 0 8px rgba(34,211,238,.4)">🏠</div><div class="mb">☆</div><div class="mb">♡</div><div class="mb">🔍</div><div class="mb">⊙</div></div>
+    <div class="bs" style="height:54px">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div style="padding:1px 12px 0;display:flex;align-items:center;gap:7px">
+        <div style="font-size:9px;font-weight:600;color:var(--home);background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25);padding:2px 7px;border-radius:9px">📍 Mi Zona activa</div>
+        <div style="font-size:9px;color:var(--text-secondary)">Desliza para ver</div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">Pin cyan + radio translucido sobre el mapa. Boton 🏠 resaltado con glow. Sheet colapsado muestra badge <strong>"Mi Zona activa"</strong>.</div>
+</div>
+
+<!-- ===== 9. SIDEBAR CON COUNTDOWN Y DISTANCIA ===== -->
+<div class="cell">
+  <div class="cell-num">Pantalla 9</div>
+  <div class="cell-label">Sidebar — countdown + distancia</div>
+  <div class="ph">
+    <div class="map"></div>
+    <div class="mkr" style="left:65px;top:130px"><div class="mkr-dot" style="background:#FF6B35;box-shadow:0 0 5px #FF6B35"></div><div class="mkr-lbl">Tokyo</div></div>
+    <div class="mkr" style="left:185px;top:110px"><div class="mkr-dot" style="background:#6890F0;box-shadow:0 0 5px #6890F0"></div><div class="mkr-lbl">Seoul</div></div>
+    <!-- home pin small -->
+    <div style="position:absolute;left:128px;top:150px;z-index:7;font-size:12px;filter:drop-shadow(0 0 4px rgba(34,211,238,.7))">📍</div>
+    <div class="hdr">
+      <div class="hdr-r1"><div class="brand">PokeWeather</div><div class="sync"></div><div class="ibt">🌙</div><div class="ibt on">⚙️</div></div>
+      <div class="hdr-r2"><div class="srch"><span style="font-size:10px;color:var(--text-secondary)">🔍</span><div class="srch-ph">Buscar ciudad...</div></div></div>
+    </div>
+    <div class="bs" style="height:55%">
+      <div class="bs-handle-area"><div class="bs-handle"></div></div>
+      <div class="feed-hdr">
+        <div class="feed-title">Climas · 5</div>
+        <div style="font-size:8px;color:var(--home);background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);padding:3px 7px;border-radius:8px">📍 Mi Zona</div>
+      </div>
+      <div style="overflow-y:auto;flex:1;padding:6px 8px;display:flex;flex-direction:column;gap:5px">
+        <div class="loc-card">
+          <div class="loc-top"><div class="loc-icon">🗼</div><div style="flex:1;min-width:0"><div class="loc-name">Pier 39, San Fr...</div><div class="loc-meta">EE.UU. · 05/09 · 12:09 AM</div></div><div class="loc-temp">18°</div></div>
+          <div style="display:flex;gap:4px;padding-top:3px"><div class="tbadge t-psychic">Psychic</div></div>
+          <div class="loc-bottom"><div class="loc-km">⊙ 3029.8 km</div><div style="width:1px;height:10px;background:var(--border-default)"></div><div class="loc-cd">⏱ 2 hrs</div></div>
+        </div>
+        <div class="loc-card">
+          <div class="loc-top"><div class="loc-icon">🗽</div><div style="flex:1;min-width:0"><div class="loc-name">Times Square...</div><div class="loc-meta">EE.UU. · 05/09 · 03:09 AM</div></div><div class="loc-temp">21°</div></div>
+          <div style="display:flex;gap:4px;padding-top:3px"><div class="tbadge t-fire">Fire</div><div class="tbadge t-grass">Grass</div></div>
+          <div class="loc-bottom"><div class="loc-km">⊙ 3413.7 km</div><div style="width:1px;height:10px;background:var(--border-default)"></div><div class="loc-cd">⏱ 2 hrs</div></div>
+        </div>
+        <div class="loc-card">
+          <div class="loc-top"><div class="loc-icon">🏙️</div><div style="flex:1;min-width:0"><div class="loc-name">Zaragoza Centro</div><div class="loc-meta">España · 05/09 · 09:09 AM</div></div><div class="loc-temp">19°</div></div>
+          <div style="display:flex;gap:4px;padding-top:3px"><div class="tbadge t-psychic">Psychic</div></div>
+          <div class="loc-bottom"><div class="loc-km">⊙ 9291.7 km</div><div style="width:1px;height:10px;background:var(--border-default)"></div><div class="loc-cd">⏱ 2 hrs</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">Cuando <strong>Mi Zona</strong> esta activa, cada card muestra <strong>distancia en km</strong> (cyan) y <strong>countdown</strong> del nido (amarillo). Badge "Mi Zona" en el feed header.</div>
+</div>
+
+</div>

@@ -84,6 +84,9 @@ export default function Sidebar({ cities }: SidebarProps) {
 
         /* ── MOBILE: sidebar reemplazado por BottomSheet ── */
         @media (max-width: 767px) {
+          .sb-wrapper {
+            display: none;
+          }
           .sb-root {
             display: none;
           }

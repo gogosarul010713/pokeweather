@@ -396,8 +396,21 @@ export default function LocationDetail({ city }: LocationDetailProps) {
           border-color: var(--border-strong);
         }
 
-        @media (max-width: 600px) {
-          .ld-modal { max-height: 82vh; border-radius: 12px 12px 0 0; }
+        @media (max-width: 768px) {
+          .ld-modal {
+            top: auto;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transform: none;
+            width: 100%;
+            max-height: 85vh;
+            border-radius: 16px 16px 0 0;
+          }
+          @keyframes ld-popIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
         }
       `}</style>
 

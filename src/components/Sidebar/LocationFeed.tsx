@@ -23,7 +23,12 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
   const conditionFilter = useStore((s) => s.conditionFilter)
   const typeFilter = useStore((s) => s.typeFilter)
   const regionFilter = useStore((s) => s.regionFilter)
+  const setRegionFilter = useStore((s) => s.setRegionFilter)
+  const setConditionFilter = useStore((s) => s.setConditionFilter)
+  const setTypeFilter = useStore((s) => s.setTypeFilter)
+  const setCategoryFilter = useStore((s) => s.setCategoryFilter)
   const activeLayers = useStore((s) => s.activeLayers)
+  const toggleLayer  = useStore((s) => s.toggleLayer)
   const nests = useStore((s) => s.nests)
   const selectedNest = useStore((s) => s.selectedNest)
   const scrollToFeedTick   = useStore((s) => s.scrollToFeedTick)
@@ -241,6 +246,112 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
           pointer-events: none;
         }
 
+        /* Layer toggle strip -- mobile only */
+        .lf-layer-strip {
+          display: none;
+        }
+
+        @media (max-width: 767px) {
+          .lf-layer-strip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 8px;
+            overflow-x: auto;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-default);
+            scrollbar-width: none;
+          }
+
+          .lf-layer-strip::-webkit-scrollbar { display: none; }
+
+          .lf-layer-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 8px;
+            border: 1px solid var(--border-default);
+            background: var(--bg-tertiary);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: background 120ms, border-color 120ms, color 120ms;
+          }
+
+          .lf-layer-chip.clima-on {
+            border-color: rgba(88,166,255,0.4);
+            color: #58A6FF;
+            background: rgba(88,166,255,0.08);
+          }
+
+          .lf-layer-chip.nidos-on {
+            border-color: rgba(63,185,80,0.4);
+            color: #3FB950;
+            background: rgba(63,185,80,0.08);
+          }
+
+          .lf-layer-chip.soon {
+            opacity: 0.38;
+            cursor: default;
+            pointer-events: none;
+          }
+        }
+
+        /* Filter chips strip -- mobile only */
+        .lf-filter-strip {
+          display: none;
+        }
+
+        @media (max-width: 767px) {
+          .lf-filter-strip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            overflow-x: auto;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-default);
+            scrollbar-width: none;
+          }
+
+          .lf-filter-strip::-webkit-scrollbar { display: none; }
+
+          .lf-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px 2px 8px;
+            background: rgba(88, 166, 255, 0.12);
+            border: 1px solid var(--ui-accent);
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--ui-accent);
+            white-space: nowrap;
+            flex-shrink: 0;
+            cursor: pointer;
+          }
+
+          .lf-chip-x {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 12px;
+            height: 12px;
+            font-size: 10px;
+            line-height: 1;
+            opacity: 0.7;
+          }
+
+          .lf-chip:hover .lf-chip-x { opacity: 1; }
+        }
+
         /* Sort mini-dropdown */
         .lf-sort-popup {
           position: absolute;
@@ -353,6 +464,27 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
       `}</style>
 
       <div className="lf-root">
+        {/* Layer toggle strip — mobile only */}
+        <div className="lf-layer-strip">
+          <button
+            className={`lf-layer-chip${activeLayers.clima ? ' clima-on' : ''}`}
+            onClick={() => toggleLayer('clima')}
+            type="button"
+          >
+            ☁️ Clima
+          </button>
+          <button
+            className={`lf-layer-chip${activeLayers.nidos ? ' nidos-on' : ''}`}
+            onClick={() => toggleLayer('nidos')}
+            type="button"
+          >
+            🌿 Nidos
+          </button>
+          <span className="lf-layer-chip soon">🏟 Gyms</span>
+          <span className="lf-layer-chip soon">🔵 Stops</span>
+          <span className="lf-layer-chip soon">🗺 Rutas</span>
+        </div>
+
         {/* Lista o mensaje vacío */}
         {totalCount > 0 ? (
           <div className={`lf-scroll ${loadingStatus === 'loading' ? 'fade-refresh' : ''}`} ref={scrollContainerRef}>
@@ -387,6 +519,30 @@ export default function LocationFeed({ cities }: LocationFeedProps) {
                     </button>
                   </div>
                 </div>
+                {activeFilterCount > 0 && (
+                  <div className="lf-filter-strip">
+                    {regionFilter !== 'todas' && (
+                      <button className="lf-chip" onClick={() => setRegionFilter('todas')} type="button">
+                        {regionFilter} <span className="lf-chip-x">x</span>
+                      </button>
+                    )}
+                    {conditionFilter.map(c => (
+                      <button key={c} className="lf-chip" onClick={() => setConditionFilter(conditionFilter.filter(x => x !== c))} type="button">
+                        {c} <span className="lf-chip-x">x</span>
+                      </button>
+                    ))}
+                    {typeFilter.map(t => (
+                      <button key={t} className="lf-chip" onClick={() => setTypeFilter(typeFilter.filter(x => x !== t))} type="button">
+                        {t} <span className="lf-chip-x">x</span>
+                      </button>
+                    ))}
+                    {categoryFilter.map(cat => (
+                      <button key={cat} className="lf-chip" onClick={() => setCategoryFilter(categoryFilter.filter(x => x !== cat))} type="button">
+                        {cat} <span className="lf-chip-x">x</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="lf-group-content">
                   {displayedCities.map((city) => (
                     <div
